@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load image_tags %}
+{% load breadcrumbs %}
+
+{% block title %}{{ university.name }} - Science Gates{% endblock %}
+{% block meta_description %}{{ university.meta_description|default:university.description|truncatewords:30 }}{% endblock %}
+
+{% block og_title %}{{ university.og_title|default:university.name }}{% endblock %}
+{% block og_description %}{{ university.og_description|default:university.description|truncatewords:30 }}{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+
+{% block extra_css %}
+    {% render_breadcrumb_schema breadcrumbs request %}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <!-- Breadcrumb Navigation -->
+    {% render_breadcrumbs breadcrumbs %}
+    <!-- Hero Section -->
+    <div class="mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start mb-8">
+            <!-- Logo -->
+            <div class="md:col-span-1 flex justify-center">
+                {% if university.logo %}
+                    <img 
+                        src="{{ university.logo.url }}" 
+                        alt="{{ university.name }} شعار"
+                        loading="lazy"
+                        class="h-32 object-contain"
+                    >
+                {% endif %}
+            </div>
+
+            <!-- Title and Location -->
+            <div class="md:col-span-2">
+                <h1 class="text-4xl font-semibold text-gray-900 mb-4">{{ university.name }}</h1>
+                <p class="text-lg text-gray-600 mb-4">
+                    <span class="inline-block">📍 {{ university.location }}</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Main Image -->
+        {% if university.main_image %}
+            <div class="mb-8 rounded-lg overflow-hidden shadow-lg">
+                {% responsive_image university.main_image.url university.name "w-full h-96 object-cover" %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Video Section -->
+    {% if university.video_url %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">فيديو عن الجامعة</h2>
+            <div class="relative w-full bg-black rounded-lg overflow-hidden" style="padding-bottom: 56.25%;">
+                <iframe 
+                    src="{{ university.video_url }}" 
+                    title="فيديو عن {{ university.name }}"
+                    class="absolute top-0 right-0 w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                ></iframe>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Description Section -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">عن الجامعة</h2>
+        <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+            {{ university.description|safe }}
+        </div>
+    </div>
+
+    <!-- Admission Requirements Section -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">شروط القبول</h2>
+        <div class="bg-blue-50 border-r-4 border-blue-600 p-6 rounded-lg">
+            <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                {{ university.admission_requirements|safe }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixed Registration Steps Section (from Site Settings) -->
+    {% include "components/registration_steps.html" %}
+
+    <!-- Faculties and Programs Section -->
+    {% if faculties %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">الكليات والبرامج</h2>
+            <div class="space-y-6">
+                {% for faculty in faculties %}
+                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <!-- Faculty Header -->
+                        <div class="bg-gradient-to-l from-blue-50 to-blue-100 p-6 border-b border-gray-200">
+                            <h3 class="text-xl font-semibold text-gray-900">{{ faculty.name }}</h3>
+                        </div>
+
+                        <!-- Programs List -->
+                        {% if faculty.programs.all %}
+                            <div class="divide-y divide-gray-200">
+                                {% for program in faculty.programs.all %}
+                                    <div class="p-6 hover:bg-gray-50 transition-colors">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <!-- Program Name -->
+                                            <div>
+                                                <p class="text-sm text-gray-600 mb-1">البرنامج</p>
+                                                <p class="font-semibold text-gray-900">{{ program.name }}</p>
+                                            </div>
+
+                                            <!-- Duration -->
+                                            <div>
+                                                <p class="text-sm text-gray-600 mb-1">مدة الدراسة</p>
+                                                <p class="font-semibold text-gray-900">{{ program.duration }}</p>
+                                            </div>
+
+                                            <!-- Tuition Fees -->
+                                            <div>
+                                                <p class="text-sm text-gray-600 mb-1">الرسوم الدراسية</p>
+                                                <p class="font-semibold text-gray-900">{{ program.tuition_fees }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="p-6 text-center text-gray-500">
+                                لا توجد برامج متاحة حالياً
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- FAQ Section with Accordion -->
+    {% if faqs %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">الأسئلة الشائعة</h2>
+            <div 
+                x-data="{ 
+                    openAccordion: null,
+                    toggleAccordion(id) {
+                        this.openAccordion = this.openAccordion === id ? null : id;
+                    }
+                }"
+                class="space-y-4"
+            >
+                {% for faq in faqs %}
+                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                        <!-- Accordion Header -->
+                        <button
+                            @click="toggleAccordion({{ faq.id }})"
+                            class="w-full px-6 py-4 text-right flex items-center justify-between hover:bg-gray-50 transition-colors"
+                            :class="{ 'bg-blue-50': openAccordion === {{ faq.id }} }"
+                        >
+                            <span class="font-semibold text-gray-900">{{ faq.question }}</span>
+                            <svg 
+                                class="w-5 h-5 text-gray-600 transition-transform"
+                                :class="{ 'rotate-180': openAccordion === {{ faq.id }} }"
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Accordion Content -->
+                        <div
+                            x-show="openAccordion === {{ faq.id }}"
+                            x-transition
+                            class="border-t border-gray-200 bg-gray-50 px-6 py-4"
+                        >
+                            <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                                {{ faq.answer|safe }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Registration Section -->
+    {% if university.registration_section %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">خطوات التسجيل</h2>
+            <div class="bg-green-50 border-r-4 border-green-600 p-6 rounded-lg">
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                    {{ university.registration_section|safe }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Lead Form Section -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">استفسر عن هذه الجامعة</h2>
+        <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+            {% include 'components/lead_form.html' with source_page=request.path %}
+        </div>
+    </div>
+
+    <!-- Related Majors Section -->
+    {% include "components/related_majors.html" with majors=university.related_majors.all %}
+
+    <!-- Related Articles Section -->
+    {% include "components/related_articles.html" with articles=university.related_articles.all %}
+</div>
+
+{% endblock %}

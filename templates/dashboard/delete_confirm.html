@@ -1,0 +1,54 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}تأكيد الحذف - لوحة التحكم{% endblock %}
+
+{% block page_title %}تأكيد الحذف{% endblock %}
+
+{% block content %}
+<div class="flex justify-center">
+    <!-- Delete Confirmation Card -->
+    <div class="bg-white rounded-lg shadow-sm border max-w-lg w-full p-6 space-y-6" style="border-color: var(--border);">
+        
+        <!-- Warning Icon -->
+        <div class="flex justify-center">
+            <div class="flex items-center justify-center w-12 h-12 rounded-full" style="background-color: rgba(239, 68, 68, 0.1);">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--danger);" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Title and Warning Message -->
+        <div class="text-center space-y-3">
+            <h2 class="text-lg font-semibold" style="color: var(--text-primary);">هل أنت متأكد من الحذف؟</h2>
+            <p class="text-sm" style="color: var(--text-secondary);">
+                سيتم حذف العنصر <strong style="color: var(--text-primary); word-break: break-word;">{{ item_name|truncatechars:100 }}</strong> بشكل نهائي.
+            </p>
+        </div>
+
+        <!-- Permanent Deletion Warning -->
+        <div class="rounded-lg p-4" style="background-color: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);">
+            <p class="text-xs font-normal" style="color: var(--danger);">
+                <strong>تحذير:</strong> لا يمكن التراجع عن هذا الإجراء. سيتم حذف البيانات بشكل دائم.
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-3">
+            <!-- Cancel Button (Secondary) -->
+            <a href="{{ cancel_url }}" class="flex-1 px-4 py-2 rounded-lg font-normal transition-colors duration-200 text-center text-sm hover:bg-gray-200" style="background-color: var(--bg-light); color: var(--text-primary); border: 1px solid var(--border);">
+                إلغاء
+            </a>
+            
+            <!-- Delete Button (Danger) -->
+            <form method="post" action="{{ delete_url }}" class="flex-1">
+                {% csrf_token %}
+                <button type="submit" class="w-full px-4 py-2 rounded-lg font-normal transition-colors duration-200 text-white text-sm cursor-pointer hover:opacity-90" style="background-color: var(--danger);">
+                    حذف نهائياً
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

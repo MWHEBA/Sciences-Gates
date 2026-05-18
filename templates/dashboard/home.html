@@ -1,0 +1,371 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}لوحة التحكم - Science Gates{% endblock %}
+
+{% block page_title %}لوحة التحكم{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--shell-gap);">
+
+    <!-- Hero Card — Welcome Section -->
+    <div style="background-color: var(--primary); border-radius: var(--radius-lg);
+                padding: 28px; color: #ffffff; box-shadow: var(--shadow);">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+            <div>
+                <h2 style="font-size: 24px; font-weight: 600; margin: 0 0 8px 0; line-height: 1.2;">
+                    أهلاً وسهلاً {{ user.first_name|default:user.username }}
+                </h2>
+                <p style="font-size: 14px; opacity: 0.9; margin: 0;">
+                    إليك ملخص سريع لأنشطة المنصة اليوم
+                </p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; flex-shrink: 0;">
+                <!-- Quick Stats -->
+                <div style="background-color: rgba(255,255,255,0.15); padding: 12px 16px; border-radius: var(--radius);
+                           text-align: center;">
+                    <p style="font-size: 11px; opacity: 0.8; margin: 0 0 4px 0;">رسائل اليوم</p>
+                    <p style="font-size: 20px; font-weight: 600; margin: 0;">
+                        {{ lead_stats.this_month|default:0 }}
+                    </p>
+                </div>
+                <div style="background-color: rgba(255,255,255,0.15); padding: 12px 16px; border-radius: var(--radius);
+                           text-align: center;">
+                    <p style="font-size: 11px; opacity: 0.8; margin: 0 0 4px 0;">غير مقروءة</p>
+                    <p style="font-size: 20px; font-weight: 600; margin: 0;">
+                        {{ lead_stats.unread|default:0 }}
+                    </p>
+                </div>
+                <div style="background-color: rgba(255,255,255,0.15); padding: 12px 16px; border-radius: var(--radius);
+                           text-align: center;">
+                    <p style="font-size: 11px; opacity: 0.8; margin: 0 0 4px 0;">ينتظر النشر</p>
+                    <p style="font-size: 20px; font-weight: 600; margin: 0;">
+                        {{ total_pending|default:0 }}
+                    </p>
+                </div>
+                <div style="background-color: rgba(255,255,255,0.15); padding: 12px 16px; border-radius: var(--radius);
+                           text-align: center;">
+                    <p style="font-size: 11px; opacity: 0.8; margin: 0 0 4px 0;">إجمالي الرسائل</p>
+                    <p style="font-size: 20px; font-weight: 600; margin: 0;">
+                        {{ lead_stats.total|default:0 }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Row — 4 Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--shell-gap);">
+        
+        <!-- Total Leads Card -->
+        <div style="background-color: var(--surface); border: 1px solid var(--border);
+                    border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+                    padding: 20px; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; right: 0; left: 0; height: 3px;
+                        background-color: var(--primary);"></div>
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+                <div>
+                    <p style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0;">
+                        إجمالي الرسائل
+                    </p>
+                    <p style="font-size: 30px; font-weight: 600; color: var(--text-primary);
+                              line-height: 1.2; margin: 6px 0 0 0;">
+                        {{ lead_stats.total|default:0 }}
+                    </p>
+                    {% if trend != 0 %}
+                    <p style="font-size: 11px; margin: 4px 0 0 0;
+                              color: {% if trend > 0 %}var(--success){% else %}var(--danger){% endif %};">
+                        {% if trend > 0 %}↑{% else %}↓{% endif %} {{ trend_abs }}% عن الشهر الماضي
+                    </p>
+                    {% endif %}
+                </div>
+                <div style="width: 44px; height: 44px; border-radius: var(--radius);
+                            background-color: var(--primary-light);
+                            display: grid; place-items: center; flex-shrink: 0;">
+                    <svg class="w-5 h-5" style="color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- This Month Card -->
+        <div style="background-color: var(--surface); border: 1px solid var(--border);
+                    border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+                    padding: 20px; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; right: 0; left: 0; height: 3px;
+                        background-color: var(--secondary);"></div>
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+                <div>
+                    <p style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0;">
+                        رسائل الشهر الحالي
+                    </p>
+                    <p style="font-size: 30px; font-weight: 600; color: var(--text-primary);
+                              line-height: 1.2; margin: 6px 0 0 0;">
+                        {{ lead_stats.this_month|default:0 }}
+                    </p>
+                </div>
+                <div style="width: 44px; height: 44px; border-radius: var(--radius);
+                            background-color: var(--secondary-light);
+                            display: grid; place-items: center; flex-shrink: 0;">
+                    <svg class="w-5 h-5" style="color: var(--secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Published Content Card -->
+        <div style="background-color: var(--surface); border: 1px solid var(--border);
+                    border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+                    padding: 20px; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; right: 0; left: 0; height: 3px;
+                        background-color: var(--success);"></div>
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+                <div>
+                    <p style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0;">
+                        محتوى منشور
+                    </p>
+                    <p style="font-size: 30px; font-weight: 600; color: var(--text-primary);
+                              line-height: 1.2; margin: 6px 0 0 0;">
+                        {% with total_published=content_stats.universities.published|add:content_stats.institutes.published|add:content_stats.majors.published|add:content_stats.articles.published %}
+                            {{ total_published }}
+                        {% endwith %}
+                    </p>
+                </div>
+                <div style="width: 44px; height: 44px; border-radius: var(--radius);
+                            background-color: var(--success-light);
+                            display: grid; place-items: center; flex-shrink: 0;">
+                    <svg class="w-5 h-5" style="color: var(--success);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Content Card -->
+        {% if total_pending > 0 %}
+        <div style="background-color: var(--surface); border: 1px solid var(--border);
+                    border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+                    padding: 20px; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; right: 0; left: 0; height: 3px;
+                        background-color: var(--warning);"></div>
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+                <div>
+                    <p style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0;">
+                        ينتظر النشر
+                    </p>
+                    <p style="font-size: 30px; font-weight: 600; color: var(--warning);
+                              line-height: 1.2; margin: 6px 0 0 0;">
+                        {{ total_pending }}
+                    </p>
+                </div>
+                <div style="width: 44px; height: 44px; border-radius: var(--radius);
+                            background-color: var(--warning-light);
+                            display: grid; place-items: center; flex-shrink: 0;">
+                    <svg class="w-5 h-5" style="color: var(--warning);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Content Cards Row — 4 Cards with Progress -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--shell-gap);">
+        
+        {% for key, stat in content_stats.items %}
+        <a href="{{ stat.list_url }}"
+           style="display: block; background-color: var(--surface);
+                  border: 1px solid var(--border); border-radius: var(--radius-lg);
+                  box-shadow: var(--shadow-card); padding: 18px;
+                  transition: box-shadow 0.2s; cursor: pointer; text-decoration: none;"
+           onmouseover="this.style.boxShadow='var(--shadow)'"
+           onmouseout="this.style.boxShadow='var(--shadow-card)'">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <p style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0;">
+                    {% if key == 'universities' %}الجامعات
+                    {% elif key == 'institutes' %}المعاهد
+                    {% elif key == 'majors' %}التخصصات
+                    {% elif key == 'articles' %}المقالات
+                    {% endif %}
+                </p>
+                <a href="{{ stat.create_url }}"
+                   style="font-size: 11px; font-weight: 600; padding: 3px 8px;
+                          border-radius: 999px; background-color: var(--primary-light);
+                          color: var(--primary); transition: background-color 0.2s; cursor: pointer;
+                          text-decoration: none;"
+                   onmouseover="this.style.backgroundColor='var(--primary-muted)'"
+                   onmouseout="this.style.backgroundColor='var(--primary-light)'"
+                   onclick="event.stopPropagation()">+ إضافة</a>
+            </div>
+            <p style="font-size: 24px; font-weight: 600; color: var(--text-primary); margin: 0;">
+                {{ stat.published }}
+                <span style="font-size: 13px; font-weight: 400; color: var(--text-muted);">
+                    / {{ stat.total }}
+                </span>
+            </p>
+            <p style="font-size: 11px; color: var(--text-muted); margin: 2px 0 0 0;">منشور من الإجمالي</p>
+            <!-- Progress bar -->
+            <div style="margin-top: 10px; height: 4px; border-radius: 999px;
+                        background-color: var(--border);">
+                {% if stat.total > 0 %}
+                <div style="height: 4px; border-radius: 999px;
+                            background-color: var(--success);
+                            width: {% widthratio stat.published stat.total 100 %}%;
+                            transition: width 0.5s;"></div>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+
+    </div>
+
+    <!-- Two-Column Row: Recent Leads + Quick Actions -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--shell-gap);">
+        
+        <!-- Recent Leads Table -->
+        <div style="background-color: var(--surface); border: 1px solid var(--border);
+                    border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+                    overflow: hidden;">
+            <div style="padding: 16px 20px; border-bottom: 1px solid var(--border);">
+                <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0;">
+                    آخر 10 رسائل
+                </h3>
+            </div>
+            {% if recent_leads %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                            <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                       color: var(--text-muted); text-transform: uppercase;">الاسم</th>
+                            <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                       color: var(--text-muted); text-transform: uppercase;">البريد</th>
+                            <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                       color: var(--text-muted); text-transform: uppercase;">النوع</th>
+                            <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                       color: var(--text-muted); text-transform: uppercase;">الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lead in recent_leads %}
+                        <tr style="border-bottom: 1px solid var(--border); transition: background-color 0.2s;"
+                            onmouseover="this.style.backgroundColor='var(--bg-light)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="padding: 12px 16px; font-size: 13px; color: var(--text-primary);">
+                                {{ lead.name|truncatewords:2 }}
+                            </td>
+                            <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
+                                {{ lead.email|truncatechars:20 }}
+                            </td>
+                            <td style="padding: 12px 16px; font-size: 11px;">
+                                {% if lead.lead_type == 'registration' %}
+                                <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                           border-radius: 999px; font-weight: 600;
+                                           background-color: var(--success-light); color: var(--success);">
+                                    تسجيل
+                                </span>
+                                {% else %}
+                                <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                           border-radius: 999px; font-weight: 600;
+                                           background-color: var(--info-light); color: var(--info);">
+                                    استفسار
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px 16px; font-size: 11px;">
+                                {% if lead.is_read %}
+                                <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                           border-radius: 999px; font-weight: 600;
+                                           background-color: var(--surface-2); color: var(--text-muted);">
+                                    مقروءة
+                                </span>
+                                {% else %}
+                                <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                           border-radius: 999px; font-weight: 600;
+                                           background-color: var(--warning-light); color: var(--warning);">
+                                    جديدة
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding: 32px 20px; text-align: center;">
+                <p style="font-size: 14px; color: var(--text-muted); margin: 0;">
+                    لا توجد رسائل حتى الآن
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions Sidebar -->
+        <div style="display: flex; flex-direction: column; gap: var(--shell-gap);">
+            
+            <!-- View All Leads Button -->
+            <a href="{% url 'dashboard:lead_list' %}"
+               style="display: flex; align-items: center; gap: 12px; padding: 16px;
+                      background-color: var(--primary); color: #ffffff;
+                      border-radius: var(--radius-lg); text-decoration: none;
+                      transition: background-color 0.2s; cursor: pointer;"
+               onmouseover="this.style.backgroundColor='var(--primary-hover)'"
+               onmouseout="this.style.backgroundColor='var(--primary)'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                <div>
+                    <p style="font-size: 13px; font-weight: 600; margin: 0;">عرض جميع الرسائل</p>
+                    <p style="font-size: 11px; opacity: 0.8; margin: 2px 0 0 0;">{{ lead_stats.total }} رسالة</p>
+                </div>
+            </a>
+
+            <!-- Unread Leads -->
+            {% if lead_stats.unread > 0 %}
+            <a href="{% url 'dashboard:lead_list' %}?is_read=0"
+               style="display: flex; align-items: center; gap: 12px; padding: 16px;
+                      background-color: var(--danger); color: #ffffff;
+                      border-radius: var(--radius-lg); text-decoration: none;
+                      transition: background-color 0.2s; cursor: pointer;"
+               onmouseover="this.style.backgroundColor='var(--danger-hover)'"
+               onmouseout="this.style.backgroundColor='var(--danger)'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+                <div>
+                    <p style="font-size: 13px; font-weight: 600; margin: 0;">رسائل غير مقروءة</p>
+                    <p style="font-size: 11px; opacity: 0.8; margin: 2px 0 0 0;">{{ lead_stats.unread }} رسالة</p>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Pending Content -->
+            {% if total_pending > 0 %}
+            <div style="background-color: var(--warning-light); border: 1px solid var(--warning);
+                        border-radius: var(--radius-lg); padding: 16px;">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <svg class="w-5 h-5" style="color: var(--warning); flex-shrink: 0; margin-top: 2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                        <p style="font-size: 13px; font-weight: 600; color: var(--warning); margin: 0;">
+                            محتوى ينتظر النشر
+                        </p>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin: 4px 0 0 0;">
+                            هناك {{ total_pending }} عنصر ينتظر النشر
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

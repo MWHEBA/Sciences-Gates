@@ -1,0 +1,332 @@
+/* Dashboard Design System - Color Token System */
+/* نظام ألوان لوحة التحكم */
+
+/*
+ * BUTTON CSS CLASS PATTERNS
+ * ========================
+ * 
+ * Base Classes (all buttons):
+ *   px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer
+ * 
+ * Variants:
+ *   Primary:   bg-primary text-white hover:bg-primary-hover
+ *   Secondary: bg-gray-100 text-gray-800 hover:bg-gray-200
+ *   Danger:    bg-danger text-white hover:bg-danger-hover
+ *   Ghost:     bg-transparent text-primary hover:bg-gray-100
+ *   Disabled:  opacity-50 pointer-events-none
+ * 
+ * See DESIGN_SYSTEM.md for complete documentation
+ */
+
+/* ═══════════════════════════════════
+   Global Font — Alexandria
+═══════════════════════════════════ */
+*,
+*::before,
+*::after {
+    font-family: 'Alexandria', sans-serif;
+}
+
+:root {
+    /* ═══════════════════════════════════
+       Brand Colors — Navy + Gold
+    ═══════════════════════════════════ */
+    --primary:          #0B2D4D;   /* Navy — اللون الأساسي */
+    --primary-hover:    #0D3A63;   /* Navy أغمق للـ hover */
+    --primary-light:    #EAF0F7;   /* Navy فاتح جداً للـ active backgrounds */
+    --primary-muted:    rgba(11, 45, 77, 0.08); /* للـ tints الخفيفة */
+
+    --secondary:        #C8A041;   /* Gold — اللون الفرعي */
+    --secondary-hover:  #B8902F;   /* Gold أغمق للـ hover */
+    --secondary-light:  #FDF6E3;   /* Gold فاتح جداً للـ backgrounds */
+    --secondary-muted:  rgba(200, 160, 65, 0.15); /* للـ tints الخفيفة */
+
+    /* ═══════════════════════════════════
+       Semantic Colors
+    ═══════════════════════════════════ */
+    --success:          #0C7A43;
+    --success-light:    #E8F7EF;
+    --danger:           #D64545;
+    --danger-hover:     #C03030;
+    --danger-light:     #FDEAEA;
+    --warning:          #D89000;
+    --warning-light:    #FFF4D9;
+    --info:             #2368B5;
+    --info-light:       #EAF2FF;
+
+    /* ═══════════════════════════════════
+       Surfaces & Backgrounds
+    ═══════════════════════════════════ */
+    --surface:          #FFFFFF;
+    --surface-2:        #F7FAFC;
+    --bg-page:          #EEF4F7;   /* خلفية الصفحة الكاملة */
+    --bg-light:         #F7FAFC;   /* للـ hover states الخفيفة */
+
+    /* ═══════════════════════════════════
+       Borders
+    ═══════════════════════════════════ */
+    --border:           #E4EAF0;
+    --border-strong:    #D0DAE4;
+
+    /* ═══════════════════════════════════
+       Text
+    ═══════════════════════════════════ */
+    --text-primary:     #11243A;
+    --text-secondary:   #43576B;
+    --text-muted:       #6B7C8F;
+
+    /* ═══════════════════════════════════
+       Shadows
+    ═══════════════════════════════════ */
+    --shadow:           0 8px 32px rgba(11, 45, 77, 0.10);
+    --shadow-sm:        0 2px 12px rgba(11, 45, 77, 0.07);
+    --shadow-card:      0 1px 4px rgba(11, 45, 77, 0.08);
+
+    /* ═══════════════════════════════════
+       Layout
+    ═══════════════════════════════════ */
+    --sidebar-width:    272px;
+    --shell-gap:        10px;
+    --radius-xl:        24px;
+    --radius-lg:        16px;
+    --radius:           12px;
+    --radius-sm:        8px;
+
+    /* ═══════════════════════════════════
+       Sidebar Sections Heights
+    ═══════════════════════════════════ */
+    --sidebar-logo-h:    96px;
+    --sidebar-profile-h: 80px;
+
+    /* ═══════════════════════════════════
+       Focus Ring
+    ═══════════════════════════════════ */
+    --focus-ring:       rgba(200, 160, 65, 0.35);
+    --disabled-opacity: 0.5;
+}
+
+/* Sidebar Styles */
+aside {
+    position: relative;
+}
+
+aside nav a {
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+aside nav a:hover {
+    background-color: var(--bg-light);
+    color: var(--primary);
+}
+
+/* قسم الملف الشخصي - زر تسجيل الخروج */
+aside .flex-shrink-0:hover {
+    color: var(--primary);
+}
+
+/* Form Styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="file"],
+textarea,
+select {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="file"]:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Disabled Input Styles */
+input:disabled,
+textarea:disabled,
+select:disabled {
+    background-color: #f3f4f6;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* File Input Styling */
+input[type="file"] {
+    padding: 0.5rem 1rem;
+}
+
+/* Select Dropdown Arrow (RTL) */
+select {
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%239ca3af' viewBox='0 0 24 24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 14l-7 7m0 0l-7-7m7 7V3'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.75rem center;
+    background-size: 1.25rem 1.25rem;
+    appearance: none;
+}
+
+/* Checkbox and Radio Styles */
+input[type="checkbox"],
+input[type="radio"] {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Button Styles */
+button[type="submit"] {
+    transition: all 0.2s ease;
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Message Styles */
+.bg-red-50 {
+    background-color: #fef2f2;
+}
+
+.text-red-800 {
+    color: #991b1b;
+}
+
+.border-red-200 {
+    border-color: #fecaca;
+}
+
+.bg-blue-50 {
+    background-color: #eff6ff;
+}
+
+.text-blue-800 {
+    color: #1e40af;
+}
+
+.border-blue-200 {
+    border-color: #bfdbfe;
+}
+
+.bg-green-50 {
+    background-color: #f0fdf4;
+}
+
+.text-green-800 {
+    color: #166534;
+}
+
+.border-green-200 {
+    border-color: #bbf7d0;
+}
+
+/* Card Styles */
+.bg-white {
+    background-color: #ffffff;
+    transition: box-shadow 0.2s ease;
+}
+
+.shadow {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-lg {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* RTL Adjustments */
+html[dir="rtl"] aside {
+    border-left: 1px solid var(--border);
+    border-right: none;
+}
+
+html[dir="rtl"] main {
+    border-right: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RTL Layout Adjustments — Responsive Sidebar Margin
+   ديناميكي بناءً على عرض الشاشة والقائمة الجانبية
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Desktop: Sidebar sticky — أضف margin ديناميكي لتجنب تداخل المحتوى */
+@media (min-width: 768px) {
+    html[dir="rtl"] main {
+        margin-right: calc(var(--sidebar-width) + var(--shell-gap) * 2);
+        margin-left: 1%;
+    }
+}
+
+/* Mobile: Sidebar fixed/floating — لا نحتاج margin لأن القائمة فوق المحتوى */
+@media (max-width: 767px) {
+    html[dir="rtl"] main {
+        margin-right: 0;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .flex {
+        flex-direction: column;
+    }
+    
+    aside {
+        width: 100%;
+        border-left: none;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    main {
+        width: 100%;
+    }
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Utility Classes */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.transition {
+    transition: all 0.2s ease;
+}
+
+.focus-ring {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+.focus-ring:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}

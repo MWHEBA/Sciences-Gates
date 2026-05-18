@@ -1,0 +1,160 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}إدارة المستخدمين - لوحة التحكم{% endblock %}
+
+{% block page_title %}إدارة المستخدمين{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header with Create Button -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-semibold text-gray-900">المستخدمون</h1>
+        <a href="{% url 'dashboard:user_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+            + إضافة مستخدم جديد
+        </a>
+    </div>
+
+    <!-- Search Form -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="get" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Search Input -->
+                <div>
+                    <label for="search" class="block text-sm font-semibold text-gray-700 mb-2">
+                        البحث
+                    </label>
+                    <input 
+                        type="text" 
+                        id="search" 
+                        name="search" 
+                        value="{{ request.GET.search }}"
+                        placeholder="ابحث عن اسم مستخدم أو بريد إلكتروني..."
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                </div>
+
+                <!-- Role Filter -->
+                <div>
+                    <label for="role" class="block text-sm font-semibold text-gray-700 mb-2">
+                        الدور
+                    </label>
+                    <select 
+                        id="role" 
+                        name="role"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">جميع الأدوار</option>
+                        <option value="super_admin" {% if request.GET.role == 'super_admin' %}selected{% endif %}>مسؤول عام</option>
+                        <option value="content_admin" {% if request.GET.role == 'content_admin' %}selected{% endif %}>مسؤول محتوى</option>
+                        <option value="seo_admin" {% if request.GET.role == 'seo_admin' %}selected{% endif %}>مسؤول SEO</option>
+                    </select>
+                </div>
+
+                <!-- Search Button -->
+                <div class="flex items-end">
+                    <button 
+                        type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+                    >
+                        بحث
+                    </button>
+                </div>
+            </div>
+
+            <!-- Clear Filters Link -->
+            {% if request.GET.search or request.GET.role %}
+            <div class="text-right">
+                <a href="{% url 'dashboard:user_list' %}" class="text-blue-600 hover:text-blue-700 text-sm font-normal">
+                    مسح الفلاتر
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Users Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        {% if users %}
+        <table class="w-full">
+            <thead class="bg-gray-100 border-b border-gray-200">
+                <tr>
+                    <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">اسم المستخدم</th>
+                    <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">البريد الإلكتروني</th>
+                    <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">الاسم الكامل</th>
+                    <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">الدور</th>
+                    <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">تاريخ الإنشاء</th>
+                    <th class="px-6 py-3 text-right text-sm font-semibold text-gray-700">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for user in users %}
+                <tr class="hover:bg-gray-50 transition duration-150">
+                    <td class="px-6 py-4 text-sm text-gray-900">{{ user.username }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ user.email }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        {% if user.first_name or user.last_name %}
+                            {{ user.first_name }} {{ user.last_name }}
+                        {% else %}
+                            <span class="text-gray-400">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold
+                            {% if user.profile.role == 'super_admin' %}
+                                bg-red-100 text-red-800
+                            {% elif user.profile.role == 'content_admin' %}
+                                bg-blue-100 text-blue-800
+                            {% else %}
+                                bg-green-100 text-green-800
+                            {% endif %}
+                        ">
+                            {{ user.profile.get_role_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600">
+                        {{ user.date_joined|date:"d/m/Y" }}
+                    </td>
+                    <td class="px-6 py-4 text-sm space-x-2">
+                        <a href="{% url 'dashboard:user_edit' user.pk %}" class="text-blue-600 hover:text-blue-900 font-normal">
+                            تعديل
+                        </a>
+                        <a href="{% url 'dashboard:user_delete' user.pk %}" class="text-red-600 hover:text-red-900 font-normal">
+                            حذف
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+            <div class="text-sm text-gray-600">
+                الصفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+            </div>
+            <div class="space-x-2">
+                {% if page_obj.has_previous %}
+                <a href="?page=1" class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">الأولى</a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">السابقة</a>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">التالية</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">الأخيرة</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="px-6 py-12 text-center">
+            <p class="text-gray-500 text-lg">لا توجد مستخدمون حالياً</p>
+            <a href="{% url 'dashboard:user_create' %}" class="mt-4 inline-block text-blue-600 hover:text-blue-900 font-normal">
+                إنشاء مستخدم جديد
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

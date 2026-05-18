@@ -1,0 +1,66 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Breadcrumb Navigation -->
+    <nav class="flex items-center gap-2 text-sm text-gray-600" aria-label="Breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+            {% if breadcrumb.url %}
+                <a href="{{ breadcrumb.url }}" class="text-blue-600 hover:text-blue-800">{{ breadcrumb.title }}</a>
+            {% else %}
+                <span class="text-gray-900 font-normal">{{ breadcrumb.title }}</span>
+            {% endif %}
+            {% if not forloop.last %}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            {% endif %}
+        {% endfor %}
+    </nav>
+
+    <!-- Page Header -->
+    <div>
+        <h1 class="text-3xl font-semibold text-gray-900">{{ page_title }}</h1>
+        <p class="mt-1 text-sm text-gray-600">تأكيد حذف الكلية</p>
+    </div>
+
+    <!-- Confirmation Card -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex gap-4">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v2M6.343 3.665c.886-.887 2.318-.887 3.203 0l9.759 9.759c.886.886.886 2.318 0 3.203l-9.759 9.759c-.886.886-2.318.886-3.203 0L3.14 16.168c-.886-.886-.886-2.318 0-3.203L6.343 3.665z"></path>
+                </svg>
+            </div>
+            <div class="flex-1">
+                <h2 class="text-lg font-semibold text-gray-900">هل أنت متأكد من حذف هذه الكلية؟</h2>
+                <p class="mt-2 text-sm text-gray-600">
+                    سيتم حذف الكلية <strong>{{ object.name }}</strong> وجميع البرامج الدراسية المرتبطة بها بشكل نهائي.
+                </p>
+                <p class="mt-2 text-sm text-gray-600">
+                    <strong>عدد البرامج:</strong> {{ object.programs.count }}
+                </p>
+                <p class="mt-4 text-sm text-red-600 font-normal">
+                    ⚠️ هذا الإجراء لا يمكن التراجع عنه.
+                </p>
+            </div>
+        </div>
+
+        <!-- Confirmation Form -->
+        <form method="post" class="mt-6">
+            {% csrf_token %}
+            <div class="flex gap-4 justify-end">
+                <a href="{% url 'dashboard:faculty_list' university.pk %}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    إلغاء
+                </a>
+                <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    تأكيد الحذف
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load image_tags %}
+{% load breadcrumbs %}
+
+{% block title %}{{ institute.name }} - Science Gates{% endblock %}
+{% block meta_description %}{{ institute.meta_description|default:institute.description|truncatewords:30 }}{% endblock %}
+
+{% block og_title %}{{ institute.og_title|default:institute.name }}{% endblock %}
+{% block og_description %}{{ institute.og_description|default:institute.description|truncatewords:30 }}{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+
+{% block extra_css %}
+    {% render_breadcrumb_schema breadcrumbs request %}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <!-- Breadcrumb Navigation -->
+    {% render_breadcrumbs breadcrumbs %}
+    <!-- Hero Section -->
+    <div class="mb-12">
+        <!-- Title -->
+        <h1 class="text-4xl font-semibold text-gray-900 mb-4">{{ institute.name }}</h1>
+    </div>
+
+    <!-- Main Image -->
+    {% if institute.main_image %}
+        <div class="mb-12 rounded-lg overflow-hidden shadow-lg">
+            {% responsive_image institute.main_image.url institute.name "w-full h-96 object-cover" %}
+        </div>
+    {% endif %}
+
+    <!-- Description Section -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">عن المعهد</h2>
+        <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+            {{ institute.description|safe }}
+        </div>
+    </div>
+
+    <!-- Registration Requirements Section -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">شروط التسجيل</h2>
+        <div class="bg-blue-50 border-r-4 border-blue-600 p-6 rounded-lg">
+            <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                {{ institute.registration_requirements|safe }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Courses Section -->
+    {% if courses %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">الدورات والبرامج</h2>
+            <div class="space-y-6">
+                {% for course in courses %}
+                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <!-- Course Header -->
+                        <div class="bg-gradient-to-l from-blue-50 to-blue-100 p-6 border-b border-gray-200">
+                            <h3 class="text-xl font-semibold text-gray-900">{{ course.name }}</h3>
+                        </div>
+
+                        <!-- Course Details -->
+                        <div class="p-6">
+                            <!-- Course Info Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <!-- Duration -->
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-2">مدة الدورة</p>
+                                    <p class="font-semibold text-gray-900">{{ course.duration }}</p>
+                                </div>
+
+                                <!-- Fees -->
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-2">الرسوم</p>
+                                    <p class="font-semibold text-gray-900">{{ course.fees }}</p>
+                                </div>
+
+                                <!-- Placeholder for alignment -->
+                                <div></div>
+                            </div>
+
+                            <!-- Course Description -->
+                            <div class="mb-4">
+                                <p class="text-sm text-gray-600 mb-2">الوصف</p>
+                                <div class="prose prose-sm max-w-none text-gray-700">
+                                    {{ course.description|safe }}
+                                </div>
+                            </div>
+
+                            <!-- Course Notes -->
+                            {% if course.notes %}
+                                <div class="bg-gray-50 border border-gray-200 rounded p-4">
+                                    <p class="text-sm text-gray-600 mb-2">ملاحظات</p>
+                                    <div class="prose prose-sm max-w-none text-gray-700">
+                                        {{ course.notes|safe }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Registration Section -->
+    {% if institute.registration_section %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">خطوات التسجيل</h2>
+            <div class="bg-green-50 border-r-4 border-green-600 p-6 rounded-lg">
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                    {{ institute.registration_section|safe }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Lead Form Section -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">استفسر عن هذا المعهد</h2>
+        <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+            {% include 'components/lead_form.html' with source_page=request.path %}
+        </div>
+    </div>
+
+    <!-- Related Articles Section -->
+    {% include "components/related_articles.html" with articles=institute.related_articles.all %}
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% comment %}
+Registration Steps Section Component
+قسم خطوات التسجيل - مكون قابل لإعادة الاستخدام
+
+This component displays the site-wide registration steps section
+that appears on all university pages.
+
+Usage:
+{% include "components/registration_steps.html" %}
+{% endcomment %}
+
+{% if site_settings and site_settings.registration_steps_content %}
+<section class="py-12 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Section Title -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                {{ site_settings.registration_steps_title }}
+            </h2>
+            <div class="h-1 w-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"></div>
+        </div>
+
+        <!-- Registration Steps Content -->
+        <div class="prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-w-none">
+            {{ site_settings.registration_steps_content|safe }}
+        </div>
+    </div>
+</section>
+{% endif %}

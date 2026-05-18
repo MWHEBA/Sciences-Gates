@@ -1,0 +1,73 @@
+{% extends "dashboard/form_page.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+
+{% block form_sections %}
+<!-- Basic Information Section -->
+<div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">المعلومات الأساسية</h2>
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <!-- Name -->
+        <div>
+            <label for="{{ form.name.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                {{ form.name.label }}
+                <span class="text-red-500">*</span>
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Slug -->
+        <div>
+            <label for="{{ form.slug.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                {{ form.slug.label }}
+                <span class="text-red-500">*</span>
+            </label>
+            {{ form.slug }}
+            {% if form.slug.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.slug.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-1 text-xs text-gray-500">{{ form.slug.help_text }}</p>
+        </div>
+
+        <!-- Study Duration -->
+        <div>
+            <label for="{{ form.study_duration.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                {{ form.study_duration.label }}
+            </label>
+            {{ form.study_duration }}
+            {% if form.study_duration.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.study_duration.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Description -->
+        <div class="md:col-span-2">
+            <label for="{{ form.description.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                {{ form.description.label }}
+            </label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Publishing Section -->
+<div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">النشر</h2>
+    <div>
+        <label class="flex items-center gap-2 cursor-pointer">
+            {{ form.is_published }}
+            <span class="text-sm font-normal text-gray-700">{{ form.is_published.label }}</span>
+        </label>
+        {% if form.is_published.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.is_published.errors.0 }}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

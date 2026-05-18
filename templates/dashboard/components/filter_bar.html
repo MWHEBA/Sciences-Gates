@@ -1,0 +1,104 @@
+{% comment %}
+    مكون شريط التصفية - Filter Bar Component
+    ========================================
+    يوفر عناصر تحكم تصفية متسقة لتضييق نطاق قوائم المحتوى.
+    
+    يتم احتواؤه في بطاقة بيضاء مع حشوة (p-6) وزوايا مستديرة (rounded-lg).
+    ينظم مدخلات التصفية في شبكة سريعة الاستجابة:
+    - 1 عمود على أجهزة العرض أقل من 768px
+    - 2 عمود على أجهزة العرض بين 768px و 1024px
+    - 3 أعمدة على أجهزة العرض أكبر من 1024px
+    
+    يوفر:
+    - مدخل بحث نصي مع نص عنصر نائب (حد أقصى 200 حرف)
+    - قوائم منسدلة للتصفية الفئوية مع خيار فارغ افتراضي
+    - زر إرسال (أساسي) وزر إعادة تعيين (ثانوي)
+    
+    السلوك:
+    - عند الإرسال: الحفاظ على قيم التصفية المحددة في سلسلة استعلام URL
+    - عند إعادة التعيين: مسح جميع القيم والانتقال إلى عنوان URL الأساسي بدون معاملات استعلام
+    
+    المتغيرات المطلوبة:
+        - search_placeholder: نص عنصر نائب لمدخل البحث (مطلوب)
+        - filters: قائمة بتعريفات التصفية (اختياري)
+            كل تصفية: {name, label, options, selected}
+            options: قائمة {value, label}
+        - search_value: قيمة البحث الحالية (اختياري)
+        - base_url: عنوان URL الأساسي لإعادة التعيين (مطلوب)
+    
+    المتطلبات: 8.1-8.9, 11.7, 16.1, 16.2, 16.5, 16.8, 16.9
+{% endcomment %}
+
+<div class="bg-white rounded-lg p-6" style="border: 1px solid var(--border);">
+    <form method="get" class="space-y-4">
+        <!-- شبكة المدخلات سريعة الاستجابة -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- مدخل البحث النصي -->
+            <div>
+                <label for="search" class="block text-sm font-normal mb-2" style="color: var(--text-primary);">
+                    البحث
+                </label>
+                <input
+                    type="text"
+                    id="search"
+                    name="search"
+                    placeholder="{{ search_placeholder }}"
+                    value="{{ search_value|default:'' }}"
+                    maxlength="200"
+                    dir="rtl"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors duration-200"
+                    style="border-color: var(--border); --tw-ring-color: var(--primary);"
+                />
+            </div>
+
+            <!-- قوائم التصفية المنسدلة -->
+            {% for filter in filters %}
+            <div>
+                <label for="filter_{{ filter.name }}" class="block text-sm font-normal mb-2" style="color: var(--text-primary);">
+                    {{ filter.label }}
+                </label>
+                <select
+                    id="filter_{{ filter.name }}"
+                    name="{{ filter.name }}"
+                    dir="rtl"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors duration-200 appearance-none"
+                    style="border-color: var(--border); --tw-ring-color: var(--primary); background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22><path d=%22M19 9l-7 7-7-7%22></path></svg>'); background-repeat: no-repeat; background-position: left 0.5rem center; background-size: 1.5em 1.5em; padding-left: 2.5rem;"
+                >
+                    <!-- خيار فارغ افتراضي -->
+                    <option value="">-- اختر --</option>
+                    
+                    <!-- خيارات التصفية -->
+                    {% for option in filter.options %}
+                    <option value="{{ option.value }}" {% if option.value == filter.selected %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- أزرار الإجراء -->
+        <div class="flex items-center gap-3 pt-4">
+            <!-- زر الإرسال (أساسي) -->
+            <button
+                type="submit"
+                class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white"
+                style="background-color: var(--primary);"
+                onmouseover="this.style.backgroundColor = 'var(--primary-hover)'"
+                onmouseout="this.style.backgroundColor = 'var(--primary)'"
+            >
+                تطبيق التصفية
+            </button>
+
+            <!-- زر إعادة التعيين (ثانوي) -->
+            <a
+                href="{{ base_url }}"
+                class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200"
+            >
+                إعادة تعيين
+            </a>
+        </div>
+    </form>
+</div>
+

@@ -1,0 +1,307 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block page_description %}عرض تفاصيل الرسالة والمعلومات المرتبطة بها{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'dashboard:lead_list' %}"
+   style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+          background-color: var(--surface-2); color: var(--text-secondary);
+          border: 1px solid var(--border); border-radius: var(--radius-lg);
+          text-decoration: none; font-size: 13px; font-weight: 600;
+          transition: background-color 0.2s; cursor: pointer;"
+   onmouseover="this.style.backgroundColor='var(--border)'"
+   onmouseout="this.style.backgroundColor='var(--surface-2)'">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+    </svg>
+    العودة
+</a>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--shell-gap);">
+
+    <!-- Two-Column Layout: 2/3 + 1/3 -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--shell-gap);">
+
+        <!-- Main Column (2/3) -->
+        <div style="display: flex; flex-direction: column; gap: var(--shell-gap);">
+
+            <!-- Basic Information Card -->
+            <div style="background-color: var(--surface); border: 1px solid var(--border);
+                        border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+                        padding: 20px;">
+                <h2 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 16px 0;">
+                    المعلومات الأساسية
+                </h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <!-- Name -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            الاسم
+                        </p>
+                        <p style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0;">
+                            {{ lead.name }}
+                        </p>
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            البريد الإلكتروني
+                        </p>
+                        <a href="mailto:{{ lead.email }}"
+                           style="font-size: 13px; color: var(--primary); text-decoration: none; cursor: pointer;"
+                           onmouseover="this.style.textDecoration='underline'"
+                           onmouseout="this.style.textDecoration='none'">
+                            {{ lead.email }}
+                        </a>
+                    </div>
+
+                    <!-- Phone -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            رقم الهاتف
+                        </p>
+                        <a href="tel:{{ lead.phone }}"
+                           style="font-size: 13px; color: var(--primary); text-decoration: none; cursor: pointer;"
+                           onmouseover="this.style.textDecoration='underline'"
+                           onmouseout="this.style.textDecoration='none'">
+                            {{ lead.phone|default:"-" }}
+                        </a>
+                    </div>
+
+                    <!-- Type -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            نوع الرسالة
+                        </p>
+                        {% if lead.lead_type == 'registration' %}
+                        <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                   border-radius: 999px; font-size: 11px; font-weight: 600;
+                                   background-color: var(--success-light); color: var(--success);">
+                            طلب تسجيل
+                        </span>
+                        {% else %}
+                        <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                   border-radius: 999px; font-size: 11px; font-weight: 600;
+                                   background-color: var(--info-light); color: var(--info);">
+                            استفسار
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Date -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            تاريخ الإرسال
+                        </p>
+                        <p style="font-size: 13px; color: var(--text-primary); margin: 0;">
+                            {{ lead.created_at|date:"d/m/Y H:i" }}
+                        </p>
+                    </div>
+
+                    <!-- Read Status -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            حالة القراءة
+                        </p>
+                        {% if lead.is_read %}
+                        <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                   border-radius: 999px; font-size: 11px; font-weight: 600;
+                                   background-color: var(--surface-2); color: var(--text-muted);">
+                            مقروءة
+                        </span>
+                        {% else %}
+                        <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                   border-radius: 999px; font-size: 11px; font-weight: 600;
+                                   background-color: var(--warning-light); color: var(--warning);">
+                            جديدة
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Card -->
+            <div style="background-color: var(--surface); border: 1px solid var(--border);
+                        border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+                        padding: 20px;">
+                <h2 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 16px 0;">
+                    الرسالة
+                </h2>
+                <div style="background-color: var(--bg-light); border: 1px solid var(--border);
+                           border-radius: var(--radius); padding: 16px; font-size: 13px;
+                           color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
+                    {{ lead.message }}
+                </div>
+            </div>
+
+            <!-- Tracking Information Card -->
+            <div style="background-color: var(--surface); border: 1px solid var(--border);
+                        border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+                        padding: 20px;">
+                <h2 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 16px 0;">
+                    معلومات التتبع
+                </h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <!-- Source Page -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            صفحة المصدر
+                        </p>
+                        {% if lead.source_page %}
+                        <a href="{{ lead.source_page }}" target="_blank"
+                           style="font-size: 12px; color: var(--primary); text-decoration: none; cursor: pointer;
+                                  word-break: break-all;"
+                           onmouseover="this.style.textDecoration='underline'"
+                           onmouseout="this.style.textDecoration='none'">
+                            {{ lead.source_page|truncatechars:40 }}
+                        </a>
+                        {% else %}
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">-</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Referrer -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            المرجع (Referrer)
+                        </p>
+                        {% if lead.referrer %}
+                        <a href="{{ lead.referrer }}" target="_blank"
+                           style="font-size: 12px; color: var(--primary); text-decoration: none; cursor: pointer;
+                                  word-break: break-all;"
+                           onmouseover="this.style.textDecoration='underline'"
+                           onmouseout="this.style.textDecoration='none'">
+                            {{ lead.referrer|truncatechars:40 }}
+                        </a>
+                        {% else %}
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">-</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- UTM Source -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            UTM Source
+                        </p>
+                        <p style="font-size: 12px; color: var(--text-primary); margin: 0;">
+                            {{ lead.utm_source|default:"-" }}
+                        </p>
+                    </div>
+
+                    <!-- UTM Medium -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            UTM Medium
+                        </p>
+                        <p style="font-size: 12px; color: var(--text-primary); margin: 0;">
+                            {{ lead.utm_medium|default:"-" }}
+                        </p>
+                    </div>
+
+                    <!-- UTM Campaign -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            UTM Campaign
+                        </p>
+                        <p style="font-size: 12px; color: var(--text-primary); margin: 0;">
+                            {{ lead.utm_campaign|default:"-" }}
+                        </p>
+                    </div>
+
+                    <!-- UTM Term -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            UTM Term
+                        </p>
+                        <p style="font-size: 12px; color: var(--text-primary); margin: 0;">
+                            {{ lead.utm_term|default:"-" }}
+                        </p>
+                    </div>
+
+                    <!-- UTM Content -->
+                    <div>
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            UTM Content
+                        </p>
+                        <p style="font-size: 12px; color: var(--text-primary); margin: 0;">
+                            {{ lead.utm_content|default:"-" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sidebar Column (1/3) -->
+        <div style="display: flex; flex-direction: column; gap: var(--shell-gap);">
+
+            <!-- Notes Card -->
+            <div style="background-color: var(--surface); border: 1px solid var(--border);
+                        border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+                        padding: 20px;">
+                <h2 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 16px 0;">
+                    الملاحظات
+                </h2>
+                
+                <form method="post" style="display: flex; flex-direction: column; gap: 12px;">
+                    {% csrf_token %}
+                    
+                    <textarea 
+                        name="notes" 
+                        rows="6"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+                               border-radius: var(--radius); font-size: 12px; color: var(--text-primary);
+                               background-color: var(--surface); font-family: inherit; resize: vertical;"
+                        dir="rtl"
+                        placeholder="أضف ملاحظاتك هنا..."
+                        onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
+                        onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'"
+                    >{{ lead.notes }}</textarea>
+
+                    <button 
+                        type="submit" 
+                        style="padding: 10px 16px; background-color: var(--primary); color: #ffffff;
+                               border: none; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+                               cursor: pointer; transition: background-color 0.2s;"
+                        onmouseover="this.style.backgroundColor='var(--primary-hover)'"
+                        onmouseout="this.style.backgroundColor='var(--primary)'"
+                    >
+                        حفظ الملاحظات
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quick Info Card -->
+            <div style="background-color: var(--primary-light); border: 1px solid var(--primary);
+                        border-radius: var(--radius-lg); padding: 16px;">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <svg class="w-5 h-5" style="color: var(--primary); flex-shrink: 0; margin-top: 2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                        <p style="font-size: 12px; font-weight: 600; color: var(--primary); margin: 0 0 4px 0;">
+                            معلومة سريعة
+                        </p>
+                        <p style="font-size: 11px; color: var(--primary); margin: 0; line-height: 1.5;">
+                            هذه الرسالة تم استقبالها في {{ lead.created_at|date:"d/m/Y" }} الساعة {{ lead.created_at|date:"H:i" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

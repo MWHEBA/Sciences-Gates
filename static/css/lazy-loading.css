@@ -1,0 +1,88 @@
+/**
+ * Lazy Loading Styles
+ * Provides styling for lazy-loaded images and placeholders
+ */
+
+/* Lazy loading placeholder animation */
+.lazy-placeholder {
+    background: linear-gradient(
+        90deg,
+        #f0f0f0 0%,
+        #e0e0e0 50%,
+        #f0f0f0 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Lazy loaded image transition */
+img[loading="lazy"].lazy-loaded {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Error state for failed image loads */
+img[loading="lazy"].lazy-error {
+    opacity: 0.5;
+    border: 1px solid #e5e7eb;
+}
+
+/* Picture element with lazy loading */
+picture img[loading="lazy"] {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Ensure proper aspect ratio for lazy-loaded images */
+img[loading="lazy"][data-aspect-ratio] {
+    aspect-ratio: var(--aspect-ratio);
+}
+
+/* Responsive image container */
+.lazy-image-container {
+    position: relative;
+    overflow: hidden;
+    background-color: #f3f4f6;
+}
+
+.lazy-image-container img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Placeholder for images in cards */
+.card img[loading="lazy"] {
+    background-color: #f3f4f6;
+}
+
+/* Ensure images don't cause layout shift */
+img[loading="lazy"] {
+    display: block;
+}
+
+/* Optimize for mobile */
+@media (max-width: 768px) {
+    .lazy-placeholder {
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+}

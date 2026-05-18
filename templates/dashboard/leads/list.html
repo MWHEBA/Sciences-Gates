@@ -1,0 +1,287 @@
+{% extends "dashboard/list_page.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block page_description %}إدارة جميع الرسائل والاستفسارات الواردة — {{ unread_count }} غير مقروءة{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'dashboard:lead_export' %}{{ export_url }}" 
+   class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white"
+   style="background-color: var(--primary);">
+    تصدير إلى CSV
+</a>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: var(--shell-gap);">
+    
+    <!-- Filter Bar -->
+    <div style="background-color: var(--surface); border: 1px solid var(--border);
+                border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-card);">
+        <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            
+            <!-- Search -->
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                    البحث
+                </label>
+                <input type="text" name="search" value="{{ search_query }}" placeholder="اسم، بريد، أو هاتف..."
+                       style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+                              border-radius: var(--radius); font-size: 13px;
+                              background-color: var(--surface); color: var(--text-primary);"
+                       onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
+                       onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+            </div>
+
+            <!-- Lead Type Filter -->
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                    نوع الرسالة
+                </label>
+                <select name="lead_type" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+                                               border-radius: var(--radius); font-size: 13px;
+                                               background-color: var(--surface); color: var(--text-primary);"
+                        onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
+                        onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                    <option value="">كل الأنواع</option>
+                    <option value="registration" {% if lead_type_filter == 'registration' %}selected{% endif %}>طلبات التسجيل</option>
+                    <option value="contact" {% if lead_type_filter == 'contact' %}selected{% endif %}>الاستفسارات</option>
+                </select>
+            </div>
+
+            <!-- Read Status Filter -->
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                    حالة القراءة
+                </label>
+                <select name="is_read" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+                                             border-radius: var(--radius); font-size: 13px;
+                                             background-color: var(--surface); color: var(--text-primary);"
+                        onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
+                        onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                    <option value="">كل الحالات</option>
+                    <option value="0" {% if request.GET.is_read == '0' %}selected{% endif %}>غير مقروءة</option>
+                    <option value="1" {% if request.GET.is_read == '1' %}selected{% endif %}>مقروءة</option>
+                </select>
+            </div>
+
+            <!-- From Date -->
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                    من التاريخ
+                </label>
+                <input type="date" name="from_date" value="{{ from_date }}"
+                       style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+                              border-radius: var(--radius); font-size: 13px;
+                              background-color: var(--surface); color: var(--text-primary);"
+                       onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
+                       onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+            </div>
+
+            <!-- To Date -->
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                    إلى التاريخ
+                </label>
+                <input type="date" name="to_date" value="{{ to_date }}"
+                       style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+                              border-radius: var(--radius); font-size: 13px;
+                              background-color: var(--surface); color: var(--text-primary);"
+                       onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
+                       onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+            </div>
+
+            <!-- Buttons -->
+            <div style="display: flex; gap: 8px; align-items: flex-end;">
+                <button type="submit" style="flex: 1; padding: 8px 12px; background-color: var(--primary);
+                                            color: #ffffff; border: none; border-radius: var(--radius);
+                                            font-size: 13px; font-weight: 600; cursor: pointer;
+                                            transition: background-color 0.2s;"
+                        onmouseover="this.style.backgroundColor='var(--primary-hover)'"
+                        onmouseout="this.style.backgroundColor='var(--primary)'">
+                    بحث
+                </button>
+                <a href="{% url 'dashboard:lead_list' %}" style="flex: 1; padding: 8px 12px; background-color: var(--surface-2);
+                                                                 color: var(--text-secondary); border: 1px solid var(--border);
+                                                                 border-radius: var(--radius); font-size: 13px; font-weight: 600;
+                                                                 cursor: pointer; text-align: center; text-decoration: none;
+                                                                 transition: background-color 0.2s;"
+                   onmouseover="this.style.backgroundColor='var(--border)'"
+                   onmouseout="this.style.backgroundColor='var(--surface-2)'">
+                    إعادة تعيين
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Leads Table -->
+    {% if leads %}
+    <div style="background-color: var(--surface); border: 1px solid var(--border);
+                border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+                overflow: hidden;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                        <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                   color: var(--text-muted); text-transform: uppercase;">الاسم</th>
+                        <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                   color: var(--text-muted); text-transform: uppercase;">البريد</th>
+                        <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                   color: var(--text-muted); text-transform: uppercase;">الهاتف</th>
+                        <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                   color: var(--text-muted); text-transform: uppercase;">النوع</th>
+                        <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                   color: var(--text-muted); text-transform: uppercase;">المصدر</th>
+                        <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                   color: var(--text-muted); text-transform: uppercase;">التاريخ</th>
+                        <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                   color: var(--text-muted); text-transform: uppercase;">الحالة</th>
+                        <th style="padding: 12px 16px; text-align: center; font-size: 11px; font-weight: 600;
+                                   color: var(--text-muted); text-transform: uppercase;">الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lead in leads %}
+                    <tr style="border-bottom: 1px solid var(--border); transition: background-color 0.2s;"
+                        onmouseover="this.style.backgroundColor='var(--bg-light)'"
+                        onmouseout="this.style.backgroundColor='transparent'">
+                        <td style="padding: 12px 16px; font-size: 13px; color: var(--text-primary); font-weight: 600;">
+                            {{ lead.name }}
+                        </td>
+                        <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
+                            {{ lead.email|truncatechars:25 }}
+                        </td>
+                        <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
+                            {{ lead.phone|default:"-" }}
+                        </td>
+                        <td style="padding: 12px 16px; font-size: 11px;">
+                            {% if lead.lead_type == 'registration' %}
+                            <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                       border-radius: 999px; font-weight: 600;
+                                       background-color: var(--success-light); color: var(--success);">
+                                تسجيل
+                            </span>
+                            {% else %}
+                            <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                       border-radius: 999px; font-weight: 600;
+                                       background-color: var(--info-light); color: var(--info);">
+                                استفسار
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px 16px; font-size: 11px; color: var(--text-muted);">
+                            {{ lead.source_page|truncatechars:20|default:"-" }}
+                        </td>
+                        <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
+                            {{ lead.created_at|date:"d/m/Y H:i" }}
+                        </td>
+                        <td style="padding: 12px 16px; font-size: 11px;">
+                            {% if lead.is_read %}
+                            <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                       border-radius: 999px; font-weight: 600;
+                                       background-color: var(--surface-2); color: var(--text-muted);">
+                                مقروءة
+                            </span>
+                            {% else %}
+                            <span style="display: inline-flex; align-items: center; padding: 3px 10px;
+                                       border-radius: 999px; font-weight: 600;
+                                       background-color: var(--warning-light); color: var(--warning);">
+                                جديدة
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px 16px; text-align: center;">
+                            <a href="{% url 'dashboard:lead_detail' lead.pk %}"
+                               style="display: inline-flex; align-items: center; justify-content: center;
+                                      width: 32px; height: 32px; border-radius: var(--radius);
+                                      background-color: var(--primary-light); color: var(--primary);
+                                      text-decoration: none; transition: background-color 0.2s; cursor: pointer;"
+                               onmouseover="this.style.backgroundColor='var(--primary-muted)'"
+                               onmouseout="this.style.backgroundColor='var(--primary-light)'"
+                               title="عرض التفاصيل">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px;">
+        {% if page_obj.has_previous %}
+        <a href="?page=1{{ query_params }}" style="padding: 8px 12px; border-radius: var(--radius);
+                                                   background-color: var(--surface-2); color: var(--text-secondary);
+                                                   text-decoration: none; font-size: 12px; font-weight: 600;
+                                                   transition: background-color 0.2s; cursor: pointer;"
+           onmouseover="this.style.backgroundColor='var(--border)'"
+           onmouseout="this.style.backgroundColor='var(--surface-2)'">
+            الأولى
+        </a>
+        <a href="?page={{ page_obj.previous_page_number }}{{ query_params }}" style="padding: 8px 12px; border-radius: var(--radius);
+                                                                                    background-color: var(--surface-2); color: var(--text-secondary);
+                                                                                    text-decoration: none; font-size: 12px; font-weight: 600;
+                                                                                    transition: background-color 0.2s; cursor: pointer;"
+           onmouseover="this.style.backgroundColor='var(--border)'"
+           onmouseout="this.style.backgroundColor='var(--surface-2)'">
+            السابقة
+        </a>
+        {% endif %}
+
+        <span style="padding: 8px 12px; font-size: 12px; color: var(--text-muted);">
+            الصفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{{ query_params }}" style="padding: 8px 12px; border-radius: var(--radius);
+                                                                               background-color: var(--surface-2); color: var(--text-secondary);
+                                                                               text-decoration: none; font-size: 12px; font-weight: 600;
+                                                                               transition: background-color 0.2s; cursor: pointer;"
+           onmouseover="this.style.backgroundColor='var(--border)'"
+           onmouseout="this.style.backgroundColor='var(--surface-2)'">
+            التالية
+        </a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{{ query_params }}" style="padding: 8px 12px; border-radius: var(--radius);
+                                                                                   background-color: var(--surface-2); color: var(--text-secondary);
+                                                                                   text-decoration: none; font-size: 12px; font-weight: 600;
+                                                                                   transition: background-color 0.2s; cursor: pointer;"
+           onmouseover="this.style.backgroundColor='var(--border)'"
+           onmouseout="this.style.backgroundColor='var(--surface-2)'">
+            الأخيرة
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div style="background-color: var(--surface); border: 1px solid var(--border);
+                border-radius: var(--radius-lg); padding: 48px 20px; text-align: center;">
+        <svg class="w-12 h-12" style="margin: 0 auto 16px; color: var(--text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+        </svg>
+        <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px 0;">
+            لا توجد رسائل
+        </h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+            {% if search_query or from_date or to_date or lead_type_filter %}
+                حاول تغيير معايير البحث أو التصفية
+            {% else %}
+                لم تصل أي رسائل حتى الآن
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

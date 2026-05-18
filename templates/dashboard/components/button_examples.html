@@ -1,0 +1,153 @@
+{% comment %}
+    Button Component Examples
+    =========================
+    
+    This file demonstrates all button variants and usage patterns
+    for the Science Gates Dashboard Design System.
+    
+    Reference: DESIGN_SYSTEM.md
+    
+    Button Base Classes:
+    px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer
+    
+    Variants:
+    - Primary:   bg-primary text-white hover:bg-primary-hover
+    - Secondary: bg-gray-100 text-gray-800 hover:bg-gray-200
+    - Danger:    bg-danger text-white hover:bg-danger-hover
+    - Ghost:     bg-transparent text-primary hover:bg-gray-100
+    - Disabled:  opacity-50 pointer-events-none
+{% endcomment %}
+
+<!-- Primary Button (Link) -->
+<a href="#"
+   class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-primary text-white hover:bg-primary-hover"
+   style="background-color: var(--primary);">
+    إضافة جديد
+</a>
+
+<!-- Primary Button (Form Submit) -->
+<button type="submit"
+        class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-primary text-white hover:bg-primary-hover"
+        style="background-color: var(--primary);">
+    حفظ
+</button>
+
+<!-- Secondary Button (Link) -->
+<a href="#"
+   class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200">
+    إلغاء
+</a>
+
+<!-- Secondary Button (Form Submit) -->
+<button type="submit"
+        class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200">
+    إعادة تعيين
+</button>
+
+<!-- Danger Button (Link) -->
+<a href="#"
+   class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-danger text-white hover:bg-danger-hover"
+   style="background-color: var(--danger);">
+    حذف
+</a>
+
+<!-- Danger Button (Form Submit) -->
+<button type="submit"
+        class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-danger text-white hover:bg-danger-hover"
+        style="background-color: var(--danger);">
+    حذف نهائياً
+</button>
+
+<!-- Ghost Button (Link) -->
+<a href="#"
+   class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-transparent text-primary hover:bg-gray-100"
+   style="color: var(--primary);">
+    عرض المزيد
+</a>
+
+<!-- Ghost Button (Form Submit) -->
+<button type="submit"
+        class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-transparent text-primary hover:bg-gray-100"
+        style="color: var(--primary);">
+    خيار إضافي
+</button>
+
+<!-- Disabled Primary Button -->
+<button type="submit"
+        class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-primary text-white hover:bg-primary-hover opacity-50 pointer-events-none"
+        style="background-color: var(--primary);"
+        disabled>
+    جاري المعالجة...
+</button>
+
+<!-- Disabled Secondary Button -->
+<button type="submit"
+        class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200 opacity-50 pointer-events-none"
+        disabled>
+    غير متاح
+</button>
+
+<!-- Button with Icon (Primary) -->
+<button type="submit"
+        class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-primary text-white hover:bg-primary-hover flex items-center gap-2"
+        style="background-color: var(--primary);">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+    </svg>
+    <span>إضافة جديد</span>
+</button>
+
+<!-- Icon-Only Button (Ghost) -->
+<button class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-transparent text-primary hover:bg-gray-100"
+        style="color: var(--primary);"
+        aria-label="تحرير">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+    </svg>
+</button>
+
+<!-- Button Group -->
+<div class="flex items-center gap-2">
+    <!-- Primary action -->
+    <button type="submit"
+            class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-primary text-white hover:bg-primary-hover"
+            style="background-color: var(--primary);">
+        حفظ
+    </button>
+    
+    <!-- Secondary action -->
+    <button type="button"
+            class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200">
+        إلغاء
+    </button>
+</div>
+
+<!-- Form with Buttons -->
+<form method="post" class="space-y-6">
+    {% csrf_token %}
+    
+    <div class="space-y-4">
+        <div>
+            <label class="block text-sm font-normal mb-2" style="color: var(--text-primary);">
+                العنوان
+            </label>
+            <input type="text"
+                   name="title"
+                   class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary transition-colors duration-200"
+                   style="border-color: var(--border); --tw-ring-color: var(--focus-ring);">
+        </div>
+    </div>
+    
+    <div class="flex items-center gap-2">
+        <button type="submit"
+                class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-primary text-white hover:bg-primary-hover"
+                style="background-color: var(--primary);">
+            حفظ
+        </button>
+        <a href="#"
+           class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200">
+            إلغاء
+        </a>
+    </div>
+</form>
+

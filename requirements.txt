@@ -1,0 +1,84 @@
+# ============================================================================
+# CORE DEPENDENCIES
+# ============================================================================
+# Django Framework (LTS version)
+Django==4.2.11
+
+# Database Driver for MySQL/MariaDB
+mysqlclient==2.2.0
+
+# Environment Configuration Management
+python-decouple==3.8
+
+# ============================================================================
+# IMAGE PROCESSING AND OPTIMIZATION
+# ============================================================================
+# Image processing library for image optimization and WebP conversion
+Pillow==10.2.0
+
+# ============================================================================
+# SECURITY AND CONTENT SANITIZATION
+# ============================================================================
+# HTML sanitization for Custom HTML Editor (prevents XSS attacks)
+bleach==6.1.0
+
+# ============================================================================
+# FORM HANDLING AND VALIDATION
+# ============================================================================
+# Django form styling with Tailwind CSS
+django-crispy-forms==2.1
+crispy-tailwind==0.5.1
+
+# ============================================================================
+# CACHING AND PERFORMANCE
+# ============================================================================
+# Query result caching for performance optimization
+django-cachalot==2.6.1
+
+# ============================================================================
+# SEO AND SITEMAP GENERATION
+# ============================================================================
+# Sitemap generation for SEO
+django-sitemap==2.2.0
+
+# ============================================================================
+# EMAIL AND NOTIFICATIONS
+# ============================================================================
+# Email backend for lead notifications
+django-anymail==10.2
+
+# ============================================================================
+# SECURITY AND CORS
+# ============================================================================
+# CORS headers for API security
+django-cors-headers==4.3.1
+
+# ============================================================================
+# UTILITIES
+# ============================================================================
+# Date/time utilities
+python-dateutil==2.8.2
+
+# HTTP requests library
+requests==2.31.0
+
+# ============================================================================
+# PRODUCTION SERVER
+# ============================================================================
+# WSGI HTTP Server (for local testing, cPanel uses Passenger)
+gunicorn==21.2.0
+
+# ============================================================================
+# DEVELOPMENT AND TESTING
+# ============================================================================
+# Testing framework (faster than Django TestCase)
+pytest==7.4.3
+pytest-django==4.7.0
+pytest-cov==4.1.0
+
+# Factory for creating test fixtures
+factory-boy==3.3.0
+
+# Optional development tools
+# django-debug-toolbar==4.2.0
+# django-extensions==3.2.3

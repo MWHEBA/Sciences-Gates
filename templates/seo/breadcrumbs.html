@@ -1,0 +1,36 @@
+{% comment %}
+Breadcrumb navigation component template.
+
+Renders breadcrumb navigation with RTL support and Tailwind CSS styling.
+Includes proper semantic HTML with navigation landmarks.
+
+Validates: Requirements 10, 1 (RTL support), 19 (Mobile responsiveness)
+{% endcomment %}
+
+{% if breadcrumbs %}
+<nav aria-label="breadcrumb" class="mb-6">
+    <ol class="flex flex-wrap items-center gap-2 text-sm md:text-base">
+        {% for breadcrumb in breadcrumbs %}
+            <li class="flex items-center gap-2">
+                {% if breadcrumb.url %}
+                    <a 
+                        href="{{ breadcrumb.url }}" 
+                        class="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                        title="{{ breadcrumb.name }}"
+                    >
+                        {{ breadcrumb.name }}
+                    </a>
+                {% else %}
+                    <span class="text-gray-700 font-semibold" aria-current="page">
+                        {{ breadcrumb.name }}
+                    </span>
+                {% endif %}
+                
+                {% if not forloop.last %}
+                    <span class="text-gray-400 mx-1" aria-hidden="true">/</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+</nav>
+{% endif %}

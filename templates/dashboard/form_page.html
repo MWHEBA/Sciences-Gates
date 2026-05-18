@@ -1,0 +1,51 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Form Container -->
+    <form method="post" enctype="multipart/form-data" class="space-y-6" id="main-form">
+        {% csrf_token %}
+
+        <!-- Non-field Errors -->
+        {% if form.non_field_errors %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+            {% for error in form.non_field_errors %}
+            <p class="text-sm">{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Form Sections Block -->
+        {% block form_sections %}{% endblock %}
+
+        <!-- Sticky Submit Area -->
+        <div class="sticky bottom-0 bg-white border-t pt-4 pb-4 -mx-8 px-8" style="border-color: var(--border);">
+            <div class="flex gap-4 justify-end">
+                {% block form_actions %}
+                <a href="{{ cancel_url }}" class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200">
+                    إلغاء
+                </a>
+                <button type="submit" class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'">
+                    {{ submit_button_text|default:"حفظ" }}
+                </button>
+                {% endblock %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Script to scroll to first error on page load -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Find first field with error
+    const errorFields = document.querySelectorAll('[aria-invalid="true"]');
+    if (errorFields.length > 0) {
+        errorFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        errorFields[0].focus();
+    }
+});
+</script>
+{% endblock %}

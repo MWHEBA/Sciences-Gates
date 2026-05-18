@@ -1,0 +1,67 @@
+{% comment %}
+    الشريط العلوي - Topbar Component
+    =================================
+    يعرض عنوان الصفحة والوصف وأزرار الإجراءات.
+    
+    يمتد على كامل عرض منطقة المحتوى الرئيسي ويعرض:
+    - عنوان الصفحة (text-2xl font-semibold) على الجانب الأيمن (RTL)
+    - وصف اختياري (text-sm text-muted، سطر واحد)
+    - حتى 3 أزرار إجراء على الجانب الأيسر (RTL)
+    - خلفية بيضاء مع حدود سفلية
+    - يتم تكديس العنوان والأزرار عموديًا مع gap-3 أقل من 768px
+    - زر قائمة الهامبرجر للموبايل (مرئي فقط أقل من 768px)
+
+    المتغيرات المطلوبة:
+        - page_title: عنوان الصفحة (مطلوب)
+    
+    المتغيرات الاختيارية:
+        - page_description: وصف مختصر للصفحة (سطر واحد)
+        - action_buttons: قائمة أزرار الإجراءات (حد أقصى 3)
+            كل زر: {url, label, variant}
+            variant: "primary" | "secondary" | "danger" | "ghost"
+    
+    المتطلبات: 4.1-4.9, 11.9, 19.1
+{% endcomment %}
+
+<header class="bg-white border-b flex-shrink-0" style="border-color: var(--border);">
+    <div class="px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <!-- عنوان الصفحة ووصفها على الجانب الأيمن (RTL) -->
+        <div class="flex items-center gap-4">
+            <!-- زر فتح القائمة الجانبية في الموبايل -->
+            <button
+                @click="sidebarOpen = true"
+                class="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
+                aria-label="فتح القائمة الجانبية"
+            >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+
+            <!-- عنوان الصفحة ووصفها -->
+            <div>
+                <h1 class="text-2xl font-semibold" style="color: var(--text-primary);">{{ page_title }}</h1>
+                {% if page_description %}
+                <p class="text-sm truncate" style="color: var(--text-muted);">{{ page_description }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- أزرار الإجراءات على الجانب الأيسر (RTL) - حد أقصى 3 أزرار -->
+        {% if action_buttons %}
+        <div class="flex items-center gap-2">
+            {% for button in action_buttons|slice:":3" %}
+            <a href="{{ button.url }}"
+               class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer
+                      {% if button.variant == 'primary' %}bg-primary text-white hover:bg-primary-hover
+                      {% elif button.variant == 'danger' %}bg-danger text-white hover:bg-danger-hover
+                      {% elif button.variant == 'ghost' %}bg-transparent text-primary hover:bg-gray-100
+                      {% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}"
+               style="{% if button.variant == 'primary' %}background-color: var(--primary);{% elif button.variant == 'danger' %}background-color: var(--danger);{% endif %}">
+                {{ button.label }}
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</header>

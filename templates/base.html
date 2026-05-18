@@ -1,0 +1,130 @@
+{% load static %}{% load seo_tags %}{% load breadcrumbs %}<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- RTL Meta Tags -->
+    <meta name="language" content="Arabic">
+    <meta name="text_direction" content="rtl">
+    
+    <!-- SEO Meta Tags -->
+    <title>{% block title %}Science Gates - Study in Malaysia{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}ماليزيا، جامعات، دراسة{% endblock %}">
+    <meta name="author" content="Science Gates">
+    <meta name="theme-color" content="#1f2937">
+    
+    <!-- Robots Meta -->
+    <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+    <meta name="googlebot" content="{% block googlebot %}index, follow{% endblock %}">
+    
+    <!-- Open Graph Tags for Social Media Sharing -->
+    <meta property="og:title" content="{% block og_title %}Science Gates - Study in Malaysia{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    <meta property="og:site_name" content="Science Gates">
+    <meta property="og:locale" content="ar_SA">
+    {% block og_image %}<meta property="og:image" content="{% static 'images/og-default.jpg' %}">{% endblock %}
+    
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="{% block twitter_card %}summary_large_image{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}Science Gates - Study in Malaysia{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
+    {% block twitter_image %}<meta name="twitter:image" content="{% static 'images/og-default.jpg' %}">{% endblock %}
+    
+    <!-- Canonical URL -->
+    {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+    
+    <!-- Alternate Links for Multilingual Support (Future) -->
+    <link rel="alternate" hreflang="ar" href="{{ request.build_absolute_uri }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
+
+    <!-- Google Fonts — Alexandria -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS with RTL Support -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/lazy-loading.css' %}">
+    
+    <!-- JSON-LD Schema Markup -->
+    {% block schema_markup %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Science Gates",
+        "url": "{{ request.scheme }}://{{ request.get_host }}/",
+        "description": "Educational content platform for Malaysian universities and institutes",
+        "inLanguage": "ar",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "Customer Service",
+            "availableLanguage": ["ar", "en"]
+        }
+    }
+    </script>
+    {% endblock %}
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Skip to Main Content Link (Accessibility) -->
+    <a href="#main-content" class="sr-only focus:not-sr-only">اذهب إلى المحتوى الرئيسي</a>
+    
+    <!-- Header -->
+    <header role="banner">
+        {% block header %}
+        {% include 'components/header.html' %}
+        {% endblock %}
+    </header>
+    
+    <!-- Main Content -->
+    <main id="main-content" role="main">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer role="contentinfo">
+        {% block footer %}
+        {% include 'components/footer.html' %}
+        {% endblock %}
+    </footer>
+    
+    <!-- Alpine.js for Interactive Components -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    
+    <!-- Google Analytics Placeholder -->
+    <!-- Replace GA_MEASUREMENT_ID with your actual Google Analytics measurement ID -->
+    {% block analytics %}
+    <!-- Google Analytics will be configured here -->
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID');
+    </script> -->
+    {% endblock %}
+    
+    <!-- Global Scripts -->
+    {% if DEBUG %}
+        <!-- Development: Use unminified files for debugging -->
+        <script src="{% static 'js/main.js' %}"></script>
+        <script src="{% static 'js/lazy-loading.js' %}"></script>
+    {% else %}
+        <!-- Production: Use minified files for performance -->
+        <script src="{% static 'js/main.min.js' %}"></script>
+        <script src="{% static 'js/lazy-loading.min.js' %}"></script>
+    {% endif %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

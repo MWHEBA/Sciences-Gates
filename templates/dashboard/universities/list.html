@@ -1,0 +1,14 @@
+{% extends "dashboard/list_page.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block page_description %}إدارة جميع الجامعات والكليات والبرامج{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'dashboard:university_create' %}" class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white" style="background-color: var(--primary);">
+    إضافة جامعة جديدة
+</a>
+{% endblock %}

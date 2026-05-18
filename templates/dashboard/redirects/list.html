@@ -1,0 +1,13 @@
+{% extends 'dashboard/list_page.html' %}
+
+{% block title %}إدارة إعادات التوجيه - Science Gates{% endblock %}
+
+{% block page_title %}إدارة إعادات التوجيه{% endblock %}
+
+{% block page_description %}إدارة جميع إعادات التوجيه 301 للموقع{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'dashboard:redirect_create' %}" class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white" style="background-color: var(--primary);">
+    إضافة إعادة توجيه جديدة
+</a>
+{% endblock %}

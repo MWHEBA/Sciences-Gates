@@ -1,0 +1,48 @@
+<!-- Empty State Component - حالة فارغة -->
+<!-- 
+    Context variables:
+    - icon_svg: string (optional) - SVG path for illustration
+    - heading: string (required) - Empty state title (Arabic)
+    - description: string (required) - Suggested action text (max 120 chars, Arabic)
+    - action_url: string (optional) - CTA button URL
+    - action_label: string (optional) - CTA button text (Arabic)
+
+    Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7
+    - Centered horizontally with py-16 vertical padding
+    - SVG icon in gray-400 at w-16 h-16
+    - Heading in text-lg font-semibold text-gray-900 (Arabic)
+    - Description in text-sm text-gray-500 (max 120 chars, Arabic)
+    - Optional primary action button below description
+    - space-y-4 between elements
+-->
+
+<div class="flex flex-col items-center justify-center py-16 px-4">
+    <!-- Icon (optional) -->
+    {% if icon_svg %}
+    <div class="w-16 h-16 text-gray-400 mb-4">
+        {{ icon_svg|safe }}
+    </div>
+    {% endif %}
+    
+    <!-- Content wrapper with consistent spacing -->
+    <div class="space-y-4 text-center max-w-sm">
+        <!-- Heading -->
+        <h3 class="text-lg font-semibold text-gray-900">
+            {{ heading }}
+        </h3>
+        
+        <!-- Description -->
+        <p class="text-sm text-gray-500" title="{{ description }}">
+            {{ description|truncatewords:20 }}
+        </p>
+        
+        <!-- Action Button (optional) -->
+        {% if action_url and action_label %}
+        <div class="pt-2">
+            <a href="{{ action_url }}" class="inline-flex items-center px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-primary text-white hover:bg-primary-hover">
+                {{ action_label }}
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,93 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}حذف الوسم - Science Gates{% endblock %}
+
+{% block page_title %}حذف الوسم{% endblock %}
+
+{% block content %}
+<!-- Back Link -->
+<div class="mb-6">
+    <a href="{% url 'dashboard:tag_list' %}" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-normal">
+        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        العودة إلى قائمة الوسوم
+    </a>
+</div>
+
+<!-- Delete Confirmation Container -->
+<div class="bg-white rounded-lg shadow p-8 max-w-2xl">
+    <!-- Warning Icon -->
+    <div class="flex justify-center mb-6">
+        <div class="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full">
+            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v2M6.343 3.665c.886-.887 2.318-.887 3.203 0l9.759 9.759c.886.886.886 2.318 0 3.203l-9.759 9.759c-.886.886-2.318.886-3.203 0L3.14 16.168c-.886-.886-.886-2.318 0-3.203L6.343 3.665z"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <!-- Title and Message -->
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4 text-center">حذف الوسم</h2>
+    <p class="text-gray-600 text-center mb-6">
+        هل أنت متأكد من رغبتك في حذف الوسم <strong>{{ object.name }}</strong>؟
+    </p>
+    
+    <!-- Warning Message -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+        <div class="flex">
+            <svg class="w-5 h-5 text-yellow-600 ml-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h3 class="text-sm font-normal text-yellow-800">تنبيه مهم</h3>
+                <div class="text-sm text-yellow-700 mt-2">
+                    <p>هذا الوسم مرتبط بـ <strong>{{ article_count }}</strong> مقالة.</p>
+                    <p class="mt-1">عند حذف الوسم، ستبقى المقالات موجودة لكن بدون هذا الوسم.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tag Details -->
+    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <h3 class="text-sm font-normal text-gray-900 mb-3">تفاصيل الوسم:</h3>
+        <dl class="space-y-2 text-sm">
+            <div class="flex justify-between">
+                <dt class="text-gray-600">الاسم:</dt>
+                <dd class="font-normal text-gray-900">{{ object.name }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-600">الرابط:</dt>
+                <dd class="font-mono text-xs bg-white px-2 py-1 rounded">{{ object.slug }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-gray-600">عدد المقالات:</dt>
+                <dd class="font-normal text-gray-900">{{ article_count }}</dd>
+            </div>
+        </dl>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex gap-4 pt-6 border-t border-gray-200">
+        <form method="post" class="flex-1">
+            {% csrf_token %}
+            <button 
+                type="submit" 
+                class="w-full inline-flex items-center justify-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 font-normal"
+            >
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                نعم، احذف الوسم
+            </button>
+        </form>
+        
+        <a 
+            href="{% url 'dashboard:tag_list' %}" 
+            class="flex-1 inline-flex items-center justify-center px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 font-normal"
+        >
+            إلغاء
+        </a>
+    </div>
+</div>
+{% endblock %}

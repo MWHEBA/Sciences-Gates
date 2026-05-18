@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}شكراً لك - Science Gates{% endblock %}
+{% block meta_description %}شكراً على استفسارك. سيتم التواصل معك قريباً.{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
+        <!-- Success Icon -->
+        <div class="mb-6">
+            <svg class="w-16 h-16 text-green-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+
+        <!-- Title -->
+        <h1 class="text-2xl font-semibold text-gray-900 mb-4">شكراً لك!</h1>
+
+        <!-- Message -->
+        <p class="text-gray-600 mb-6">
+            تم استقبال استفسارك بنجاح. سيتم التواصل معك قريباً على البريد الإلكتروني أو رقم الهاتف المسجل.
+        </p>
+
+        <!-- Return Link -->
+        <a 
+            href="{% url 'home' %}"
+            class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
+        >
+            العودة للصفحة الرئيسية
+        </a>
+    </div>
+</div>
+{% endblock %}

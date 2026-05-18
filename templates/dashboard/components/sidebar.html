@@ -1,0 +1,233 @@
+{% load static %}
+<!-- القائمة الجانبية -->
+<div class="flex flex-col h-full" style="min-height: 0;">
+
+    <!-- شعار المنصة واسمها — ثابت أعلى -->
+    <div class="flex-shrink-0" style="padding: 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; text-align: center;">
+        <img src="{% static 'images/logo.png' %}" alt="Science Gates"
+             style="height: 48px; object-fit: contain;">
+    </div>
+
+    <!-- قائمة التنقل — min-height ديناميكي = ارتفاع الـ aside - الشعار - الملف الشخصي -->
+    <nav class="flex-1 px-4 py-6 overflow-y-auto"
+         style="min-height: calc(100vh - 8px - var(--sidebar-logo-h) - var(--sidebar-profile-h));"
+         aria-label="القائمة الرئيسية" @click="if ($el.closest('a')) sidebarOpen = false">
+
+        <!-- الرئيسية -->
+        <div class="mb-6">
+            <a href="{% url 'dashboard:home' %}"
+               class="flex items-center px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer"
+               style="{% if request.path == '/dashboard/' %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+               onmouseover="{% if request.path != '/dashboard/' %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+               onmouseout="{% if request.path != '/dashboard/' %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}">
+                <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-4 7 4M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                <span class="font-normal">الرئيسية</span>
+            </a>
+        </div>
+
+        {% if user.profile.is_content_admin or user.profile.is_super_admin %}
+        <!-- قسم المحتوى - مدير المحتوى والمدير العام -->
+        <div class="mb-6">
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">المحتوى</h3>
+            <div class="space-y-1">
+                <!-- الجامعات -->
+                <a href="{% url 'dashboard:university_list' %}"
+                   class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                   style="{% if '/dashboard/universities' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                   onmouseover="{% if '/dashboard/universities' not in request.path %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+                   onmouseout="{% if '/dashboard/universities' not in request.path %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}"
+                   @click="sidebarOpen = false">
+                    <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    <span>الجامعات</span>
+                </a>
+
+                <!-- المعاهد -->
+                <a href="{% url 'dashboard:institute_list' %}"
+                   class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                   style="{% if '/dashboard/institutes' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                   onmouseover="{% if '/dashboard/institutes' not in request.path %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+                   onmouseout="{% if '/dashboard/institutes' not in request.path %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}"
+                   @click="sidebarOpen = false">
+                    <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"></path>
+                    </svg>
+                    <span>المعاهد</span>
+                </a>
+
+                <!-- التخصصات -->
+                <a href="{% url 'dashboard:major_list' %}"
+                   class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                   style="{% if '/dashboard/majors' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                   onmouseover="{% if '/dashboard/majors' not in request.path %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+                   onmouseout="{% if '/dashboard/majors' not in request.path %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}"
+                   @click="sidebarOpen = false">
+                    <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                    </svg>
+                    <span>التخصصات</span>
+                </a>
+
+                <!-- المقالات -->
+                <a href="{% url 'dashboard:article_list' %}"
+                   class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                   style="{% if '/dashboard/articles' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                   onmouseover="{% if '/dashboard/articles' not in request.path %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+                   onmouseout="{% if '/dashboard/articles' not in request.path %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}"
+                   @click="sidebarOpen = false">
+                    <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                    </svg>
+                    <span>المقالات</span>
+                </a>
+
+                <!-- الفئات -->
+                <a href="{% url 'dashboard:category_list' %}"
+                   class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                   style="{% if '/dashboard/categories' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                   onmouseover="{% if '/dashboard/categories' not in request.path %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+                   onmouseout="{% if '/dashboard/categories' not in request.path %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}"
+                   @click="sidebarOpen = false">
+                    <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                    <span>الفئات</span>
+                </a>
+
+                <!-- الوسوم -->
+                <a href="{% url 'dashboard:tag_list' %}"
+                   class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                   style="{% if '/dashboard/tags' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                   onmouseover="{% if '/dashboard/tags' not in request.path %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+                   onmouseout="{% if '/dashboard/tags' not in request.path %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}"
+                   @click="sidebarOpen = false">
+                    <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                    <span>الوسوم</span>
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- قسم الرسائل - متاح لجميع المستخدمين -->
+        <div class="mb-6">
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">الرسائل</h3>
+            <div class="space-y-1">
+                <a href="{% url 'dashboard:lead_list' %}"
+                   class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                   style="{% if '/dashboard/leads' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                   onmouseover="{% if '/dashboard/leads' not in request.path %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+                   onmouseout="{% if '/dashboard/leads' not in request.path %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}"
+                   @click="sidebarOpen = false">
+                    <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    <span>عرض الرسائل</span>
+
+                    <!-- شارة الرسائل غير المقروءة -->
+                    {% if unread_leads_count > 0 %}
+                    <span class="mr-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold leading-none text-white rounded-full" style="background-color: var(--danger);">
+                        {{ unread_leads_count }}
+                    </span>
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+
+        <!-- قسم SEO - مدير SEO والمدير العام -->
+        {% if user.profile.is_seo_admin or user.profile.is_super_admin %}
+        <div class="mb-6">
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">SEO</h3>
+            <div class="space-y-1">
+                <!-- إعادة التوجيه -->
+                <a href="{% url 'dashboard:redirect_list' %}"
+                   class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                   style="{% if '/dashboard/redirects' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                   onmouseover="{% if '/dashboard/redirects' not in request.path %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+                   onmouseout="{% if '/dashboard/redirects' not in request.path %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}"
+                   @click="sidebarOpen = false">
+                    <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                    </svg>
+                    <span>إعادة التوجيه</span>
+                </a>
+
+                <!-- إعدادات SEO -->
+                <a href="{% url 'dashboard:seo_overview' %}"
+                   class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                   style="{% if '/dashboard/seo' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                   onmouseover="{% if '/dashboard/seo' not in request.path %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+                   onmouseout="{% if '/dashboard/seo' not in request.path %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}"
+                   @click="sidebarOpen = false">
+                    <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span>إعدادات SEO</span>
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- قسم الإدارة - المدير العام فقط -->
+        {% if user.profile.is_super_admin %}
+        <div class="mb-6">
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">الإدارة</h3>
+            <div class="space-y-1">
+                <!-- إدارة المستخدمين -->
+                <a href="{% url 'dashboard:user_list' %}"
+                   class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                   style="{% if '/dashboard/users' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                   onmouseover="{% if '/dashboard/users' not in request.path %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
+                   onmouseout="{% if '/dashboard/users' not in request.path %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}"
+                   @click="sidebarOpen = false">
+                    <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span>إدارة المستخدمين</span>
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+    </nav>
+
+    <!-- قسم الملف الشخصي وتسجيل الخروج — ثابت أسفل -->
+    <div class="flex-shrink-0" style="padding: 14px; border-top: 1px solid var(--border);">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+                    border-radius: var(--radius); background-color: var(--bg-light);
+                    border: 1px solid var(--border);">
+            <!-- Avatar -->
+            <div style="width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+                        background-color: var(--primary); color: #fff;
+                        display: grid; place-items: center; font-weight: 600; font-size: 14px;">
+                {{ user.get_full_name|default:user.username|first|upper }}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <p style="font-size: 13px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    {{ user.get_full_name|default:user.username }}
+                </p>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">
+                    {{ user.profile.get_role_display }}
+                </p>
+            </div>
+            <a href="{% url 'dashboard:logout' %}"
+               style="flex-shrink: 0; padding: 6px; border-radius: 8px; color: var(--text-muted);
+                      transition: color 0.2s, background-color 0.2s; cursor: pointer;"
+               onmouseover="this.style.color='var(--danger)'; this.style.backgroundColor='var(--danger-light)'"
+               onmouseout="this.style.color='var(--text-muted)'; this.style.backgroundColor='transparent'"
+               aria-label="تسجيل الخروج">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,46 @@
+/* 
+ * Main CSS file - Tailwind-ready structure
+ * Import Tailwind CSS here or add custom styles
+ */
+
+:root {
+    /* Define CSS variables for colors here */
+    --color-primary: #1f2937;
+    --color-secondary: #6b7280;
+    --color-accent: #3b82f6;
+    --color-background: #ffffff;
+    --color-text: #111827;
+    --color-border: #e5e7eb;
+    
+    /* Font size: 1rem = 14px */
+    font-size: 14px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Alexandria', sans-serif;
+}
+
+html {
+    font-size: 14px;
+}
+
+body {
+    font-family: 'Alexandria', sans-serif;
+    color: var(--color-text);
+    background-color: var(--color-background);
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+/* RTL Support */
+html[dir="rtl"] body {
+    direction: rtl;
+    text-align: right;
+}
+
+html[dir="rtl"] body * {
+    direction: rtl;
+}

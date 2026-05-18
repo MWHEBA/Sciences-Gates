@@ -1,0 +1,148 @@
+{% load table_tags %}
+{% comment %}
+    جدول البيانات - Data Table Component
+    ====================================
+    يعرض محتوى في جدول منظم مع رؤوس أعمدة وصفوف قابلة للتفاعل.
+    
+    يعرض:
+    - بطاقة بيضاء مع زوايا مستديرة وظل خفيف
+    - رؤوس أعمدة في صف رمادي (bg-gray-50) مع محاذاة لليمين (RTL)
+    - صفوف مع حشوة متسقة (px-6 py-4) وحدود فاصلة
+    - تأثير hover:bg-gray-50 على الصفوف
+    - عمود إجراءات مع أزرار تحرير/حذف
+    - قيم الحالة باستخدام مكون الشارة
+    - أسماء العناصر كروابط قابلة للنقر
+    - نص بحجم text-sm لجميع محتويات الخلايا
+    - HTML دلالي (table, thead, tbody, th مع scope, td)
+    - أزرار إجراء قابلة للتركيز من لوحة المفاتيح مع مؤشر تركيز مرئي
+    - تمرير أفقي على عرض ضيق (overflow-x-auto)
+    
+    متغيرات السياق:
+        - columns: قائمة تعريفات الأعمدة (مطلوب)
+            كل عمود: {
+                label: str - عنوان العمود
+                key: str - مفتاح البيانات من الصف
+                type: str - نوع العمود: 'text', 'link', 'badge', 'date', 'actions'
+                link_url_name: str (اختياري) - اسم URL للروابط (للنوع 'link')
+                link_param: str (اختياري) - معامل URL (عادة 'id')
+                badge_status_key: str (اختياري) - مفتاح حالة الشارة (للنوع 'badge')
+            }
+        - rows: QuerySet أو قائمة - صفوف البيانات (مطلوب)
+        - edit_url_name: str - اسم URL لإجراء التحرير (مطلوب)
+        - delete_url_name: str - اسم URL لإجراء الحذف (مطلوب)
+    
+    المتطلبات: 7.1-7.12, 11.6, 17.1, 17.4
+{% endcomment %}
+
+<div class="overflow-x-auto">
+    <div class="bg-white rounded-lg shadow-sm border" style="border-color: var(--border);">
+        <table class="w-full text-sm">
+            <!-- رؤوس الأعمدة -->
+            <thead>
+                <tr class="bg-gray-50 border-b" style="border-color: var(--border);">
+                    {% for column in columns %}
+                    <th scope="col" 
+                        class="px-6 py-4 text-right text-xs font-semibold uppercase"
+                        style="color: var(--text-muted);">
+                        {{ column.label }}
+                    </th>
+                    {% endfor %}
+                    <!-- عمود الإجراءات -->
+                    <th scope="col" 
+                        class="px-6 py-4 text-right text-xs font-semibold uppercase"
+                        style="color: var(--text-muted);">
+                        الإجراءات
+                    </th>
+                </tr>
+            </thead>
+            
+            <!-- صفوف البيانات -->
+            <tbody>
+                {% for row in rows %}
+                <tr class="border-b hover:bg-gray-50 transition-colors duration-200"
+                    style="border-color: var(--border);">
+                    
+                    {% for column in columns %}
+                    <td class="px-6 py-4" style="color: var(--text-primary);">
+                        {% if column.type == 'text' %}
+                            {# نص عادي #}
+                            {{ row|get_item:column.key }}
+                        
+                        {% elif column.type == 'link' %}
+                            {# رابط قابل للنقر بلون أساسي #}
+                            {% if column.link_url_name and column.link_param %}
+                                <a href="{% url column.link_url_name row|get_item:column.link_param %}"
+                                   class="hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 rounded px-1"
+                                   style="color: var(--primary); --tw-ring-color: var(--primary);">
+                                    {{ row|get_item:column.key }}
+                                </a>
+                            {% else %}
+                                {{ row|get_item:column.key }}
+                            {% endif %}
+                        
+                        {% elif column.type == 'badge' %}
+                            {# شارة حالة #}
+                            {% if column.badge_status_key %}
+                                {% with status_value=row|get_item:column.badge_status_key %}
+                                    {% include "dashboard/components/badge.html" with text=status_value variant=status_value|get_status_variant %}
+                                {% endwith %}
+                            {% endif %}
+                        
+                        {% elif column.type == 'date' %}
+                            {# تاريخ #}
+                            {% if row|get_item:column.key %}
+                                {{ row|get_item:column.key|date:"d/m/Y" }}
+                            {% endif %}
+                        
+                        {% else %}
+                            {# نوع افتراضي - نص #}
+                            {{ row|get_item:column.key }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    
+                    <!-- عمود الإجراءات -->
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <!-- زر التحرير - يتم تقديمه فقط إذا كان edit_url_name موجود -->
+                            {% if edit_url_name and edit_url_name != "edit" %}
+                            <a href="{% url edit_url_name row.id %}"
+                               class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 cursor-pointer
+                                      focus:outline-none focus:ring-2 focus:ring-offset-2"
+                               style="--tw-ring-color: var(--primary);"
+                               aria-label="تحرير">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </a>
+                            {% endif %}
+                            
+                            <!-- زر الحذف - يتم تقديمه فقط إذا كان delete_url_name موجود -->
+                            {% if delete_url_name and delete_url_name != "delete" %}
+                            <a href="{% url delete_url_name row.id %}"
+                               class="p-2 rounded-lg text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer
+                                      focus:outline-none focus:ring-2 focus:ring-offset-2"
+                               style="--tw-ring-color: var(--danger);"
+                               aria-label="حذف">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{{ columns|length|add:1 }}" class="px-6 py-8 text-center">
+                        <p style="color: var(--text-muted);">لا توجد بيانات للعرض</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+

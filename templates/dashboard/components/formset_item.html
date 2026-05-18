@@ -1,0 +1,45 @@
+{% comment %}
+Formset Item Component
+Renders a single formset item with fields and delete button.
+
+Context variables:
+- form: Django formset form instance
+- formset_prefix: Prefix for the formset (e.g., 'faculties')
+- item_index: Index of the item in the formset
+- item_name: Display name for the item (e.g., 'Faculty')
+- fields: List of form fields to display
+- columns: Number of columns for grid layout (default: 1)
+{% endcomment %}
+
+<div class="border rounded-lg p-6 space-y-4 bg-white" style="border-color: var(--border);" data-form-index="{{ item_index }}">
+    <!-- Item Header with Delete Button -->
+    <div class="flex items-center justify-between pb-4 border-b" style="border-color: var(--border);">
+        <h3 class="text-base font-normal text-text-primary">
+            {{ item_name }} #{{ item_index|add:1 }}
+        </h3>
+        <button
+            type="button"
+            class="px-3 py-1 rounded-lg text-sm font-normal transition-colors duration-200 cursor-pointer text-white"
+            style="background-color: var(--danger);"
+            onmouseover="this.style.backgroundColor='var(--danger-hover)'"
+            onmouseout="this.style.backgroundColor='var(--danger)'"
+            onclick="this.closest('[data-form-index]').style.opacity='0.5'; this.closest('[data-form-index]').style.pointerEvents='none'; this.closest('[data-form-index]').querySelector('[name$=\'-DELETE\']').checked=true;"
+        >
+            حذف
+        </button>
+    </div>
+
+    <!-- Hidden DELETE field -->
+    {{ form.DELETE }}
+
+    <!-- Fields Grid -->
+    <div class="grid grid-cols-1 {% if columns == 2 %}md:grid-cols-2{% elif columns == 3 %}md:grid-cols-3{% elif columns == 4 %}md:grid-cols-4{% endif %} gap-6">
+        {% for field in form %}
+            {% if field.name != 'DELETE' %}
+            <div>
+                {% include 'dashboard/components/form_field.html' %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>

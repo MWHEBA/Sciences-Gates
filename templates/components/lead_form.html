@@ -1,0 +1,285 @@
+<!-- Lead Form Component with Client-Side Validation -->
+<!-- نموذج الرسالة مع التحقق من البيانات على جانب العميل -->
+<form 
+    method="post" 
+    action="{% url 'leads:submit' %}" 
+    class="space-y-6"
+    x-data="leadFormValidation()"
+    @submit.prevent="submitForm"
+    novalidate
+>
+    {% csrf_token %}
+    
+    <!-- Hidden source page field -->
+    <input type="hidden" name="source_page" value="{{ source_page }}">
+    
+    <!-- Honeypot field (hidden from users with CSS display:none) -->
+    <div style="display: none;">
+        <input 
+            type="text" 
+            name="website" 
+            placeholder="Website"
+            tabindex="-1"
+            autocomplete="off"
+        >
+    </div>
+
+    <!-- Name Field -->
+    <div>
+        <label for="id_name" class="block text-sm font-semibold text-gray-900 mb-2 text-right">
+            الاسم الكامل <span class="text-red-600">*</span>
+        </label>
+        <input 
+            type="text" 
+            id="id_name"
+            name="name" 
+            required
+            x-model="form.name"
+            @blur="validateName"
+            @input="clearError('name')"
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+            :class="errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+            placeholder="أدخل اسمك الكامل"
+            dir="rtl"
+            maxlength="200"
+        >
+        <p x-show="errors.name" class="text-red-600 text-sm mt-1 text-right" x-text="errors.name"></p>
+    </div>
+
+    <!-- Email Field -->
+    <div>
+        <label for="id_email" class="block text-sm font-semibold text-gray-900 mb-2 text-right">
+            البريد الإلكتروني <span class="text-red-600">*</span>
+        </label>
+        <input 
+            type="email" 
+            id="id_email"
+            name="email" 
+            required
+            x-model="form.email"
+            @blur="validateEmail"
+            @input="clearError('email')"
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            :class="errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+            placeholder="أدخل بريدك الإلكتروني"
+            dir="ltr"
+        >
+        <p x-show="errors.email" class="text-red-600 text-sm mt-1 text-right" x-text="errors.email"></p>
+    </div>
+
+    <!-- Phone Field -->
+    <div>
+        <label for="id_phone" class="block text-sm font-semibold text-gray-900 mb-2 text-right">
+            رقم الهاتف <span class="text-red-600">*</span>
+        </label>
+        <input 
+            type="tel" 
+            id="id_phone"
+            name="phone" 
+            required
+            x-model="form.phone"
+            @blur="validatePhone"
+            @input="clearError('phone')"
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            :class="errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+            placeholder="أدخل رقم هاتفك"
+            dir="ltr"
+            maxlength="20"
+        >
+        <p x-show="errors.phone" class="text-red-600 text-sm mt-1 text-right" x-text="errors.phone"></p>
+    </div>
+
+    <!-- Message Field -->
+    <div>
+        <label for="id_message" class="block text-sm font-semibold text-gray-900 mb-2 text-right">
+            الرسالة <span class="text-red-600">*</span>
+        </label>
+        <textarea 
+            id="id_message"
+            name="message" 
+            required
+            x-model="form.message"
+            @blur="validateMessage"
+            @input="clearError('message')"
+            rows="5"
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right resize-none"
+            :class="errors.message ? 'border-red-500 bg-red-50' : 'border-gray-300'"
+            placeholder="أدخل رسالتك أو استفسارك"
+            dir="rtl"
+        ></textarea>
+        <p x-show="errors.message" class="text-red-600 text-sm mt-1 text-right" x-text="errors.message"></p>
+    </div>
+
+    <!-- Lead Type (hidden, default to REGISTRATION) -->
+    <input type="hidden" name="lead_type" value="registration">
+
+    <!-- Form-level error message -->
+    <div 
+        x-show="formError" 
+        class="p-4 bg-red-50 border border-red-200 rounded-lg text-right"
+    >
+        <p class="text-red-700 text-sm" x-text="formError"></p>
+    </div>
+
+    <!-- Submit Button -->
+    <div>
+        <button 
+            type="submit"
+            :disabled="isSubmitting"
+            class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+        >
+            <span x-show="!isSubmitting">إرسال الاستفسار</span>
+            <span x-show="isSubmitting">جاري الإرسال...</span>
+        </button>
+    </div>
+
+    <!-- Privacy Notice -->
+    <p class="text-xs text-gray-600 text-center">
+        نحن نحترم خصوصيتك. لن نشارك بيانات الاتصال الخاصة بك مع أطراف ثالثة.
+    </p>
+</form>
+
+<!-- Alpine.js Validation Script -->
+<script>
+function leadFormValidation() {
+    return {
+        form: {
+            name: '',
+            email: '',
+            phone: '',
+            message: '',
+        },
+        errors: {
+            name: '',
+            email: '',
+            phone: '',
+            message: '',
+        },
+        formError: '',
+        isSubmitting: false,
+
+        /**
+         * Validate name field
+         * Requirements: not empty
+         */
+        validateName() {
+            const name = this.form.name.trim();
+            if (!name) {
+                this.errors.name = 'الاسم مطلوب';
+                return false;
+            }
+            if (name.length < 2) {
+                this.errors.name = 'الاسم قصير جداً';
+                return false;
+            }
+            this.errors.name = '';
+            return true;
+        },
+
+        /**
+         * Validate email field
+         * Requirements: valid email format
+         */
+        validateEmail() {
+            const email = this.form.email.trim();
+            if (!email) {
+                this.errors.email = 'البريد الإلكتروني مطلوب';
+                return false;
+            }
+            // Simple email validation regex
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                this.errors.email = 'البريد الإلكتروني غير صحيح';
+                return false;
+            }
+            this.errors.email = '';
+            return true;
+        },
+
+        /**
+         * Validate phone field
+         * Requirements: valid phone format (7-20 digits)
+         */
+        validatePhone() {
+            const phone = this.form.phone.trim();
+            if (!phone) {
+                this.errors.phone = 'رقم الهاتف مطلوب';
+                return false;
+            }
+            // Remove common separators
+            const cleanedPhone = phone.replace(/[\s\-\(\)\.]/g, '');
+            // Check if it contains only digits and optional leading +
+            if (!/^\+?\d{7,20}$/.test(cleanedPhone)) {
+                this.errors.phone = 'رقم الهاتف غير صحيح (7-20 رقم على الأقل)';
+                return false;
+            }
+            this.errors.phone = '';
+            return true;
+        },
+
+        /**
+         * Validate message field
+         * Requirements: not empty, minimum 10 characters
+         */
+        validateMessage() {
+            const message = this.form.message.trim();
+            if (!message) {
+                this.errors.message = 'الرسالة مطلوبة';
+                return false;
+            }
+            if (message.length < 10) {
+                this.errors.message = 'الرسالة قصيرة جداً (10 أحرف على الأقل)';
+                return false;
+            }
+            this.errors.message = '';
+            return true;
+        },
+
+        /**
+         * Clear error for a specific field
+         */
+        clearError(field) {
+            this.errors[field] = '';
+            this.formError = '';
+        },
+
+        /**
+         * Validate all fields
+         */
+        validateAll() {
+            const nameValid = this.validateName();
+            const emailValid = this.validateEmail();
+            const phoneValid = this.validatePhone();
+            const messageValid = this.validateMessage();
+            
+            return nameValid && emailValid && phoneValid && messageValid;
+        },
+
+        /**
+         * Submit form with validation
+         */
+        async submitForm() {
+            this.formError = '';
+            
+            // Validate all fields
+            if (!this.validateAll()) {
+                this.formError = 'يرجى تصحيح الأخطاء أعلاه';
+                return;
+            }
+
+            this.isSubmitting = true;
+
+            try {
+                // Get the form element
+                const form = this.$el;
+                
+                // Submit the form
+                form.submit();
+            } catch (error) {
+                this.formError = 'حدث خطأ أثناء إرسال النموذج. يرجى المحاولة مرة أخرى.';
+                this.isSubmitting = false;
+            }
+        }
+    }
+}
+</script>

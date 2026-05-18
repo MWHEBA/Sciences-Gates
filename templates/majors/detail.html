@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load image_tags %}
+{% load breadcrumbs %}
+
+{% block title %}{{ major.name }} - Science Gates{% endblock %}
+{% block meta_description %}{{ major.meta_description|default:major.description|truncatewords:30 }}{% endblock %}
+
+{% block og_title %}{{ major.og_title|default:major.name }}{% endblock %}
+{% block og_description %}{{ major.og_description|default:major.description|truncatewords:30 }}{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+
+{% block extra_css %}
+    {% render_breadcrumb_schema breadcrumbs request %}
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <!-- Breadcrumb Navigation -->
+    {% render_breadcrumbs breadcrumbs %}
+    
+    <!-- Hero Section -->
+    <div class="mb-12">
+        <h1 class="text-4xl font-semibold text-gray-900 mb-4">{{ major.name }}</h1>
+        
+        <!-- Main Image -->
+        {% if major.main_image %}
+            <div class="mb-8 rounded-lg overflow-hidden shadow-lg">
+                {% responsive_image major.main_image.url major.name "w-full h-96 object-cover" %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Description Section -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">عن التخصص</h2>
+        <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+            {{ major.description|safe }}
+        </div>
+    </div>
+
+    <!-- Quick Information Section -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">معلومات سريعة</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Study Duration -->
+            <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                <p class="text-sm text-gray-600 mb-2">مدة الدراسة</p>
+                <p class="text-xl font-semibold text-gray-900">{{ major.study_duration }}</p>
+            </div>
+
+            <!-- Tuition Fees -->
+            {% if major.tuition_fees %}
+                <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                    <p class="text-sm text-gray-600 mb-2">الرسوم الدراسية</p>
+                    <p class="text-xl font-semibold text-gray-900">{{ major.tuition_fees }}</p>
+                </div>
+            {% endif %}
+
+            <!-- Study Language -->
+            {% if major.study_language %}
+                <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                    <p class="text-sm text-gray-600 mb-2">لغة الدراسة</p>
+                    <p class="text-xl font-semibold text-gray-900">{{ major.study_language }}</p>
+                </div>
+            {% endif %}
+
+            <!-- Practical Training -->
+            {% if major.practical_training %}
+                <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                    <p class="text-sm text-gray-600 mb-2">التدريب العملي</p>
+                    <p class="text-xl font-semibold text-gray-900">{{ major.practical_training }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Why Study This Major Section -->
+    {% if major.why_study_section %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">لماذا تدرس هذا التخصص؟</h2>
+            <div class="bg-blue-50 border-r-4 border-blue-600 p-6 rounded-lg">
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                    {{ major.why_study_section|safe }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Best Universities Section -->
+    {% if best_universities %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">أفضل الجامعات لهذا التخصص</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for university in best_universities %}
+                    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+                        {% if university.logo %}
+                            <div class="mb-4 flex justify-center">
+                                <img 
+                                    src="{{ university.logo.url }}" 
+                                    alt="{{ university.name }} شعار"
+                                    loading="lazy"
+                                    class="h-16 object-contain"
+                                >
+                            </div>
+                        {% endif %}
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 text-center">{{ university.name }}</h3>
+                        <p class="text-sm text-gray-600 text-center mb-4">📍 {{ university.location }}</p>
+                        <a 
+                            href="{{ university.get_absolute_url }}"
+                            class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg text-center transition-colors text-sm"
+                        >
+                            عرض التفاصيل
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Cheap Universities Section -->
+    {% if cheap_universities %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">جامعات اقتصادية لهذا التخصص</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for university in cheap_universities %}
+                    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+                        {% if university.logo %}
+                            <div class="mb-4 flex justify-center">
+                                <img 
+                                    src="{{ university.logo.url }}" 
+                                    alt="{{ university.name }} شعار"
+                                    loading="lazy"
+                                    class="h-16 object-contain"
+                                >
+                            </div>
+                        {% endif %}
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 text-center">{{ university.name }}</h3>
+                        <p class="text-sm text-gray-600 text-center mb-4">📍 {{ university.location }}</p>
+                        <a 
+                            href="{{ university.get_absolute_url }}"
+                            class="block w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg text-center transition-colors text-sm"
+                        >
+                            عرض التفاصيل
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Subjects Table Section -->
+    {% if subjects_tables %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">المواد الدراسية</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse bg-white shadow-sm rounded-lg overflow-hidden">
+                    <thead>
+                        <tr class="bg-gray-100 border-b-2 border-gray-300">
+                            <th class="px-6 py-4 text-right font-semibold text-gray-900">السنة الدراسية</th>
+                            <th class="px-6 py-4 text-right font-semibold text-gray-900">المواد</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in subjects_tables %}
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 text-gray-900 font-semibold">{{ row.academic_year }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ row.subjects }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Salary Table Section -->
+    {% if salary_tables %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">فرص العمل والرواتب</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse bg-white shadow-sm rounded-lg overflow-hidden">
+                    <thead>
+                        <tr class="bg-gray-100 border-b-2 border-gray-300">
+                            <th class="px-6 py-4 text-right font-semibold text-gray-900">المسمى الوظيفي</th>
+                            <th class="px-6 py-4 text-right font-semibold text-gray-900">متوسط الراتب الشهري</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in salary_tables %}
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 text-gray-900 font-semibold">{{ row.job_title }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ row.average_monthly_salary }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Countries Table Section -->
+    {% if countries_tables %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">الدراسة في دول مختلفة</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse bg-white shadow-sm rounded-lg overflow-hidden">
+                    <thead>
+                        <tr class="bg-gray-100 border-b-2 border-gray-300">
+                            <th class="px-6 py-4 text-right font-semibold text-gray-900">الوجهة</th>
+                            <th class="px-6 py-4 text-right font-semibold text-gray-900">مدة الدراسة</th>
+                            <th class="px-6 py-4 text-right font-semibold text-gray-900">الرسوم السنوية</th>
+                            <th class="px-6 py-4 text-right font-semibold text-gray-900">تكلفة المعيشة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in countries_tables %}
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 text-gray-900 font-semibold">{{ row.destination }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ row.study_duration }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ row.annual_fees }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ row.living_cost }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Career Opportunities Section -->
+    {% if major.career_opportunities %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">فرص العمل</h2>
+            <div class="bg-green-50 border-r-4 border-green-600 p-6 rounded-lg">
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                    {{ major.career_opportunities|safe }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- How to Apply Section -->
+    {% if major.how_to_apply_section %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">كيفية التقديم</h2>
+            <div class="bg-purple-50 border-r-4 border-purple-600 p-6 rounded-lg">
+                <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                    {{ major.how_to_apply_section|safe }}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Lead Form Section -->
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6">استفسر عن هذا التخصص</h2>
+        <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+            {% include 'components/lead_form.html' with source_page=request.path %}
+        </div>
+    </div>
+
+    <!-- Related Articles Section -->
+    {% include "components/related_articles.html" with articles=major.related_articles.all %}
+</div>
+
+<!-- Alpine.js for Interactive Components -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+{% endblock %}

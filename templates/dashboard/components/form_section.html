@@ -1,0 +1,31 @@
+{% comment %}
+Form Section Component
+Renders a form section with heading and fields.
+
+Context variables:
+- title: Section heading (Arabic text)
+- fields: List of form fields to display in this section
+- columns: Number of columns for grid layout (default: 1)
+- description: Optional section description
+{% endcomment %}
+
+<div class="bg-white rounded-lg p-6 border" style="border-color: var(--border);">
+    <!-- Section Heading -->
+    <h2 class="text-lg font-semibold text-text-primary mb-6 pb-4 border-b" style="border-color: var(--border);">
+        {{ title }}
+    </h2>
+
+    <!-- Section Description (optional) -->
+    {% if description %}
+    <p class="text-sm text-text-muted mb-4">{{ description }}</p>
+    {% endif %}
+
+    <!-- Fields Grid -->
+    <div class="grid grid-cols-1 {% if columns == 2 %}md:grid-cols-2{% elif columns == 3 %}md:grid-cols-3{% elif columns == 4 %}md:grid-cols-4{% endif %} gap-6">
+        {% for field in fields %}
+        <div>
+            {% include 'dashboard/components/form_field.html' %}
+        </div>
+        {% endfor %}
+    </div>
+</div>

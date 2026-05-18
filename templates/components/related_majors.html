@@ -1,0 +1,95 @@
+{% comment %}
+Related Majors Component
+مكون التخصصات المرتبطة
+
+This component displays related majors for university pages.
+
+Usage:
+{% include "components/related_majors.html" with majors=object.related_majors.all %}
+{% endcomment %}
+
+{% if majors %}
+<section class="py-12 bg-white dark:bg-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Section Title -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                التخصصات المتاحة
+            </h2>
+            <div class="h-1 w-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full"></div>
+        </div>
+
+        <!-- Majors Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for major in majors|slice:":6" %}
+                <div class="bg-slate-50 dark:bg-slate-700 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 border border-slate-200 dark:border-slate-600">
+                    <!-- Major Image -->
+                    {% if major.main_image %}
+                        <div class="relative h-40 overflow-hidden bg-slate-200 dark:bg-slate-600">
+                            <img 
+                                src="{{ major.main_image.url }}" 
+                                alt="{{ major.name }}"
+                                loading="lazy"
+                                class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            >
+                        </div>
+                    {% endif %}
+
+                    <!-- Major Content -->
+                    <div class="p-6">
+                        <!-- Category Badge -->
+                        <div class="mb-3">
+                            <span class="inline-block px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 text-xs font-medium rounded-full">
+                                {{ major.get_major_category_display }}
+                            </span>
+                        </div>
+
+                        <!-- Title -->
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3 line-clamp-2">
+                            <a href="{{ major.get_absolute_url }}" class="hover:text-green-600 dark:hover:text-green-400 transition-colors">
+                                {{ major.name }}
+                            </a>
+                        </h3>
+
+                        <!-- Quick Info -->
+                        <div class="space-y-2 mb-4 text-sm text-slate-600 dark:text-slate-400">
+                            {% if major.study_duration %}
+                                <div class="flex items-center">
+                                    <span class="text-green-600 dark:text-green-400 ml-2">📚</span>
+                                    <span>{{ major.study_duration }}</span>
+                                </div>
+                            {% endif %}
+                            {% if major.tuition_fees %}
+                                <div class="flex items-center">
+                                    <span class="text-green-600 dark:text-green-400 ml-2">💰</span>
+                                    <span>{{ major.tuition_fees }}</span>
+                                </div>
+                            {% endif %}
+                            {% if major.study_language %}
+                                <div class="flex items-center">
+                                    <span class="text-green-600 dark:text-green-400 ml-2">🌐</span>
+                                    <span>{{ major.study_language }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- View Link -->
+                        <a href="{{ major.get_absolute_url }}" class="inline-block text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium text-sm transition-colors">
+                            اعرف المزيد ←
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- View All Link -->
+        {% if majors|length > 6 %}
+            <div class="mt-8 text-center">
+                <a href="#" class="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
+                    عرض جميع التخصصات
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}

@@ -1,0 +1,112 @@
+{% comment %}
+Form Field Component
+Renders a single form field with label, input, help text, and error messages.
+
+Context variables:
+- field: Django form field
+- label: Optional custom label (defaults to field.label)
+- required: Optional boolean to override field.field.required
+- help_text: Optional custom help text (defaults to field.help_text)
+- input_class: Optional additional CSS classes for the input element
+- container_class: Optional additional CSS classes for the container div
+{% endcomment %}
+
+<div class="{% if container_class %}{{ container_class }}{% else %}space-y-2{% endif %}">
+    <!-- Label with Required Indicator -->
+    <label for="{{ field.id_for_label }}" class="block text-sm font-normal text-text-primary">
+        {{ label|default:field.label }}
+        {% if field.field.required or required %}
+        <span class="text-danger">*</span>
+        {% endif %}
+    </label>
+
+    <!-- Input Field -->
+    {% if field.field.widget.input_type == "textarea" %}
+        <textarea
+            id="{{ field.id_for_label }}"
+            name="{{ field.name }}"
+            class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary transition-colors duration-200 {% if field.errors %}border-red-500{% else %}border-gray-300{% endif %} {% if input_class %}{{ input_class }}{% endif %}"
+            {% if field.value %}value="{{ field.value }}"{% endif %}
+            {% if field.field.disabled %}disabled{% endif %}
+            dir="rtl"
+        >{{ field.value|default:"" }}</textarea>
+    {% elif field.field.widget.input_type == "select" %}
+        <div class="relative">
+            <select
+                id="{{ field.id_for_label }}"
+                name="{{ field.name }}"
+                class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary transition-colors duration-200 appearance-none {% if field.errors %}border-red-500{% else %}border-gray-300{% endif %} {% if field.field.disabled %}bg-gray-100 opacity-50 cursor-not-allowed{% endif %} {% if input_class %}{{ input_class }}{% endif %}"
+                {% if field.field.disabled %}disabled{% endif %}
+            >
+                {% for value, label in field.field.choices %}
+                    <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <!-- Custom SVG Arrow for RTL -->
+            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+        </div>
+    {% elif field.field.widget.input_type == "file" %}
+        <input
+            type="file"
+            id="{{ field.id_for_label }}"
+            name="{{ field.name }}"
+            class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary transition-colors duration-200 {% if field.errors %}border-red-500{% else %}border-gray-300{% endif %} {% if field.field.disabled %}bg-gray-100 opacity-50 cursor-not-allowed{% endif %} {% if input_class %}{{ input_class }}{% endif %}"
+            {% if field.field.disabled %}disabled{% endif %}
+        />
+    {% elif field.field.widget.input_type == "checkbox" %}
+        <div class="flex items-center gap-2">
+            <input
+                type="checkbox"
+                id="{{ field.id_for_label }}"
+                name="{{ field.name }}"
+                class="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-primary transition-colors duration-200 cursor-pointer {% if field.field.disabled %}opacity-50 cursor-not-allowed{% endif %}"
+                {% if field.value %}checked{% endif %}
+                {% if field.field.disabled %}disabled{% endif %}
+            />
+            <label for="{{ field.id_for_label }}" class="text-sm font-normal text-text-primary cursor-pointer">
+                {{ label|default:field.label }}
+            </label>
+        </div>
+    {% else %}
+        <!-- Text, Email, Password, Number, etc. -->
+        <input
+            type="{{ field.field.widget.input_type|default:'text' }}"
+            id="{{ field.id_for_label }}"
+            name="{{ field.name }}"
+            class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary transition-colors duration-200 {% if field.errors %}border-red-500{% else %}border-gray-300{% endif %} {% if field.field.disabled %}bg-gray-100 opacity-50 cursor-not-allowed{% endif %} {% if input_class %}{{ input_class }}{% endif %}"
+            {% if field.value %}value="{{ field.value }}"{% endif %}
+            {% if field.field.disabled %}disabled{% endif %}
+            dir="rtl"
+        />
+    {% endif %}
+
+    <!-- Help Text -->
+    {% if field.help_text or help_text %}
+    <p class="text-xs text-text-muted">
+        {{ help_text|default:field.help_text|safe }}
+    </p>
+    {% endif %}
+
+    <!-- Validation Errors -->
+    {% if field.errors %}
+    <div class="space-y-1">
+        {% for error in field.errors %}
+        <p class="text-sm text-red-500 mt-1">{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Mark field as invalid for accessibility and error scrolling -->
+{% if field.errors %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const field = document.getElementById('{{ field.id_for_label }}');
+    if (field) {
+        field.setAttribute('aria-invalid', 'true');
+    }
+});
+</script>
+{% endif %}

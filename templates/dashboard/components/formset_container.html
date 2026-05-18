@@ -1,0 +1,86 @@
+{% comment %}
+Formset Container Component
+Renders a complete inline formset with add button and management form.
+
+Context variables:
+- formset: Django formset instance
+- formset_prefix: Prefix for the formset (e.g., 'faculties')
+- item_name: Display name for items (e.g., 'Faculty')
+- title: Section heading (Arabic text)
+- description: Optional section description
+- columns: Number of columns for grid layout (default: 1)
+{% endcomment %}
+
+<div class="bg-white rounded-lg p-6 border" style="border-color: var(--border);">
+    <!-- Section Heading -->
+    <div class="flex items-center justify-between mb-6 pb-4 border-b" style="border-color: var(--border);">
+        <div>
+            <h2 class="text-lg font-semibold text-text-primary">
+                {{ title }}
+            </h2>
+            {% if description %}
+            <p class="text-sm text-text-muted mt-1">{{ description }}</p>
+            {% endif %}
+        </div>
+        <button
+            type="button"
+            class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white"
+            style="background-color: var(--primary);"
+            onmouseover="this.style.backgroundColor='var(--primary-hover)'"
+            onmouseout="this.style.backgroundColor='var(--primary)'"
+            data-add-formset="{{ formset_prefix }}"
+        >
+            + إضافة {{ item_name }}
+        </button>
+    </div>
+
+    <!-- Management Form (hidden) -->
+    {{ formset.management_form }}
+
+    <!-- Formset Items Container -->
+    <div class="space-y-4" data-formset="{{ formset_prefix }}" data-item-name="{{ item_name }}">
+        {% for form in formset %}
+            {% if not form.DELETE.value %}
+            <div class="border rounded-lg p-6 space-y-4 bg-white" style="border-color: var(--border);" data-form-index="{{ forloop.counter0 }}">
+                <!-- Item Header with Delete Button -->
+                <div class="flex items-center justify-between pb-4 border-b" style="border-color: var(--border);">
+                    <h3 class="text-base font-normal text-text-primary">
+                        {{ item_name }} #{{ forloop.counter }}
+                    </h3>
+                    <button
+                        type="button"
+                        class="px-3 py-1 rounded-lg text-sm font-normal transition-colors duration-200 cursor-pointer text-white"
+                        style="background-color: var(--danger);"
+                        onmouseover="this.style.backgroundColor='var(--danger-hover)'"
+                        onmouseout="this.style.backgroundColor='var(--danger)'"
+                        onclick="this.closest('[data-form-index]').style.opacity='0.5'; this.closest('[data-form-index]').style.pointerEvents='none'; this.closest('[data-form-index]').querySelector('[name$=\'-DELETE\']').checked=true;"
+                    >
+                        حذف
+                    </button>
+                </div>
+
+                <!-- Hidden DELETE field -->
+                {{ form.DELETE }}
+
+                <!-- Fields Grid -->
+                <div class="grid grid-cols-1 {% if columns == 2 %}md:grid-cols-2{% elif columns == 3 %}md:grid-cols-3{% elif columns == 4 %}md:grid-cols-4{% endif %} gap-6">
+                    {% for field in form %}
+                        {% if field.name != 'DELETE' %}
+                        <div>
+                            {% include 'dashboard/components/form_field.html' %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Empty State Message -->
+    {% if formset|length == 0 %}
+    <div class="text-center py-8">
+        <p class="text-sm text-text-muted">لا توجد عناصر حتى الآن. انقر على الزر أعلاه لإضافة واحدة.</p>
+    </div>
+    {% endif %}
+</div>

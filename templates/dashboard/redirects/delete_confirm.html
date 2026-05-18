@@ -1,0 +1,124 @@
+{% extends 'dashboard/delete_confirm.html' %}
+
+{% block title %}تأكيد الحذف - Science Gates{% endblock %}
+    <div class="flex justify-center mb-6">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v2M7.08 6.47a9 9 0 1 1 9.84 0"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <!-- Confirmation Message -->
+    <h2 class="text-2xl font-semibold text-gray-900 text-center mb-4">حذف إعادة التوجيه</h2>
+    
+    <p class="text-gray-600 text-center mb-6">
+        هل أنت متأكد من رغبتك في حذف هذه إعادة التوجيه؟ لا يمكن التراجع عن هذا الإجراء.
+    </p>
+    
+    <!-- Redirect Details -->
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+        <div class="space-y-4">
+            <!-- Old URL -->
+            <div>
+                <p class="text-xs font-normal text-gray-600 uppercase tracking-wide mb-1">الرابط القديم</p>
+                <p class="font-mono text-sm bg-white px-3 py-2 rounded border border-gray-200 break-all">
+                    {{ object.old_url }}
+                </p>
+            </div>
+            
+            <!-- New URL -->
+            <div>
+                <p class="text-xs font-normal text-gray-600 uppercase tracking-wide mb-1">الرابط الجديد</p>
+                <p class="font-mono text-sm bg-white px-3 py-2 rounded border border-gray-200 break-all">
+                    {{ object.new_url }}
+                </p>
+            </div>
+            
+            <!-- Status -->
+            <div>
+                <p class="text-xs font-normal text-gray-600 uppercase tracking-wide mb-1">الحالة</p>
+                <p class="text-sm">
+                    {% if object.is_active %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal bg-green-100 text-green-800">
+                        <span class="w-2 h-2 bg-green-600 rounded-full ml-1"></span>
+                        نشط
+                    </span>
+                    {% else %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal bg-gray-100 text-gray-800">
+                        <span class="w-2 h-2 bg-gray-600 rounded-full ml-1"></span>
+                        غير نشط
+                    </span>
+                    {% endif %}
+                </p>
+            </div>
+            
+            <!-- Hit Count -->
+            <div>
+                <p class="text-xs font-normal text-gray-600 uppercase tracking-wide mb-1">عدد مرات الاستخدام</p>
+                <p class="text-sm font-semibold text-blue-600">{{ object.hit_count }}</p>
+            </div>
+            
+            <!-- Created Date -->
+            <div>
+                <p class="text-xs font-normal text-gray-600 uppercase tracking-wide mb-1">تاريخ الإنشاء</p>
+                <p class="text-sm text-gray-700">{{ object.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+            
+            <!-- Notes -->
+            {% if object.notes %}
+            <div>
+                <p class="text-xs font-normal text-gray-600 uppercase tracking-wide mb-1">ملاحظات</p>
+                <p class="text-sm text-gray-700 bg-white px-3 py-2 rounded border border-gray-200">
+                    {{ object.notes }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Warning Message -->
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <p class="text-sm text-red-800">
+            <span class="font-normal">تحذير:</span>
+            بعد حذف هذه إعادة التوجيه، سيتوقف التوجيه من <span class="font-mono text-xs bg-white px-1 rounded">{{ object.old_url }}</span> إلى <span class="font-mono text-xs bg-white px-1 rounded">{{ object.new_url }}</span>. قد يؤدي هذا إلى أخطاء 404 للزوار الذين يحاولون الوصول إلى الرابط القديم.
+        </p>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex gap-4">
+        <!-- Delete Button -->
+        <form method="post" class="flex-1">
+            {% csrf_token %}
+            <button 
+                type="submit" 
+                class="w-full inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 font-normal"
+            >
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                نعم، احذف إعادة التوجيه
+            </button>
+        </form>
+        
+        <!-- Cancel Button -->
+        <a 
+            href="{% url 'dashboard:redirect_list' %}" 
+            class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 font-normal"
+        >
+            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            إلغاء
+        </a>
+    </div>
+    
+    <!-- Info Box -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 class="text-sm font-normal text-blue-900 mb-2">نصيحة:</h3>
+        <p class="text-sm text-blue-800">
+            بدلاً من حذف إعادة التوجيه، يمكنك تعطيلها بإلغاء تفعيلها. هذا يحافظ على السجل ويسمح بإعادة تفعيلها لاحقاً إذا لزم الأمر.
+        </p>
+    </div>
+</div>
+{% endblock %}

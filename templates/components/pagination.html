@@ -1,0 +1,70 @@
+{# Reusable pagination component for public pages #}
+{# Usage: {% include "components/pagination.html" with page_obj=page_obj query_params="&search=query" %} #}
+
+{% if is_paginated %}
+    <nav class="flex justify-center items-center gap-2 mb-8" aria-label="pagination">
+        <!-- Previous Page -->
+        {% if page_obj.has_previous %}
+            <a 
+                href="?page=1{{ query_params }}"
+                class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                title="الصفحة الأولى"
+            >
+                «
+            </a>
+            <a 
+                href="?page={{ page_obj.previous_page_number }}{{ query_params }}"
+                class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+                السابق
+            </a>
+        {% else %}
+            <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">«</span>
+            <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">السابق</span>
+        {% endif %}
+
+        <!-- Page Numbers -->
+        <div class="flex gap-1">
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="px-3 py-2 rounded-lg bg-blue-600 text-white font-semibold">
+                        {{ num }}
+                    </span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a 
+                        href="?page={{ num }}{{ query_params }}"
+                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                        {{ num }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Next Page -->
+        {% if page_obj.has_next %}
+            <a 
+                href="?page={{ page_obj.next_page_number }}{{ query_params }}"
+                class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+                التالي
+            </a>
+            <a 
+                href="?page={{ page_obj.paginator.num_pages }}{{ query_params }}"
+                class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                title="الصفحة الأخيرة"
+            >
+                »
+            </a>
+        {% else %}
+            <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">التالي</span>
+            <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">»</span>
+        {% endif %}
+    </nav>
+
+    <!-- Pagination Info -->
+    <div class="text-center text-gray-600 mb-8">
+        الصفحة <strong>{{ page_obj.number }}</strong> من <strong>{{ page_obj.paginator.num_pages }}</strong>
+        (إجمالي: <strong>{{ page_obj.paginator.count }}</strong> عنصر)
+    </div>
+{% endif %}

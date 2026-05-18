@@ -1,0 +1,144 @@
+<!-- Footer Component with Links -->
+<!-- تذييل الصفحة مع الروابط -->
+<footer class="bg-gray-900 text-gray-300 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Footer Content Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            
+            <!-- About Section -->
+            <div class="text-right">
+                <h3 class="text-white font-semibold text-lg mb-4">عن بوابات العلوم</h3>
+                <p class="text-sm leading-relaxed">
+                    منصة تعليمية متخصصة في تقديم معلومات شاملة عن الجامعات والمعاهد والتخصصات في ماليزيا.
+                </p>
+            </div>
+
+            <!-- Content Links -->
+            <div class="text-right">
+                <h3 class="text-white font-semibold text-lg mb-4">المحتوى</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a 
+                            href="{% url 'universities:list' %}" 
+                            class="text-sm hover:text-blue-400 transition-colors"
+                        >
+                            الجامعات
+                        </a>
+                    </li>
+                    <li>
+                        <a 
+                            href="{% url 'institutes:list' %}" 
+                            class="text-sm hover:text-blue-400 transition-colors"
+                        >
+                            المعاهد
+                        </a>
+                    </li>
+                    <li>
+                        <a 
+                            href="{% url 'majors:list' %}" 
+                            class="text-sm hover:text-blue-400 transition-colors"
+                        >
+                            التخصصات
+                        </a>
+                    </li>
+                    <li>
+                        <a 
+                            href="{% url 'articles:list' %}" 
+                            class="text-sm hover:text-blue-400 transition-colors"
+                        >
+                            المقالات
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="text-right">
+                <h3 class="text-white font-semibold text-lg mb-4">روابط سريعة</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a 
+                            href="{% url 'home' %}" 
+                            class="text-sm hover:text-blue-400 transition-colors"
+                        >
+                            الرئيسية
+                        </a>
+                    </li>
+                    <li>
+                        <a 
+                            href="{% url 'search:results' %}" 
+                            class="text-sm hover:text-blue-400 transition-colors"
+                        >
+                            البحث
+                        </a>
+                    </li>
+                    <li>
+                        <a 
+                            href="#contact" 
+                            class="text-sm hover:text-blue-400 transition-colors"
+                        >
+                            اتصل بنا
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Contact Section -->
+            <div class="text-right">
+                <h3 class="text-white font-semibold text-lg mb-4">تواصل معنا</h3>
+                <ul class="space-y-2 text-sm">
+                    <li class="flex items-center justify-end space-x-2 rtl:space-x-reverse">
+                        <span>البريد الإلكتروني</span>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                        </svg>
+                    </li>
+                    <li class="flex items-center justify-end space-x-2 rtl:space-x-reverse">
+                        <span>+60 1-2345-6789</span>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773c.418 1.265 1.215 2.807 2.453 4.045 1.238 1.238 2.78 2.035 4.045 2.453l.773-1.548a1 1 0 011.06-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                        </svg>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-gray-700 my-8"></div>
+
+        <!-- Footer Bottom -->
+        <div class="flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
+            
+            <!-- Copyright -->
+            <div class="text-center md:text-right mb-4 md:mb-0">
+                <p>&copy; 2024 بوابات العلوم. جميع الحقوق محفوظة.</p>
+            </div>
+
+            <!-- Legal Links -->
+            <div class="flex items-center space-x-4 rtl:space-x-reverse">
+                <a 
+                    href="#privacy" 
+                    class="hover:text-blue-400 transition-colors"
+                >
+                    سياسة الخصوصية
+                </a>
+                <span class="text-gray-600">|</span>
+                <a 
+                    href="#terms" 
+                    class="hover:text-blue-400 transition-colors"
+                >
+                    شروط الاستخدام
+                </a>
+                <span class="text-gray-600">|</span>
+                <a 
+                    href="#sitemap" 
+                    class="hover:text-blue-400 transition-colors"
+                >
+                    خريطة الموقع
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>

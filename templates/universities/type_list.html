@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ type_label }} - بوابات العلوم{% endblock %}
+
+{% block meta %}
+<meta name="description" content="قائمة {{ type_label }} - اختر من بين أفضل الجامعات">
+<meta name="keywords" content="جامعات، {{ type_label }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Breadcrumbs -->
+    <nav class="mb-8 text-sm">
+        <ol class="flex gap-2">
+            {% for title, url in breadcrumbs %}
+                {% if url %}
+                    <li><a href="{{ url }}" class="text-blue-600 hover:underline">{{ title }}</a></li>
+                    <li class="text-gray-400">/</li>
+                {% else %}
+                    <li class="text-gray-600">{{ title }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </nav>
+    
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ type_label }}</h1>
+        <p class="text-lg text-gray-600">اختر من بين أفضل {{ type_label }} المتاحة</p>
+    </div>
+    
+    <!-- Universities Grid -->
+    {% if universities %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {% for university in universities %}
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer">
+            <!-- University Logo -->
+            {% if university.logo %}
+            <div class="h-48 bg-gray-100 overflow-hidden">
+                <img src="{{ university.logo.url }}" alt="{{ university.name }}" class="w-full h-full object-cover">
+            </div>
+            {% endif %}
+            
+            <!-- University Info -->
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-2">{{ university.name }}</h3>
+                <p class="text-gray-600 text-sm mb-4">{{ university.location }}</p>
+                
+                <!-- Description -->
+                <p class="text-gray-700 text-sm mb-4 line-clamp-3">{{ university.description }}</p>
+                
+                <!-- Type Badge -->
+                <div class="mb-4">
+                    {% if university.university_type == 'public' %}
+                    <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">جامعة حكومية</span>
+                    {% else %}
+                    <span class="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">جامعة خاصة</span>
+                    {% endif %}
+                </div>
+                
+                <!-- View Details Button -->
+                <a href="{% url 'universities:detail' university.slug %}" class="inline-block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
+                    عرض التفاصيل
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="flex justify-center items-center gap-2 mb-8">
+        {% if page_obj.has_previous %}
+        <a href="?page=1" class="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">الأولى</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">السابقة</a>
+        {% endif %}
+        
+        <span class="px-3 py-2 bg-blue-600 text-white rounded">{{ page_obj.number }} من {{ paginator.num_pages }}</span>
+        
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">التالية</a>
+        <a href="?page={{ paginator.num_pages }}" class="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">الأخيرة</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12">
+        <p class="text-gray-600 text-lg">لا توجد {{ type_label }} متاحة حالياً</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

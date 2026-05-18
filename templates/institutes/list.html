@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load image_tags %}
+
+{% block title %}المعاهد - Science Gates{% endblock %}
+{% block meta_description %}اكتشف أفضل المعاهد والمراكز التدريبية في ماليزيا مع معلومات شاملة عن الدورات والبرامج{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <!-- Page Header -->
+    <div class="mb-12">
+        <h1 class="text-4xl font-semibold text-gray-900 mb-4">المعاهد</h1>
+        <p class="text-lg text-gray-600">اكتشف أفضل المعاهد والمراكز التدريبية الماليزية وتعرف على دوراتها وبرامجها</p>
+    </div>
+
+    <!-- Institutes Grid -->
+    {% if institutes %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {% for institute in institutes %}
+                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+                    <!-- Institute Image -->
+                    <div class="relative h-48 bg-gray-200 overflow-hidden">
+                        {% if institute.main_image %}
+                            {% responsive_image institute.main_image.url institute.name "w-full h-full object-cover" %}
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center bg-gray-300">
+                                <span class="text-gray-500">لا توجد صورة</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Institute Info -->
+                    <div class="p-6">
+                        <!-- Name -->
+                        <h2 class="text-xl font-semibold text-gray-900 mb-3">
+                            {{ institute.name }}
+                        </h2>
+
+                        <!-- Description -->
+                        <p class="text-gray-700 text-sm mb-4 line-clamp-3">
+                            {{ institute.description|truncatewords:30 }}
+                        </p>
+
+                        <!-- Courses Count -->
+                        <p class="text-sm text-gray-600 mb-4">
+                            <span class="inline-block">📚 {{ institute.courses.count }} دورة</span>
+                        </p>
+
+                        <!-- View Details Button -->
+                        <a 
+                            href="{{ institute.get_absolute_url }}"
+                            class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg text-center transition-colors"
+                        >
+                            عرض التفاصيل
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav class="flex justify-center items-center gap-2 mb-8" aria-label="pagination">
+                <!-- Previous Page -->
+                {% if page_obj.has_previous %}
+                    <a 
+                        href="?page=1"
+                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        title="الصفحة الأولى"
+                    >
+                        «
+                    </a>
+                    <a 
+                        href="?page={{ page_obj.previous_page_number }}"
+                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                        السابق
+                    </a>
+                {% else %}
+                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">«</span>
+                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">السابق</span>
+                {% endif %}
+
+                <!-- Page Numbers -->
+                <div class="flex gap-1">
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <span class="px-3 py-2 rounded-lg bg-blue-600 text-white font-semibold">
+                                {{ num }}
+                            </span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <a 
+                                href="?page={{ num }}"
+                                class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                            >
+                                {{ num }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Next Page -->
+                {% if page_obj.has_next %}
+                    <a 
+                        href="?page={{ page_obj.next_page_number }}"
+                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                        التالي
+                    </a>
+                    <a 
+                        href="?page={{ page_obj.paginator.num_pages }}"
+                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        title="الصفحة الأخيرة"
+                    >
+                        »
+                    </a>
+                {% else %}
+                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">التالي</span>
+                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">»</span>
+                {% endif %}
+            </nav>
+
+            <!-- Pagination Info -->
+            <div class="text-center text-gray-600 mb-8">
+                الصفحة <strong>{{ page_obj.number }}</strong> من <strong>{{ page_obj.paginator.num_pages }}</strong>
+                (إجمالي: <strong>{{ page_obj.paginator.count }}</strong> معهد)
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- No Institutes Message -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
+            <p class="text-gray-700 text-lg">لا توجد معاهد متاحة حالياً</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
