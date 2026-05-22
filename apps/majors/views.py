@@ -5,6 +5,8 @@ from django.views.generic import ListView, DetailView, TemplateView
 from django.db.models import Prefetch
 from django.core.paginator import Paginator
 from .models import Major, SubjectsTable, SalaryTable, CountriesTable
+from apps.seo.mixins import BreadcrumbMixin
+from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
 class MajorListView(ListView):
@@ -35,7 +37,7 @@ class MajorListView(ListView):
         ).order_by('name')
 
 
-class MajorDetailView(DetailView):
+class MajorDetailView(BreadcrumbMixin, DetailView):
     """
     Display detailed information about a specific major.
     
@@ -92,6 +94,14 @@ class MajorDetailView(DetailView):
             'related_articles'
         )
     
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for major detail page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .add_section('majors')
+            .current(self.object.name)
+            .build())
+    
     def get_context_data(self, **kwargs):
         """Add additional context for the template."""
         context = super().get_context_data(**kwargs)
@@ -104,23 +114,35 @@ class MajorDetailView(DetailView):
         context['best_universities'] = major.best_universities.all()
         context['cheap_universities'] = major.cheap_universities.all()
         
-        # Add breadcrumbs for SEO
-        context['breadcrumbs'] = [
-            ('الرئيسية', '/'),
-            ('التخصصات', '/majors/'),
-            (major.name, None),  # Current page
-        ]
-        
         return context
 
 
-class MajorCategoryListView(TemplateView):
+class MajorCategoryListView(BreadcrumbMixin, TemplateView):
     """
     Display majors filtered by category.
     
     Shows paginated list of majors for a specific category.
     """
     template_name = 'majors/category_list.html'
+    
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for major category list page."""
+        category = self.kwargs.get('category', 'other')
+        category_labels = {
+            'medical': 'التخصصات الطبية',
+            'engineering': 'التخصصات الهندسية',
+            'cs': 'الحاسوب والتكنولوجيا',
+            'business': 'إدارة الأعمال',
+            'science': 'العلوم',
+            'other': 'تخصصات أخرى'
+        }
+        category_label = category_labels.get(category, 'التخصصات')
+        
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .add_section('majors')
+            .current(category_label)
+            .build())
     
     def get_context_data(self, **kwargs):
         """Get majors by category with pagination."""
@@ -159,7 +181,6 @@ class MajorCategoryListView(TemplateView):
         ).order_by('name')
         
         # Pagination
-        from django.core.paginator import Paginator
         paginator = Paginator(queryset, 12)
         page_number = self.request.GET.get('page', 1)
         page_obj = paginator.get_page(page_number)
@@ -180,11 +201,5 @@ class MajorCategoryListView(TemplateView):
         context['category'] = category
         context['category_label'] = category_labels.get(category, 'التخصصات')
         context['page_title'] = category_labels.get(category, 'التخصصات')
-        
-        context['breadcrumbs'] = [
-            ('الرئيسية', '/'),
-            ('التخصصات', '/majors/'),
-            (category_labels.get(category), None)
-        ]
         
         return context

@@ -249,12 +249,12 @@ class UserProfileTestCase(TestCase):
         self.assertEqual(profile.get_role_display(), 'مسؤول المحتوى')
     
     def test_is_super_admin_method(self):
-        """Test is_super_admin() method."""
+        """Test is_super_admin property."""
         from apps.core.models import UserRole
         profile = self.user.profile
         
         # Initially should be False
-        self.assertFalse(profile.is_super_admin())
+        self.assertFalse(profile.is_super_admin)
         
         # Change role to SUPER_ADMIN
         profile.role = UserRole.SUPER_ADMIN
@@ -262,15 +262,15 @@ class UserProfileTestCase(TestCase):
         
         # Refresh from database
         profile.refresh_from_db()
-        self.assertTrue(profile.is_super_admin())
+        self.assertTrue(profile.is_super_admin)
     
     def test_is_content_admin_method(self):
-        """Test is_content_admin() method."""
+        """Test is_content_admin property."""
         from apps.core.models import UserRole
         profile = self.user.profile
         
         # Should be True by default
-        self.assertTrue(profile.is_content_admin())
+        self.assertTrue(profile.is_content_admin)
         
         # Change role to SEO_ADMIN
         profile.role = UserRole.SEO_ADMIN
@@ -278,15 +278,15 @@ class UserProfileTestCase(TestCase):
         
         # Refresh from database
         profile.refresh_from_db()
-        self.assertFalse(profile.is_content_admin())
+        self.assertFalse(profile.is_content_admin)
     
     def test_is_seo_admin_method(self):
-        """Test is_seo_admin() method."""
+        """Test is_seo_admin property."""
         from apps.core.models import UserRole
         profile = self.user.profile
         
         # Initially should be False
-        self.assertFalse(profile.is_seo_admin())
+        self.assertFalse(profile.is_seo_admin)
         
         # Change role to SEO_ADMIN
         profile.role = UserRole.SEO_ADMIN
@@ -294,7 +294,7 @@ class UserProfileTestCase(TestCase):
         
         # Refresh from database
         profile.refresh_from_db()
-        self.assertTrue(profile.is_seo_admin())
+        self.assertTrue(profile.is_seo_admin)
     
     def test_user_profile_string_representation(self):
         """Test __str__ method of UserProfile."""

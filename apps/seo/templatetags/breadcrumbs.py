@@ -4,27 +4,36 @@ Breadcrumb navigation template tags.
 This module provides template tags for rendering breadcrumb navigation
 and breadcrumb schema markup.
 
+Supports both legacy formats (tuples, dicts) and new Breadcrumb objects
+for backward compatibility during migration.
+
 Validates: Requirements 10
 """
 from django import template
-from django.utils.html import escape
 from django.utils.safestring import mark_safe
 import json
 
 from apps.seo.schema import SchemaGenerator
+from apps.seo.breadcrumbs import Breadcrumb, BreadcrumbTrail
 
 register = template.Library()
 
 
-@register.inclusion_tag('seo/breadcrumbs.html')
+@register.inclusion_tag('components/breadcrumb.html')
 def render_breadcrumbs(breadcrumbs):
     """
     Render breadcrumb navigation.
     
     Generates HTML breadcrumb navigation with RTL support and Tailwind CSS styling.
+    Delegates to components/breadcrumb.html component.
+    
+    Supports both legacy formats and new Breadcrumb objects:
+    - List of Breadcrumb objects (preferred)
+    - List of tuples: (name, url)
+    - List of dicts: {'name': '...', 'url': '...'}
     
     Args:
-        breadcrumbs: List of tuples (name, url) or list of dicts with 'name' and 'url' keys
+        breadcrumbs: List of breadcrumb items
         
     Returns:
         Dictionary with breadcrumb data for template rendering
@@ -34,19 +43,17 @@ def render_breadcrumbs(breadcrumbs):
         
     Validates: Requirements 10
     """
-    # Normalize breadcrumbs to list of dicts
-    normalized_breadcrumbs = []
-    for item in breadcrumbs:
-        if isinstance(item, tuple):
-            normalized_breadcrumbs.append({
-                'name': item[0],
-                'url': item[1] if len(item) > 1 else None,
-            })
-        elif isinstance(item, dict):
-            normalized_breadcrumbs.append(item)
-        else:
-            # Skip invalid items
-            continue
+    # Convert to Breadcrumb objects if needed
+    if not breadcrumbs:
+        return {'breadcrumbs': []}
+    
+    # Check if already Breadcrumb objects
+    if isinstance(breadcrumbs[0], Breadcrumb):
+        normalized_breadcrumbs = breadcrumbs
+    else:
+        # Convert legacy format using BreadcrumbTrail
+        trail = BreadcrumbTrail.from_legacy(breadcrumbs)
+        normalized_breadcrumbs = trail.build()
     
     return {
         'breadcrumbs': normalized_breadcrumbs,
@@ -60,8 +67,10 @@ def render_breadcrumb_schema(breadcrumbs, request):
     
     Generates JSON-LD BreadcrumbList schema for search engine optimization.
     
+    Supports both legacy formats and new Breadcrumb objects.
+    
     Args:
-        breadcrumbs: List of tuples (name, url) or list of dicts with 'name' and 'url' keys
+        breadcrumbs: List of breadcrumb items
         request: HTTP request object for building absolute URLs
         
     Returns:
@@ -75,18 +84,19 @@ def render_breadcrumb_schema(breadcrumbs, request):
     if not breadcrumbs:
         return ''
     
-    # Normalize breadcrumbs to list of tuples
-    normalized_breadcrumbs = []
-    for item in breadcrumbs:
-        if isinstance(item, tuple):
-            normalized_breadcrumbs.append(item)
-        elif isinstance(item, dict):
-            normalized_breadcrumbs.append((item.get('name', ''), item.get('url', '')))
-        else:
-            continue
+    # Convert to Breadcrumb objects if needed
+    if isinstance(breadcrumbs[0], Breadcrumb):
+        normalized_breadcrumbs = breadcrumbs
+    else:
+        # Convert legacy format using BreadcrumbTrail
+        trail = BreadcrumbTrail.from_legacy(breadcrumbs)
+        normalized_breadcrumbs = trail.build()
+    
+    # Convert to tuples for schema generator
+    breadcrumb_tuples = [(crumb.name, crumb.url) for crumb in normalized_breadcrumbs]
     
     # Generate schema using SchemaGenerator
-    schema = SchemaGenerator.generate_breadcrumb_schema(normalized_breadcrumbs, request)
+    schema = SchemaGenerator.generate_breadcrumb_schema(breadcrumb_tuples, request)
     
     # Convert to JSON-LD
     schema_json = SchemaGenerator.to_json_ld(schema)

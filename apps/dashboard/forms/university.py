@@ -5,7 +5,7 @@ University forms for the dashboard.
 from django import forms
 from django.forms import inlineformset_factory
 from apps.universities.models import University, UniversityFAQ, Faculty, Program
-from apps.core.widgets import SimpleRichTextWidget
+from apps.html_editor.widgets import CustomHTMLEditorWidget
 
 
 class UniversityForm(forms.ModelForm):
@@ -58,11 +58,8 @@ class UniversityForm(forms.ModelForm):
                 'accept': 'image/*',
                 'required': True,
             }),
-            'location': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'موقع الجامعة (المدينة، الولاية)',
-                'required': True,
-                'dir': 'rtl',
+            'location': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'موقع الجامعة (المدينة، الولاية)...',
             }),
             'video_url': forms.URLInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -70,24 +67,15 @@ class UniversityForm(forms.ModelForm):
                 'dir': 'ltr',
             }),
             
-            # Rich Text Sections
-            'description': SimpleRichTextWidget(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'وصف شامل عن الجامعة',
-                'rows': 10,
-                'dir': 'rtl',
+            # Rich Text Sections — Professional HTML Editor
+            'description': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'وصف شامل عن الجامعة...',
             }),
-            'admission_requirements': SimpleRichTextWidget(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'شروط القبول في الجامعة',
-                'rows': 8,
-                'dir': 'rtl',
+            'admission_requirements': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'شروط القبول في الجامعة...',
             }),
-            'registration_section': SimpleRichTextWidget(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'معلومات عملية التسجيل والخطوات',
-                'rows': 8,
-                'dir': 'rtl',
+            'registration_section': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'معلومات عملية التسجيل والخطوات...',
             }),
             
             # Relationships
@@ -106,7 +94,7 @@ class UniversityForm(forms.ModelForm):
             # SEO Fields
             'meta_title': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'عنوان SEO (60 حرف كحد أقصى)',
+                'placeholder': '60 حرف كحد أقصى',
                 'maxlength': '60',
                 'dir': 'rtl',
             }),
@@ -124,7 +112,7 @@ class UniversityForm(forms.ModelForm):
             }),
             'canonical_url': forms.URLInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'الرابط الأساسي (اتركه فارغاً للاستخدام الافتراضي)',
+                'placeholder': 'اتركه فارغاً للاستخدام الافتراضي',
                 'dir': 'ltr',
             }),
             'robots_index': forms.CheckboxInput(attrs={
@@ -195,7 +183,6 @@ class UniversityForm(forms.ModelForm):
             'logo': 'شعار الجامعة (PNG مع خلفية شفافة مفضل)',
             'main_image': 'صورة رئيسية للجامعة',
             'location': 'موقع الجامعة (المدينة، الولاية)',
-            'video_url': 'رابط فيديو YouTube أو Vimeo',
             
             # Rich Text Sections
             'description': 'وصف شامل عن الجامعة (يدعم: غامق، مائل، عناوين، قوائم، روابط)',
@@ -261,6 +248,42 @@ UniversityFAQFormSet = inlineformset_factory(
         'answer': 'إجابة السؤال',
         'sort_order': 'ترتيب ظهور السؤال (الأصغر أولاً)',
     }
+)
+
+
+# Create inline formset for Faculty entries
+class FacultyFormSetForm(forms.ModelForm):
+    """Form for Faculty in inline formset"""
+    class Meta:
+        model = Faculty
+        fields = ['name', 'sort_order']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'اسم الكلية',
+                'required': True,
+                'dir': 'rtl',
+            }),
+            'sort_order': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'ترتيب العرض',
+                'min': '0',
+                'dir': 'ltr',
+            }),
+        }
+        labels = {
+            'name': 'اسم الكلية',
+            'sort_order': 'ترتيب العرض',
+        }
+
+
+UniversityFacultyFormSet = inlineformset_factory(
+    University,
+    Faculty,
+    form=FacultyFormSetForm,
+    fields=['name', 'sort_order'],
+    extra=1,
+    can_delete=True,
 )
 
 

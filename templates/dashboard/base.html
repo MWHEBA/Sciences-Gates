@@ -49,7 +49,7 @@
         <aside
             :class="sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'"
             class="fixed top-5 right-5 bottom-5 z-40 flex flex-col transition-transform duration-200 ease-in-out
-                   md:sticky md:top-5 md:h-[calc(100vh-40px)] md:flex-shrink-0"
+                   md:fixed md:top-5 md:right-5 md:h-[calc(100vh-40px)] md:flex-shrink-0 md:overflow-y-auto"
             style="width: var(--sidebar-width);
                    background-color: var(--surface);
                    border: 1px solid var(--border);
@@ -94,7 +94,33 @@
                         <div>
                             <h1 class="text-xl font-semibold leading-tight"
                                 style="color: var(--text-primary);">{% block page_title %}{% endblock %}</h1>
+                            {% if breadcrumbs %}
+                            <nav aria-label="breadcrumb" class="mt-1">
+                                <ol class="flex flex-wrap items-center gap-1 text-sm">
+                                    {% for crumb in breadcrumbs %}
+                                        <li class="flex items-center gap-1">
+                                            {% if crumb.url %}
+                                                <a href="{{ crumb.url }}" class="transition-colors duration-200 cursor-pointer flex items-center gap-1" style="color: var(--primary);" onmouseover="this.style.color='var(--secondary)'" onmouseout="this.style.color='var(--primary)'">
+                                                    {% if forloop.first %}
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-4 7 4M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                                    </svg>
+                                                    {% endif %}
+                                                    {{ crumb.name }}
+                                                </a>
+                                            {% else %}
+                                                <span style="color: var(--text-muted);">{{ crumb.name }}</span>
+                                            {% endif %}
+                                            {% if not forloop.last %}
+                                                <span style="color: var(--text-muted);" aria-hidden="true">/</span>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ol>
+                            </nav>
+                            {% else %}
                             {% block page_description %}{% endblock %}
+                            {% endif %}
                         </div>
                     </div>
 
@@ -113,9 +139,16 @@
             {% endif %}
 
             <!-- محتوى الصفحة -->
-            <div class="flex-1">
+            {% block content_wrapper %}
+            <div class="flex-1 flex flex-col"
+                 style="background-color: white;
+                        border-radius: var(--radius-xl);
+                        border: 1px solid var(--border);
+                        padding: 24px;
+                        box-shadow: var(--shadow-sm);">
                 {% block content %}{% endblock %}
             </div>
+            {% endblock %}
 
         </main>
     </div>
@@ -126,9 +159,11 @@
     <!-- السكريبتات -->
     {% if DEBUG %}
     <script src="{% static 'js/formset-management.js' %}"></script>
+    <script src="{% static 'js/image-upload.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
     {% else %}
     <script src="{% static 'js/formset-management.min.js' %}"></script>
+    <script src="{% static 'js/image-upload.min.js' %}"></script>
     <script src="{% static 'js/main.min.js' %}"></script>
     {% endif %}
     {% block extra_js %}{% endblock %}

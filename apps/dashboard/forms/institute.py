@@ -87,7 +87,7 @@ class InstituteForm(forms.ModelForm):
             # SEO Fields
             'meta_title': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'عنوان SEO (60 حرف كحد أقصى)',
+                'placeholder': '60 حرف كحد أقصى',
                 'maxlength': '60',
                 'dir': 'rtl',
             }),
@@ -105,7 +105,7 @@ class InstituteForm(forms.ModelForm):
             }),
             'canonical_url': forms.URLInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'الرابط الأساسي (اتركه فارغاً للاستخدام الافتراضي)',
+                'placeholder': 'اتركه فارغاً للاستخدام الافتراضي',
                 'dir': 'ltr',
             }),
             'robots_index': forms.CheckboxInput(attrs={

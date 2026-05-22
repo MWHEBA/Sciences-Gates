@@ -4,6 +4,8 @@ Public views for displaying article content to end users.
 from django.views.generic import ListView, DetailView
 from django.db.models import Prefetch, Q
 from .models import Article, Category, Tag
+from apps.seo.mixins import BreadcrumbMixin
+from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
 class ArticleListView(ListView):
@@ -33,7 +35,7 @@ class ArticleListView(ListView):
         ).order_by('-publish_date')
 
 
-class ArticleDetailView(DetailView):
+class ArticleDetailView(BreadcrumbMixin, DetailView):
     """
     Display detailed information about a specific article.
     
@@ -70,6 +72,20 @@ class ArticleDetailView(DetailView):
             'related_majors'
         )
     
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for article detail page."""
+        article = self.object
+        trail = BreadcrumbTrail().add_section('home').add_section('articles')
+        
+        # Add category if available
+        if article.category:
+            trail.add(article.category.name, article.category.get_absolute_url())
+        
+        # Add current article
+        trail.current(article.title)
+        
+        return trail.build()
+    
     def get_context_data(self, **kwargs):
         """Add additional context for the template."""
         context = super().get_context_data(**kwargs)
@@ -80,25 +96,10 @@ class ArticleDetailView(DetailView):
         context['related_institutes'] = article.related_institutes.all()
         context['related_majors'] = article.related_majors.all()
         
-        # Add breadcrumbs for SEO
-        breadcrumbs = [
-            ('الرئيسية', '/'),
-            ('المقالات', '/articles/'),
-        ]
-        
-        # Add category if available
-        if article.category:
-            breadcrumbs.append((article.category.name, article.category.get_absolute_url()))
-        
-        # Add current article
-        breadcrumbs.append((article.title, None))
-        
-        context['breadcrumbs'] = breadcrumbs
-        
         return context
 
 
-class CategoryArticleListView(ListView):
+class CategoryArticleListView(BreadcrumbMixin, ListView):
     """
     Display a paginated list of published articles in a specific category.
     
@@ -126,6 +127,22 @@ class CategoryArticleListView(ListView):
             'tags'
         ).order_by('-publish_date')
     
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for category article list page."""
+        category_slug = self.kwargs.get('slug')
+        try:
+            category = Category.objects.get(slug=category_slug)
+            return (BreadcrumbTrail()
+                .add_section('home')
+                .add_section('articles')
+                .current(category.name)
+                .build())
+        except Category.DoesNotExist:
+            return (BreadcrumbTrail()
+                .add_section('home')
+                .add_section('articles')
+                .build())
+    
     def get_context_data(self, **kwargs):
         """Add category information to context."""
         context = super().get_context_data(**kwargs)
@@ -135,24 +152,13 @@ class CategoryArticleListView(ListView):
         try:
             category = Category.objects.get(slug=category_slug)
             context['category'] = category
-            
-            # Add breadcrumbs for SEO
-            context['breadcrumbs'] = [
-                ('الرئيسية', '/'),
-                ('المقالات', '/articles/'),
-                (category.name, None),  # Current page
-            ]
         except Category.DoesNotExist:
             context['category'] = None
-            context['breadcrumbs'] = [
-                ('الرئيسية', '/'),
-                ('المقالات', '/articles/'),
-            ]
         
         return context
 
 
-class TagArticleListView(ListView):
+class TagArticleListView(BreadcrumbMixin, ListView):
     """
     Display a paginated list of published articles with a specific tag.
     
@@ -180,6 +186,22 @@ class TagArticleListView(ListView):
             'tags'
         ).order_by('-publish_date').distinct()
     
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for tag article list page."""
+        tag_slug = self.kwargs.get('slug')
+        try:
+            tag = Tag.objects.get(slug=tag_slug)
+            return (BreadcrumbTrail()
+                .add_section('home')
+                .add_section('articles')
+                .current(f'الوسم: {tag.name}')
+                .build())
+        except Tag.DoesNotExist:
+            return (BreadcrumbTrail()
+                .add_section('home')
+                .add_section('articles')
+                .build())
+    
     def get_context_data(self, **kwargs):
         """Add tag information to context."""
         context = super().get_context_data(**kwargs)
@@ -189,18 +211,7 @@ class TagArticleListView(ListView):
         try:
             tag = Tag.objects.get(slug=tag_slug)
             context['tag'] = tag
-            
-            # Add breadcrumbs for SEO
-            context['breadcrumbs'] = [
-                ('الرئيسية', '/'),
-                ('المقالات', '/articles/'),
-                (f'الوسم: {tag.name}', None),  # Current page
-            ]
         except Tag.DoesNotExist:
             context['tag'] = None
-            context['breadcrumbs'] = [
-                ('الرئيسية', '/'),
-                ('المقالات', '/articles/'),
-            ]
         
         return context

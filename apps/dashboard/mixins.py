@@ -44,7 +44,7 @@ class ContentAdminRequiredMixin(DashboardMixin):
             return response
 
         user_profile = request.user.profile
-        if not (user_profile.is_content_admin() or user_profile.is_super_admin()):
+        if not (user_profile.is_content_admin or user_profile.is_super_admin):
             messages.error(request, 'ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول.')
             return HttpResponseForbidden('غير مصرح بالوصول إلى هذا المورد')
 
@@ -66,7 +66,7 @@ class SEOAdminRequiredMixin(DashboardMixin):
             return response
 
         user_profile = request.user.profile
-        if not (user_profile.is_seo_admin() or user_profile.is_super_admin()):
+        if not (user_profile.is_seo_admin or user_profile.is_super_admin):
             messages.error(request, 'ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول.')
             return HttpResponseForbidden('غير مصرح بالوصول إلى هذا المورد')
 
@@ -88,7 +88,7 @@ class SuperAdminRequiredMixin(DashboardMixin):
             return response
 
         user_profile = request.user.profile
-        if not user_profile.is_super_admin():
+        if not user_profile.is_super_admin:
             messages.error(request, 'ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول.')
             return HttpResponseForbidden('غير مصرح بالوصول إلى هذا المورد')
 

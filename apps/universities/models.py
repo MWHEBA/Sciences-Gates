@@ -55,7 +55,6 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
     video_url = models.URLField(
         blank=True,
         verbose_name='رابط الفيديو',
-        help_text='رابط فيديو YouTube أو Vimeo'
     )
     admission_requirements = models.TextField(
         verbose_name='شروط القبول',

@@ -5,6 +5,8 @@ from django.views.generic import ListView, DetailView, TemplateView
 from django.db.models import Prefetch
 from django.core.paginator import Paginator
 from .models import University, Faculty, Program, UniversityFAQ
+from apps.seo.mixins import BreadcrumbMixin
+from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
 class UniversityListView(ListView):
@@ -35,7 +37,7 @@ class UniversityListView(ListView):
         ).order_by('name')
 
 
-class UniversityDetailView(DetailView):
+class UniversityDetailView(BreadcrumbMixin, DetailView):
     """
     Display detailed information about a specific university.
     
@@ -88,6 +90,14 @@ class UniversityDetailView(DetailView):
             'related_articles'
         )
     
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for university detail page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .add_section('universities')
+            .current(self.object.name)
+            .build())
+    
     def get_context_data(self, **kwargs):
         """Add additional context for the template."""
         context = super().get_context_data(**kwargs)
@@ -97,23 +107,31 @@ class UniversityDetailView(DetailView):
         context['faculties'] = university.faculties.all()
         context['faqs'] = university.faqs.all()
         
-        # Add breadcrumbs for SEO
-        context['breadcrumbs'] = [
-            ('الرئيسية', '/'),
-            ('الجامعات', '/universities/'),
-            (university.name, None),  # Current page
-        ]
-        
         return context
 
 
-class UniversityTypeListView(TemplateView):
+class UniversityTypeListView(BreadcrumbMixin, TemplateView):
     """
     Display universities filtered by type (public/private).
     
     Shows paginated list of universities for a specific type.
     """
     template_name = 'universities/type_list.html'
+    
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for university type list page."""
+        university_type = self.kwargs.get('type', 'public')
+        type_labels = {
+            'public': 'الجامعات الحكومية',
+            'private': 'الجامعات الخاصة'
+        }
+        type_label = type_labels.get(university_type, 'الجامعات')
+        
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .add_section('universities')
+            .current(type_label)
+            .build())
     
     def get_context_data(self, **kwargs):
         """Get universities by type with pagination."""
@@ -161,11 +179,5 @@ class UniversityTypeListView(TemplateView):
         context['university_type'] = university_type
         context['type_label'] = type_labels.get(university_type, 'الجامعات')
         context['page_title'] = type_labels.get(university_type, 'الجامعات')
-        
-        context['breadcrumbs'] = [
-            ('الرئيسية', '/'),
-            ('الجامعات', '/universities/'),
-            (type_labels.get(university_type), None)
-        ]
         
         return context

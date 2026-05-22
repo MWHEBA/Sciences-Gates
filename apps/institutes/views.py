@@ -5,6 +5,8 @@ from django.views.generic import ListView, DetailView, TemplateView
 from django.db.models import Prefetch
 from django.core.paginator import Paginator
 from .models import Institute, Course
+from apps.seo.mixins import BreadcrumbMixin
+from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
 class InstituteListView(ListView):
@@ -33,7 +35,7 @@ class InstituteListView(ListView):
         ).order_by('name')
 
 
-class InstituteDetailView(DetailView):
+class InstituteDetailView(BreadcrumbMixin, DetailView):
     """
     Display detailed information about a specific institute.
     
@@ -72,6 +74,14 @@ class InstituteDetailView(DetailView):
             'related_articles'
         )
     
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for institute detail page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .add_section('institutes')
+            .current(self.object.name)
+            .build())
+    
     def get_context_data(self, **kwargs):
         """Add additional context for the template."""
         context = super().get_context_data(**kwargs)
@@ -80,23 +90,31 @@ class InstituteDetailView(DetailView):
         institute = self.object
         context['courses'] = institute.courses.all()
         
-        # Add breadcrumbs for SEO
-        context['breadcrumbs'] = [
-            ('الرئيسية', '/'),
-            ('المعاهد', '/institutes/'),
-            (institute.name, None),  # Current page
-        ]
-        
         return context
 
 
-class InstituteTypeListView(TemplateView):
+class InstituteTypeListView(BreadcrumbMixin, TemplateView):
     """
     Display institutes filtered by type (language/academic).
     
     Shows paginated list of institutes for a specific type.
     """
     template_name = 'institutes/type_list.html'
+    
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for institute type list page."""
+        institute_type = self.kwargs.get('type', 'academic')
+        type_labels = {
+            'language': 'معاهد اللغة الإنجليزية',
+            'academic': 'المعاهد الأكاديمية'
+        }
+        type_label = type_labels.get(institute_type, 'المعاهد')
+        
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .add_section('institutes')
+            .current(type_label)
+            .build())
     
     def get_context_data(self, **kwargs):
         """Get institutes by type with pagination."""
@@ -138,11 +156,5 @@ class InstituteTypeListView(TemplateView):
         context['institute_type'] = institute_type
         context['type_label'] = type_labels.get(institute_type, 'المعاهد')
         context['page_title'] = type_labels.get(institute_type, 'المعاهد')
-        
-        context['breadcrumbs'] = [
-            ('الرئيسية', '/'),
-            ('المعاهد', '/institutes/'),
-            (type_labels.get(institute_type), None)
-        ]
         
         return context

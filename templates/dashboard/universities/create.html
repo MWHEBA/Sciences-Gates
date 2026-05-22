@@ -1,349 +1,503 @@
-{% extends "dashboard/form_page.html" %}
+{% extends "dashboard/base.html" %}
 {% load static %}
 
 {% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
 
-{% block form_sections %}
-<!-- Basic Information Section -->
-<div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">المعلومات الأساسية</h2>
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <!-- Name -->
-        <div>
-            <label for="{{ form.name.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.name.label }}
-                <span class="text-red-500">*</span>
-            </label>
-            {{ form.name }}
-            {% if form.name.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</p>
-            {% endif %}
-        </div>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/html_editor.css' %}">
+{% endblock %}
 
-        <!-- Slug -->
-        <div>
-            <label for="{{ form.slug.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.slug.label }}
-                <span class="text-red-500">*</span>
-            </label>
-            {{ form.slug }}
-            {% if form.slug.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.slug.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.slug.help_text }}</p>
-        </div>
+{% block content_wrapper %}
+<form method="post" enctype="multipart/form-data" id="main-form">
+    {% csrf_token %}
 
-        <!-- University Type -->
-        <div>
-            <label for="{{ form.university_type.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.university_type.label }}
-                <span class="text-red-500">*</span>
-            </label>
-            {{ form.university_type }}
-            {% if form.university_type.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.university_type.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.university_type.help_text }}</p>
-        </div>
-
-        <!-- Location -->
-        <div>
-            <label for="{{ form.location.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.location.label }}
-                <span class="text-red-500">*</span>
-            </label>
-            {{ form.location }}
-            {% if form.location.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.location.errors.0 }}</p>
-            {% endif %}
-        </div>
-
-        <!-- Logo -->
-        <div>
-            <label for="{{ form.logo.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.logo.label }}
-                <span class="text-red-500">*</span>
-            </label>
-            {{ form.logo }}
-            {% if form.logo.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.logo.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.logo.help_text }}</p>
-        </div>
-
-        <!-- Main Image -->
-        <div>
-            <label for="{{ form.main_image.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.main_image.label }}
-                <span class="text-red-500">*</span>
-            </label>
-            {{ form.main_image }}
-            {% if form.main_image.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.main_image.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.main_image.help_text }}</p>
-        </div>
-
-        <!-- Video URL -->
-        <div>
-            <label for="{{ form.video_url.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.video_url.label }}
-            </label>
-            {{ form.video_url }}
-            {% if form.video_url.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.video_url.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.video_url.help_text }}</p>
-        </div>
-
-        <!-- Description -->
-        <div class="md:col-span-2">
-            <label for="{{ form.description.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.description.label }}
-                <span class="text-red-500">*</span>
-            </label>
-            {{ form.description }}
-            {% if form.description.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.description.help_text }}</p>
-        </div>
-
-        <!-- Admission Requirements -->
-        <div class="md:col-span-2">
-            <label for="{{ form.admission_requirements.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.admission_requirements.label }}
-                <span class="text-red-500">*</span>
-            </label>
-            {{ form.admission_requirements }}
-            {% if form.admission_requirements.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.admission_requirements.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.admission_requirements.help_text }}</p>
-        </div>
-
-        <!-- Registration Section -->
-        <div class="md:col-span-2">
-            <label for="{{ form.registration_section.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.registration_section.label }}
-            </label>
-            {{ form.registration_section }}
-            {% if form.registration_section.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.registration_section.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.registration_section.help_text }}</p>
-        </div>
-    </div>
-</div>
-
-<!-- Relationships Section -->
-<div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">الارتباطات</h2>
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <!-- Related Majors -->
-        <div>
-            <label for="{{ form.related_majors.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.related_majors.label }}
-            </label>
-            <div class="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
-                {{ form.related_majors }}
-            </div>
-            {% if form.related_majors.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.related_majors.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.related_majors.help_text }}</p>
-        </div>
-
-        <!-- Related Articles -->
-        <div>
-            <label for="{{ form.related_articles.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.related_articles.label }}
-            </label>
-            <div class="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
-                {{ form.related_articles }}
-            </div>
-            {% if form.related_articles.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.related_articles.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.related_articles.help_text }}</p>
-        </div>
-    </div>
-</div>
-
-<!-- FAQ Section -->
-<div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">الأسئلة الشائعة</h2>
-    <div id="faq-formset">
-        {{ faq_formset.management_form }}
-        {% for form in faq_formset %}
-        <div class="mb-6 p-4 border border-gray-200 rounded-lg" data-form-index="{{ forloop.counter0 }}">
-            <div class="grid grid-cols-1 gap-4">
-                <!-- Question -->
-                <div>
-                    <label for="{{ form.question.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                        {{ form.question.label }}
-                    </label>
-                    {{ form.question }}
-                    {% if form.question.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.question.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <!-- Answer -->
-                <div>
-                    <label for="{{ form.answer.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                        {{ form.answer.label }}
-                    </label>
-                    {{ form.answer }}
-                    {% if form.answer.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.answer.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <!-- Sort Order -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="{{ form.sort_order.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                            {{ form.sort_order.label }}
-                        </label>
-                        {{ form.sort_order }}
-                        {% if form.sort_order.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.sort_order.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <!-- Delete Checkbox -->
-                    <div>
-                        <label class="flex items-center gap-2 cursor-pointer mt-6">
-                            {{ form.DELETE }}
-                            <span class="text-sm font-normal text-gray-700">حذف هذا السؤال</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Non-field Errors -->
+    {% if form.non_field_errors %}
+    <div class="mb-4 p-4 rounded-lg" style="background-color: var(--danger-light); border: 1px solid var(--danger); color: var(--danger);">
+        {% for error in form.non_field_errors %}
+        <p class="text-sm">{{ error }}</p>
         {% endfor %}
     </div>
-</div>
+    {% endif %}
 
-<!-- Publishing Section -->
-<div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">النشر</h2>
-    <div>
-        <label for="{{ form.publish_status.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-            {{ form.publish_status.label }}
-        </label>
-        {{ form.publish_status }}
-        {% if form.publish_status.errors %}
-            <p class="mt-1 text-sm text-red-600">{{ form.publish_status.errors.0 }}</p>
-        {% endif %}
-        <p class="mt-1 text-xs text-gray-500">{{ form.publish_status.help_text }}</p>
+    <!-- Layout: سكشنين منفصلين — يمين 70% وشمال 30% -->
+    <div class="flex-1 flex" style="align-items: stretch; gap: 20px;">
+
+        <!-- السكشن الرئيسي — 70% (يمين في RTL) -->
+        <div class="flex-1 min-w-0" style="flex: 7;">
+            <div class="space-y-6">
+
+                <!-- المعلومات الأساسية — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">المعلومات الأساسية</h2>
+                        <div class="space-y-6">
+                            <!-- الاسم — Full Width -->
+                            <div>
+                                <label for="{{ form.name.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.name.label }}
+                                    <span style="color: var(--danger);">*</span>
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.name.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- الرابط — Full Width -->
+                            <div>
+                                <label for="{{ form.slug.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.slug.label }}
+                                    <span style="color: var(--danger);">*</span>
+                                </label>
+                                {{ form.slug }}
+                                {% if form.slug.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.slug.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.slug.help_text }}</p>
+                            </div>
+
+                            <!-- باقي الحقول في Grid -->
+                            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <!-- نوع الجامعة -->
+                                <div>
+                                    <label for="{{ form.university_type.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                        {{ form.university_type.label }}
+                                        <span style="color: var(--danger);">*</span>
+                                    </label>
+                                    {{ form.university_type }}
+                                    {% if form.university_type.errors %}
+                                        <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.university_type.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- رابط الفيديو -->
+                                <div>
+                                    <label for="{{ form.video_url.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                        {{ form.video_url.label }}
+                                    </label>
+                                    {{ form.video_url }}
+                                    {% if form.video_url.errors %}
+                                        <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.video_url.errors.0 }}</p>
+                                    {% endif %}
+                                    <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.video_url.help_text }}</p>
+                                </div>
+
+                                <!-- الشعار -->
+                                <div>
+                                    {% include "dashboard/components/image_upload.html" with field=form.logo required=True %}
+                                </div>
+
+                                <!-- الصورة الرئيسية -->
+                                <div>
+                                    {% include "dashboard/components/image_upload.html" with field=form.main_image required=True %}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- المحتوى — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">المحتوى</h2>
+                        <div class="space-y-6">
+                            <!-- الوصف -->
+                            <div>
+                                <label for="{{ form.description.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.description.label }}
+                                    <span style="color: var(--danger);">*</span>
+                                </label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.description.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.description.help_text }}</p>
+                            </div>
+
+                            <!-- الموقع — Editor -->
+                            <div>
+                                <label for="{{ form.location.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.location.label }}
+                                    <span style="color: var(--danger);">*</span>
+                                </label>
+                                {{ form.location }}
+                                {% if form.location.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.location.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.location.help_text }}</p>
+                            </div>
+
+                            <!-- شروط القبول -->
+                            <div>
+                                <label for="{{ form.admission_requirements.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.admission_requirements.label }}
+                                    <span style="color: var(--danger);">*</span>
+                                </label>
+                                {{ form.admission_requirements }}
+                                {% if form.admission_requirements.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.admission_requirements.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.admission_requirements.help_text }}</p>
+                            </div>
+
+                            <!-- قسم التسجيل -->
+                            <div>
+                                <label for="{{ form.registration_section.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.registration_section.label }}
+                                </label>
+                                {{ form.registration_section }}
+                                {% if form.registration_section.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.registration_section.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.registration_section.help_text }}</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- التخصصات المرتبطة — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">التخصصات المرتبطة</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="{{ form.related_majors.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.related_majors.label }}
+                                </label>
+                                <div class="max-h-48 overflow-y-auto rounded-lg p-3" style="border: 1px solid var(--border); background-color: var(--surface-2);">
+                                    {{ form.related_majors }}
+                                </div>
+                                {% if form.related_majors.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_majors.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- الكليات — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">الكليات</h2>
+                        <div id="faculty-formset">
+                            {{ faculty_formset.management_form }}
+                            {% for faculty_form in faculty_formset %}
+                            <div class="mb-4 p-4 rounded-lg" style="border: 1px solid var(--border); background-color: var(--surface-2);" data-form-index="{{ forloop.counter0 }}">
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <!-- اسم الكلية -->
+                                    <div>
+                                        <label for="{{ faculty_form.name.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                            {{ faculty_form.name.label }}
+                                        </label>
+                                        {{ faculty_form.name }}
+                                        {% if faculty_form.name.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ faculty_form.name.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- ترتيب -->
+                                    <div>
+                                        <label for="{{ faculty_form.sort_order.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                            {{ faculty_form.sort_order.label }}
+                                        </label>
+                                        {{ faculty_form.sort_order }}
+                                    </div>
+
+                                    <!-- حذف -->
+                                    <div class="md:col-span-2">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            {{ faculty_form.DELETE }}
+                                            <span class="text-sm" style="color: var(--text-secondary);">حذف هذه الكلية</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+
+                <!-- الأسئلة الشائعة — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">الأسئلة الشائعة</h2>
+                        <div id="faq-formset">
+                            {{ faq_formset.management_form }}
+                            {% for faq_form in faq_formset %}
+                            <div class="mb-4 p-4 rounded-lg" style="border: 1px solid var(--border); background-color: var(--surface-2);" data-form-index="{{ forloop.counter0 }}">
+                                <div class="grid grid-cols-1 gap-4">
+                                    <!-- السؤال -->
+                                    <div>
+                                        <label for="{{ faq_form.question.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                            {{ faq_form.question.label }}
+                                        </label>
+                                        {{ faq_form.question }}
+                                        {% if faq_form.question.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ faq_form.question.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- الإجابة -->
+                                    <div>
+                                        <label for="{{ faq_form.answer.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                            {{ faq_form.answer.label }}
+                                        </label>
+                                        {{ faq_form.answer }}
+                                        {% if faq_form.answer.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ faq_form.answer.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- ترتيب + حذف -->
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="{{ faq_form.sort_order.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                                {{ faq_form.sort_order.label }}
+                                            </label>
+                                            {{ faq_form.sort_order }}
+                                        </div>
+                                        <div>
+                                            <label class="flex items-center gap-2 cursor-pointer mt-6">
+                                                {{ faq_form.DELETE }}
+                                                <span class="text-sm" style="color: var(--text-secondary);">حذف هذا السؤال</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- السايد بار — 30% (شمال في RTL) -->
+        <div style="flex: 3; min-width: 0; align-self: stretch;">
+            <div style="position: sticky; top: 80px;">
+
+                <!-- النشر — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 20px;
+                            margin-bottom: 24px;">
+                    <section>
+                        <h3 class="text-base font-semibold" style="color: var(--text-primary); margin-bottom: 16px;">النشر</h3>
+                        
+                        <!-- الحالة الحالية -->
+                        <div class="flex items-center gap-2 mb-4 p-3 rounded-lg" style="background-color: var(--surface-2); border: 1px solid var(--border);">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background-color: {% if form.publish_status.value == 'published' %}var(--success){% else %}var(--danger){% endif %};"></span>
+                            <span class="text-sm" style="color: var(--text-secondary);">الحالة:</span>
+                            <span class="text-sm font-normal" style="color: var(--text-primary);">
+                                {% if form.publish_status.value == 'published' %}منشور{% else %}مسودة{% endif %}
+                            </span>
+                        </div>
+
+                        <!-- حقل مخفي -->
+                        <input type="hidden" name="publish_status" id="id_publish_status" value="{{ form.publish_status.value|default:'unpublished' }}">
+
+                        <!-- أزرار -->
+                        <div class="flex flex-col gap-2">
+                            <button type="submit" class="w-full px-4 py-2 rounded-lg font-normal text-white transition-colors duration-200 cursor-pointer" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'" onclick="document.getElementById('id_publish_status').value='published'">
+                                نشر
+                            </button>
+                            <button type="submit" class="w-full px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer" style="background-color: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border);" onclick="document.getElementById('id_publish_status').value='unpublished'">
+                                حفظ كمسودة
+                            </button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- الارتباطات — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 20px;
+                            margin-bottom: 24px;">
+                    <section>
+                        <h3 class="text-base font-semibold" style="color: var(--text-primary); margin-bottom: 16px;">الارتباطات</h3>
+                        <div class="space-y-4">
+                            <!-- المقالات المرتبطة -->
+                            <div>
+                                <label for="{{ form.related_articles.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.related_articles.label }}
+                                </label>
+                                <div class="max-h-36 overflow-y-auto rounded-lg p-3" style="border: 1px solid var(--border); background-color: var(--surface-2);">
+                                    {{ form.related_articles }}
+                                </div>
+                                {% if form.related_articles.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_articles.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- تحسين محركات البحث — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 20px;">
+                    <section x-data="{ showAdvanced: false }">
+                        <h3 class="text-base font-semibold" style="color: var(--text-primary); margin-bottom: 16px;">تحسين محركات البحث</h3>
+                        <div class="space-y-4">
+                            <!-- عنوان SEO -->
+                            <div>
+                                <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.meta_title.label }}
+                                </label>
+                                {{ form.meta_title }}
+                                {% if form.meta_title.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.meta_title.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- وصف SEO -->
+                            <div>
+                                <label for="{{ form.meta_description.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.meta_description.label }}
+                                </label>
+                                {{ form.meta_description }}
+                                {% if form.meta_description.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.meta_description.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- الكلمة المفتاحية -->
+                            <div>
+                                <label for="{{ form.focus_keyword.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.focus_keyword.label }}
+                                </label>
+                                {{ form.focus_keyword }}
+                                {% if form.focus_keyword.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.focus_keyword.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- زر الإعدادات المتقدمة -->
+                            <button type="button"
+                                    @click="showAdvanced = !showAdvanced"
+                                    class="flex items-center gap-2 w-full pt-3 cursor-pointer"
+                                    style="padding-top: 10px; border-top: 1px solid var(--border);">
+                                <svg :class="showAdvanced ? 'rotate-90' : ''" style="width: 14px; height: 14px; color: var(--text-muted); transition: transform 0.2s ease;" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                                <span class="text-sm" style="color: var(--text-muted);">إعدادات متقدمة</span>
+                            </button>
+
+                            <!-- الإعدادات المتقدمة — Collapsible -->
+                            <div x-show="showAdvanced" x-collapse>
+                                <div class="space-y-4 pt-3">
+                                    <!-- الرابط الأساسي -->
+                                    <div>
+                                        <label for="{{ form.canonical_url.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                            {{ form.canonical_url.label }}
+                                        </label>
+                                        {{ form.canonical_url }}
+                                        {% if form.canonical_url.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.canonical_url.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- إعدادات الروبوتات -->
+                                    <div class="space-y-2">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            {{ form.robots_index }}
+                                            <span class="text-sm" style="color: var(--text-secondary);">{{ form.robots_index.label }}</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            {{ form.robots_follow }}
+                                            <span class="text-sm" style="color: var(--text-secondary);">{{ form.robots_follow.label }}</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            {{ form.sitemap_include }}
+                                            <span class="text-sm" style="color: var(--text-secondary);">{{ form.sitemap_include.label }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Open Graph -->
+                                    <div class="pt-3" style="padding-top: 10px; border-top: 1px solid var(--border);">
+                                        <p class="text-sm font-normal mb-3" style="color: var(--text-primary);">Open Graph</p>
+                                        <div class="space-y-4">
+                                            <!-- عنوان OG -->
+                                            <div>
+                                                <label for="{{ form.og_title.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                                    {{ form.og_title.label }}
+                                                </label>
+                                                {{ form.og_title }}
+                                                {% if form.og_title.errors %}
+                                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.og_title.errors.0 }}</p>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- وصف OG -->
+                                            <div>
+                                                <label for="{{ form.og_description.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                                    {{ form.og_description.label }}
+                                                </label>
+                                                {{ form.og_description }}
+                                                {% if form.og_description.errors %}
+                                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.og_description.errors.0 }}</p>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- صورة OG -->
+                                            <div>
+                                                {% include "dashboard/components/image_upload.html" with field=form.og_image %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+            </div>
+        </div>
+
     </div>
-</div>
+</form>
 
-<!-- SEO Section -->
-<div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">تحسين محركات البحث (SEO)</h2>
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <!-- Meta Title -->
-        <div>
-            <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.meta_title.label }}
-            </label>
-            {{ form.meta_title }}
-            {% if form.meta_title.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.meta_title.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.meta_title.help_text }}</p>
-        </div>
+<!-- سكريبت التمرير لأول خطأ -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const errorFields = document.querySelectorAll('[aria-invalid="true"]');
+    if (errorFields.length > 0) {
+        errorFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        errorFields[0].focus();
+    }
+});
+</script>
+{% endblock %}
 
-        <!-- Focus Keyword -->
-        <div>
-            <label for="{{ form.focus_keyword.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.focus_keyword.label }}
-            </label>
-            {{ form.focus_keyword }}
-            {% if form.focus_keyword.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.focus_keyword.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.focus_keyword.help_text }}</p>
-        </div>
-
-        <!-- Meta Description -->
-        <div class="md:col-span-2">
-            <label for="{{ form.meta_description.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.meta_description.label }}
-            </label>
-            {{ form.meta_description }}
-            {% if form.meta_description.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.meta_description.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.meta_description.help_text }}</p>
-        </div>
-
-        <!-- Canonical URL -->
-        <div>
-            <label for="{{ form.canonical_url.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.canonical_url.label }}
-            </label>
-            {{ form.canonical_url }}
-            {% if form.canonical_url.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.canonical_url.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.canonical_url.help_text }}</p>
-        </div>
-
-        <!-- Robots Settings -->
-        <div class="space-y-3">
-            <label class="flex items-center gap-2 cursor-pointer">
-                {{ form.robots_index }}
-                <span class="text-sm font-normal text-gray-700">{{ form.robots_index.label }}</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-                {{ form.robots_follow }}
-                <span class="text-sm font-normal text-gray-700">{{ form.robots_follow.label }}</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-                {{ form.sitemap_include }}
-                <span class="text-sm font-normal text-gray-700">{{ form.sitemap_include.label }}</span>
-            </label>
-        </div>
-
-        <!-- OG Title -->
-        <div>
-            <label for="{{ form.og_title.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.og_title.label }}
-            </label>
-            {{ form.og_title }}
-            {% if form.og_title.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.og_title.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.og_title.help_text }}</p>
-        </div>
-
-        <!-- OG Description -->
-        <div class="md:col-span-2">
-            <label for="{{ form.og_description.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.og_description.label }}
-            </label>
-            {{ form.og_description }}
-            {% if form.og_description.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.og_description.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.og_description.help_text }}</p>
-        </div>
-
-        <!-- OG Image -->
-        <div>
-            <label for="{{ form.og_image.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.og_image.label }}
-            </label>
-            {{ form.og_image }}
-            {% if form.og_image.errors %}
-                <p class="mt-1 text-sm text-red-600">{{ form.og_image.errors.0 }}</p>
-            {% endif %}
-            <p class="mt-1 text-xs text-gray-500">{{ form.og_image.help_text }}</p>
-        </div>
-    </div>
-</div>
+{% block extra_js %}
+<script src="{% static 'js/html_editor.js' %}"></script>
 {% endblock %}

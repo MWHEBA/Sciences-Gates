@@ -7,11 +7,11 @@
 <div class="space-y-6">
     <!-- Breadcrumb Navigation -->
     <nav class="flex items-center gap-2 text-sm text-gray-600" aria-label="Breadcrumb">
-        {% for breadcrumb in breadcrumbs %}
-            {% if breadcrumb.url %}
-                <a href="{{ breadcrumb.url }}" class="text-blue-600 hover:text-blue-800">{{ breadcrumb.title }}</a>
+        {% for crumb in breadcrumbs %}
+            {% if crumb.url %}
+                <a href="{{ crumb.url }}" class="text-blue-600 hover:text-blue-800">{{ crumb.name }}</a>
             {% else %}
-                <span class="text-gray-900 font-normal">{{ breadcrumb.title }}</span>
+                <span class="text-gray-900 font-normal">{{ crumb.name }}</span>
             {% endif %}
             {% if not forloop.last %}
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -25,12 +25,14 @@ from apps.articles.models import Article, Category, Tag
 from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin
 from apps.dashboard.forms import (
     UserCreateForm, UserUpdateForm, RedirectForm, 
-    UniversityForm, UniversityFAQFormSet, FacultyForm, ProgramFormSet, 
+    UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, 
     InstituteForm, CourseFormSet,
     MajorForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet,
     ArticleForm, CategoryForm, TagForm
 )
 from apps.articles.models import Category, Tag
+from apps.seo.mixins import DashboardBreadcrumbMixin
+from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
 class DashboardLoginView(View):
@@ -226,7 +228,7 @@ class DashboardHomeView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
-class UserListView(SuperAdminRequiredMixin, ListView):
+class UserListView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
     List all users with their roles.
     عرض قائمة بجميع المستخدمين مع أدوارهم
@@ -236,6 +238,13 @@ class UserListView(SuperAdminRequiredMixin, ListView):
     context_object_name = 'users'
     paginate_by = 20
 
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for user list page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('المستخدمون')
+            .build())
+
     def get_queryset(self):
         """Get all users ordered by username."""
         return User.objects.filter(is_staff=True).select_related('profile').order_by('username')
@@ -244,6 +253,8 @@ class UserListView(SuperAdminRequiredMixin, ListView):
         """Add page title to context."""
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة المستخدمين'
+        # Add items for list_page.html template
+        context['items'] = context.get('users', [])
         return context
 
 
@@ -348,7 +359,7 @@ class UserDeleteView(SuperAdminRequiredMixin, DeleteView):
         return context
 
 
-class RedirectListView(SEOAdminRequiredMixin, ListView):
+class RedirectListView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
     List all redirects with search and filtering.
     عرض قائمة بجميع إعادات التوجيه مع البحث والتصفية
@@ -364,6 +375,13 @@ class RedirectListView(SEOAdminRequiredMixin, ListView):
     template_name = 'dashboard/redirects/list.html'
     context_object_name = 'redirects'
     paginate_by = 20
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for redirect list page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('إعادات التوجيه')
+            .build())
 
     def get_queryset(self):
         """Get redirects with optional search and filtering."""
@@ -392,6 +410,8 @@ class RedirectListView(SEOAdminRequiredMixin, ListView):
         context['page_title'] = 'إدارة إعادات التوجيه'
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
+        # Add items for list_page.html template
+        context['items'] = context.get('redirects', [])
         return context
 
 
@@ -507,7 +527,7 @@ class RedirectDeleteView(SEOAdminRequiredMixin, DeleteView):
 # University Management Views
 # ============================================================================
 
-class UniversityListView(ContentAdminRequiredMixin, ListView):
+class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
     List all universities with search and status filters.
     عرض قائمة بجميع الجامعات مع البحث والتصفية حسب الحالة
@@ -527,6 +547,13 @@ class UniversityListView(ContentAdminRequiredMixin, ListView):
     template_name = 'dashboard/universities/list.html'
     context_object_name = 'universities'
     paginate_by = 20
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for university list page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('الجامعات')
+            .build())
 
     def get_queryset(self):
         """Get universities with optional search and filtering."""
@@ -578,6 +605,8 @@ class UniversityListView(ContentAdminRequiredMixin, ListView):
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['type_filter'] = self.request.GET.get('type', '')
+        # Add items for list_page.html template
+        context['items'] = context.get('universities', [])
         return context
 
 
@@ -601,20 +630,25 @@ class UniversityCreateView(ContentAdminRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
             context['faq_formset'] = UniversityFAQFormSet(self.request.POST, instance=self.object)
+            context['faculty_formset'] = UniversityFacultyFormSet(self.request.POST, instance=self.object)
         else:
             context['faq_formset'] = UniversityFAQFormSet(instance=self.object)
+            context['faculty_formset'] = UniversityFacultyFormSet(instance=self.object)
         context['page_title'] = 'إنشاء جامعة جديدة'
         return context
 
     def form_valid(self, form):
-        """Handle successful form submission with formset."""
+        """Handle successful form submission with formsets."""
         context = self.get_context_data()
         faq_formset = context['faq_formset']
+        faculty_formset = context['faculty_formset']
         
-        if faq_formset.is_valid():
+        if faq_formset.is_valid() and faculty_formset.is_valid():
             self.object = form.save()
             faq_formset.instance = self.object
             faq_formset.save()
+            faculty_formset.instance = self.object
+            faculty_formset.save()
             messages.success(
                 self.request,
                 f'تم إنشاء الجامعة "{self.object.name}" بنجاح'
@@ -761,7 +795,7 @@ class UniversityDeleteView(ContentAdminRequiredMixin, DeleteView):
 # Faculty Management Views
 # ============================================================================
 
-class FacultyListView(ContentAdminRequiredMixin, ListView):
+class FacultyListView(DashboardBreadcrumbMixin, ContentAdminRequiredMixin, ListView):
     """
     List all faculties for a specific university.
     عرض قائمة بجميع الكليات لجامعة معينة
@@ -786,24 +820,30 @@ class FacultyListView(ContentAdminRequiredMixin, ListView):
             university_id=university_id
         ).prefetch_related('programs').order_by('sort_order', 'name')
 
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for faculty list page."""
+        university_id = self.kwargs.get('university_id')
+        university = get_object_or_404(University, pk=university_id)
+        
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_universities')
+            .add(university.name, reverse_lazy('dashboard:university_edit', kwargs={'pk': university.pk}))
+            .current('الكليات')
+            .build())
+
     def get_context_data(self, **kwargs):
-        """Add university and breadcrumb to context."""
+        """Add university to context."""
         context = super().get_context_data(**kwargs)
         university_id = self.kwargs.get('university_id')
         university = get_object_or_404(University, pk=university_id)
         
         context['university'] = university
         context['page_title'] = f'إدارة الكليات: {university.name}'
-        context['breadcrumbs'] = [
-            {'title': 'لوحة التحكم', 'url': reverse_lazy('dashboard:home')},
-            {'title': 'الجامعات', 'url': reverse_lazy('dashboard:university_list')},
-            {'title': university.name, 'url': reverse_lazy('dashboard:university_edit', kwargs={'pk': university.pk})},
-            {'title': 'الكليات', 'url': None},
-        ]
         return context
 
 
-class FacultyCreateView(ContentAdminRequiredMixin, CreateView):
+class FacultyCreateView(DashboardBreadcrumbMixin, ContentAdminRequiredMixin, CreateView):
     """
     Create a new faculty with inline Program formset.
     إنشاء كلية جديدة مع نموذج البرامج المدمج
@@ -819,6 +859,19 @@ class FacultyCreateView(ContentAdminRequiredMixin, CreateView):
     form_class = FacultyForm
     template_name = 'dashboard/faculties/create.html'
 
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for faculty create page."""
+        university_id = self.kwargs.get('university_id')
+        university = get_object_or_404(University, pk=university_id)
+        
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_universities')
+            .add(university.name, reverse_lazy('dashboard:university_edit', kwargs={'pk': university.pk}))
+            .add('الكليات', reverse_lazy('dashboard:faculty_list', kwargs={'university_id': university.pk}))
+            .current('إنشاء جديد')
+            .build())
+
     def get_context_data(self, **kwargs):
         """Add formset and university to context."""
         context = super().get_context_data(**kwargs)
@@ -832,13 +885,6 @@ class FacultyCreateView(ContentAdminRequiredMixin, CreateView):
         
         context['university'] = university
         context['page_title'] = f'إنشاء كلية جديدة: {university.name}'
-        context['breadcrumbs'] = [
-            {'title': 'لوحة التحكم', 'url': reverse_lazy('dashboard:home')},
-            {'title': 'الجامعات', 'url': reverse_lazy('dashboard:university_list')},
-            {'title': university.name, 'url': reverse_lazy('dashboard:university_edit', kwargs={'pk': university.pk})},
-            {'title': 'الكليات', 'url': reverse_lazy('dashboard:faculty_list', kwargs={'university_id': university.pk})},
-            {'title': 'إنشاء جديد', 'url': None},
-        ]
         return context
 
     def form_valid(self, form):
@@ -872,7 +918,7 @@ class FacultyCreateView(ContentAdminRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class FacultyUpdateView(ContentAdminRequiredMixin, UpdateView):
+class FacultyUpdateView(DashboardBreadcrumbMixin, ContentAdminRequiredMixin, UpdateView):
     """
     Update an existing faculty with inline Program formset.
     تحديث كلية موجودة مع نموذج البرامج المدمج
@@ -888,6 +934,18 @@ class FacultyUpdateView(ContentAdminRequiredMixin, UpdateView):
     form_class = FacultyForm
     template_name = 'dashboard/faculties/edit.html'
 
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for faculty update page."""
+        university = self.object.university
+        
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_universities')
+            .add(university.name, reverse_lazy('dashboard:university_edit', kwargs={'pk': university.pk}))
+            .add('الكليات', reverse_lazy('dashboard:faculty_list', kwargs={'university_id': university.pk}))
+            .current(self.object.name)
+            .build())
+
     def get_context_data(self, **kwargs):
         """Add formset and university to context."""
         context = super().get_context_data(**kwargs)
@@ -900,13 +958,6 @@ class FacultyUpdateView(ContentAdminRequiredMixin, UpdateView):
         
         context['university'] = university
         context['page_title'] = f'تحديث الكلية: {self.object.name}'
-        context['breadcrumbs'] = [
-            {'title': 'لوحة التحكم', 'url': reverse_lazy('dashboard:home')},
-            {'title': 'الجامعات', 'url': reverse_lazy('dashboard:university_list')},
-            {'title': university.name, 'url': reverse_lazy('dashboard:university_edit', kwargs={'pk': university.pk})},
-            {'title': 'الكليات', 'url': reverse_lazy('dashboard:faculty_list', kwargs={'university_id': university.pk})},
-            {'title': self.object.name, 'url': None},
-        ]
         return context
 
     def form_valid(self, form):
@@ -935,7 +986,7 @@ class FacultyUpdateView(ContentAdminRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class FacultyDeleteView(ContentAdminRequiredMixin, DeleteView):
+class FacultyDeleteView(DashboardBreadcrumbMixin, ContentAdminRequiredMixin, DeleteView):
     """
     Delete a faculty with confirmation.
     حذف كلية مع تأكيد
@@ -948,6 +999,18 @@ class FacultyDeleteView(ContentAdminRequiredMixin, DeleteView):
     """
     model = Faculty
     template_name = 'dashboard/faculties/delete_confirm.html'
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for faculty delete page."""
+        university = self.object.university
+        
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_universities')
+            .add(university.name, reverse_lazy('dashboard:university_edit', kwargs={'pk': university.pk}))
+            .add('الكليات', reverse_lazy('dashboard:faculty_list', kwargs={'university_id': university.pk}))
+            .current('حذف')
+            .build())
 
     def get_success_url(self):
         """Return success URL with university context."""
@@ -966,19 +1029,12 @@ class FacultyDeleteView(ContentAdminRequiredMixin, DeleteView):
         return response
 
     def get_context_data(self, **kwargs):
-        """Add page title and breadcrumbs to context."""
+        """Add page title and university to context."""
         context = super().get_context_data(**kwargs)
         university = self.object.university
         
         context['page_title'] = f'حذف الكلية: {self.object.name}'
         context['university'] = university
-        context['breadcrumbs'] = [
-            {'title': 'لوحة التحكم', 'url': reverse_lazy('dashboard:home')},
-            {'title': 'الجامعات', 'url': reverse_lazy('dashboard:university_list')},
-            {'title': university.name, 'url': reverse_lazy('dashboard:university_edit', kwargs={'pk': university.pk})},
-            {'title': 'الكليات', 'url': reverse_lazy('dashboard:faculty_list', kwargs={'university_id': university.pk})},
-            {'title': 'حذف', 'url': None},
-        ]
         return context
 
 
@@ -986,7 +1042,7 @@ class FacultyDeleteView(ContentAdminRequiredMixin, DeleteView):
 # Institute Management Views
 # ============================================================================
 
-class InstituteListView(ContentAdminRequiredMixin, ListView):
+class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
     List all institutes with search and status filters.
     عرض قائمة بجميع المعاهد مع البحث والتصفية حسب الحالة
@@ -1005,6 +1061,13 @@ class InstituteListView(ContentAdminRequiredMixin, ListView):
     template_name = 'dashboard/institutes/list.html'
     context_object_name = 'institutes'
     paginate_by = 20
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for institute list page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('المعاهد')
+            .build())
 
     def get_queryset(self):
         """Get institutes with optional search and filtering."""
@@ -1042,8 +1105,9 @@ class InstituteListView(ContentAdminRequiredMixin, ListView):
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['type_filter'] = self.request.GET.get('type', '')
+        # Add items for list_page.html template
+        context['items'] = context.get('institutes', [])
         return context
-        context['page_title'] = 'إدارة المعاهد'
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         return context
@@ -1228,7 +1292,7 @@ class InstituteDeleteView(ContentAdminRequiredMixin, DeleteView):
 # Major Management Views
 # ============================================================================
 
-class MajorListView(ContentAdminRequiredMixin, ListView):
+class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
     List all majors with search and status filters.
     عرض قائمة بجميع التخصصات مع البحث والتصفية حسب الحالة
@@ -1244,6 +1308,13 @@ class MajorListView(ContentAdminRequiredMixin, ListView):
     template_name = 'dashboard/majors/list.html'
     context_object_name = 'majors'
     paginate_by = 20
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for major list page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('التخصصات')
+            .build())
 
     def get_queryset(self):
         """Get majors with optional search and filtering."""
@@ -1281,6 +1352,8 @@ class MajorListView(ContentAdminRequiredMixin, ListView):
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['category_filter'] = self.request.GET.get('category', '')
+        # Add items for list_page.html template
+        context['items'] = context.get('majors', [])
         return context
 
 
@@ -1494,7 +1567,7 @@ class MajorDeleteView(ContentAdminRequiredMixin, DeleteView):
 # Category Management Views
 # ============================================================================
 
-class CategoryListView(ContentAdminRequiredMixin, ListView):
+class CategoryListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
     List all article categories with search filter.
     عرض قائمة بجميع فئات المقالات مع البحث
@@ -1509,6 +1582,13 @@ class CategoryListView(ContentAdminRequiredMixin, ListView):
     template_name = 'dashboard/categories/list.html'
     context_object_name = 'categories'
     paginate_by = 20
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for category list page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('فئات المقالات')
+            .build())
 
     def get_queryset(self):
         """Get categories with optional search."""
@@ -1529,6 +1609,8 @@ class CategoryListView(ContentAdminRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة فئات المقالات'
         context['search_query'] = self.request.GET.get('search', '')
+        # Add items for list_page.html template
+        context['items'] = context.get('categories', [])
         return context
 
 
@@ -1645,7 +1727,7 @@ class CategoryDeleteView(ContentAdminRequiredMixin, DeleteView):
 # Tag Management Views
 # ============================================================================
 
-class TagListView(ContentAdminRequiredMixin, ListView):
+class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
     List all article tags with search filter.
     عرض قائمة بجميع وسوم المقالات مع البحث
@@ -1660,6 +1742,13 @@ class TagListView(ContentAdminRequiredMixin, ListView):
     template_name = 'dashboard/tags/list.html'
     context_object_name = 'tags'
     paginate_by = 20
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for tag list page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('وسوم المقالات')
+            .build())
 
     def get_queryset(self):
         """Get tags with optional search."""
@@ -1680,6 +1769,8 @@ class TagListView(ContentAdminRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة وسوم المقالات'
         context['search_query'] = self.request.GET.get('search', '')
+        # Add items for list_page.html template
+        context['items'] = context.get('tags', [])
         return context
 
 
@@ -1796,7 +1887,7 @@ class TagDeleteView(ContentAdminRequiredMixin, DeleteView):
 # Article Management Views
 # ============================================================================
 
-class ArticleListView(ContentAdminRequiredMixin, ListView):
+class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
     List all articles with search, category, and status filters.
     عرض قائمة بجميع المقالات مع البحث والتصفية حسب الفئة والحالة
@@ -1813,6 +1904,13 @@ class ArticleListView(ContentAdminRequiredMixin, ListView):
     template_name = 'dashboard/articles/list.html'
     context_object_name = 'articles'
     paginate_by = 20
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for article list page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('المقالات')
+            .build())
 
     def get_queryset(self):
         """Get articles with optional search and filtering."""
@@ -1855,6 +1953,8 @@ class ArticleListView(ContentAdminRequiredMixin, ListView):
         context['category_filter'] = self.request.GET.get('category', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['categories'] = Category.objects.all().order_by('name')
+        # Add items for list_page.html template
+        context['items'] = context.get('articles', [])
         return context
 
 
@@ -2027,7 +2127,7 @@ class ArticleDeleteView(ContentAdminRequiredMixin, DeleteView):
 # Lead Management Views
 # ============================================================================
 
-class LeadListView(ContentAdminRequiredMixin, ListView):
+class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
     List all leads with filters: type, date range, search, read status.
     عرض قائمة بجميع الرسائل مع التصفية حسب: النوع، نطاق التاريخ، البحث، حالة القراءة
@@ -2049,6 +2149,13 @@ class LeadListView(ContentAdminRequiredMixin, ListView):
     template_name = 'dashboard/leads/list.html'
     context_object_name = 'leads'
     paginate_by = 20
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for lead list page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('الرسائل')
+            .build())
 
     def get_queryset(self):
         """Get leads with optional filtering."""
@@ -2133,6 +2240,9 @@ class LeadListView(ContentAdminRequiredMixin, ListView):
             query_params.append(f'read_status={context["read_status"]}')
         
         context['export_url'] = f'?{"&".join(query_params)}' if query_params else ''
+        
+        # Add items for list_page.html template
+        context['items'] = context.get('leads', [])
         
         return context
 
@@ -2503,3 +2613,98 @@ class ArticleBulkActionView(ContentAdminRequiredMixin, View):
             messages.success(request, f'تم حذف {count} مقالة')
 
         return redirect('dashboard:article_list')
+
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ─── EDITOR IMAGE UPLOAD ──────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.middleware.csrf import get_token
+from PIL import Image
+import io
+import os
+from datetime import datetime
+
+
+@require_http_methods(["POST"])
+@login_required
+def editor_image_upload(request):
+    """
+    Handle image upload for the HTML editor.
+    يتعامل مع رفع الصور للمحرر
+    """
+    try:
+        if 'image' not in request.FILES:
+            return JsonResponse({'error': 'لا توجد صورة'}, status=400)
+
+        image_file = request.FILES['image']
+        
+        # Validate file size (max 5MB)
+        if image_file.size > 5 * 1024 * 1024:
+            return JsonResponse({'error': 'حجم الصورة كبير جداً (الحد الأقصى 5MB)'}, status=400)
+
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+        if image_file.content_type not in allowed_types:
+            return JsonResponse({'error': 'نوع الملف غير مدعوم'}, status=400)
+
+        # Open and validate image
+        try:
+            img = Image.open(image_file)
+            img.verify()
+            img = Image.open(image_file)  # Re-open after verify
+        except Exception as e:
+            return JsonResponse({'error': 'الملف ليس صورة صحيحة'}, status=400)
+
+        # Optimize image
+        max_width = 1200
+        max_height = 1200
+        
+        if img.width > max_width or img.height > max_height:
+            img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+
+        # Convert to RGB if necessary (for JPEG)
+        if img.mode in ('RGBA', 'LA', 'P'):
+            rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+            rgb_img.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+            img = rgb_img
+
+        # Save optimized image
+        output = io.BytesIO()
+        img.save(output, format='JPEG', quality=85, optimize=True)
+        output.seek(0)
+
+        # Generate filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'editor/{request.user.id}/{timestamp}_{image_file.name.split(".")[0]}.jpg'
+
+        # Save to storage
+        path = default_storage.save(filename, ContentFile(output.getvalue()))
+        url = default_storage.url(path)
+
+        return JsonResponse({
+            'success': True,
+            'url': url,
+            'filename': os.path.basename(path),
+            'size': {
+                'width': img.width,
+                'height': img.height,
+            }
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': f'خطأ في الرفع: {str(e)}'}, status=500)
+
+
+class EditorImageUploadView(LoginRequiredMixin, View):
+    """
+    Class-based view for image upload (alternative to function-based view).
+    """
+    def post(self, request):
+        return editor_image_upload(request)

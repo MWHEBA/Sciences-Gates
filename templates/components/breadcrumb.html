@@ -1,0 +1,83 @@
+{% comment %}
+Breadcrumb navigation component.
+
+Unified breadcrumb rendering for all contexts (public + dashboard).
+Uses canonical Breadcrumb object schema: name + url.
+
+Features:
+- RTL-compatible
+- Semantic HTML with ARIA labels
+- CSS variables for colors (no hardcoded values)
+- Responsive typography
+- Smooth transitions on hover
+- Accessible current page indicator
+
+Usage:
+    {% include 'components/breadcrumb.html' %}
+    
+Context required:
+    breadcrumbs: List[Breadcrumb] from BreadcrumbTrail.build()
+{% endcomment %}
+
+{% if breadcrumbs %}
+<nav aria-label="breadcrumb" class="mb-6">
+    <ol class="flex flex-wrap items-center gap-2 text-sm md:text-base" style="color: var(--text-muted);">
+        {% for crumb in breadcrumbs %}
+            <li class="flex items-center gap-2">
+                {% if crumb.url %}
+                    <a 
+                        href="{{ crumb.url }}" 
+                        class="breadcrumb-link"
+                        title="{{ crumb.name }}"
+                    >
+                        {{ crumb.name }}
+                    </a>
+                {% else %}
+                    <span class="breadcrumb-current" aria-current="page">
+                        {{ crumb.name }}
+                    </span>
+                {% endif %}
+                
+                {% if not forloop.last %}
+                    <span class="breadcrumb-separator" aria-hidden="true">/</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+</nav>
+{% endif %}
+
+<style>
+    .breadcrumb-link {
+        color: var(--primary);
+        text-decoration: none;
+        transition: color 0.2s ease, text-decoration 0.2s ease;
+        cursor: pointer;
+    }
+
+    .breadcrumb-link:hover {
+        color: var(--secondary);
+        text-decoration: underline;
+    }
+
+    .breadcrumb-link:focus {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+
+    .breadcrumb-current {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .breadcrumb-separator {
+        color: var(--text-muted);
+        margin: 0 0.25rem;
+    }
+
+    /* RTL Support */
+    html[dir="rtl"] .breadcrumb-separator {
+        margin: 0 0.25rem;
+    }
+</style>
