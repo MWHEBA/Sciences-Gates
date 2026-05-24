@@ -1,0 +1,30 @@
+<article class="card" onclick="window.location='{% url 'majors:detail' major.slug %}'" style="cursor:pointer;">
+    <!-- صورة التخصص -->
+    <a href="{% url 'majors:detail' major.slug %}" class="card__image" style="height: 180px;">
+        <img 
+            src="{% if major.image %}{{ major.image.url }}{% else %}https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800{% endif %}" 
+            alt="{{ major.name }}"
+            loading="lazy"
+        >
+    </a>
+    
+    <!-- محتوى الكرت -->
+    <div class="card__content" style="padding: 1.5rem;">
+        <!-- اسم التخصص -->
+        <h3 class="card__title" style="font-size:1.1rem;">
+            <a href="{% url 'majors:detail' major.slug %}">{{ major.name }}</a>
+        </h3>
+        
+        <!-- الوصف -->
+        <p class="card__desc" style="margin-bottom:1rem;">{{ major.description|striptags|truncatewords:15 }}</p>
+        
+        <!-- زر التفاصيل -->
+        <a 
+            href="{% url 'majors:detail' major.slug }}" 
+            class="btn btn--outline btn--block btn--sm"
+            style="margin-top: auto;"
+        >
+            التفاصيل والجامعات
+        </a>
+    </div>
+</article>

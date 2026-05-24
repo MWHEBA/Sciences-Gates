@@ -1,0 +1,21 @@
+<article class="card">
+    <a href="{% url 'articles:detail' article.slug %}" class="card__image">
+        <img src="{% if article.featured_image %}{{ article.featured_image.url }}{% else %}https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800{% endif %}" alt="{{ article.title }}">
+    </a>
+    <div class="card__content">
+        <div style="font-size:0.75rem; color:var(--text-light); margin-bottom:0.5rem; display:flex; justify-content:space-between;">
+            <span>{{ article.published_date|date:"d F Y" }}</span>
+            {% if article.category %}
+                <span>{{ article.category.name }}</span>
+            {% endif %}
+        </div>
+        <h3 class="card__title"><a href="{% url 'articles:detail' article.slug %}">{{ article.title }}</a></h3>
+        <p class="card__desc">{{ article.excerpt|truncatewords:20 }}</p>
+        <div class="card__footer" style="padding-top:0.75rem;">
+            <a href="{% url 'articles:detail' article.slug %}" style="color:var(--primary); font-weight:600; display:flex; align-items:center; gap:0.25rem; font-size:0.875rem;">
+                اقرأ المقال
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(180deg);"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </div>
+    </div>
+</article>

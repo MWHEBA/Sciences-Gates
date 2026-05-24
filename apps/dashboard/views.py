@@ -643,6 +643,12 @@ class UniversityCreateView(ContentAdminRequiredMixin, CreateView):
         faq_formset = context['faq_formset']
         faculty_formset = context['faculty_formset']
         
+        # Debug: Log POST data
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"POST data keys: {list(self.request.POST.keys())}")
+        logger.debug(f"Form data: {form.cleaned_data}")
+        
         if faq_formset.is_valid() and faculty_formset.is_valid():
             self.object = form.save()
             faq_formset.instance = self.object
@@ -655,10 +661,22 @@ class UniversityCreateView(ContentAdminRequiredMixin, CreateView):
             )
             return redirect('dashboard:university_edit', pk=self.object.pk)
         else:
+            # Formsets have errors, show them
+            logger.debug(f"FAQ Formset errors: {faq_formset.errors}")
+            logger.debug(f"Faculty Formset errors: {faculty_formset.errors}")
+            for field, errors in faq_formset.errors.items():
+                for error in errors:
+                    messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
+            for field, errors in faculty_formset.errors.items():
+                for error in errors:
+                    messages.error(self.request, f'خطأ في الكليات: {error}')
             return self.form_invalid(form)
 
     def form_invalid(self, form):
         """Handle form errors."""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Form errors: {form.errors}")
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{error}')

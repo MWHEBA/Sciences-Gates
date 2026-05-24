@@ -1,18 +1,74 @@
 /* 
- * Main CSS file - Tailwind-ready structure
- * Import Tailwind CSS here or add custom styles
+ * Sciences Gates - Public Web Design System Styles
+ * Matches the Dashboard color variables (Navy & Gold) with premium web aesthetics
  */
 
 :root {
-    /* Define CSS variables for colors here */
-    --color-primary: #1f2937;
-    --color-secondary: #6b7280;
-    --color-accent: #3b82f6;
-    --color-background: #ffffff;
-    --color-text: #111827;
-    --color-border: #e5e7eb;
-    
-    /* Font size: 1rem = 14px */
+    /* ═══════════════════════════════════
+       Brand Colors — Navy + Gold
+       ═══════════════════════════════════ */
+    --primary:          #0B2D4D;   /* Navy — اللون الأساسي */
+    --primary-hover:    #0D3A63;   /* Navy أغمق للـ hover */
+    --primary-light:    #EAF0F7;   /* Navy فاتح جداً للـ active backgrounds */
+    --primary-muted:    rgba(11, 45, 77, 0.08); /* للـ tints الخفيفة */
+
+    --secondary:        #C8A041;   /* Gold — اللون الفرعي */
+    --secondary-hover:  #B8902F;   /* Gold أغمق للـ hover */
+    --secondary-light:  #FDF6E3;   /* Gold فاتح جداً للـ backgrounds */
+    --secondary-muted:  rgba(200, 160, 65, 0.15); /* للـ tints الخفيفة */
+
+    /* ═══════════════════════════════════
+       Semantic Colors
+       ═══════════════════════════════════ */
+    --success:          #0C7A43;
+    --success-light:    #E8F7EF;
+    --danger:           #D64545;
+    --danger-hover:     #C03030;
+    --danger-light:     #FDEAEA;
+    --warning:          #D89000;
+    --warning-light:    #FFF4D9;
+    --info:             #2368B5;
+    --info-light:       #EAF2FF;
+
+    /* ═══════════════════════════════════
+       Surfaces & Backgrounds
+       ═══════════════════════════════════ */
+    --surface:          #FFFFFF;
+    --surface-2:        #F7FAFC;
+    --bg-page:          #F0F4F8;   /* خلفية الصفحة الكاملة - أفتح قليلاً لإحساس نظيف */
+    --bg-light:         #F7FAFC;   /* للـ hover states الخفيفة */
+
+    /* ═══════════════════════════════════
+       Borders
+       ═══════════════════════════════════ */
+    --border:           #E4EAF0;
+    --border-strong:    #D0DAE4;
+
+    /* ═══════════════════════════════════
+       Text
+       ═══════════════════════════════════ */
+    --text-primary:     #11243A;
+    --text-secondary:   #43576B;
+    --text-muted:       #6B7C8F;
+
+    /* ═══════════════════════════════════
+       Shadows & Glassmorphism
+       ═══════════════════════════════════ */
+    --shadow:           0 10px 30px -10px rgba(11, 45, 77, 0.08);
+    --shadow-lg:        0 20px 40px -15px rgba(11, 45, 77, 0.12);
+    --shadow-sm:        0 2px 12px rgba(11, 45, 77, 0.04);
+    --shadow-card:      0 4px 20px -2px rgba(11, 45, 77, 0.05);
+    --focus-ring:       rgba(200, 160, 65, 0.35);
+
+    /* ═══════════════════════════════════
+       Layout & Borders
+       ═══════════════════════════════════ */
+    --radius-xl:        24px;
+    --radius-lg:        16px;
+    --radius:           12px;
+    --radius-sm:        8px;
+
+    /* Font scale base */
     font-size: 14px;
 }
 
@@ -25,17 +81,77 @@
 
 html {
     font-size: 14px;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-hover) var(--primary-light);
 }
 
 body {
     font-family: 'Alexandria', sans-serif;
-    color: var(--color-text);
-    background-color: var(--color-background);
+    color: var(--text-primary);
+    background-color: var(--bg-page);
     line-height: 1.6;
     font-size: 1rem;
 }
 
-/* RTL Support */
+/* Custom Thin Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--primary-light);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 4px;
+    border: 2px solid var(--primary-light);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Premium UI Utilities */
+.glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(228, 234, 240, 0.6);
+    box-shadow: var(--shadow-card);
+}
+
+.glass-card-dark {
+    background: rgba(11, 45, 77, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(200, 160, 65, 0.2);
+}
+
+.glass-nav {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(228, 234, 240, 0.7);
+}
+
+/* Micro animations & transitions */
+.transition-premium {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* RTL Helpers */
 html[dir="rtl"] body {
     direction: rtl;
     text-align: right;
@@ -43,4 +159,438 @@ html[dir="rtl"] body {
 
 html[dir="rtl"] body * {
     direction: rtl;
+}
+
+/* Custom selection styling */
+::selection {
+    background-color: var(--secondary-muted);
+    color: var(--primary);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   NEW UTILITIES — UI Upgrade Phase
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════
+   Section Backgrounds
+   ═══════════════════════════════════ */
+.section-dark {
+    background-color: var(--primary);
+    color: #ffffff;
+}
+
+.section-light {
+    background-color: var(--surface);
+}
+
+.section-muted {
+    background-color: var(--bg-page);
+}
+
+/* ═══════════════════════════════════
+   Hero Badge Pattern
+   ═══════════════════════════════════ */
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background-color: var(--secondary-muted);
+    color: var(--secondary);
+    border: 1px solid rgba(200, 160, 65, 0.25);
+}
+
+/* ═══════════════════════════════════
+   Rounded Full Buttons
+   ═══════════════════════════════════ */
+.btn-primary-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background-color: var(--secondary);
+    color: var(--primary);
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 24px rgba(200, 160, 65, 0.3);
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    display: inline-flex;
+}
+
+.btn-primary-pill:hover {
+    background-color: var(--secondary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(200, 160, 65, 0.4);
+}
+
+.btn-ghost-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-ghost-pill:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ═══════════════════════════════════
+   Feature Cards (for Dark Hero)
+   ═══════════════════════════════════ */
+.feature-card-dark {
+    background: rgba(13, 58, 99, 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+}
+
+.feature-card-dark .icon-wrap {
+    width: 56px;
+    height: 56px;
+    background: var(--secondary-muted);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+/* ═══════════════════════════════════
+   Section Heading Pattern
+   ═══════════════════════════════════ */
+.section-heading {
+    text-align: center;
+    margin-bottom: 64px;
+}
+
+.section-heading h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.section-heading p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+.section-heading-dark h2 {
+    color: #ffffff;
+}
+
+.section-heading-dark p {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+/* ═══════════════════════════════════
+   Page Hero (for list pages)
+   ═══════════════════════════════════ */
+.page-hero {
+    background-color: var(--primary);
+    padding: 80px 0 64px;
+    text-align: center;
+}
+
+.page-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 16px;
+}
+
+.page-hero p {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+/* ═══════════════════════════════════
+   Filter Tabs
+   ═══════════════════════════════════ */
+.filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 48px;
+}
+
+.filter-tab {
+    padding: 10px 24px;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    color: var(--text-secondary);
+}
+
+.filter-tab:hover {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary-light);
+}
+
+.filter-tab.active {
+    background-color: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(11, 45, 77, 0.2);
+}
+
+/* ═══════════════════════════════════
+   Testimonial Cards
+   ═══════════════════════════════════ */
+.testimonial-card {
+    background-color: var(--bg-page);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    text-align: right;
+    position: relative;
+}
+
+.testimonial-card .stars {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    color: #F59E0B;
+}
+
+.testimonial-card .quote-icon {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    color: var(--border-strong);
+    width: 40px;
+    height: 40px;
+}
+
+.testimonial-card .avatar {
+    width: 48px;
+    height: 48px;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* ═══════════════════════════════════
+   WhatsApp Floating Button
+   ═══════════════════════════════════ */
+.whatsapp-float {
+    position: fixed;
+    bottom: 32px;
+    left: 32px;
+    width: 60px;
+    height: 60px;
+    background-color: #25D366;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 999;
+    text-decoration: none;
+}
+
+.whatsapp-float:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(37, 211, 102, 0.5);
+}
+
+.whatsapp-float svg {
+    width: 32px;
+    height: 32px;
+    fill: #ffffff;
+}
+
+.whatsapp-float .tooltip {
+    position: absolute;
+    left: calc(100% + 16px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffffff;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.whatsapp-float:hover .tooltip {
+    opacity: 1;
+}
+
+/* ═══════════════════════════════════
+   Services Cards
+   ═══════════════════════════════════ */
+.service-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.service-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+    border-color: var(--secondary-light);
+}
+
+.service-card .icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+/* ═══════════════════════════════════
+   CTA Section
+   ═══════════════════════════════════ */
+.cta-section {
+    background-color: var(--primary);
+    padding: 96px 0;
+    text-align: center;
+}
+
+.cta-section h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+.cta-section p {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 600px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+}
+
+/* ═══════════════════════════════════
+   Responsive Adjustments
+   ═══════════════════════════════════ */
+@media (max-width: 768px) {
+    .page-hero h1 {
+        font-size: 1.875rem;
+    }
+
+    .section-heading h2 {
+        font-size: 1.5rem;
+    }
+
+    .btn-primary-pill,
+    .btn-ghost-pill {
+        padding: 12px 24px;
+        font-size: 0.875rem;
+    }
+
+    .whatsapp-float {
+        bottom: 24px;
+        left: 24px;
+        width: 56px;
+        height: 56px;
+    }
+
+    .whatsapp-float svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .whatsapp-float .tooltip {
+        display: none;
+    }
+
+    /* Card sizing adjustments */
+    .service-card {
+        padding: 24px;
+    }
+
+    .testimonial-card {
+        padding: 24px;
+    }
+
+    .glass-card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 640px) {
+    .page-hero h1 {
+        font-size: 1.5rem;
+    }
+
+    .page-hero p {
+        font-size: 0.95rem;
+    }
+
+    .section-heading h2 {
+        font-size: 1.25rem;
+    }
+
+    .section-heading p {
+        font-size: 0.95rem;
+    }
+
+    .cta-section h2 {
+        font-size: 1.5rem;
+    }
+
+    .cta-section p {
+        font-size: 0.95rem;
+    }
+
+    .filter-tabs {
+        gap: 8px;
+    }
+
+    .filter-tab {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+    }
 }

@@ -9,7 +9,7 @@ from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
-class MajorListView(ListView):
+class MajorListView(BreadcrumbMixin, ListView):
     """
     Display a paginated list of published majors.
     
@@ -35,6 +35,13 @@ class MajorListView(ListView):
             'cheap_universities',
             'related_articles'
         ).order_by('name')
+    
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for major list page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .current('التخصصات')
+            .build())
 
 
 class MajorDetailView(BreadcrumbMixin, DetailView):

@@ -6,6 +6,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/html_editor.css' %}">
+<link rel="stylesheet" href="{% static 'css/faculty-formset.css' %}">
 {% endblock %}
 
 {% block content_wrapper %}
@@ -196,41 +197,65 @@
                             box-shadow: var(--shadow-sm);
                             padding: 24px;">
                     <section>
-                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">الكليات</h2>
-                        <div id="faculty-formset">
-                            {{ faculty_formset.management_form }}
+                        <div class="faculty-section__header">
+                            <div class="faculty-section__title">
+                                <h2 class="text-lg font-semibold">الكليات</h2>
+                                <span class="faculty-counter" id="faculty-counter">0</span>
+                            </div>
+                            <button type="button" class="faculty-add-btn" id="faculty-add-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                إضافة كلية
+                            </button>
+                        </div>
+
+                        <!-- Management Form -->
+                        {{ faculty_formset.management_form }}
+
+                        <!-- حاوية العناصر -->
+                        <div id="faculty-items-container">
                             {% for faculty_form in faculty_formset %}
-                            <div class="mb-4 p-4 rounded-lg" style="border: 1px solid var(--border); background-color: var(--surface-2);" data-form-index="{{ forloop.counter0 }}">
-                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <!-- اسم الكلية -->
-                                    <div>
-                                        <label for="{{ faculty_form.name.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                            {{ faculty_form.name.label }}
-                                        </label>
-                                        {{ faculty_form.name }}
-                                        {% if faculty_form.name.errors %}
-                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ faculty_form.name.errors.0 }}</p>
-                                        {% endif %}
-                                    </div>
-
-                                    <!-- ترتيب -->
-                                    <div>
-                                        <label for="{{ faculty_form.sort_order.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                            {{ faculty_form.sort_order.label }}
-                                        </label>
-                                        {{ faculty_form.sort_order }}
-                                    </div>
-
-                                    <!-- حذف -->
-                                    <div class="md:col-span-2">
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            {{ faculty_form.DELETE }}
-                                            <span class="text-sm" style="color: var(--text-secondary);">حذف هذه الكلية</span>
-                                        </label>
-                                    </div>
+                            <div class="faculty-item faculty-item--existing faculty-item--visible" data-faculty-index="{{ forloop.counter0 }}">
+                                <div class="faculty-item__drag-handle" title="اسحب لإعادة الترتيب">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="9" cy="6" r="1.5"/>
+                                        <circle cx="15" cy="6" r="1.5"/>
+                                        <circle cx="9" cy="12" r="1.5"/>
+                                        <circle cx="15" cy="12" r="1.5"/>
+                                        <circle cx="9" cy="18" r="1.5"/>
+                                        <circle cx="15" cy="18" r="1.5"/>
+                                    </svg>
                                 </div>
+                                <div class="faculty-item__content">
+                                    <div class="faculty-item__number">{{ forloop.counter }}</div>
+                                    {{ faculty_form.name }}
+                                    {{ faculty_form.sort_order }}
+                                    {{ faculty_form.id }}
+                                </div>
+                                <button type="button" class="faculty-item__delete" title="حذف الكلية">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/>
+                                        <line x1="10" y1="11" x2="10" y2="17"/>
+                                        <line x1="14" y1="11" x2="14" y2="17"/>
+                                    </svg>
+                                </button>
+                                <input type="hidden" name="faculties-{{ forloop.counter0 }}-DELETE" id="id_faculties-{{ forloop.counter0 }}-DELETE" value="">
                             </div>
                             {% endfor %}
+                        </div>
+
+                        <!-- الحالة الفارغة -->
+                        <div class="faculty-empty-state" id="faculty-empty-state">
+                            <div class="faculty-empty-state__icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z"/>
+                                    <path d="M12 8v8M8 12h8"/>
+                                </svg>
+                            </div>
+                            <p class="faculty-empty-state__text">لا توجد كليات مضافة</p>
+                            <p class="faculty-empty-state__hint">اضغط "إضافة كلية" لإضافة كلية جديدة</p>
                         </div>
                     </section>
                 </div>
@@ -500,4 +525,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% block extra_js %}
 <script src="{% static 'js/html_editor.js' %}"></script>
+<script src="{% static 'js/faculty-formset.js' %}"></script>
 {% endblock %}

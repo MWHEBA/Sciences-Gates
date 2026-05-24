@@ -1,0 +1,39 @@
+<article class="card" onclick="window.location='{% url 'universities:detail' university.slug %}'" style="cursor:pointer;">
+    <!-- صورة الجامعة -->
+    <a href="{% url 'universities:detail' university.slug %}" class="card__image">
+        <span class="card__badge">{{ university.get_university_type_display }}</span>
+        <img 
+            src="{% if university.main_image %}{{ university.main_image.url }}{% else %}https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&q=80&w=800{% endif %}" 
+            alt="{{ university.name }}"
+            loading="lazy"
+        >
+    </a>
+    
+    <!-- محتوى الكرت -->
+    <div class="card__content">
+        <!-- اسم الجامعة -->
+        <h3 class="card__title">
+            <a href="{% url 'universities:detail' university.slug %}">{{ university.name }}</a>
+        </h3>
+        
+        <!-- الوصف -->
+        <p class="card__desc">{{ university.description|striptags|truncatewords:20 }}</p>
+        
+        <!-- التذييل -->
+        <div class="card__footer">
+            <span style="display:flex; align-items:center; gap:0.5rem; color: var(--text-light);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>{{ university.location|striptags|truncatewords:3 }}</span>
+            </span>
+            <a href="{% url 'universities:detail' university.slug %}" style="display:flex; align-items:center; gap:0.5rem; color: var(--primary); font-weight:600; text-decoration:none; transition: color 0.2s;" onmouseover="this.style.color='var(--secondary)'" onmouseout="this.style.color='var(--primary)'">
+                اقرأ المزيد
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(180deg);" aria-hidden="true">
+                    <path d="M5 12h14M12 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+</article>

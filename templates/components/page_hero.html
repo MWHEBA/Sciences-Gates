@@ -1,0 +1,13 @@
+<!-- Page Hero Component — Shared across all list pages -->
+<!-- Usage: {% include "components/page_hero.html" with title="..." subtitle="..." badge="..." %} -->
+<div class="page-hero">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {% if badge %}
+        <span class="hero-badge mb-6 inline-flex">{{ badge }}</span>
+        {% endif %}
+        <h1>{{ title }}</h1>
+        {% if subtitle %}
+        <p>{{ subtitle }}</p>
+        {% endif %}
+    </div>
+</div>

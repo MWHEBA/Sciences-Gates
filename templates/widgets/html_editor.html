@@ -11,6 +11,7 @@
         then replaces this element with the real hidden textarea it manages.
     #}
     <textarea
+        name="{{ widget.name }}"
         data-initial-value="{{ widget.value|default:'' }}"
         data-name="{{ widget.name }}"
         style="display:none;"

@@ -1,0 +1,17 @@
+<div class="accordion">
+    {% for faq in faqs %}
+    <div class="accordion__item">
+        <button class="accordion__header" aria-expanded="false">
+            {{ faq.question }}
+            <svg class="accordion__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+            </svg>
+        </button>
+        <div class="accordion__content">
+            <div class="accordion__inner">
+                {{ faq.answer }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>

@@ -1,83 +1,29 @@
 {% comment %}
-Breadcrumb navigation component.
-
-Unified breadcrumb rendering for all contexts (public + dashboard).
-Uses canonical Breadcrumb object schema: name + url.
-
-Features:
-- RTL-compatible
-- Semantic HTML with ARIA labels
-- CSS variables for colors (no hardcoded values)
-- Responsive typography
-- Smooth transitions on hover
-- Accessible current page indicator
-
-Usage:
-    {% include 'components/breadcrumb.html' %}
-    
-Context required:
-    breadcrumbs: List[Breadcrumb] from BreadcrumbTrail.build()
+بريدكرمب الموقع العام — نفس شكل بريدكرمب الداشبورد
+يُستخدم داخل page header تحت عنوان الصفحة مباشرة
 {% endcomment %}
-
 {% if breadcrumbs %}
-<nav aria-label="breadcrumb" class="mb-6">
-    <ol class="flex flex-wrap items-center gap-2 text-sm md:text-base" style="color: var(--text-muted);">
+<nav aria-label="مسار التنقل" class="mt-1">
+    <ol class="flex flex-wrap items-center gap-1 text-sm" style="list-style:none; padding:0; margin:0;">
         {% for crumb in breadcrumbs %}
-            <li class="flex items-center gap-2">
+            <li class="flex items-center gap-1">
                 {% if crumb.url %}
-                    <a 
-                        href="{{ crumb.url }}" 
-                        class="breadcrumb-link"
-                        title="{{ crumb.name }}"
-                    >
+                    <a href="{{ crumb.url }}" class="transition-colors duration-200 cursor-pointer flex items-center gap-1" style="color: var(--primary); text-decoration:none;" onmouseover="this.style.color='var(--secondary)'" onmouseout="this.style.color='var(--primary)'">
+                        {% if forloop.first %}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true" style="display:inline-block; width:1em; height:1em;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-4 7 4M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                        {% endif %}
                         {{ crumb.name }}
                     </a>
                 {% else %}
-                    <span class="breadcrumb-current" aria-current="page">
-                        {{ crumb.name }}
-                    </span>
+                    <span style="color: var(--text-muted);">{{ crumb.name }}</span>
                 {% endif %}
-                
                 {% if not forloop.last %}
-                    <span class="breadcrumb-separator" aria-hidden="true">/</span>
+                    <span style="color: var(--text-muted);" aria-hidden="true">/</span>
                 {% endif %}
             </li>
         {% endfor %}
     </ol>
 </nav>
 {% endif %}
-
-<style>
-    .breadcrumb-link {
-        color: var(--primary);
-        text-decoration: none;
-        transition: color 0.2s ease, text-decoration 0.2s ease;
-        cursor: pointer;
-    }
-
-    .breadcrumb-link:hover {
-        color: var(--secondary);
-        text-decoration: underline;
-    }
-
-    .breadcrumb-link:focus {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
-        border-radius: 2px;
-    }
-
-    .breadcrumb-current {
-        color: var(--text-primary);
-        font-weight: 500;
-    }
-
-    .breadcrumb-separator {
-        color: var(--text-muted);
-        margin: 0 0.25rem;
-    }
-
-    /* RTL Support */
-    html[dir="rtl"] .breadcrumb-separator {
-        margin: 0 0.25rem;
-    }
-</style>

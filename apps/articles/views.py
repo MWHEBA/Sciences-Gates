@@ -8,7 +8,7 @@ from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
-class ArticleListView(ListView):
+class ArticleListView(BreadcrumbMixin, ListView):
     """
     Display a paginated list of published articles.
     
@@ -33,6 +33,13 @@ class ArticleListView(ListView):
         ).prefetch_related(
             'tags'
         ).order_by('-publish_date')
+    
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for article list page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .current('المقالات')
+            .build())
 
 
 class ArticleDetailView(BreadcrumbMixin, DetailView):

@@ -1,163 +1,88 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}نتائج البحث - بوابات العلوم{% endblock %}
+{% block title %}نتائج البحث عن "{{ query }}" | بوابات العلوم{% endblock %}
+{% block meta_description %}نتائج البحث عن {{ query }} في بوابات العلوم. جامعات، معاهد، تخصصات، ومقالات.{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50 py-12">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Search Results Header -->
+<section class="section section-bg-white">
+    <div class="container">
+        <div class="search-results-header">
+            <h1 class="search-results-title">نتائج البحث</h1>
+            {% include 'components/breadcrumb.html' %}
+            <p class="search-results-description">
+                وجدنا <strong class="search-results-count">{{ total_results }}</strong> نتيجة عن "<strong class="search-results-query">{{ query }}</strong>"
+            </p>
+        </div>
+
         <!-- Search Form -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-semibold text-gray-900 mb-6 text-right">البحث</h1>
-            
-            <form method="get" class="flex gap-2">
-                <input 
-                    type="text" 
-                    name="query" 
-                    value="{{ query }}"
-                    placeholder="ابحث عن جامعات أو معاهد أو تخصصات أو مقالات..."
-                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    dir="rtl"
-                    autocomplete="off"
-                />
-                <button 
-                    type="submit"
-                    class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-normal"
-                >
-                    بحث
-                </button>
+        <div class="search-results-form-wrapper">
+            <form method="get" class="search-results-form">
+                <div class="search-results-input">
+                    <input type="text" name="q" class="form-control" placeholder="ابحث مرة أخرى..." value="{{ query }}" aria-label="البحث">
+                </div>
+                <button type="submit" class="btn btn--primary" title="بحث">بحــث</button>
             </form>
         </div>
 
-        <!-- Results Section -->
-        {% if query %}
-            {% if has_results %}
-                <!-- Results Found -->
-                <div class="mb-6">
-                    <p class="text-gray-600 text-right mb-6">
-                        تم العثور على <span class="font-semibold text-gray-900">{{ total_count }}</span> نتيجة للبحث عن "<span class="font-semibold">{{ query }}</span>"
-                    </p>
-
-                    <!-- Results List -->
-                    <div class="space-y-4">
-                        {% for result in results %}
-                            <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6 border-r-4 border-blue-500">
-                                <div class="flex justify-between items-start gap-4">
-                                    <div class="flex-1">
-                                        <!-- Result Type Badge -->
-                                        <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full mb-2">
-                                            {{ result.type_label }}
-                                        </span>
-
-                                        <!-- Result Title -->
-                                        <h3 class="text-xl font-semibold text-gray-900 mb-2 text-right">
-                                            <a href="{{ result.url }}" class="hover:text-blue-600 transition-colors">
-                                                {{ result.name }}
-                                            </a>
-                                        </h3>
-
-                                        <!-- Category (for articles) -->
-                                        {% if result.category %}
-                                            <p class="text-sm text-gray-500 mb-2 text-right">
-                                                الفئة: <span class="font-normal">{{ result.category }}</span>
-                                            </p>
-                                        {% endif %}
-
-                                        <!-- Excerpt -->
-                                        <p class="text-gray-600 text-right line-clamp-2">
-                                            {{ result.excerpt }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- View Link -->
-                                <div class="mt-4 text-right">
-                                    <a href="{{ result.url }}" class="text-blue-600 hover:text-blue-800 font-normal transition-colors">
-                                        عرض التفاصيل ←
-                                    </a>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-
-                    <!-- Pagination -->
-                    {% if results.has_other_pages %}
-                        <nav class="mt-8 flex justify-center gap-2" aria-label="Pagination">
-                            {% if results.has_previous %}
-                                <a href="?query={{ query }}&page=1" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                    الأولى
-                                </a>
-                                <a href="?query={{ query }}&page={{ results.previous_page_number }}" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                    السابقة
-                                </a>
-                            {% endif %}
-
-                            <!-- Page Numbers -->
-                            <div class="flex gap-1">
-                                {% for num in results.paginator.page_range %}
-                                    {% if results.number == num %}
-                                        <span class="px-3 py-2 bg-blue-600 text-white rounded-lg">
-                                            {{ num }}
-                                        </span>
-                                    {% elif num > results.number|add:'-3' and num < results.number|add:'3' %}
-                                        <a href="?query={{ query }}&page={{ num }}" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                            {{ num }}
-                                        </a>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-
-                            {% if results.has_next %}
-                                <a href="?query={{ query }}&page={{ results.next_page_number }}" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                    التالية
-                                </a>
-                                <a href="?query={{ query }}&page={{ results.paginator.num_pages }}" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                    الأخيرة
-                                </a>
-                            {% endif %}
-                        </nav>
-                    {% endif %}
+        <!-- Results -->
+        {% if has_results %}
+            <!-- Universities Results -->
+            {% if universities %}
+            <div style="margin-bottom:4rem;">
+                <h2 class="section-title">الجامعات</h2>
+                <div class="grid grid--3">
+                    {% for university in universities %}
+                        {% include 'partials/university-card.html' with university=university %}
+                    {% endfor %}
                 </div>
-            {% else %}
-                <!-- No Results Found -->
-                <div class="bg-white rounded-lg shadow p-8 text-center">
-                    <div class="mb-4">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-normal text-gray-900 mb-2">لم يتم العثور على نتائج</h3>
-                    <p class="text-gray-600 mb-4">
-                        لم نتمكن من العثور على نتائج للبحث عن "<span class="font-semibold">{{ query }}</span>"
-                    </p>
-                    <p class="text-gray-500 text-sm">
-                        جرب استخدام كلمات مفتاحية مختلفة أو تحقق من تهجئة البحث
-                    </p>
+            </div>
+            {% endif %}
+
+            <!-- Institutes Results -->
+            {% if institutes %}
+            <div style="margin-bottom:4rem;">
+                <h2 class="section-title">المعاهد</h2>
+                <div class="grid grid--3">
+                    {% for institute in institutes %}
+                        {% include 'partials/institute-card.html' with institute=institute %}
+                    {% endfor %}
                 </div>
+            </div>
+            {% endif %}
+
+            <!-- Majors Results -->
+            {% if majors %}
+            <div style="margin-bottom:4rem;">
+                <h2 class="section-title">التخصصات</h2>
+                <div class="grid grid--4">
+                    {% for major in majors %}
+                        {% include 'partials/major-card.html' with major=major %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Articles Results -->
+            {% if articles %}
+            <div style="margin-bottom:4rem;">
+                <h2 class="section-title">المقالات</h2>
+                <div class="grid grid--3">
+                    {% for article in articles %}
+                        {% include 'partials/article-card.html' with article=article %}
+                    {% endfor %}
+                </div>
+            </div>
             {% endif %}
         {% else %}
-            <!-- No Query Entered -->
-            <div class="bg-white rounded-lg shadow p-8 text-center">
-                <div class="mb-4">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-normal text-gray-900 mb-2">ابدأ البحث</h3>
-                <p class="text-gray-600">
-                    أدخل كلمة مفتاحية في حقل البحث أعلاه للبحث عن جامعات أو معاهد أو تخصصات أو مقالات
-                </p>
-            </div>
+            <!-- No Results -->
+            {% include 'partials/empty-state.html' with title="لا توجد نتائج" message="لم نجد نتائج تطابق بحثك. حاول استخدام كلمات مفتاحية مختلفة أو تصفح الفئات الرئيسية." clear_url="/" %}
         {% endif %}
     </div>
-</div>
+</section>
 
-<style>
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-</style>
+<!-- CTA Band -->
+{% include 'partials/cta-band.html' %}
+
 {% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}الصفحة غير موجودة | بوابات العلوم{% endblock %}
+
+{% block content %}
+<section class="section section-bg-white" style="min-height:60vh; display:flex; align-items:center;">
+    <div class="container" style="max-width:600px;">
+        <div class="error-message">
+            <!-- Error Icon -->
+            <div class="error-icon">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+
+            <!-- Error Code -->
+            <h1 class="error-code">404</h1>
+
+            <!-- Error Title -->
+            <h2 class="error-title">الصفحة غير موجودة</h2>
+
+            <!-- Error Message -->
+            <p class="error-message-text">
+                عذراً، الصفحة التي تبحث عنها غير موجودة أو قد تم نقلها. يرجى التحقق من الرابط والمحاولة مرة أخرى.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="error-actions">
+                <a href="/" class="btn btn--primary btn--lg" title="العودة إلى الصفحة الرئيسية">العودة للرئيسية</a>
+                <a href="{% url 'universities:list' %}" class="btn btn--outline btn--lg" title="تصفح قائمة الجامعات">تصفح الجامعات</a>
+            </div>
+
+            <!-- Suggestions -->
+            <div class="error-suggestions">
+                <h3 class="error-suggestions-title">قد تهمك أيضاً:</h3>
+                <div class="error-suggestions-links">
+                    <a href="{% url 'universities:list' %}" class="error-suggestion-link" title="عرض قائمة الجامعات">الجامعات</a>
+                    <span class="error-suggestion-separator">•</span>
+                    <a href="{% url 'institutes:list' %}" class="error-suggestion-link" title="عرض قائمة المعاهد">المعاهد</a>
+                    <span class="error-suggestion-separator">•</span>
+                    <a href="{% url 'majors:list' %}" class="error-suggestion-link" title="عرض قائمة التخصصات">التخصصات</a>
+                    <span class="error-suggestion-separator">•</span>
+                    <a href="{% url 'articles:list' %}" class="error-suggestion-link" title="عرض قائمة المقالات">المقالات</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,144 +1,60 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load image_tags %}
 
-{% block title %}الجامعات - Science Gates{% endblock %}
-{% block meta_description %}اكتشف أفضل الجامعات في ماليزيا مع معلومات شاملة عن البرامج والتخصصات{% endblock %}
+{% block title %}الجامعات في ماليزيا | بوابات العلوم{% endblock %}
+{% block meta_description %}استكشف قائمة أفضل الجامعات الماليزية المعترف بها عالمياً. اختر من بين أكثر من 50 جامعة شريكة.{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-12">
-    <!-- Page Header -->
-    <div class="mb-12">
-        <h1 class="text-4xl font-semibold text-gray-900 mb-4">الجامعات</h1>
-        <p class="text-lg text-gray-600">اكتشف أفضل الجامعات الماليزية وتعرف على برامجها الأكاديمية</p>
-    </div>
-
-    <!-- Universities Grid -->
-    {% if universities %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {% for university in universities %}
-                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
-                    <!-- University Image -->
-                    <div class="relative h-48 bg-gray-200 overflow-hidden">
-                        {% if university.main_image %}
-                            {% responsive_image university.main_image.url university.name "w-full h-full object-cover" %}
-                        {% else %}
-                            <div class="w-full h-full flex items-center justify-center bg-gray-300">
-                                <span class="text-gray-500">لا توجد صورة</span>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- University Info -->
-                    <div class="p-6">
-                        <!-- Logo -->
-                        {% if university.logo %}
-                            <div class="mb-4 flex justify-center">
-                                {% responsive_image university.logo.url university.name|add:" شعار" "h-16 object-contain" %}
-                            </div>
-                        {% endif %}
-
-                        <!-- Name -->
-                        <h2 class="text-xl font-semibold text-gray-900 mb-2 text-center">
-                            {{ university.name }}
-                        </h2>
-
-                        <!-- Location -->
-                        <p class="text-sm text-gray-600 mb-3 text-center">
-                            <span class="inline-block">📍 {{ university.location }}</span>
-                        </p>
-
-                        <!-- Description -->
-                        <p class="text-gray-700 text-sm mb-4 line-clamp-3">
-                            {{ university.description|truncatewords:30 }}
-                        </p>
-
-                        <!-- View Details Button -->
-                        <a 
-                            href="{{ university.get_absolute_url }}"
-                            class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg text-center transition-colors"
-                        >
-                            عرض التفاصيل
-                        </a>
-                    </div>
-                </div>
-            {% endfor %}
+<!-- Page Header -->
+<section class="section section-bg-white">
+    <div class="container">
+        <div style="text-align:center; max-width:800px; margin:0 auto 4rem;">
+            <h1 style="color:var(--primary); margin-bottom:0.25rem;">الجامعات في ماليزيا</h1>
+            {% include 'components/breadcrumb.html' %}
+            <p style="font-size:1.125rem; color:var(--text-body); margin-top:1rem;">استكشف قائمة أفضل الجامعات الماليزية المعترف بها عالمياً، نقدم لك دليلاً شاملاً لمساعدتك في اتخاذ القرار الأكاديمي الصحيح.</p>
         </div>
 
-        <!-- Pagination -->
-        {% if is_paginated %}
-            <nav class="flex justify-center items-center gap-2 mb-8" aria-label="pagination">
-                <!-- Previous Page -->
-                {% if page_obj.has_previous %}
-                    <a 
-                        href="?page=1"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        title="الصفحة الأولى"
-                    >
-                        «
-                    </a>
-                    <a 
-                        href="?page={{ page_obj.previous_page_number }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                        السابق
-                    </a>
-                {% else %}
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">«</span>
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">السابق</span>
-                {% endif %}
-
-                <!-- Page Numbers -->
-                <div class="flex gap-1">
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <span class="px-3 py-2 rounded-lg bg-blue-600 text-white font-semibold">
-                                {{ num }}
-                            </span>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <a 
-                                href="?page={{ num }}"
-                                class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                            >
-                                {{ num }}
-                            </a>
-                        {% endif %}
-                    {% endfor %}
+        <!-- Search and Filters -->
+        <div style="background:var(--bg-gray); padding:1.5rem; border-radius:var(--radius-lg); margin-bottom:3rem; display:flex; gap:1rem; flex-wrap:wrap; align-items:center;">
+            <form method="get" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; width:100%;">
+                <div style="flex-grow:1; min-width:250px;">
+                    <input type="text" name="q" class="form-control" placeholder="ابحث عن اسم الجامعة..." value="{{ request.GET.q }}" style="border:none; box-shadow:var(--shadow-soft);">
                 </div>
+                <select name="type" class="form-control" style="width:200px; border:none; box-shadow:var(--shadow-soft);">
+                    <option value="">نوع الجامعة</option>
+                    <option value="public" {% if request.GET.type == 'public' %}selected{% endif %}>حكومية</option>
+                    <option value="private" {% if request.GET.type == 'private' %}selected{% endif %}>خاصة</option>
+                    <option value="foreign" {% if request.GET.type == 'foreign' %}selected{% endif %}>جامعات أجنبية</option>
+                </select>
+                <select name="city" class="form-control" style="width:200px; border:none; box-shadow:var(--shadow-soft);">
+                    <option value="">المدينة</option>
+                    <option value="kl" {% if request.GET.city == 'kl' %}selected{% endif %}>كوالالمبور</option>
+                    <option value="selangor" {% if request.GET.city == 'selangor' %}selected{% endif %}>سيلانجور</option>
+                    <option value="penang" {% if request.GET.city == 'penang' %}selected{% endif %}>بينانج</option>
+                    <option value="johor" {% if request.GET.city == 'johor' %}selected{% endif %}>جوهر</option>
+                </select>
+                <button type="submit" class="btn btn--primary">بحــث</button>
+            </form>
+        </div>
 
-                <!-- Next Page -->
-                {% if page_obj.has_next %}
-                    <a 
-                        href="?page={{ page_obj.next_page_number }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                        التالي
-                    </a>
-                    <a 
-                        href="?page={{ page_obj.paginator.num_pages }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        title="الصفحة الأخيرة"
-                    >
-                        »
-                    </a>
-                {% else %}
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">التالي</span>
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">»</span>
-                {% endif %}
-            </nav>
-
-            <!-- Pagination Info -->
-            <div class="text-center text-gray-600 mb-8">
-                الصفحة <strong>{{ page_obj.number }}</strong> من <strong>{{ page_obj.paginator.num_pages }}</strong>
-                (إجمالي: <strong>{{ page_obj.paginator.count }}</strong> جامعة)
+        <!-- Universities Grid -->
+        {% if universities %}
+            <div class="grid grid--3">
+                {% for university in universities %}
+                    {% include 'partials/university-card.html' with university=university %}
+                {% endfor %}
             </div>
-        {% endif %}
 
-    {% else %}
-        <!-- No Universities Message -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
-            <p class="text-gray-700 text-lg">لا توجد جامعات متاحة حالياً</p>
-        </div>
-    {% endif %}
-</div>
+            <!-- Pagination -->
+            {% include 'components/pagination.html' %}
+        {% else %}
+            <!-- Empty State -->
+            {% include 'partials/empty-state.html' with title="لا توجد جامعات" message="لم نجد جامعات تطابق معايير البحث الحالية. حاول تغيير الفلاتر." clear_url=clear_url %}
+        {% endif %}
+    </div>
+</section>
+
+<!-- CTA Band -->
+{% include 'partials/cta-band.html' %}
+
 {% endblock %}

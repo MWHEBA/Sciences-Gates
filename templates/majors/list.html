@@ -1,148 +1,47 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load image_tags %}
 
-{% block title %}التخصصات - Science Gates{% endblock %}
-{% block meta_description %}اكتشف أفضل التخصصات الدراسية في الجامعات الماليزية مع معلومات شاملة عن الرسوم والفرص الوظيفية{% endblock %}
+{% block title %}التخصصات الدراسية في ماليزيا | بوابات العلوم{% endblock %}
+{% block meta_description %}استكشف أفضل التخصصات الدراسية في الجامعات الماليزية. هندسة، إدارة أعمال، طب، وأكثر.{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-12">
-    <!-- Page Header -->
-    <div class="mb-12">
-        <h1 class="text-4xl font-semibold text-gray-900 mb-4">التخصصات الدراسية</h1>
-        <p class="text-lg text-gray-600">اكتشف التخصصات المتاحة في الجامعات الماليزية وتعرف على فرص العمل والرواتب</p>
-    </div>
-
-    <!-- Majors Grid -->
-    {% if majors %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {% for major in majors %}
-                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
-                    <!-- Major Image -->
-                    <div class="relative h-48 bg-gray-200 overflow-hidden">
-                        {% if major.main_image %}
-                            {% responsive_image major.main_image.url major.name "w-full h-full object-cover" %}
-                        {% else %}
-                            <div class="w-full h-full flex items-center justify-center bg-gray-300">
-                                <span class="text-gray-500">لا توجد صورة</span>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Major Info -->
-                    <div class="p-6">
-                        <!-- Name -->
-                        <h2 class="text-xl font-semibold text-gray-900 mb-3">
-                            {{ major.name }}
-                        </h2>
-
-                        <!-- Quick Info -->
-                        <div class="space-y-2 mb-4 text-sm text-gray-600">
-                            {% if major.study_duration %}
-                                <p>
-                                    <span class="font-semibold">مدة الدراسة:</span>
-                                    {{ major.study_duration }}
-                                </p>
-                            {% endif %}
-                            {% if major.study_language %}
-                                <p>
-                                    <span class="font-semibold">لغة الدراسة:</span>
-                                    {{ major.study_language }}
-                                </p>
-                            {% endif %}
-                        </div>
-
-                        <!-- Description -->
-                        <p class="text-gray-700 text-sm mb-4 line-clamp-3">
-                            {{ major.description|truncatewords:30 }}
-                        </p>
-
-                        <!-- View Details Button -->
-                        <a 
-                            href="{{ major.get_absolute_url }}"
-                            class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg text-center transition-colors"
-                        >
-                            عرض التفاصيل
-                        </a>
-                    </div>
-                </div>
-            {% endfor %}
+<!-- Page Header -->
+<section class="section section-bg-white">
+    <div class="container">
+        <div style="text-align:center; max-width:800px; margin:0 auto 4rem;">
+            <h1 style="color:var(--primary); margin-bottom:0.25rem; font-size:clamp(2rem, 5vw, 3rem);">التخصصات الدراسية</h1>
+            {% include 'components/breadcrumb.html' %}
+            <p style="font-size:1.125rem; color:var(--text-body); line-height:1.8; margin-top:1rem;">اكتشف مختلف التخصصات الدراسية المتاحة في الجامعات الماليزية. اختر التخصص الذي يناسب طموحك وميولك الأكاديمية.</p>
         </div>
 
-        <!-- Pagination -->
-        {% if is_paginated %}
-            <nav class="flex justify-center items-center gap-2 mb-8" aria-label="pagination">
-                <!-- Previous Page -->
-                {% if page_obj.has_previous %}
-                    <a 
-                        href="?page=1"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        title="الصفحة الأولى"
-                    >
-                        «
-                    </a>
-                    <a 
-                        href="?page={{ page_obj.previous_page_number }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                        السابق
-                    </a>
-                {% else %}
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">«</span>
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">السابق</span>
-                {% endif %}
-
-                <!-- Page Numbers -->
-                <div class="flex gap-1">
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <span class="px-3 py-2 rounded-lg bg-blue-600 text-white font-semibold">
-                                {{ num }}
-                            </span>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <a 
-                                href="?page={{ num }}"
-                                class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                            >
-                                {{ num }}
-                            </a>
-                        {% endif %}
-                    {% endfor %}
+        <!-- Search -->
+        <div style="background:var(--bg-gray); padding:2rem; border-radius:var(--radius-lg); margin-bottom:3rem; box-shadow:var(--shadow-soft);">
+            <form method="get" style="display:flex; gap:1rem; align-items:center;">
+                <div style="flex-grow:1;">
+                    <input type="text" name="q" class="form-control" placeholder="ابحث عن تخصص..." value="{{ request.GET.q }}" style="border:none; box-shadow:var(--shadow-soft); padding:0.75rem 1rem; border-radius:var(--radius-md);" aria-label="البحث عن تخصص">
                 </div>
+                <button type="submit" class="btn btn--primary" style="cursor:pointer;">بحــث</button>
+            </form>
+        </div>
 
-                <!-- Next Page -->
-                {% if page_obj.has_next %}
-                    <a 
-                        href="?page={{ page_obj.next_page_number }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                        التالي
-                    </a>
-                    <a 
-                        href="?page={{ page_obj.paginator.num_pages }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        title="الصفحة الأخيرة"
-                    >
-                        »
-                    </a>
-                {% else %}
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">التالي</span>
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">»</span>
-                {% endif %}
-            </nav>
-
-            <!-- Pagination Info -->
-            <div class="text-center text-gray-600 mb-8">
-                الصفحة <strong>{{ page_obj.number }}</strong> من <strong>{{ page_obj.paginator.num_pages }}</strong>
-                (إجمالي: <strong>{{ page_obj.paginator.count }}</strong> تخصص)
+        <!-- Majors Grid -->
+        {% if majors %}
+            <div class="grid grid--4">
+                {% for major in majors %}
+                    {% include 'partials/major-card.html' with major=major %}
+                {% endfor %}
             </div>
-        {% endif %}
 
-    {% else %}
-        <!-- No Majors Message -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
-            <p class="text-gray-700 text-lg">لا توجد تخصصات متاحة حالياً</p>
-        </div>
-    {% endif %}
-</div>
+            <!-- Pagination -->
+            {% include 'components/pagination.html' %}
+        {% else %}
+            <!-- Empty State -->
+            {% include 'partials/empty-state.html' with title="لا توجد تخصصات" message="لم نجد تخصصات تطابق معايير البحث الحالية. حاول استخدام كلمات مفتاحية مختلفة." %}
+        {% endif %}
+    </div>
+</section>
+
+<!-- CTA Band -->
+{% include 'partials/cta-band.html' %}
+
 {% endblock %}

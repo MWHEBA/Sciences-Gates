@@ -9,7 +9,7 @@ from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
-class InstituteListView(ListView):
+class InstituteListView(BreadcrumbMixin, ListView):
     """
     Display a paginated list of published institutes.
     
@@ -33,6 +33,13 @@ class InstituteListView(ListView):
         ).prefetch_related(
             'related_articles'
         ).order_by('name')
+    
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for institute list page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .current('المعاهد')
+            .build())
 
 
 class InstituteDetailView(BreadcrumbMixin, DetailView):

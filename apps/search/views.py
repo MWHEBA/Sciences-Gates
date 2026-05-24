@@ -7,9 +7,11 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.urls import reverse_lazy
 from .forms import SearchForm, AdvancedSearchForm
 from .utils import build_search_query, get_excerpt
+from apps.seo.mixins import BreadcrumbMixin
+from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
-class SearchView(FormView):
+class SearchView(BreadcrumbMixin, FormView):
     """
     View for searching across University, Institute, Major, and Article models.
     
@@ -19,6 +21,13 @@ class SearchView(FormView):
     form_class = SearchForm
     template_name = 'search/results.html'
     success_url = reverse_lazy('search:results')
+    
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for search results page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .current('نتائج البحث')
+            .build())
     
     def get_context_data(self, **kwargs):
         """Add search results to context."""

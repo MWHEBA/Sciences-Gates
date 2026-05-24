@@ -2,160 +2,103 @@
 {% load static %}
 {% load image_tags %}
 
-{% block title %}{{ category.name }} - المقالات - Science Gates{% endblock %}
+{% block title %}{{ category.name }} - المقالات - بوابات العلوم{% endblock %}
 {% block meta_description %}اقرأ جميع مقالات فئة {{ category.name }}{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-12">
+<div class="container">
     <!-- Page Header -->
-    <div class="mb-12">
-        <h1 class="text-4xl font-semibold text-gray-900 mb-4">{{ category.name }}</h1>
+    <div class="articles-page-header">
+        <div class="articles-page-header-accent"></div>
+        <span class="articles-page-header-label">تصفح حسب الفئة</span>
+        <h1 class="articles-page-header-title">{{ category.name }}</h1>
         {% if category.description %}
-            <p class="text-lg text-gray-600">{{ category.description }}</p>
+            <p class="articles-page-header-description">{{ category.description }}</p>
         {% endif %}
     </div>
 
     <!-- Articles List -->
     {% if articles %}
-        <div class="space-y-6 mb-12">
+        <div class="articles-list">
             {% for article in articles %}
-                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
-                    <div class="flex flex-col md:flex-row">
-                        <!-- Article Image -->
-                        <div class="md:w-1/3 h-48 md:h-auto bg-gray-200 overflow-hidden flex-shrink-0">
-                            {% if article.featured_image %}
-                                {% responsive_image article.featured_image.url article.title "w-full h-full object-cover" %}
-                            {% else %}
-                                <div class="w-full h-full flex items-center justify-center bg-gray-300">
-                                    <span class="text-gray-500">لا توجد صورة</span>
-                                </div>
-                            {% endif %}
-                        </div>
+                <article class="article-list-item">
+                    
+                    <!-- Article Image Section -->
+                    <div class="article-list-image">
+                        {% if article.featured_image %}
+                            <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="article-list-image-img">
+                        {% else %}
+                            <div class="article-list-image-placeholder">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 4a2 2 0 00-2 2v3m2-3a2 2 0 012 2v3m-2-3a2 2 0 00-2-2.5m3-3a1 1 0 100-2 1 1 0 000 2zM9 9h1.01M9 13h3.01m-3.01 4h3.01"></path></svg>
+                            </div>
+                        {% endif %}
+                    </div>
 
-                        <!-- Article Info -->
-                        <div class="p-6 md:w-2/3 flex flex-col justify-between">
-                            <!-- Tags -->
-                            <div class="mb-3 flex flex-wrap gap-2">
+                    <!-- Article Details Section -->
+                    <div class="article-list-content">
+                        
+                        <div class="article-list-body">
+                            <!-- Tags badges -->
+                            <div class="article-list-badges">
                                 {% for tag in article.tags.all %}
                                     <a 
                                         href="{% url 'articles:tag' tag.slug %}"
-                                        class="inline-block bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full hover:bg-gray-200 transition-colors"
+                                        class="article-list-badge article-list-badge--tag"
+                                        title="عرض مقالات الوسم #{{ tag.name }}"
                                     >
-                                        {{ tag.name }}
+                                        #{{ tag.name }}
                                     </a>
                                 {% endfor %}
                             </div>
 
                             <!-- Title -->
-                            <h2 class="text-2xl font-semibold text-gray-900 mb-2">
-                                <a 
-                                    href="{{ article.get_absolute_url }}"
-                                    class="hover:text-blue-600 transition-colors"
-                                >
-                                    {{ article.title }}
-                                </a>
+                            <h2 class="article-list-title">
+                                <a href="{{ article.get_absolute_url }}" title="اقرأ المقال: {{ article.title }}">{{ article.title }}</a>
                             </h2>
 
-                            <!-- Meta Information -->
-                            <div class="text-sm text-gray-600 mb-3 flex flex-wrap gap-4">
-                                <span>📅 {{ article.publish_date|date:"d F Y" }}</span>
+                            <!-- Metadata info row -->
+                            <div class="article-list-meta">
+                                <span class="article-list-meta-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    <time datetime="{{ article.published_date|date:'Y-m-d' }}">{{ article.published_date|date:"d M Y" }}</time>
+                                </span>
                                 {% if article.author %}
-                                    <span>✍️ {{ article.author.get_full_name|default:article.author.username }}</span>
+                                    <span class="article-list-meta-item">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                        <span>{{ article.author.get_full_name|default:article.author.username }}</span>
+                                    </span>
                                 {% endif %}
                             </div>
 
-                            <!-- Description -->
-                            <p class="text-gray-700 mb-4 line-clamp-3">
-                                {{ article.content|striptags|truncatewords:50 }}
+                            <!-- Description / Excerpt -->
+                            <p class="article-list-excerpt">
+                                {{ article.content|striptags|truncatewords:45 }}
                             </p>
+                        </div>
 
-                            <!-- Read More Button -->
+                        <!-- Read More Button -->
+                        <div class="article-list-footer">
                             <a 
                                 href="{{ article.get_absolute_url }}"
-                                class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors w-fit"
+                                class="btn btn--primary btn--sm"
+                                title="اقرأ المقال الكامل"
                             >
-                                اقرأ المزيد
+                                اقرأ المقال الكامل
                             </a>
                         </div>
                     </div>
-                </div>
+                </article>
             {% endfor %}
         </div>
 
         <!-- Pagination -->
         {% if is_paginated %}
-            <nav class="flex justify-center items-center gap-2 mb-8" aria-label="pagination">
-                <!-- Previous Page -->
-                {% if page_obj.has_previous %}
-                    <a 
-                        href="?page=1"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        title="الصفحة الأولى"
-                    >
-                        «
-                    </a>
-                    <a 
-                        href="?page={{ page_obj.previous_page_number }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                        السابق
-                    </a>
-                {% else %}
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">«</span>
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">السابق</span>
-                {% endif %}
-
-                <!-- Page Numbers -->
-                <div class="flex gap-1">
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <span class="px-3 py-2 rounded-lg bg-blue-600 text-white font-semibold">
-                                {{ num }}
-                            </span>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <a 
-                                href="?page={{ num }}"
-                                class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                            >
-                                {{ num }}
-                            </a>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-
-                <!-- Next Page -->
-                {% if page_obj.has_next %}
-                    <a 
-                        href="?page={{ page_obj.next_page_number }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                        التالي
-                    </a>
-                    <a 
-                        href="?page={{ page_obj.paginator.num_pages }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        title="الصفحة الأخيرة"
-                    >
-                        »
-                    </a>
-                {% else %}
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">التالي</span>
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">»</span>
-                {% endif %}
-            </nav>
-
-            <!-- Pagination Info -->
-            <div class="text-center text-gray-600 mb-8">
-                الصفحة <strong>{{ page_obj.number }}</strong> من <strong>{{ page_obj.paginator.num_pages }}</strong>
-                (إجمالي: <strong>{{ page_obj.paginator.count }}</strong> مقالة)
-            </div>
+            {% include 'components/pagination.html' with page_obj=page_obj %}
         {% endif %}
 
     {% else %}
         <!-- No Articles Message -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
-            <p class="text-gray-700 text-lg">لا توجد مقالات في هذه الفئة حالياً</p>
-        </div>
+        {% include 'partials/empty-state.html' with message="لا توجد مقالات في هذه الفئة حالياً" description="يرجى العودة لاحقاً لقراءة أحدث الأخبار." %}
     {% endif %}
 </div>
 {% endblock %}

@@ -259,17 +259,12 @@ class FacultyFormSetForm(forms.ModelForm):
         fields = ['name', 'sort_order']
         widgets = {
             'name': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'faculty-item__input',
                 'placeholder': 'اسم الكلية',
                 'required': True,
                 'dir': 'rtl',
             }),
-            'sort_order': forms.NumberInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'ترتيب العرض',
-                'min': '0',
-                'dir': 'ltr',
-            }),
+            'sort_order': forms.HiddenInput(),
         }
         labels = {
             'name': 'اسم الكلية',
@@ -282,7 +277,8 @@ UniversityFacultyFormSet = inlineformset_factory(
     Faculty,
     form=FacultyFormSetForm,
     fields=['name', 'sort_order'],
-    extra=1,
+    extra=0,
+    max_num=100,
     can_delete=True,
 )
 

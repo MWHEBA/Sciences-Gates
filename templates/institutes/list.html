@@ -1,137 +1,54 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load image_tags %}
 
-{% block title %}المعاهد - Science Gates{% endblock %}
-{% block meta_description %}اكتشف أفضل المعاهد والمراكز التدريبية في ماليزيا مع معلومات شاملة عن الدورات والبرامج{% endblock %}
+{% block title %}معاهد اللغة الإنجليزية في ماليزيا | بوابات العلوم{% endblock %}
+{% block meta_description %}استكشف أفضل معاهد اللغة الإنجليزية في ماليزيا. برامج مكثفة للإيلتس والتوفل والإعداد الأكاديمي.{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-12">
-    <!-- Page Header -->
-    <div class="mb-12">
-        <h1 class="text-4xl font-semibold text-gray-900 mb-4">المعاهد</h1>
-        <p class="text-lg text-gray-600">اكتشف أفضل المعاهد والمراكز التدريبية الماليزية وتعرف على دوراتها وبرامجها</p>
-    </div>
-
-    <!-- Institutes Grid -->
-    {% if institutes %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {% for institute in institutes %}
-                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
-                    <!-- Institute Image -->
-                    <div class="relative h-48 bg-gray-200 overflow-hidden">
-                        {% if institute.main_image %}
-                            {% responsive_image institute.main_image.url institute.name "w-full h-full object-cover" %}
-                        {% else %}
-                            <div class="w-full h-full flex items-center justify-center bg-gray-300">
-                                <span class="text-gray-500">لا توجد صورة</span>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Institute Info -->
-                    <div class="p-6">
-                        <!-- Name -->
-                        <h2 class="text-xl font-semibold text-gray-900 mb-3">
-                            {{ institute.name }}
-                        </h2>
-
-                        <!-- Description -->
-                        <p class="text-gray-700 text-sm mb-4 line-clamp-3">
-                            {{ institute.description|truncatewords:30 }}
-                        </p>
-
-                        <!-- Courses Count -->
-                        <p class="text-sm text-gray-600 mb-4">
-                            <span class="inline-block">📚 {{ institute.courses.count }} دورة</span>
-                        </p>
-
-                        <!-- View Details Button -->
-                        <a 
-                            href="{{ institute.get_absolute_url }}"
-                            class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg text-center transition-colors"
-                        >
-                            عرض التفاصيل
-                        </a>
-                    </div>
-                </div>
-            {% endfor %}
+<!-- Page Header -->
+<section class="section section-bg-white">
+    <div class="container">
+        <div style="text-align:center; max-width:800px; margin:0 auto 4rem;">
+            <h1 style="color:var(--primary); margin-bottom:0.25rem; font-size:clamp(2rem, 5vw, 3rem);">معاهد اللغة الإنجليزية</h1>
+            {% include 'components/breadcrumb.html' %}
+            <p style="font-size:1.125rem; color:var(--text-body); line-height:1.8; margin-top:1rem;">اختر من بين أفضل معاهد اللغة الإنجليزية المعتمدة دولياً. برامج مكثفة وفعالة للإيلتس والتوفل والإعداد الأكاديمي.</p>
         </div>
 
-        <!-- Pagination -->
-        {% if is_paginated %}
-            <nav class="flex justify-center items-center gap-2 mb-8" aria-label="pagination">
-                <!-- Previous Page -->
-                {% if page_obj.has_previous %}
-                    <a 
-                        href="?page=1"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        title="الصفحة الأولى"
-                    >
-                        «
-                    </a>
-                    <a 
-                        href="?page={{ page_obj.previous_page_number }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                        السابق
-                    </a>
-                {% else %}
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">«</span>
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">السابق</span>
-                {% endif %}
-
-                <!-- Page Numbers -->
-                <div class="flex gap-1">
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <span class="px-3 py-2 rounded-lg bg-blue-600 text-white font-semibold">
-                                {{ num }}
-                            </span>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <a 
-                                href="?page={{ num }}"
-                                class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                            >
-                                {{ num }}
-                            </a>
-                        {% endif %}
-                    {% endfor %}
+        <!-- Search and Filters - Marketplace Pattern -->
+        <div style="background:var(--bg-gray); padding:2rem; border-radius:var(--radius-lg); margin-bottom:3rem; display:flex; gap:1rem; flex-wrap:wrap; align-items:center; box-shadow:var(--shadow-soft);">
+            <form method="get" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; width:100%;">
+                <div style="flex-grow:1; min-width:250px;">
+                    <input type="text" name="q" class="form-control" placeholder="ابحث عن اسم المعهد..." value="{{ request.GET.q }}" style="border:none; box-shadow:var(--shadow-soft); padding:0.75rem 1rem; border-radius:var(--radius-md);" aria-label="البحث عن معهد">
                 </div>
+                <select name="city" class="form-control" style="width:200px; border:none; box-shadow:var(--shadow-soft); padding:0.75rem 1rem; border-radius:var(--radius-md);" aria-label="اختر المدينة">
+                    <option value="">جميع المدن</option>
+                    <option value="kl" {% if request.GET.city == 'kl' %}selected{% endif %}>كوالالمبور</option>
+                    <option value="selangor" {% if request.GET.city == 'selangor' %}selected{% endif %}>سيلانجور</option>
+                    <option value="penang" {% if request.GET.city == 'penang' %}selected{% endif %}>بينانج</option>
+                    <option value="johor" {% if request.GET.city == 'johor' %}selected{% endif %}>جوهر</option>
+                </select>
+                <button type="submit" class="btn btn--primary" style="cursor:pointer;">بحــث</button>
+            </form>
+        </div>
 
-                <!-- Next Page -->
-                {% if page_obj.has_next %}
-                    <a 
-                        href="?page={{ page_obj.next_page_number }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                        التالي
-                    </a>
-                    <a 
-                        href="?page={{ page_obj.paginator.num_pages }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        title="الصفحة الأخيرة"
-                    >
-                        »
-                    </a>
-                {% else %}
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">التالي</span>
-                    <span class="px-3 py-2 rounded-lg border border-gray-300 text-gray-400 cursor-not-allowed">»</span>
-                {% endif %}
-            </nav>
-
-            <!-- Pagination Info -->
-            <div class="text-center text-gray-600 mb-8">
-                الصفحة <strong>{{ page_obj.number }}</strong> من <strong>{{ page_obj.paginator.num_pages }}</strong>
-                (إجمالي: <strong>{{ page_obj.paginator.count }}</strong> معهد)
+        <!-- Institutes Grid -->
+        {% if institutes %}
+            <div class="grid grid--3">
+                {% for institute in institutes %}
+                    {% include 'partials/institute-card.html' with institute=institute %}
+                {% endfor %}
             </div>
-        {% endif %}
 
-    {% else %}
-        <!-- No Institutes Message -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
-            <p class="text-gray-700 text-lg">لا توجد معاهد متاحة حالياً</p>
-        </div>
-    {% endif %}
-</div>
+            <!-- Pagination -->
+            {% include 'components/pagination.html' %}
+        {% else %}
+            <!-- Empty State -->
+            {% include 'partials/empty-state.html' with title="لا توجد معاهد" message="لم نجد معاهد تطابق معايير البحث الحالية. حاول تغيير الفلاتر أو البحث عن كلمات مفتاحية مختلفة." %}
+        {% endif %}
+    </div>
+</section>
+
+<!-- CTA Band -->
+{% include 'partials/cta-band.html' %}
+
 {% endblock %}

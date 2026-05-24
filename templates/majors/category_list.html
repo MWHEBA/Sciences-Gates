@@ -10,13 +10,11 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <!-- Breadcrumbs -->
-    {% include 'components/breadcrumb.html' %}
-    
     <!-- Page Header -->
     <div class="mb-8">
-        <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ category_label }}</h1>
-        <p class="text-lg text-gray-600">اختر من بين أفضل {{ category_label }} المتاحة</p>
+        <h1 class="text-4xl font-bold mb-1" style="color:var(--primary);">{{ category_label }}</h1>
+        {% include 'components/breadcrumb.html' %}
+        <p class="text-lg mt-3" style="color:var(--text-body);">اختر من بين أفضل {{ category_label }} المتاحة</p>
     </div>
     
     <!-- Majors Grid -->

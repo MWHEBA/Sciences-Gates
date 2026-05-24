@@ -1,0 +1,12 @@
+<div class="section section-bg-gray">
+    <div class="container">
+        <h2 class="section-title">{{ title|default:"مقالات ذات صلة" }}</h2>
+        <div class="grid grid--3">
+            {% for item in items %}
+                {% include "partials/article-card.html" with article=item %}
+            {% empty %}
+                <p style="grid-column: 1 / -1; text-align: center; color: var(--text-light);">لا توجد عناصر ذات صلة</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>

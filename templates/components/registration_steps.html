@@ -10,20 +10,20 @@ Usage:
 {% endcomment %}
 
 {% if site_settings and site_settings.registration_steps_content %}
-<section class="py-12 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Section Title -->
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-                {{ site_settings.registration_steps_title }}
-            </h2>
-            <div class="h-1 w-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"></div>
-        </div>
+<section class="glass-card rounded-2xl p-8 border border-border text-right relative overflow-hidden">
+    <!-- Decorative background highlight -->
+    <div class="absolute top-0 right-0 w-32 h-32 bg-secondary-muted rounded-full blur-3xl -z-10 opacity-30"></div>
+    
+    <!-- Section Title -->
+    <div class="mb-6 pb-4 border-b border-border">
+        <h2 class="text-2xl font-bold text-primary mb-2 flex items-center gap-2">
+            <span class="text-secondary">📋</span> {{ site_settings.registration_steps_title }}
+        </h2>
+    </div>
 
-        <!-- Registration Steps Content -->
-        <div class="prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-w-none">
-            {{ site_settings.registration_steps_content|safe }}
-        </div>
+    <!-- Registration Steps Content -->
+    <div class="prose prose-primary max-w-none text-text-secondary leading-relaxed text-sm md:text-base">
+        {{ site_settings.registration_steps_content|safe }}
     </div>
 </section>
 {% endif %}

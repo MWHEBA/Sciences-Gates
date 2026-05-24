@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}خطأ في الخادم | بوابات العلوم{% endblock %}
+
+{% block content %}
+<section class="section section-bg-white" style="min-height:60vh; display:flex; align-items:center;">
+    <div class="container" style="max-width:600px;">
+        <div class="error-message">
+            <!-- Error Icon -->
+            <div class="error-icon error-icon--warning">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
+            </div>
+
+            <!-- Error Code -->
+            <h1 class="error-code error-code--warning">500</h1>
+
+            <!-- Error Title -->
+            <h2 class="error-title">خطأ في الخادم</h2>
+
+            <!-- Error Message -->
+            <p class="error-message-text">
+                عذراً، حدث خطأ غير متوقع في الخادم. يرجى المحاولة مرة أخرى لاحقاً أو التواصل معنا للمساعدة.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="error-actions">
+                <a href="/" class="btn btn--primary btn--lg" title="العودة إلى الصفحة الرئيسية">العودة للرئيسية</a>
+                <a href="{% url 'leads:submit' %}" class="btn btn--outline btn--lg" title="تواصل معنا">تواصل معنا</a>
+            </div>
+
+            <!-- Support Info -->
+            <div class="error-support">
+                <h3 class="error-support-title">هل تحتاج إلى مساعدة؟</h3>
+                <p class="error-support-text">
+                    يمكنك التواصل معنا مباشرة عبر:
+                </p>
+                <div class="error-support-contacts">
+                    <div class="error-support-contact">
+                        <strong class="error-support-label">البريد الإلكتروني:</strong><br>
+                        <a href="mailto:info@sciencesgates.com" class="error-support-link" title="أرسل لنا بريد إلكتروني">info@sciencesgates.com</a>
+                    </div>
+                    <div class="error-support-contact">
+                        <strong class="error-support-label">الهاتف:</strong><br>
+                        <a href="tel:+60123456789" class="error-support-link" title="اتصل بنا">+60 12 345 6789</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,319 +1,200 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
-{% load image_tags %}
 
-{% block title %}Science Gates - ادرس في ماليزيا{% endblock %}
-{% block meta_description %}منصة متخصصة لاختيار أفضل الجامعات والمعاهد والتخصصات في ماليزيا{% endblock %}
+{% block title %}بوابات العلوم - الدراسة في ماليزيا{% endblock %}
+{% block meta_description %}اكتشف أفضل الجامعات الماليزية، احصل على استشارات مجانية، وقبولات جامعية سريعة مع بوابات العلوم.{% endblock %}
 
 {% block content %}
-<div class="bg-white" dir="rtl">
-    <!-- Hero Section -->
-    <section class="relative bg-gradient-to-b from-blue-50 to-white py-16 md:py-24 px-4 md:px-8">
-        <div class="max-w-6xl mx-auto">
-            <div class="text-center">
-                <!-- Hero Title -->
-                <h1 class="text-4xl md:text-5xl font-semibold text-gray-900 mb-4">
-                    🎓 Science Gates
-                </h1>
-                <h2 class="text-2xl md:text-3xl font-semibold text-blue-600 mb-6">
-                    ادرس في ماليزيا
-                </h2>
-                
-                <!-- Hero Description -->
-                <p class="text-lg text-gray-700 mb-8 max-w-2xl mx-auto leading-relaxed">
-                    منصة متخصصة تساعدك على اختيار أفضل الجامعات والمعاهد والتخصصات في ماليزيا.
-                    اكتشف برامج دراسية متميزة وفرص تعليمية عالمية.
-                </p>
-                
-                <!-- CTA Buttons -->
-                <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                    <a href="{% url 'universities:list' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors">
-                        استكشف الجامعات
-                    </a>
-                    <a href="{% url 'majors:list' %}" class="inline-block bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold py-3 px-8 rounded-lg transition-colors">
-                        اختر تخصصك
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Featured Universities Section -->
-    {% if universities %}
-    <section class="py-16 px-4 md:px-8 bg-white">
-        <div class="max-w-6xl mx-auto">
-            <div class="mb-12">
-                <h2 class="text-3xl font-semibold text-gray-900 mb-2">الجامعات المميزة</h2>
-                <p class="text-gray-600">اكتشف أفضل الجامعات الماليزية</p>
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container hero__inner">
+        <div class="hero__content">
+            <h1 style="color:var(--primary);">وجهتك الأفضل للدراسة في <span class="text-secondary">ماليزيا</span></h1>
+            <p>انطلق نحو مستقبل مشرق مع خدمات استشارية مجانية، قبولات جامعية سريعة، وتوجيه ومتابعة مستمرة. بوابات العلوم هي رفيقك الأكاديمي.</p>
+            <div class="hero__actions">
+                <a href="{% url 'leads:submit' %}" class="btn btn--primary btn--lg">احصل على استشارة مجانية</a>
+                <a href="{% url 'universities:list' %}" class="btn btn--outline btn--lg">تصفح الجامعات</a>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for university in universities %}
-                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                    <!-- University Image -->
-                    {% if university.main_image %}
-                    <div class="relative h-48 overflow-hidden bg-gray-100">
-                        {% responsive_image university.main_image.url university.name "w-full h-full object-cover hover:scale-105 transition-transform duration-300" %}
-                    </div>
-                    {% endif %}
-                    
-                    <!-- University Info -->
-                    <div class="p-6">
-                        {% if university.logo %}
-                        <div class="mb-4">
-                            {% responsive_image university.logo.url university.name|add:" شعار" "h-12 object-contain" %}
-                        </div>
-                        {% endif %}
-                        
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ university.name }}</h3>
-                        
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
-                            {{ university.description|truncatewords:20 }}
-                        </p>
-                        
-                        <div class="flex items-center text-gray-500 text-sm mb-4">
-                            <span>📍</span>
-                            <span class="mr-2">{{ university.location }}</span>
-                        </div>
-                        
-                        <a 
-                            href="{{ university.get_absolute_url }}" 
-                            class="inline-block text-blue-600 hover:text-blue-700 font-semibold text-sm"
-                        >
-                            اعرف المزيد ←
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            
-            <div class="text-center mt-12">
-                <a href="{% url 'universities:list' %}" class="inline-block text-blue-600 hover:text-blue-700 font-semibold">
-                    عرض جميع الجامعات →
-                </a>
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
-    <!-- Featured Institutes Section -->
-    {% if institutes %}
-    <section class="py-16 px-4 md:px-8 bg-gray-50">
-        <div class="max-w-6xl mx-auto">
-            <div class="mb-12">
-                <h2 class="text-3xl font-semibold text-gray-900 mb-2">المعاهد المتخصصة</h2>
-                <p class="text-gray-600">تصفح المعاهد والمراكز التدريبية</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for institute in institutes %}
-                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                    <!-- Institute Image -->
-                    {% if institute.main_image %}
-                    <div class="relative h-48 overflow-hidden bg-gray-100">
-                        {% responsive_image institute.main_image.url institute.name "w-full h-full object-cover hover:scale-105 transition-transform duration-300" %}
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Institute Info -->
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ institute.name }}</h3>
-                        
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
-                            {{ institute.description|truncatewords:20 }}
-                        </p>
-                        
-                        {% if institute.courses.count %}
-                        <div class="text-gray-500 text-sm mb-4">
-                            <span>📚</span>
-                            <span class="mr-2">{{ institute.courses.count }} دورة</span>
-                        </div>
-                        {% endif %}
-                        
-                        <a 
-                            href="{{ institute.get_absolute_url }}" 
-                            class="inline-block text-blue-600 hover:text-blue-700 font-semibold text-sm"
-                        >
-                            اعرف المزيد ←
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            
-            <div class="text-center mt-12">
-                <a href="{% url 'institutes:list' %}" class="inline-block text-blue-600 hover:text-blue-700 font-semibold">
-                    عرض جميع المعاهد →
-                </a>
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
-    <!-- Featured Majors Section -->
-    {% if majors %}
-    <section class="py-16 px-4 md:px-8 bg-white">
-        <div class="max-w-6xl mx-auto">
-            <div class="mb-12">
-                <h2 class="text-3xl font-semibold text-gray-900 mb-2">التخصصات الدراسية</h2>
-                <p class="text-gray-600">اختر التخصص المناسب لمستقبلك</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for major in majors %}
-                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                    <!-- Major Image -->
-                    {% if major.main_image %}
-                    <div class="relative h-48 overflow-hidden bg-gray-100">
-                        {% responsive_image major.main_image.url major.name "w-full h-full object-cover hover:scale-105 transition-transform duration-300" %}
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Major Info -->
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ major.name }}</h3>
-                        
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
-                            {{ major.description|truncatewords:20 }}
-                        </p>
-                        
-                        <!-- Quick Info -->
-                        <div class="space-y-2 text-gray-600 text-sm mb-4">
-                            {% if major.study_duration %}
-                            <div>
-                                <span>⏱️</span>
-                                <span class="mr-2">{{ major.study_duration }}</span>
-                            </div>
-                            {% endif %}
-                            {% if major.study_language %}
-                            <div>
-                                <span>🗣️</span>
-                                <span class="mr-2">{{ major.study_language }}</span>
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <a 
-                            href="{{ major.get_absolute_url }}" 
-                            class="inline-block text-blue-600 hover:text-blue-700 font-semibold text-sm"
-                        >
-                            اعرف المزيد ←
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            
-            <div class="text-center mt-12">
-                <a href="{% url 'majors:list' %}" class="inline-block text-blue-600 hover:text-blue-700 font-semibold">
-                    عرض جميع التخصصات →
-                </a>
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
-    <!-- Recent Articles Section -->
-    {% if articles %}
-    <section class="py-16 px-4 md:px-8 bg-gray-50">
-        <div class="max-w-6xl mx-auto">
-            <div class="mb-12">
-                <h2 class="text-3xl font-semibold text-gray-900 mb-2">آخر المقالات</h2>
-                <p class="text-gray-600">اقرأ أحدث المقالات والأخبار التعليمية</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for article in articles %}
-                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                    <!-- Article Image -->
-                    {% if article.featured_image %}
-                    <div class="relative h-48 overflow-hidden bg-gray-100">
-                        {% responsive_image article.featured_image.url article.title "w-full h-full object-cover hover:scale-105 transition-transform duration-300" %}
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Article Info -->
-                    <div class="p-6">
-                        <!-- Category Badge -->
-                        {% if article.category %}
-                        <div class="mb-3">
-                            <a 
-                                href="{{ article.category.get_absolute_url }}"
-                                class="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full"
-                            >
-                                {{ article.category.name }}
-                            </a>
-                        </div>
-                        {% endif %}
-                        
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                            {{ article.title }}
-                        </h3>
-                        
-                        <!-- Article Meta -->
-                        <div class="flex items-center text-gray-500 text-xs mb-4 space-x-4 space-x-reverse">
-                            {% if article.author %}
-                            <span>✍️ {{ article.author.get_full_name|default:article.author.username }}</span>
-                            {% endif %}
-                            <span>📅 {{ article.publish_date|date:"d M Y" }}</span>
-                        </div>
-                        
-                        <a 
-                            href="{{ article.get_absolute_url }}" 
-                            class="inline-block text-blue-600 hover:text-blue-700 font-semibold text-sm"
-                        >
-                            اقرأ المقالة ←
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            
-            <div class="text-center mt-12">
-                <a href="{% url 'articles:list' %}" class="inline-block text-blue-600 hover:text-blue-700 font-semibold">
-                    عرض جميع المقالات →
-                </a>
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
-    <!-- Lead Form Section -->
-    <section class="py-16 px-4 md:px-8 bg-blue-50">
-        <div class="max-w-2xl mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-semibold text-gray-900 mb-2">هل تريد معرفة المزيد؟</h2>
-                <p class="text-gray-600">تواصل معنا واحصل على استشارة مجانية</p>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-lg p-8">
-                {% include "components/lead_form.html" with source_page=request.path %}
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="py-16 px-4 md:px-8 bg-white">
-        <div class="max-w-6xl mx-auto">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+            <!-- Stats -->
+            <div style="margin-top:2.5rem; display:flex; gap:2rem; align-items:center;">
                 <div>
-                    <div class="text-4xl font-semibold text-blue-600 mb-2">{{ universities.count }}</div>
-                    <p class="text-gray-600">جامعة</p>
+                    <span style="display:block; font-size:1.5rem; font-weight:700; color:var(--primary);">+50</span>
+                    <span style="font-size:0.875rem; color:var(--text-body);">جامعة شريكة</span>
                 </div>
                 <div>
-                    <div class="text-4xl font-semibold text-blue-600 mb-2">{{ institutes.count }}</div>
-                    <p class="text-gray-600">معهد</p>
+                    <span style="display:block; font-size:1.5rem; font-weight:700; color:var(--primary);">+3000</span>
+                    <span style="font-size:0.875rem; color:var(--text-body);">طالب مقبول</span>
                 </div>
                 <div>
-                    <div class="text-4xl font-semibold text-blue-600 mb-2">{{ majors.count }}</div>
-                    <p class="text-gray-600">تخصص</p>
-                </div>
-                <div>
-                    <div class="text-4xl font-semibold text-blue-600 mb-2">{{ articles.count }}</div>
-                    <p class="text-gray-600">مقالة</p>
+                    <span style="display:block; font-size:1.5rem; font-weight:700; color:var(--primary);">%100</span>
+                    <span style="font-size:0.875rem; color:var(--text-body);">استشارات مجانية</span>
                 </div>
             </div>
         </div>
-    </section>
-</div>
+        <div class="hero__image-wrapper">
+            <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&q=80&w=1200" alt="طالب جامعي في ماليزيا">
+        </div>
+    </div>
+</section>
+
+<!-- Featured Universities -->
+<section class="section section-bg-white">
+    <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2.5rem;">
+            <h2 class="section-title" style="margin-bottom:0;">جامعات ماليزية متميزة</h2>
+            <a href="{% url 'universities:list' %}" class="btn btn--outline">عرض كل الجامعات</a>
+        </div>
+        <div class="grid grid--3">
+            {% for university in featured_universities %}
+                {% include 'partials/university-card.html' with university=university %}
+            {% empty %}
+                <p style="grid-column: 1 / -1; text-align: center; color: var(--text-light);">لا توجد جامعات متاحة حالياً</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="section section-bg-gray">
+    <div class="container">
+        <h2 class="section-title text-center">لماذا تختار بوابات العلوم؟</h2>
+        <div class="grid grid--4" style="margin-top:3rem;">
+            <!-- Feature 1 -->
+            <div style="background:var(--bg-white); padding:2rem; border-radius:var(--radius-lg); text-align:center; box-shadow:var(--shadow-soft);">
+                <div style="width:60px; height:60px; background:var(--primary-light); color:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <h3 style="font-size:1.25rem;">قبولات مضمونة ومجانية</h3>
+                <p style="color:var(--text-body); font-size:0.875rem;">نحن وكلاء رسميون، مما يعني سهولة وسرعة الإجراءات بدون رسوم خفية.</p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div style="background:var(--bg-white); padding:2rem; border-radius:var(--radius-lg); text-align:center; box-shadow:var(--shadow-soft);">
+                <div style="width:60px; height:60px; background:var(--primary-light); color:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                <h3 style="font-size:1.25rem;">استشارات أكاديمية</h3>
+                <p style="color:var(--text-body); font-size:0.875rem;">توجيهك لاختيار التخصص والجامعة الأنسب لميزانيتك وطموحك.</p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div style="background:var(--bg-white); padding:2rem; border-radius:var(--radius-lg); text-align:center; box-shadow:var(--shadow-soft);">
+                <div style="width:60px; height:60px; background:var(--primary-light); color:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </div>
+                <h3 style="font-size:1.25rem;">تأمين السكن والفيزا</h3>
+                <p style="color:var(--text-body); font-size:0.875rem;">خدمات متكاملة تشمل استخراج فيزا الطالب وتأمين سكن ملائم.</p>
+            </div>
+
+            <!-- Feature 4 -->
+            <div style="background:var(--bg-white); padding:2rem; border-radius:var(--radius-lg); text-align:center; box-shadow:var(--shadow-soft);">
+                <div style="width:60px; height:60px; background:var(--primary-light); color:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                </div>
+                <h3 style="font-size:1.25rem;">متابعة بعد الوصول</h3>
+                <p style="color:var(--text-body); font-size:0.875rem;">استقبال في المطار ومساعدة في إجراءات التسجيل وفتح الحساب البنكي.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Majors and Institutes -->
+<section class="section section-bg-white">
+    <div class="container grid grid--2" style="gap:4rem;">
+        <!-- Majors -->
+        <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2rem;">
+                <h2 class="section-title" style="margin-bottom:0; font-size:1.75rem;">أبرز التخصصات</h2>
+                <a href="{% url 'majors:list' %}" class="btn btn--outline btn--sm">الكل</a>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                {% for major in featured_majors %}
+                    {% include 'partials/major-card.html' with major=major %}
+                {% empty %}
+                    <p style="text-align: center; color: var(--text-light);">لا توجد تخصصات متاحة حالياً</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Institutes -->
+        <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2rem;">
+                <h2 class="section-title" style="margin-bottom:0; font-size:1.75rem;">معاهد اللغة الإنجليزية</h2>
+                <a href="{% url 'institutes:list' %}" class="btn btn--outline btn--sm">الكل</a>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                {% for institute in featured_institutes %}
+                    {% include 'partials/institute-card.html' with institute=institute %}
+                {% empty %}
+                    <p style="text-align: center; color: var(--text-light);">لا توجد معاهد متاحة حالياً</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Steps Section -->
+<section class="section section-bg-primary">
+    <div class="container text-center">
+        <h2 class="section-title text-center" style="color:white;">خطوات التسجيل معنا</h2>
+        <div class="grid grid--4" style="margin-top:3rem;">
+            <div>
+                <div style="font-size:3rem; font-weight:800; color:var(--secondary); opacity:0.8; margin-bottom:1rem;">01</div>
+                <h3 style="color:white; font-size:1.25rem;">تواصل معنا</h3>
+                <p style="color:rgba(255,255,255,0.8); font-size:0.875rem;">املأ نموذج التسجيل للحصول على الاستشارة.</p>
+            </div>
+            <div>
+                <div style="font-size:3rem; font-weight:800; color:var(--secondary); opacity:0.8; margin-bottom:1rem;">02</div>
+                <h3 style="color:white; font-size:1.25rem;">تقديم المستندات</h3>
+                <p style="color:rgba(255,255,255,0.8); font-size:0.875rem;">أرسل أوراقك وسنقوم بترجمتها وتصديقها إن لزم الأمر.</p>
+            </div>
+            <div>
+                <div style="font-size:3rem; font-weight:800; color:var(--secondary); opacity:0.8; margin-bottom:1rem;">03</div>
+                <h3 style="color:white; font-size:1.25rem;">استلام القبول المجاني</h3>
+                <p style="color:rgba(255,255,255,0.8); font-size:0.875rem;">استلام القبول الجامعي خلال أيام قليلة.</p>
+            </div>
+            <div>
+                <div style="font-size:3rem; font-weight:800; color:var(--secondary); opacity:0.8; margin-bottom:1rem;">04</div>
+                <h3 style="color:white; font-size:1.25rem;">السفر والدراسة</h3>
+                <p style="color:rgba(255,255,255,0.8); font-size:0.875rem;">سوف نستقبلك في المطار ونرافقك للجامعة.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Latest Articles -->
+<section class="section section-bg-white">
+    <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2.5rem;">
+            <h2 class="section-title" style="margin-bottom:0;">المقالات والأخبار</h2>
+            <a href="{% url 'articles:list' %}" class="btn btn--outline">المزيد</a>
+        </div>
+        <div class="grid grid--3">
+            {% for article in latest_articles %}
+                {% include 'partials/article-card.html' with article=article %}
+            {% empty %}
+                <p style="grid-column: 1 / -1; text-align: center; color: var(--text-light);">لا توجد مقالات متاحة حالياً</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- FAQs Section -->
+<section class="section section-bg-gray">
+    <div class="container grid grid--2" style="align-items:start;">
+        <div>
+            <h2 class="section-title" style="margin-bottom:1rem;">الأسئلة الشائعة</h2>
+            <p style="color:var(--text-body); margin-bottom:2rem;">جمعنا لك أبرز الأسئلة التي يطرحها الطلاب الجدد حول الدراسة والمعيشة في ماليزيا. لا تتردد بالتواصل معنا لأي استفسار آخر.</p>
+            <a href="{% url 'leads:submit' %}" class="btn btn--primary">تواصل معنا الآن</a>
+        </div>
+        <div>
+            {% include 'partials/faq-accordion.html' with faqs=faqs %}
+        </div>
+    </div>
+</section>
+
+<!-- CTA Band -->
+{% include 'partials/cta-band.html' %}
+
 {% endblock %}

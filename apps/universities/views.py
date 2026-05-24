@@ -9,7 +9,7 @@ from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
-class UniversityListView(ListView):
+class UniversityListView(BreadcrumbMixin, ListView):
     """
     Display a paginated list of published universities.
     
@@ -35,6 +35,13 @@ class UniversityListView(ListView):
             'related_majors',
             'related_articles'
         ).order_by('name')
+    
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for university list page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .current('الجامعات')
+            .build())
 
 
 class UniversityDetailView(BreadcrumbMixin, DetailView):
