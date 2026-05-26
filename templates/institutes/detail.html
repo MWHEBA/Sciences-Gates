@@ -176,15 +176,7 @@
 
             <!-- Inquiry Lead Form Sidebar Card -->
             <div class="detail-sidebar-card detail-sidebar-card--sticky">
-                <h3 class="detail-sidebar-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    استفسر الآن
-                </h3>
-                <p class="detail-sidebar-description">هل لديك تساؤلات بخصوص هذا المعهد؟ املأ النموذج أدناه وسيقوم فريقنا بالتواصل معك.</p>
-                
-                <div class="detail-sidebar-form">
-                    {% include 'components/lead_form.html' with source_page=request.path %}
-                </div>
+                {% include 'components/lead_form.html' with source_page=request.path %}
             </div>
 
         </div>

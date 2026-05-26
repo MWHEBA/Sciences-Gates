@@ -3,6 +3,7 @@ Context processors for global template context.
 معالجات السياق للسياق العام للقوالب
 """
 from apps.leads.models import Lead
+from apps.leads.countries import ALL_COUNTRIES, DEFAULT_COUNTRY, DEFAULT_CODE, DEFAULT_PLACEHOLDER
 from apps.core.models import SiteSettings
 
 
@@ -40,3 +41,20 @@ def site_settings_context(request):
         site_settings = None
     
     return {'site_settings': site_settings}
+
+
+def phone_countries_context(request):
+    """
+    Add phone country codes to templates that need the lead form.
+    إضافة أكواد الدول للقوالب التي تحتاج فورم التواصل
+    """
+    # Only load for public pages (not dashboard)
+    if 'dashboard' in request.path:
+        return {}
+    
+    return {
+        'phone_countries': ALL_COUNTRIES,
+        'default_country': DEFAULT_COUNTRY,
+        'default_code': DEFAULT_CODE,
+        'default_placeholder': DEFAULT_PLACEHOLDER,
+    }

@@ -87,7 +87,6 @@ class TestUniversityDetailView:
             location='كوالالمبور',
             video_url='https://www.youtube.com/embed/test',
             admission_requirements='شروط القبول',
-            registration_section='خطوات التسجيل',
             publish_status='published'
         )
         
@@ -166,6 +165,21 @@ class TestUniversityDetailView:
         assert len(response.context['faculties']) == 1
         assert len(response.context['faqs']) == 1
     
+    def test_detail_view_shows_tabbed_admission_requirements(self):
+        """Test that detail view displays the program-specific admission requirements when present."""
+        self.university.admission_requirements_bachelor = 'شروط البكالوريوس المميزة'
+        self.university.admission_requirements_master = 'شروط الماجستير المميزة'
+        self.university.admission_requirements_phd = 'شروط الدكتوراه المميزة'
+        self.university.save()
+        
+        response = self.client.get(
+            reverse('universities:detail', kwargs={'slug': self.university.slug})
+        )
+        content = response.content.decode()
+        assert 'شروط البكالوريوس المميزة' in content
+        assert 'شروط الماجستير المميزة' in content
+        assert 'شروط الدكتوراه المميزة' in content
+
     def test_detail_view_unpublished_returns_404(self):
         """Test that unpublished university returns 404."""
         from .models import University

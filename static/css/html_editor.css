@@ -13,6 +13,7 @@
     overflow: hidden;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     background-color: var(--surface);
+    resize: vertical;
 }
 
 .pro-editor-wrapper.is-focused {
@@ -72,6 +73,8 @@
     background-color: var(--surface-2);
     border-bottom: 1px solid var(--border);
     user-select: none;
+    position: relative;
+    /* لـ absolute positioning للزر */
 }
 
 .pro-editor-toolbar-group {
@@ -143,11 +146,92 @@
     border-color: var(--secondary-light);
 }
 
+/* Beautify button styling */
+.pro-editor-beautify-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-2);
+    color: var(--secondary);
+    font-family: 'Alexandria', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    gap: 4px;
+    margin-right: 6px;
+    width: auto !important;
+    /* overwrite standard width */
+}
+
+.pro-editor-beautify-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.pro-editor-beautify-btn:hover {
+    background-color: var(--secondary-light);
+    color: var(--secondary);
+    border-color: var(--secondary);
+}
+
+
+/* Compact/Minimal toggle button — أقصى يسار الشريط حرفياً */
+.pro-editor-compact-btn {
+    position: absolute;
+    left: 8px;
+    background-color: var(--secondary);
+    color: #fff;
+    border: 1px solid var(--secondary);
+    border-radius: var(--radius-sm);
+    width: 28px;
+    height: 28px;
+    opacity: 0.6;
+    transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.pro-editor-compact-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.pro-editor-compact-btn:hover {
+    opacity: 0.8;
+    background-color: var(--secondary-hover, var(--secondary));
+    color: #fff;
+    border-color: var(--secondary-hover, var(--secondary));
+}
+
+.pro-editor-compact-btn.is-active {
+    background-color: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    opacity: 0.6;
+}
+
+.pro-editor-compact-btn.is-active:hover {
+    opacity: 0.8;
+    background-color: var(--primary-hover, var(--primary));
+    color: #fff;
+    border-color: var(--primary-hover, var(--primary));
+}
+
+/* Minimal toolbar mode — smooth transition */
+.pro-editor-toolbar.is-minimal {
+    padding: 6px 10px;
+}
+
+.pro-editor-toolbar .pro-editor-btn,
+.pro-editor-toolbar .pro-editor-separator,
+.pro-editor-toolbar .pro-editor-toolbar-group {
+    transition: opacity 0.15s ease, max-width 0.15s ease;
+}
+
 /* ─── Editor Content Area ─────────────────────────────────────────────────── */
 .pro-editor-content {
     flex: 1;
-    min-height: 220px;
-    max-height: 600px;
     overflow-y: auto;
     padding: 16px 18px;
     background-color: var(--surface);
@@ -159,7 +243,7 @@
     text-align: right;
     outline: none;
     word-break: break-word;
-    resize: vertical;
+    resize: none;
 }
 
 /* Placeholder */
@@ -173,8 +257,6 @@
 .pro-editor-panel {
     display: none;
     flex: 1;
-    min-height: 220px;
-    max-height: 600px;
     overflow: hidden;
 }
 
@@ -366,26 +448,26 @@
 
 /* ─── Font Size Select (Word-style) ───────────────────────────────────────── */
 .pro-editor-fontsize-select {
-    height: 32px;
-    padding: 6px 28px 6px 12px;
+    height: 28px;
+    padding: 4px 24px 4px 10px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background-color: var(--surface);
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 11px !important;
     font-family: 'Alexandria', sans-serif;
-    font-weight: 500;
+    font-weight: 400;
     cursor: pointer;
     outline: none;
     transition: all 0.15s ease;
-    min-width: 90px;
+    min-width: 80px;
     text-align: right;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%23666' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: left 8px center;
     background-size: 8px 5px;
-    padding-left: 24px;
+    padding-left: 20px;
 }
 
 .pro-editor-fontsize-select:hover {
@@ -411,26 +493,26 @@
 
 /* ─── Line Height Select ──────────────────────────────────────────────────── */
 .pro-editor-lineheight-select {
-    height: 32px;
-    padding: 6px 28px 6px 12px;
+    height: 28px;
+    padding: 4px 24px 4px 10px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background-color: var(--surface);
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 11px !important;
     font-family: 'Alexandria', sans-serif;
-    font-weight: 500;
+    font-weight: 400;
     cursor: pointer;
     outline: none;
     transition: all 0.15s ease;
-    min-width: 90px;
+    min-width: 80px;
     text-align: right;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%23666' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: left 8px center;
     background-size: 8px 5px;
-    padding-left: 24px;
+    padding-left: 20px;
 }
 
 .pro-editor-lineheight-select:hover {
@@ -522,8 +604,15 @@
 }
 
 @keyframes pro-dropdown-slide-in {
-    from { opacity: 0; transform: translateY(-8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .pro-dropdown-header {
@@ -645,8 +734,13 @@
 }
 
 @keyframes pro-modal-fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .pro-editor-modal {
@@ -661,8 +755,15 @@
 }
 
 @keyframes pro-modal-slide-in {
-    from { transform: translateY(-8px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
+    from {
+        transform: translateY(-8px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .pro-editor-modal-header {
@@ -855,6 +956,7 @@
 
 /* ─── Print ───────────────────────────────────────────────────────────────── */
 @media print {
+
     .pro-editor-toolbar,
     .pro-editor-footer {
         display: none;
@@ -1340,14 +1442,57 @@
     z-index: 10000;
 }
 
-.pro-image-resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
-.pro-image-resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
-.pro-image-resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
-.pro-image-resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
-.pro-image-resize-handle.n { top: -4px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
-.pro-image-resize-handle.s { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
-.pro-image-resize-handle.w { top: 50%; left: -4px; transform: translateY(-50%); cursor: w-resize; }
-.pro-image-resize-handle.e { top: 50%; right: -4px; transform: translateY(-50%); cursor: e-resize; }
+.pro-image-resize-handle.nw {
+    top: -4px;
+    left: -4px;
+    cursor: nw-resize;
+}
+
+.pro-image-resize-handle.ne {
+    top: -4px;
+    right: -4px;
+    cursor: ne-resize;
+}
+
+.pro-image-resize-handle.sw {
+    bottom: -4px;
+    left: -4px;
+    cursor: sw-resize;
+}
+
+.pro-image-resize-handle.se {
+    bottom: -4px;
+    right: -4px;
+    cursor: se-resize;
+}
+
+.pro-image-resize-handle.n {
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: n-resize;
+}
+
+.pro-image-resize-handle.s {
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: s-resize;
+}
+
+.pro-image-resize-handle.w {
+    top: 50%;
+    left: -4px;
+    transform: translateY(-50%);
+    cursor: w-resize;
+}
+
+.pro-image-resize-handle.e {
+    top: 50%;
+    right: -4px;
+    transform: translateY(-50%);
+    cursor: e-resize;
+}
 
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

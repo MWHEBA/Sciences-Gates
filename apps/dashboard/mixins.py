@@ -19,12 +19,19 @@ class DashboardMixin(LoginRequiredMixin):
     def dispatch(self, request, *args, **kwargs):
         """Check if user is authenticated and has a profile."""
         if not request.user.is_authenticated:
-            return redirect(self.login_url)
+            # Redirect to login with next parameter
+            from django.urls import reverse
+            login_url = reverse(self.login_url)
+            next_url = request.get_full_path()
+            return redirect(f'{login_url}?next={next_url}')
 
         # Check if user has a profile
         if not hasattr(request.user, 'profile'):
             messages.error(request, 'لم يتم العثور على ملف المستخدم. يرجى التواصل مع المسؤول.')
-            return redirect('dashboard:login')
+            from django.urls import reverse
+            login_url = reverse('dashboard:login')
+            next_url = request.get_full_path()
+            return redirect(f'{login_url}?next={next_url}')
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -39,9 +46,14 @@ class ContentAdminRequiredMixin(DashboardMixin):
         """Check if user has content admin or super admin role."""
         response = super().dispatch(request, *args, **kwargs)
 
-        # If parent dispatch returned a redirect, return it
-        if isinstance(response, redirect.__class__):
+        # If parent dispatch returned a redirect or error response, return it
+        if not hasattr(response, 'status_code') or response.status_code != 200:
             return response
+
+        # Check if user has profile (should be guaranteed by parent, but double-check)
+        if not hasattr(request.user, 'profile'):
+            messages.error(request, 'لم يتم العثور على ملف المستخدم. يرجى التواصل مع المسؤول.')
+            return redirect('dashboard:login')
 
         user_profile = request.user.profile
         if not (user_profile.is_content_admin or user_profile.is_super_admin):
@@ -61,9 +73,14 @@ class SEOAdminRequiredMixin(DashboardMixin):
         """Check if user has SEO admin or super admin role."""
         response = super().dispatch(request, *args, **kwargs)
 
-        # If parent dispatch returned a redirect, return it
-        if isinstance(response, redirect.__class__):
+        # If parent dispatch returned a redirect or error response, return it
+        if not hasattr(response, 'status_code') or response.status_code != 200:
             return response
+
+        # Check if user has profile (should be guaranteed by parent, but double-check)
+        if not hasattr(request.user, 'profile'):
+            messages.error(request, 'لم يتم العثور على ملف المستخدم. يرجى التواصل مع المسؤول.')
+            return redirect('dashboard:login')
 
         user_profile = request.user.profile
         if not (user_profile.is_seo_admin or user_profile.is_super_admin):
@@ -83,9 +100,14 @@ class SuperAdminRequiredMixin(DashboardMixin):
         """Check if user has super admin role."""
         response = super().dispatch(request, *args, **kwargs)
 
-        # If parent dispatch returned a redirect, return it
-        if isinstance(response, redirect.__class__):
+        # If parent dispatch returned a redirect or error response, return it
+        if not hasattr(response, 'status_code') or response.status_code != 200:
             return response
+
+        # Check if user has profile (should be guaranteed by parent, but double-check)
+        if not hasattr(request.user, 'profile'):
+            messages.error(request, 'لم يتم العثور على ملف المستخدم. يرجى التواصل مع المسؤول.')
+            return redirect('dashboard:login')
 
         user_profile = request.user.profile
         if not user_profile.is_super_admin:

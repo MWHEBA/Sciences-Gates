@@ -22,7 +22,7 @@ class UniversityAdmin(admin.ModelAdmin):
             'fields': ('logo', 'main_image')
         }),
         ('المحتوى', {
-            'fields': ('description', 'admission_requirements', 'registration_section')
+            'fields': ('description', 'admission_requirements_bachelor', 'admission_requirements_master', 'admission_requirements_phd')
         }),
         ('الفيديو', {
             'fields': ('video_url',)

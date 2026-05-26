@@ -16,21 +16,17 @@
     }
     
     function initEditorFormIntegration() {
-        console.log('[Editor Form Integration] Initializing...');
         
         // Find all forms
         const forms = document.querySelectorAll('form');
         
         forms.forEach((form, formIndex) => {
-            console.log(`[Editor Form Integration] Processing form ${formIndex}`);
             
             // Listen for form submission
             form.addEventListener('submit', function(e) {
-                console.log('[Editor Form Integration] Form submission detected');
                 
                 // Find all editor mounts in this form
                 const editorMounts = form.querySelectorAll('.pro-editor-mount');
-                console.log(`[Editor Form Integration] Found ${editorMounts.length} editor mounts`);
                 
                 editorMounts.forEach((mount, mountIndex) => {
                     // Get the editor area
@@ -43,7 +39,6 @@
                     
                     // Get the field name
                     const fieldName = mount.getAttribute('data-field-name');
-                    console.log(`[Editor Form Integration] Mount ${mountIndex}: field="${fieldName}"`);
                     
                     if (!fieldName) {
                         console.warn(`[Editor Form Integration] No field name found in mount ${mountIndex}`);
@@ -52,7 +47,6 @@
                     
                     // Get the content
                     const content = editorArea.innerHTML;
-                    console.log(`[Editor Form Integration] Content length: ${content.length}`);
                     
                     // Find the hidden textarea
                     const hiddenTextarea = mount.querySelector('textarea[style*="display: none"]');
@@ -61,7 +55,6 @@
                         // Update the hidden textarea
                         hiddenTextarea.value = content;
                         hiddenTextarea.name = fieldName;
-                        console.log(`[Editor Form Integration] Updated hidden textarea: ${fieldName}`);
                     } else {
                         console.warn(`[Editor Form Integration] No hidden textarea found in mount ${mountIndex}`);
                     }
@@ -70,7 +63,6 @@
                     const formField = form.querySelector(`textarea[name="${fieldName}"]`);
                     if (formField && formField !== hiddenTextarea) {
                         formField.value = content;
-                        console.log(`[Editor Form Integration] Updated form field: ${fieldName}`);
                     }
                 });
             }, false);
@@ -91,7 +83,6 @@
                 const content = editorArea.innerHTML;
                 if (hiddenTextarea.value !== content) {
                     hiddenTextarea.value = content;
-                    console.log(`[Editor Form Integration] Periodic sync: ${hiddenTextarea.name}`);
                 }
             }
         });

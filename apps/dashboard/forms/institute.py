@@ -172,9 +172,9 @@ class InstituteForm(forms.ModelForm):
             'main_image': 'صورة رئيسية للمعهد',
             
             # Rich Text Sections
-            'description': 'وصف شامل عن المعهد (يدعم: غامق، مائل، عناوين، قوائم، روابط)',
-            'registration_requirements': 'شروط التسجيل في المعهد (يدعم: غامق، مائل، عناوين، قوائم، روابط)',
-            'registration_section': 'معلومات عملية التسجيل والخطوات (يدعم: غامق، مائل، عناوين، قوائم، روابط)',
+            'description': 'وصف شامل عن المعهد',
+            'registration_requirements': 'شروط التسجيل في المعهد',
+            'registration_section': 'معلومات عملية التسجيل والخطوات',
             
             # Relationships
             'related_articles': 'اختر المقالات المرتبطة بهذا المعهد',

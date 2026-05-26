@@ -48,6 +48,7 @@ class ProfessionalHTMLEditor {
         fontColor: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 17h6"/><path d="M6 4v14"/><path d="M18 4v14"/><line x1="3" y1="20" x2="21" y2="20" stroke="currentColor" stroke-width="3"/></svg>`,
         table: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>`,
         insertIcon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
+        magic: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 4 5 5M3 21l10-10M20.96 2.04a2.12 2.12 0 0 0-3 0l-5.32 5.32 3 3 5.32-5.32a2.12 2.12 0 0 0 0-3Z"/><path d="M19 16c.5 0 1 .5 1 1v1c0 .5-.5 1-1 1h-1c-.5 0-1-.5-1-1v-1c0-.5.5-1 1-1h1ZM10 4c.5 0 1 .5 1 1v1c0 .5-.5 1-1 1H9c-.5 0-1-.5-1-1V5c0-.5.5-1 1-1h1ZM6 14c.5 0 1 .5 1 1v1c0 .5-.5 1-1 1H5c-.5 0-1-.5-1-1v-1c0-.5.5-1 1-1h1Z"/></svg>`,
     };
 
     // ─── Toolbar Config ────────────────────────────────────────────────────────
@@ -129,8 +130,20 @@ class ProfessionalHTMLEditor {
         '#5B0F00', '#660000', '#783F04', '#7F6000', '#274E13', '#0C343D', '#1C4587', '#073763', '#20124D', '#4C1130',
     ];
 
+    // ─── Minimal Toolbar Config (الأدوات الأساسية فقط) ───────────────────────
+    static MINIMAL_TOOLBAR_IDS = new Set([
+        'undo', 'redo', 'bold', 'h2', 'h3', 'ul',
+        'alignRight', 'alignCenter', 'alignLeft', 'alignJustify',
+        'table',
+    ]);
+
     // ─── Init ──────────────────────────────────────────────────────────────────
     _init() {
+        this._isMinimalMode = true; // افتراضياً الوضع المصغر
+        // حفظ المحتوى الأصلي قبل ما _buildDOM يمسح الـ container
+        const initialTextarea = this.container.querySelector('textarea[data-is-initial]');
+        this._initialName = initialTextarea ? initialTextarea.getAttribute('data-name') : '';
+        this._initialValue = initialTextarea ? initialTextarea.value : '';
         this._buildDOM();
         this._bindEvents();
         this._loadInitialContent();
@@ -159,13 +172,28 @@ class ProfessionalHTMLEditor {
         modeBtn.setAttribute('aria-label', 'تبديل الوضع');
         modeBtn.setAttribute('data-mode', 'visual');
         modeBtn.innerHTML = ProfessionalHTMLEditor.ICONS.eye;
-        modeBtn.addEventListener('click', (e) => {
+        modeBtn.addEventListener('mousedown', (e) => {
             e.preventDefault();
             const currentMode = modeBtn.getAttribute('data-mode');
             this._switchMode(currentMode === 'visual' ? 'text' : 'visual');
         });
 
+        const beautifyBtn = document.createElement('button');
+        beautifyBtn.type = 'button';
+        beautifyBtn.className = 'pro-editor-btn pro-editor-beautify-btn';
+        beautifyBtn.id = `btn-${this.container.id || 'editor'}-beautify`;
+        beautifyBtn.title = 'تنسيق وترتيب الكود (Beautify HTML)';
+        beautifyBtn.setAttribute('aria-label', 'تنسيق الكود');
+        beautifyBtn.style.display = 'none';
+        beautifyBtn.innerHTML = ProfessionalHTMLEditor.ICONS.magic + '<span class="pro-btn-label" style="margin-right: 4px; font-size: 11px;">تنسيق الكود</span>';
+        beautifyBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this._beautifyCode();
+        });
+        this._beautifyBtn = beautifyBtn;
+
         modeGroup.appendChild(modeBtn);
+        modeGroup.appendChild(beautifyBtn);
         this.toolbar.appendChild(modeGroup);
 
         // Separator
@@ -345,6 +373,32 @@ class ProfessionalHTMLEditor {
         fontColorGroup.appendChild(this._fontColorBtn);
         this.toolbar.appendChild(fontColorGroup);
 
+        // ─── Compact/Minimal Toggle Button (آخر زر في الشريط) ──────────────────
+        const compactSep = document.createElement('div');
+        compactSep.className = 'pro-editor-separator';
+        compactSep.setAttribute('aria-hidden', 'true');
+        this.toolbar.appendChild(compactSep);
+
+        const compactGroup = document.createElement('div');
+        compactGroup.className = 'pro-editor-toolbar-group';
+
+        const compactBtn = document.createElement('button');
+        compactBtn.type = 'button';
+        compactBtn.className = 'pro-editor-btn pro-editor-compact-btn';
+        compactBtn.id = `btn-${this.container.id || 'editor'}-compact`;
+        compactBtn.title = 'تبديل شريط الأدوات (مصغر / كامل)';
+        compactBtn.setAttribute('aria-label', 'تبديل شريط الأدوات');
+        compactBtn.setAttribute('aria-pressed', 'false');
+        compactBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 9 12 5 16 9"></polyline><polyline points="8 15 12 19 16 15"></polyline></svg>`;
+        compactBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this._toggleMinimalMode();
+        });
+
+        compactGroup.appendChild(compactBtn);
+        this.toolbar.appendChild(compactGroup);
+        this._compactBtn = compactBtn;
+
         // Visual panel (WYSIWYG)
         const visualPanel = document.createElement('div');
         visualPanel.className = 'pro-editor-panel is-active';
@@ -404,6 +458,8 @@ class ProfessionalHTMLEditor {
         this.toolbar.addEventListener('mousedown', (e) => {
             const btn = e.target.closest('.pro-editor-btn');
             if (!btn) return;
+            // استثناء أزرار التبديل — عندها event listeners خاصة
+            if (btn.classList.contains('pro-editor-mode-btn') || btn.classList.contains('pro-editor-compact-btn')) return;
             e.preventDefault(); // Prevent focus loss from editor
             this._handleToolbarAction(btn);
         });
@@ -454,19 +510,20 @@ class ProfessionalHTMLEditor {
     }
 
     _loadInitialContent() {
-        // The hidden textarea already has the initial value set by Django
-        // We read it and put it in the editorArea
-        const existingTextarea = this.container.querySelector('textarea[data-initial-value]');
-        if (existingTextarea) {
-            this.hiddenTextarea.name = existingTextarea.getAttribute('data-name');
-            const val = existingTextarea.getAttribute('data-initial-value');
-            this.editorArea.innerHTML = val || '';
-            existingTextarea.remove();
+        // استخدام المحتوى المحفوظ من _init (قبل ما _buildDOM يمسح الـ container)
+        if (this._initialName) {
+            this.hiddenTextarea.name = this._initialName;
+        }
+        if (this._initialValue) {
+            this.editorArea.innerHTML = this._initialValue;
         }
         this._syncToTextarea();
         this._updateWordCount();
         this._bindAllTableEvents();
         this._bindImageEvents();
+        
+        // تطبيق الوضع المصغر افتراضياً
+        this._applyMinimalMode();
     }
 
     // ─── Toolbar Actions ───────────────────────────────────────────────────────
@@ -1919,83 +1976,167 @@ class ProfessionalHTMLEditor {
     // ─── Paste Handler ─────────────────────────────────────────────────────────
     _handlePaste(e) {
         e.preventDefault();
+
+        // نحفظ الـ selection الحالية
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+
         const html = e.clipboardData.getData('text/html');
         const text = e.clipboardData.getData('text/plain');
 
+        let contentToInsert = '';
+
         if (html) {
-            const sanitized = this._sanitize(html);
-            document.execCommand('insertHTML', false, sanitized);
+            contentToInsert = this._sanitize(html);
         } else if (text) {
-            // Convert plain text newlines to <br>
-            const escaped = text
+            // نص عادي — نحول الأسطر الجديدة لـ <br>
+            contentToInsert = text
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/\n/g, '<br>');
-            document.execCommand('insertHTML', false, escaped);
+        }
+
+        if (contentToInsert) {
+            // نحذف المحتوى المحدد (لو فيه)
+            range.deleteContents();
+
+            // نعمل fragment من الـ HTML النظيف
+            const frag = document.createRange().createContextualFragment(contentToInsert);
+            range.insertNode(frag);
+
+            // نحرك الـ cursor لنهاية المحتوى الملصوق
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
         }
 
         this._syncToTextarea();
     }
 
-    // ─── HTML Sanitizer ────────────────────────────────────────────────────────
+    // ─── HTML Sanitizer (ذكي — ينظف شوائب اللصق من المصادر الخارجية) ────────
     _sanitize(html) {
+        // الخطوة 1: إزالة HTML comments (مثل <!--StartFragment--> و <!--EndFragment-->)
+        html = html.replace(/<!--[\s\S]*?-->/g, '');
+
+        // الخطوة 2: إزالة opening/closing tags فقط (بدون محتواها) لـ html, head, body
+        html = html.replace(/<\/?(html|head|body)[^>]*>/gi, '');
+
+        // الخطوة 3: إزالة <meta>, <style>, <script>, <link>, <title> tags بمحتواها
+        html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        html = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+        html = html.replace(/<(meta|link|title)[^>]*\/?>/gi, '');
+        html = html.replace(/<title[^>]*>[\s\S]*?<\/title>/gi, '');
+        html = html.replace(/<!doctype[^>]*>/gi, '');
+
         const ALLOWED_TAGS = new Set([
-            'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'del', 'strike',
-            'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'blockquote', 'span', 'img', 'font',
-            'table', 'thead', 'tbody', 'tr', 'th', 'td', 'colgroup', 'col', 'div',
+            'b', 'strong', 'em', 'i', 'u', 's', 'del', 'strike',
+            'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'blockquote',
+            'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+            'colgroup', 'col', 'div', 'br', 'p',
         ]);
+
+        // التاجات اللي نشيلها ونحافظ على محتواها (unwrap)
+        const UNWRAP_TAGS = new Set([
+            'span', 'font', 'section', 'article', 'header', 'footer',
+            'main', 'aside', 'nav', 'figure', 'figcaption', 'mark',
+            'small', 'big', 'center', 'abbr', 'cite', 'code', 'pre',
+            'sub', 'sup', 'details', 'summary', 'label',
+        ]);
+
         const ALLOWED_ATTRS = {
             'a':     ['href', 'title', 'target'],
-            'span':  ['style'],
-            'img':   ['src', 'alt', 'style', 'width', 'height'],
-            'font':  ['color', 'size'],
-            'table': ['class', 'style', 'data-pro-table'],
-            'th':    ['style', 'colspan', 'rowspan', 'class'],
-            'td':    ['style', 'colspan', 'rowspan', 'class'],
-            'tr':    ['style', 'class'],
+            'img':   ['src', 'alt', 'width', 'height'],
+            'table': ['class', 'data-pro-table'],
+            'th':    ['colspan', 'rowspan', 'class'],
+            'td':    ['colspan', 'rowspan', 'class'],
+            'tr':    ['class'],
             'col':   ['style'],
-            'div':   ['class', 'style'],
+            'div':   [],
         };
-        const SAFE_PROTOCOLS = ['http:', 'https:', 'mailto:'];
 
         const temp = document.createElement('div');
         temp.innerHTML = html;
 
+        // الخطوة 4: unwrap كل التاجات الزائدة (span, font, إلخ) بشكل آمن
+        let unwrapFound = true;
+        let safetyCounter = 0;
+        while (unwrapFound && safetyCounter < 100) {
+            safetyCounter++;
+            unwrapFound = false;
+            const allElements = temp.querySelectorAll('*');
+            for (let i = 0; i < allElements.length; i++) {
+                const el = allElements[i];
+                const tag = el.tagName.toLowerCase();
+                if (UNWRAP_TAGS.has(tag)) {
+                    while (el.firstChild) {
+                        el.parentNode.insertBefore(el.firstChild, el);
+                    }
+                    el.parentNode.removeChild(el);
+                    unwrapFound = true;
+                    break;
+                }
+            }
+        }
+
+        // الخطوة 5: تنظيف التاجات الغير مسموحة وإزالة الـ attributes
         const clean = (node) => {
             const children = Array.from(node.childNodes);
             children.forEach(child => {
+                if (child.nodeType === Node.COMMENT_NODE) {
+                    node.removeChild(child);
+                    return;
+                }
+
                 if (child.nodeType === Node.ELEMENT_NODE) {
                     const tag = child.tagName.toLowerCase();
+
                     if (!ALLOWED_TAGS.has(tag)) {
-                        // Replace with its text content
                         const text = document.createTextNode(child.textContent);
                         node.replaceChild(text, child);
                         return;
                     }
-                    // Remove disallowed attributes
+
+                    // إزالة كل الـ attributes الغير مسموحة
                     const allowed = ALLOWED_ATTRS[tag] || [];
                     Array.from(child.attributes).forEach(attr => {
                         if (!allowed.includes(attr.name)) {
                             child.removeAttribute(attr.name);
                         }
                     });
-                    // Validate href
+
+                    // التحقق من أمان الروابط
                     if (tag === 'a') {
                         const href = child.getAttribute('href') || '';
                         if (!this._isSafeUrl(href)) child.removeAttribute('href');
                     }
-                    // Validate img src
                     if (tag === 'img') {
                         const src = child.getAttribute('src') || '';
                         if (!this._isSafeUrl(src)) child.removeAttribute('src');
                     }
+
+                    // تحويل <p> لـ <div>
+                    if (tag === 'p') {
+                        const div = document.createElement('div');
+                        while (child.firstChild) {
+                            div.appendChild(child.firstChild);
+                        }
+                        node.replaceChild(div, child);
+                        clean(div);
+                        return;
+                    }
+
                     clean(child);
                 }
             });
         };
 
         clean(temp);
+
+        // إزالة الـ divs الفارغة
+        temp.querySelectorAll('div:empty, p:empty').forEach(el => el.remove());
+
         return temp.innerHTML;
     }
 
@@ -2434,6 +2575,76 @@ class ProfessionalHTMLEditor {
         searchInput.focus();
     }
 
+    // ─── Minimal/Compact Mode Toggle ─────────────────────────────────────────
+    _toggleMinimalMode() {
+        this._isMinimalMode = !this._isMinimalMode;
+        this._updateMinimalModeUI();
+    }
+
+    _applyMinimalMode() {
+        // تطبيق الوضع المصغر بدون toggle
+        this._isMinimalMode = true;
+        this._updateMinimalModeUI();
+    }
+
+    _updateMinimalModeUI() {
+        this._compactBtn.classList.toggle('is-active', this._isMinimalMode);
+        this._compactBtn.setAttribute('aria-pressed', this._isMinimalMode ? 'true' : 'false');
+        this.toolbar.classList.toggle('is-minimal', this._isMinimalMode);
+
+        // Toggle visibility of toolbar buttons and groups
+        const allBtns = this.toolbar.querySelectorAll('.pro-editor-btn:not(.pro-editor-mode-btn):not(.pro-editor-compact-btn)');
+        const allSeps = this.toolbar.querySelectorAll('.pro-editor-separator');
+        const fontSizeSelect = this._fontSizeSelect;
+        const lineHeightSelect = this._lineHeightSelect;
+        const fontColorBtn = this._fontColorBtn;
+
+        if (this._isMinimalMode) {
+            // إخفاء كل الأزرار ما عدا الأساسية
+            allBtns.forEach(btn => {
+                const btnId = (btn.id || '').split('-').pop();
+                if (ProfessionalHTMLEditor.MINIMAL_TOOLBAR_IDS.has(btnId)) {
+                    btn.style.display = '';
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
+
+            // إخفاء ارتفاع السطر
+            if (lineHeightSelect) lineHeightSelect.parentElement.style.display = 'none';
+
+            // إظهار حجم الخط ولون الخط
+            if (fontSizeSelect) fontSizeSelect.parentElement.style.display = '';
+            if (fontColorBtn) fontColorBtn.parentElement.style.display = '';
+
+            // إخفاء الفواصل الزائدة
+            allSeps.forEach(sep => {
+                const prev = sep.previousElementSibling;
+                const next = sep.nextElementSibling;
+                // إخفاء الفاصل لو المجموعة اللي قبله أو بعده مخفية
+                const prevVisible = prev && prev.style.display !== 'none' && this._hasVisibleChildren(prev);
+                const nextVisible = next && next.style.display !== 'none' && this._hasVisibleChildren(next);
+                sep.style.display = (prevVisible && nextVisible) ? '' : 'none';
+            });
+        } else {
+            // إظهار كل شيء
+            allBtns.forEach(btn => btn.style.display = '');
+            allSeps.forEach(sep => sep.style.display = '');
+            if (fontSizeSelect) fontSizeSelect.parentElement.style.display = '';
+            if (lineHeightSelect) lineHeightSelect.parentElement.style.display = '';
+            if (fontColorBtn) fontColorBtn.parentElement.style.display = '';
+        }
+    }
+
+    _hasVisibleChildren(el) {
+        if (!el) return false;
+        if (el.classList && el.classList.contains('pro-editor-toolbar-group')) {
+            const children = el.querySelectorAll('.pro-editor-btn, select');
+            return Array.from(children).some(c => c.style.display !== 'none');
+        }
+        return el.style.display !== 'none';
+    }
+
     // ─── Mode Switching ────────────────────────────────────────────────────────
     _switchMode(mode) {
         const panels = this.container.querySelectorAll('.pro-editor-panel');
@@ -2447,6 +2658,11 @@ class ProfessionalHTMLEditor {
         this._modeBtn.setAttribute('data-mode', mode);
         this._modeBtn.classList.toggle('is-active', mode === 'text');
 
+        // Toggle beautify button visibility
+        if (this._beautifyBtn) {
+            this._beautifyBtn.style.display = mode === 'text' ? 'inline-flex' : 'none';
+        }
+
         // Sync content when switching
         if (mode === 'text') {
             this._syncToTextarea();
@@ -2455,6 +2671,45 @@ class ProfessionalHTMLEditor {
             this._syncFromTextarea();
             this.editorArea.focus();
         }
+    }
+
+    _beautifyCode() {
+        if (this._modeBtn.getAttribute('data-mode') !== 'text') return;
+        const currentHTML = this.textArea.value;
+        const formatted = this._beautifyHTML(currentHTML);
+        this.textArea.value = formatted;
+        this._syncFromTextarea();
+    }
+
+    _beautifyHTML(html) {
+        var formatted = '';
+        var reg = /(<[^>]+>)/g;
+        var elements = html.replace(reg, '\r\n$1\r\n').split('\r\n');
+        var indent = 0;
+        var pad = '    '; // 4 spaces
+        elements.forEach(function(el) {
+            var elTrimmed = el.trim();
+            if (!elTrimmed) return;
+            
+            // Check if it's a closing tag
+            if (elTrimmed.match(/^<\/\w/)) {
+                indent--;
+            }
+            
+            // Add indentation
+            var padding = '';
+            for (var i = 0; i < indent; i++) {
+                padding += pad;
+            }
+            
+            formatted += padding + elTrimmed + '\r\n';
+            
+            // Check if it's an opening tag (and not self-closing or void)
+            if (elTrimmed.match(/^<\w[^>]*[^\/]>$/) && !elTrimmed.match(/^<(br|hr|img|input|link|meta)/i)) {
+                indent++;
+            }
+        });
+        return formatted.trim();
     }
 }
 

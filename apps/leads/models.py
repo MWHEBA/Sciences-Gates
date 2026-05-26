@@ -21,6 +21,7 @@ class Lead(TimestampedModel):
         verbose_name='الاسم'
     )
     email = models.EmailField(
+        blank=True,
         verbose_name='البريد الإلكتروني'
     )
     phone = models.CharField(
@@ -28,6 +29,7 @@ class Lead(TimestampedModel):
         verbose_name='رقم الهاتف'
     )
     message = models.TextField(
+        blank=True,
         verbose_name='الرسالة'
     )
     

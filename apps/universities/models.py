@@ -47,8 +47,7 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='الوصف',
         help_text='وصف شامل عن الجامعة'
     )
-    location = models.CharField(
-        max_length=200,
+    location = models.TextField(
         verbose_name='الموقع',
         help_text='موقع الجامعة (المدينة، الولاية)'
     )
@@ -57,13 +56,28 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='رابط الفيديو',
     )
     admission_requirements = models.TextField(
-        verbose_name='شروط القبول',
-        help_text='شروط القبول في الجامعة'
-    )
-    registration_section = models.TextField(
         blank=True,
-        verbose_name='قسم التسجيل',
-        help_text='معلومات عملية التسجيل والخطوات'
+        default="",
+        verbose_name='شروط القبول العامة / السابقة',
+        help_text='شروط القبول العامة أو السابقة في الجامعة (أرشيف)'
+    )
+    admission_requirements_bachelor = models.TextField(
+        blank=True,
+        default="",
+        verbose_name='شروط القبول للبكالوريوس (Bachelor’s)',
+        help_text='شروط القبول الخاصة ببرنامج البكالوريوس'
+    )
+    admission_requirements_master = models.TextField(
+        blank=True,
+        default="",
+        verbose_name='شروط القبول للماجستير (Master’s)',
+        help_text='شروط القبول الخاصة ببرنامج الماجستير'
+    )
+    admission_requirements_phd = models.TextField(
+        blank=True,
+        default="",
+        verbose_name='شروط القبول للدكتوراه (PhD)',
+        help_text='شروط القبول الخاصة ببرنامج الدكتوراه'
     )
 
     # Relationships

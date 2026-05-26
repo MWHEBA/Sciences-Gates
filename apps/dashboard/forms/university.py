@@ -20,7 +20,8 @@ class UniversityForm(forms.ModelForm):
             # Basic Information
             'name', 'slug', 'university_type', 'logo', 'main_image', 'location', 'video_url',
             # Rich Text Sections
-            'description', 'admission_requirements', 'registration_section',
+            'description',
+            'admission_requirements_bachelor', 'admission_requirements_master', 'admission_requirements_phd',
             # Relationships
             'related_majors', 'related_articles',
             # Publishing
@@ -33,16 +34,17 @@ class UniversityForm(forms.ModelForm):
         widgets = {
             # Basic Information Section
             'name': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 paste-trigger',
                 'placeholder': 'اسم الجامعة',
                 'required': True,
                 'dir': 'rtl',
             }),
             'slug': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 paste-trigger',
                 'placeholder': 'الرابط (يدعم الأحرف العربية)',
                 'required': True,
                 'dir': 'ltr',
+                'data-paste-clean': 'slug',
             }),
             'university_type': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -71,11 +73,14 @@ class UniversityForm(forms.ModelForm):
             'description': CustomHTMLEditorWidget(attrs={
                 'data-placeholder': 'وصف شامل عن الجامعة...',
             }),
-            'admission_requirements': CustomHTMLEditorWidget(attrs={
-                'data-placeholder': 'شروط القبول في الجامعة...',
+            'admission_requirements_bachelor': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'شروط القبول لبرنامج البكالوريوس (Bachelor’s)...',
             }),
-            'registration_section': CustomHTMLEditorWidget(attrs={
-                'data-placeholder': 'معلومات عملية التسجيل والخطوات...',
+            'admission_requirements_master': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'شروط القبول لبرنامج الماجستير (Master’s)...',
+            }),
+            'admission_requirements_phd': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'شروط القبول لبرنامج الدكتوراه (PhD)...',
             }),
             
             # Relationships
@@ -154,8 +159,9 @@ class UniversityForm(forms.ModelForm):
             
             # Rich Text Sections
             'description': 'وصف الجامعة',
-            'admission_requirements': 'شروط القبول',
-            'registration_section': 'قسم التسجيل',
+            'admission_requirements_bachelor': 'شروط القبول للبكالوريوس (Bachelor’s)',
+            'admission_requirements_master': 'شروط القبول للماجستير (Master’s)',
+            'admission_requirements_phd': 'شروط القبول للدكتوراه (PhD)',
             
             # Relationships
             'related_majors': 'التخصصات المرتبطة',
@@ -185,9 +191,10 @@ class UniversityForm(forms.ModelForm):
             'location': 'موقع الجامعة (المدينة، الولاية)',
             
             # Rich Text Sections
-            'description': 'وصف شامل عن الجامعة (يدعم: غامق، مائل، عناوين، قوائم، روابط)',
-            'admission_requirements': 'شروط القبول في الجامعة (يدعم: غامق، مائل، عناوين، قوائم، روابط)',
-            'registration_section': 'معلومات عملية التسجيل والخطوات (يدعم: غامق، مائل، عناوين، قوائم، روابط)',
+            'description': 'وصف شامل عن الجامعة',
+            'admission_requirements_bachelor': 'شروط القبول الخاصة ببرنامج البكالوريوس',
+            'admission_requirements_master': 'شروط القبول الخاصة ببرنامج الماجستير',
+            'admission_requirements_phd': 'شروط القبول الخاصة ببرنامج الدكتوراه',
             
             # Relationships
             'related_majors': 'اختر التخصصات المرتبطة بهذه الجامعة',
@@ -215,28 +222,23 @@ UniversityFAQFormSet = inlineformset_factory(
     University,
     UniversityFAQ,
     fields=['question', 'answer', 'sort_order'],
-    extra=1,
+    extra=0,
     can_delete=True,
     widgets={
         'question': forms.TextInput(attrs={
-            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'class': 'faq-item__question-input',
             'placeholder': 'السؤال',
             'required': True,
             'dir': 'rtl',
         }),
         'answer': forms.Textarea(attrs={
-            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'class': 'faq-item__answer-input',
             'placeholder': 'الإجابة',
             'rows': 4,
             'required': True,
             'dir': 'rtl',
         }),
-        'sort_order': forms.NumberInput(attrs={
-            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-            'placeholder': 'ترتيب العرض',
-            'min': '0',
-            'dir': 'ltr',
-        }),
+        'sort_order': forms.HiddenInput(),
     },
     labels={
         'question': 'السؤال',
@@ -279,6 +281,56 @@ UniversityFacultyFormSet = inlineformset_factory(
     fields=['name', 'sort_order'],
     extra=0,
     max_num=100,
+    can_delete=True,
+)
+
+
+# ============================================================================
+# Nested Program Formset for Faculty
+# ============================================================================
+
+class ProgramFormSetForm(forms.ModelForm):
+    """Form for Program in nested formset within Faculty"""
+    class Meta:
+        model = Program
+        fields = ['name', 'duration', 'tuition_fees', 'sort_order']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'fpm-program-input',
+                'placeholder': 'اسم البرنامج',
+                'dir': 'rtl',
+                'required': True,
+            }),
+            'duration': forms.TextInput(attrs={
+                'class': 'fpm-program-input fpm-program-input--short',
+                'placeholder': '4 سنوات',
+                'dir': 'rtl',
+                'required': True,
+            }),
+            'tuition_fees': forms.TextInput(attrs={
+                'class': 'fpm-program-input fpm-program-input--short',
+                'placeholder': '25,000 دولار',
+                'dir': 'rtl',
+                'required': True,
+            }),
+            'sort_order': forms.HiddenInput(),
+        }
+        labels = {
+            'name': 'اسم البرنامج',
+            'duration': 'مدة الدراسة',
+            'tuition_fees': 'الرسوم الدراسية',
+            'sort_order': 'ترتيب العرض',
+        }
+
+
+# Nested Program Formset
+NestedProgramFormSet = inlineformset_factory(
+    Faculty,
+    Program,
+    form=ProgramFormSetForm,
+    fields=['name', 'duration', 'tuition_fees', 'sort_order'],
+    extra=0,
+    max_num=50,
     can_delete=True,
 )
 

@@ -2,6 +2,7 @@
 {% load static %}
 {% load image_tags %}
 {% load breadcrumbs %}
+{% load university_tags %}
 
 {% block title %}{{ university.name }} - بوابات العلوم{% endblock %}
 {% block meta_description %}{{ university.meta_description|default:university.description|striptags|truncatewords:30 }}{% endblock %}
@@ -12,26 +13,470 @@
 {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
 
 {% block extra_css %}
-    {% render_breadcrumb_schema breadcrumbs request %}
+{% render_breadcrumb_schema breadcrumbs request %}
+<style>
+    /* Admission Tabs styling */
+    .admission-tabs-container {
+        margin-top: 1.5rem;
+        background: var(--surface);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .admission-tabs-headers {
+        display: flex;
+        gap: 4px;
+        background-color: var(--surface-2);
+        border-bottom: 1px solid var(--border);
+        padding: 8px 12px 0 12px;
+    }
+
+    .admission-tab-btn {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        font-family: inherit;
+        border-top-left-radius: var(--radius-sm);
+        border-top-right-radius: var(--radius-sm);
+    }
+
+    .admission-tab-btn:hover {
+        color: var(--primary);
+        background-color: rgba(11, 45, 77, 0.03);
+    }
+
+    .admission-tab-btn--active {
+        color: var(--primary);
+        border-bottom-color: var(--secondary);
+        background-color: var(--surface);
+        font-weight: 700;
+    }
+
+    .admission-tabs-content {
+        padding: 24px;
+        background-color: var(--surface);
+    }
+
+    @media (max-width: 640px) {
+        .admission-tabs-headers {
+            flex-direction: column;
+            gap: 2px;
+            padding: 12px;
+        }
+
+        .admission-tab-btn {
+            border-bottom: none;
+            border-right: 3px solid transparent;
+            text-align: right;
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+        }
+
+        .admission-tab-btn--active {
+            border-right-color: var(--secondary);
+            background-color: var(--surface-2);
+        }
+    }
+
+    .reg-float-btn {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+        width: auto;
+        min-width: 48px;
+        max-width: 48px;
+        height: 48px;
+        background-color: var(--primary);
+        color: #ffffff;
+        border: none;
+        border-radius: 9999px;
+        box-shadow: 0 6px 20px rgba(11, 45, 77, 0.2);
+        cursor: pointer;
+        z-index: 996;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 12px;
+        overflow: hidden;
+        transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s, transform 0.3s, box-shadow 0.3s, translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        white-space: nowrap;
+    }
+
+    .reg-float-btn svg {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        stroke: #ffffff;
+    }
+
+    .reg-float-btn:hover {
+        max-width: 450px;
+        padding: 10px 16px 10px 24px;
+        background-color: var(--primary-hover);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(11, 45, 77, 0.4);
+    }
+
+    .reg-float-text {
+        opacity: 0;
+        visibility: hidden;
+        margin-right: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: right;
+        line-height: 1.25;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        transform: translateX(10px);
+    }
+
+    .reg-float-btn:hover .reg-float-text {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0);
+    }
+
+    .reg-float-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .reg-float-subtitle {
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: 4px;
+        color: var(--secondary);
+    }
+
+    @media (max-width: 768px) {
+        .reg-float-btn {
+            bottom: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            padding: 12px;
+        }
+
+        .reg-float-btn:hover {
+            width: 48px;
+            padding: 12px;
+            transform: none;
+            box-shadow: 0 6px 20px rgba(11, 45, 77, 0.2);
+        }
+
+        .reg-float-text {
+            display: none !important;
+        }
+    }
+
+    /* Modal Styles */
+    .reg-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(11, 45, 77, 0.5);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .reg-modal-content {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        width: 100%;
+        max-width: 600px;
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
+        animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        direction: rtl;
+        text-align: right;
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .reg-modal-header {
+        background: var(--primary);
+        color: #ffffff;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top-left-radius: var(--radius-xl);
+        border-top-right-radius: var(--radius-xl);
+    }
+
+    .reg-modal-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+    }
+
+    .reg-modal-close {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 50%;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .reg-modal-close:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .reg-modal-body {
+        padding: 24px;
+        overflow: visible;
+    }
+
+    .reg-modal-footer {
+        padding: 16px 24px;
+        background: var(--surface-2);
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom-left-radius: var(--radius-xl);
+        border-bottom-right-radius: var(--radius-xl);
+    }
+
+    /* Floating Widget Slide-Out Animations */
+    .whatsapp-widget,
+    .admin-dashboard-float,
+    .admin-edit-float {
+        transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, transform 0.3s !important;
+    }
+
+    /* Right side hide */
+    .reg-float-btn.floating-hide {
+        translate: 80px 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Left side hide */
+    .whatsapp-widget.floating-hide,
+    .admin-dashboard-float.floating-hide,
+    .admin-edit-float.floating-hide {
+        translate: -80px 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Step Wizard Indicators */
+    .reg-wizard {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        padding: 8px 0;
+    }
+
+    .reg-wizard-step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .reg-wizard-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--surface-2);
+        border: 2px solid var(--border-strong);
+        color: var(--text-secondary);
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .reg-wizard-step--active .reg-wizard-number {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        color: #ffffff;
+    }
+
+    .reg-wizard-step--completed .reg-wizard-number {
+        background-color: var(--success);
+        border-color: var(--success);
+        color: #ffffff;
+    }
+
+    .reg-wizard-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .reg-wizard-step--active .reg-wizard-label {
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    .reg-wizard-line {
+        flex: 1;
+        height: 2px;
+        background-color: var(--border-strong);
+        margin: 0 16px;
+        max-width: 80px;
+    }
+
+    .reg-wizard-line--active {
+        background-color: var(--primary);
+    }
+
+    /* Form fields styling */
+    .reg-form-group {
+        margin-bottom: 18px;
+    }
+
+    .reg-form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+    }
+
+    .reg-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: var(--text-primary);
+        background-color: var(--surface);
+        transition: border-color 0.2s, box-shadow 0.2s;
+        outline: none;
+    }
+
+    .reg-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .reg-select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: var(--text-primary);
+        background-color: var(--surface);
+        outline: none;
+        cursor: pointer;
+    }
+
+    .reg-select:focus {
+        border-color: var(--primary);
+    }
+
+    .reg-textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: var(--text-primary);
+        background-color: var(--surface);
+        outline: none;
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .reg-textarea:focus {
+        border-color: var(--primary);
+    }
+
+    .reg-btn {
+        padding: 10px 20px;
+        border-radius: var(--radius-sm);
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        font-family: inherit;
+    }
+
+    .reg-btn--primary {
+        background-color: var(--primary);
+        color: #ffffff;
+    }
+
+    .reg-btn--primary:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .reg-btn--secondary {
+        background-color: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-strong);
+    }
+
+    .reg-btn--secondary:hover {
+        background-color: var(--surface-2);
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="detail-page-container">
-    
+<div class="detail-page-container" x-data="{ openRegModal: false, regStep: 1 }">
+
     <!-- University Hero Header Section -->
     <div class="detail-header">
-        
+
         <!-- Header Banner Image -->
         <div class="detail-header-banner">
             {% if university.main_image %}
-                <img src="{{ university.main_image.url }}" alt="{{ university.name }}" class="detail-header-image">
+            <img src="{{ university.main_image.url }}" alt="{{ university.name }}" class="detail-header-image">
             {% else %}
-                <div class="detail-header-placeholder">
-                    <span>{{ university.name }}</span>
-                </div>
+            <div class="detail-header-placeholder">
+                <span>{{ university.name }}</span>
+            </div>
             {% endif %}
             <div class="detail-header-overlay"></div>
-            
+
             <!-- Type badge overlay -->
             <div class="detail-header-badge">
                 <span class="badge badge--secondary">
@@ -54,14 +499,18 @@
 
     <!-- Main Content Layout -->
     <div class="detail-layout">
-        
+
         <!-- Right Column: Detail Content (2/3 width) -->
         <div class="detail-main">
-            
+
             <!-- About Section -->
             <section class="detail-section">
                 <div class="detail-section-header">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        aria-hidden="true">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
                     <h2 class="detail-section-title">عن الجامعة</h2>
                 </div>
                 <div class="detail-section-content">
@@ -69,157 +518,228 @@
                 </div>
             </section>
 
+            <!-- Location Section -->
+            {% if university.location %}
+            <section class="detail-section">
+                <div class="detail-section-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        aria-hidden="true">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <h2 class="detail-section-title">موقع الجامعة</h2>
+                </div>
+                <div class="detail-section-content">
+                    {{ university.location|safe }}
+                </div>
+            </section>
+            {% endif %}
+
             <!-- Video Section (if available) -->
             {% if university.video_url %}
-                <section class="detail-section">
-                    <div class="detail-section-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-                        <h2 class="detail-section-title">فيديو تعريفي</h2>
-                    </div>
-                    <div class="detail-video-container">
-                        <iframe 
-                            width="100%" 
-                            height="400" 
-                            src="{{ university.video_url }}" 
-                            title="فيديو تعريفي عن {{ university.name }}"
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                </section>
+            <section class="detail-section">
+                <div class="detail-section-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        aria-hidden="true">
+                        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>
+                    <h2 class="detail-section-title">فيديو تعريفي</h2>
+                </div>
+                <div class="detail-video-container">
+                    <iframe width="100%" height="400" src="{{ university.video_url|to_embed_url }}"
+                        title="فيديو تعريفي عن {{ university.name }}" frameborder="0"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </section>
             {% endif %}
 
             <!-- Admission Requirements Section -->
             <section class="detail-section">
                 <div class="detail-section-header">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        aria-hidden="true">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
                     <h2 class="detail-section-title">شروط القبول والالتحاق</h2>
                 </div>
-                <div class="detail-section-highlight">
-                    {{ university.admission_requirements|safe }}
+
+                {% if university.admission_requirements_bachelor or university.admission_requirements_master or university.admission_requirements_phd %}
+                <div class="admission-tabs-container" x-data="{ 
+                        activeTab: '{% if university.admission_requirements_bachelor %}bachelor{% elif university.admission_requirements_master %}master{% else %}phd{% endif %}' 
+                    }">
+                    <!-- Tab Headers -->
+                    <div class="admission-tabs-headers">
+                        {% if university.admission_requirements_bachelor %}
+                        <button @click="activeTab = 'bachelor'"
+                            :class="activeTab === 'bachelor' ? 'admission-tab-btn--active' : ''"
+                            class="admission-tab-btn" type="button">
+                            البكالوريوس (Bachelor’s)
+                        </button>
+                        {% endif %}
+                        {% if university.admission_requirements_master %}
+                        <button @click="activeTab = 'master'"
+                            :class="activeTab === 'master' ? 'admission-tab-btn--active' : ''" class="admission-tab-btn"
+                            type="button">
+                            الماجستير (Master’s)
+                        </button>
+                        {% endif %}
+                        {% if university.admission_requirements_phd %}
+                        <button @click="activeTab = 'phd'"
+                            :class="activeTab === 'phd' ? 'admission-tab-btn--active' : ''" class="admission-tab-btn"
+                            type="button">
+                            الدكتوراه (PhD)
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div class="admission-tabs-content">
+                        {% if university.admission_requirements_bachelor %}
+                        <div x-show="activeTab === 'bachelor'" class="detail-section-content" x-transition>
+                            {{ university.admission_requirements_bachelor|safe }}
+                        </div>
+                        {% endif %}
+                        {% if university.admission_requirements_master %}
+                        <div x-show="activeTab === 'master'" class="detail-section-content" x-transition>
+                            {{ university.admission_requirements_master|safe }}
+                        </div>
+                        {% endif %}
+                        {% if university.admission_requirements_phd %}
+                        <div x-show="activeTab === 'phd'" class="detail-section-content" x-transition>
+                            {{ university.admission_requirements_phd|safe }}
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
+                {% else %}
+                <p class="detail-empty-state">لم يتم تحديد شروط القبول لهذه الجامعة بعد.</p>
+                {% endif %}
             </section>
 
             <!-- Faculties and Programs Section -->
             {% if faculties %}
-                <section class="detail-section">
-                    <div class="detail-section-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                        <h2 class="detail-section-title">الكليات والبرامج الأكاديمية</h2>
-                    </div>
-                    
-                    <div class="detail-faculties-accordion">
-                        {% for faculty in faculties %}
-                            <div class="detail-faculty-item" x-data="{ open: false }">
-                                <!-- Faculty Header (Accordion Toggle) -->
-                                <button 
-                                    class="detail-faculty-header"
-                                    @click="open = !open"
-                                    :aria-expanded="open"
-                                    :class="{ 'detail-faculty-header--open': open }">
-                                    <span class="detail-faculty-name">{{ faculty.name }}</span>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="detail-faculty-icon">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </button>
+            <section class="detail-section">
+                <div class="detail-section-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        aria-hidden="true">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    <h2 class="detail-section-title">الكليات والبرامج الأكاديمية</h2>
+                </div>
 
-                                <!-- Faculty Programs (Accordion Content) -->
-                                <div 
-                                    class="detail-faculty-content"
-                                    x-show="open"
-                                    x-collapse>
-                                    
-                                    {% if faculty.programs.all %}
-                                        <div class="detail-programs-list">
-                                            {% for program in faculty.programs.all %}
-                                                <div class="detail-program-card">
-                                                    <div class="detail-program-header">
-                                                        <h4 class="detail-program-title">{{ program.name }}</h4>
-                                                    </div>
-                                                    <div class="detail-program-details">
-                                                        <div class="detail-program-info">
-                                                            <span class="detail-program-info-label">مدة الدراسة:</span>
-                                                            <span class="detail-program-info-value">{{ program.duration }}</span>
-                                                        </div>
-                                                        <div class="detail-program-info">
-                                                            <span class="detail-program-info-label">الرسوم السنوية:</span>
-                                                            <span class="detail-program-info-value">{{ program.tuition_fees }}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                    {% else %}
-                                        <p class="detail-empty-state">لا توجد برامج متاحة حالياً في هذه الكلية</p>
-                                    {% endif %}
-                                </div>
+                <div class="detail-faculties-accordion" x-data="{ openFaculty: null }">
+                    {% for faculty in faculties %}
+                    <div class="detail-faculty-item">
+                        <!-- Faculty Header (Accordion Toggle) -->
+                        <button class="detail-faculty-header" @click="
+                                        openFaculty = openFaculty === {{ forloop.counter0 }} ? null : {{ forloop.counter0 }};
+                                        if (openFaculty === {{ forloop.counter0 }}) { setTimeout(() => { $el.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, 300) }
+                                    " :aria-expanded="openFaculty === {{ forloop.counter0 }}"
+                            :class="{ 'detail-faculty-header--open': openFaculty === {{ forloop.counter0 }} }">
+                            <span class="detail-faculty-name">{{ faculty.name }}</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" aria-hidden="true" class="detail-faculty-icon">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+
+                        <!-- Faculty Programs (Accordion Content) -->
+                        <div class="detail-faculty-content" x-show="openFaculty === {{ forloop.counter0 }}" x-collapse>
+
+                            {% if faculty.programs.all %}
+                            <div class="detail-table-wrapper">
+                                <table class="detail-table">
+                                    <thead>
+                                        <tr>
+                                            <th>اسم البرنامج</th>
+                                            <th>مدة الدراسة</th>
+                                            <th>الرسوم السنوية</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for program in faculty.programs.all %}
+                                        <tr>
+                                            <td class="detail-table-cell-primary">{{ program.name }}</td>
+                                            <td>{{ program.duration }}</td>
+                                            <td class="detail-table-cell-highlight">{{ program.tuition_fees }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
-                        {% endfor %}
+                            {% else %}
+                            <p class="detail-empty-state">لا توجد برامج متاحة حالياً في هذه الكلية</p>
+                            {% endif %}
+                        </div>
                     </div>
-                </section>
+                    {% endfor %}
+                </div>
+            </section>
             {% endif %}
 
             <!-- FAQ Section -->
             {% if faqs %}
-                <section class="detail-section">
-                    <div class="detail-section-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
-                        <h2 class="detail-section-title">الأسئلة الشائعة</h2>
-                    </div>
-                    
-                    <div class="detail-faq-accordion">
-                        {% for faq in faqs %}
-                            <div class="detail-faq-item" x-data="{ open: false }">
-                                <!-- FAQ Question (Accordion Toggle) -->
-                                <button 
-                                    class="detail-faq-header"
-                                    @click="open = !open"
-                                    :aria-expanded="open"
-                                    :class="{ 'detail-faq-header--open': open }">
-                                    <span class="detail-faq-question">{{ faq.question }}</span>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="detail-faq-icon">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </button>
+            <section class="detail-section">
+                <div class="detail-section-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <h2 class="detail-section-title">الأسئلة الشائعة</h2>
+                </div>
 
-                                <!-- FAQ Answer (Accordion Content) -->
-                                <div 
-                                    class="detail-faq-content"
-                                    x-show="open"
-                                    x-collapse>
-                                    <div class="detail-faq-answer">
-                                        {{ faq.answer|safe }}
-                                    </div>
-                                </div>
+                <div class="detail-faq-accordion" x-data="{ openFaq: null }">
+                    {% for faq in faqs %}
+                    <div class="detail-faq-item">
+                        <!-- FAQ Question (Accordion Toggle) -->
+                        <button class="detail-faq-header" @click="
+                                        openFaq = openFaq === {{ forloop.counter0 }} ? null : {{ forloop.counter0 }};
+                                        if (openFaq === {{ forloop.counter0 }}) { setTimeout(() => { $el.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, 300) }
+                                    " :aria-expanded="openFaq === {{ forloop.counter0 }}"
+                            :class="{ 'detail-faq-header--open': openFaq === {{ forloop.counter0 }} }">
+                            <span class="detail-faq-question">{{ faq.question }}</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" aria-hidden="true" class="detail-faq-icon">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+
+                        <!-- FAQ Answer (Accordion Content) -->
+                        <div class="detail-faq-content" x-show="openFaq === {{ forloop.counter0 }}" x-collapse>
+                            <div class="detail-faq-answer">
+                                {{ faq.answer|safe }}
                             </div>
-                        {% endfor %}
+                        </div>
                     </div>
-                </section>
-            {% endif %}
-
-            <!-- Registration Section -->
-            {% if university.registration_section %}
-                <section class="detail-section">
-                    <div class="detail-section-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-                        <h2 class="detail-section-title">خطوات التقديم والتسجيل</h2>
-                    </div>
-                    <div class="detail-section-highlight">
-                        {{ university.registration_section|safe }}
-                    </div>
-                </section>
+                    {% endfor %}
+                </div>
+            </section>
             {% endif %}
 
         </div>
 
         <!-- Left Column: Sidebar / Meta Info & Inquiry Form (1/3 width) -->
         <div class="detail-sidebar">
-            
+
             <!-- Quick Facts Sidebar Card -->
             <div class="detail-sidebar-card">
                 <h3 class="detail-sidebar-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        <line x1="9" y1="10" x2="15" y2="10"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                        <line x1="9" y1="18" x2="13" y2="18"></line>
+                    </svg>
                     معلومات سريعة
                 </h3>
                 <dl class="detail-sidebar-list">
@@ -233,34 +753,531 @@
                         <dd class="detail-sidebar-value">{{ faculties|length }} كليات</dd>
                     </div>
                     {% endif %}
-                    <div class="detail-sidebar-item">
-                        <dt class="detail-sidebar-label">الموقع:</dt>
-                        <dd class="detail-sidebar-value">{{ university.location|striptags }}</dd>
-                    </div>
                 </dl>
             </div>
 
             <!-- Inquiry Lead Form Sidebar Card -->
             <div class="detail-sidebar-card detail-sidebar-card--sticky">
-                <h3 class="detail-sidebar-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    استفسر الآن
-                </h3>
-                <p class="detail-sidebar-description">هل لديك تساؤلات بخصوص هذه الجامعة؟ املأ النموذج أدناه وسيقوم فريقنا بالتواصل معك.</p>
-                
-                <div class="detail-sidebar-form">
-                    {% include 'components/lead_form.html' with source_page=request.path %}
-                </div>
+                {% include 'components/lead_form.html' with source_page=request.path %}
             </div>
 
         </div>
 
     </div>
 
-    <!-- Related Articles Section (Full width bottom tab/grid) -->
+    <!-- Registration Steps Section (Full Width) -->
+    <section class="detail-section detail-section--full-width">
+        <div class="detail-section-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                aria-hidden="true">
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path>
+                <rect x="9" y="3" width="6" height="4" rx="2"></rect>
+                <path d="M9 14l2 2 4-4"></path>
+            </svg>
+            <h2 class="detail-section-title">خطوات التسجيل في {{ university.name }}</h2>
+        </div>
+
+        <div class="reg-steps-grid">
+            <div class="reg-steps-grid__container">
+                <!-- الخطوة الأولى -->
+                <div class="reg-card">
+                    <div class="reg-card__badge">الخطوة الأولى</div>
+                    <div class="reg-card__icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304.45 394">
+                            <path
+                                d="M177.73,5c5.27,1.4,11.33.9,16.28,3.6,2.21,1.21,6.97,6.36,6.97,8.78v298.88h52.88c2.12,0,7.49,2.06,9.33,3.42,10.46,7.74,9.97,32.38,9.04,44.19-.81,10.29-4.46,21.46-14.99,25.14H47.98c-2.26-1.53-5.16-2.15-7.24-4.01-10.75-9.59-10.4-47.31-3.87-59.23,2.47-4.52,8.47-9.51,13.74-9.51h61.12v-79.12c0-.45,2.3-3.98,3.01-4.49,4.56-3.32,10.78-.88,11.95,4.53l-.29,89.62c-1.12,2.37-3.27,4.39-6.02,4.48l-69.41.34c-4.9,6.14-4.68,37.27-.38,41.66l203.15.61c1.04-.34,1.26-1.25,1.62-2.13,2.51-6.14,2.89-29.8.74-35.99-.39-1.12-1.6-3.65-2.61-4.14l-61.84-.41c-2.52.21-5.67-4.49-5.67-6.33V21.5c-16.81-2.11-35.23-2.69-51.97.16-23.96,15.56-48.43,30.46-72.17,46.33-5.77,3.86-13.81,7.11-14.61,14.64-.54,5.03-.62,25.92.79,29.96.26.74.19,1.51,1.14,1.88,3.58-.87,6.82-2.45,10.09-4.07,19.03-9.42,37.41-21.73,56.47-31.28,5.21-2.65,10.89.6,11.05,6.48l-.08,86.99c-.76,5.54-9.1,7.86-12.73,3.82-.49-.54-2.23-4.12-2.23-4.52v-73.12c-20.22,9.54-38.55,23.37-59.8,30.57-11.17,1.75-16.66-4.41-18.72-14.67-1.72-8.56-1.98-30.73.32-38.99,2.9-10.42,11.06-14.06,19.32-19.68,25.24-17.18,51.56-33.43,77.63-49.12l9.76-1.86h37.5Z" />
+                            <path d="M119.6,197.39c9.7.04,10.01,16.47-2.2,14.57-7.64-1.19-7.31-14.61,2.2-14.57Z" />
+                        </svg>
+                    </div>
+                    <h3 class="reg-card__title">تقديم الطلب والوثائق</h3>
+                    <p class="reg-card__desc">قم بتحضير الأوراق التالية:</p>
+                    <ul class="reg-card__list">
+                        <li>جواز السفر كامل الصفحات</li>
+                        <li>صورة شخصية بخلفية بيضاء</li>
+                        <li>الشهادات الأكاديمية وكشوف الدرجات</li>
+                    </ul>
+                    <div class="reg-card__desc-footer">
+                        عبر الواتس اب أو البريد الإلكتروني:<br>
+                        <span class="reg-card__email">info@sciencesgates.com</span>
+                    </div>
+                </div>
+
+                <!-- الخطوة الثانية -->
+                <div class="reg-card">
+                    <div class="reg-card__badge">الخطوة الثانية</div>
+                    <div class="reg-card__icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 301.52 390.2">
+                            <path
+                                d="M158.26,3.1l27.01,4.12c63.04,14.34,87.16,62.54,78.65,124.41-7.56,54.96-54.33,104.19-91.38,142.62-10.69,11.09-25.55,23.3-34.91,34.84-.74.92-1.46,1.9-1.86,3.02h124.12c20.93,0,20.87,34.23,19.87,48.37-.78,10.99-3.78,23.44-15.74,26.63H45.76c-25.32-2.56-25.27-29.27-24.03-49.16,1.23-19.62,9.71-30.62,22.15-44.6,20.95-23.55,44.37-48.24,66.37-70.88,2.31-2.38,5.26-6.15,8.66-6.4,6.43-.47,11.16,6.77,6.69,12-23.55,28.25-53.13,53.67-76.46,81.79-12.38,14.92-13.91,28.42-12.35,47.62.71,8.77,2.27,14.6,12.34,14.66h210.82c.88.04,1.62-.04,2.22-.77,3-3.63,3.04-25.03,2.6-30.37-.26-3.16-1.64-12.75-5.02-13.73l-143.86-.14c-5.72-.58-8.44-7.13-4.86-11.64,55.25-62.56,156.02-133.48,137.78-229.28C233.23,4.48,120.58,7.17,62.5,38.22c-11.33,6.06-17.86,9.91-18.98,23.77-.26,3.2.23,34.6,2.62,34.87,11.47-5.87,22.07-13.38,34.13-18.37,58.09-24.03,110.9.07,94.44,68.94-1.75,7.31-8.24,32.51-18.9,27.25-8.81-4.34-.97-14.73,1.16-20.99,14.83-43.7,1.75-75.78-49.11-67.86-21.05,3.28-32.72,13.17-50.34,22.41-18.83,9.87-25.84-.81-28.16-18.6-1.79-13.75-2.6-37.37,5.59-48.96C50.1,19.23,109.09,4.57,134.26,3.1h24Z" />
+                            <path d="M135.99,203.12c-7.4-6.53,2.98-18.03,10.23-11.35s-2.97,17.76-10.23,11.35Z" />
+                        </svg>
+                    </div>
+                    <h3 class="reg-card__title">إصدار التأشيرة الدراسية</h3>
+                    <p class="reg-card__desc">بعد الحصول على خطاب القبول من الجامعة، يجب على الطالب دفع رسوم الفيزا إلى
+                        حساب الجامعة بشكل مباشر للبدء في إجراءات الفيزا. تحتاج العملية حوالي ثلاثة أسابيع لإصدار فيزا
+                        الطالب.</p>
+                </div>
+
+                <!-- الخطوة الثالثة -->
+                <div class="reg-card">
+                    <div class="reg-card__badge">الخطوة الثالثة</div>
+                    <div class="reg-card__icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 302.91 392">
+                            <path
+                                d="M159.7,4l29.41,4.71c34.05,8.46,60.76,29.87,69.37,64.86,10.2,41.49-2.84,90.79-42.51,111.49,32.23,12.21,56.77,37.76,61.39,72.81,8.83,66.92-41.77,117.31-104.89,126.63l-26.27,3.36c-8.7-.35-17.56.47-26.25,0-21.44-1.15-70.26-10.89-85.87-26.25-10.81-10.65-12.92-52.58-4.11-64.07,9.52-12.41,22.11-1.68,32.47,2.74,28.02,11.93,67.47,22.12,96.27,7.5,29.03-14.74,27.27-56.12-.75-71.48-26.38-14.46-53.37-7.11-81.12-9.63-21.09-1.91-19.45-28.77-18.42-44.63.75-11.53,4.72-22.26,17.67-23.57,27.97-2.83,61.08,7.18,82.5-17.99,4.02-4.72,4.75-10.94,12.69-9.71,3.61.56,6.22,4.92,5.53,8.39-1.37,6.97-13.18,18.3-19.13,22.16-24.8,16.12-54,11.14-82.01,12.48-2.92,1.94-2.59,25.63-2.13,29.93.24,2.23,1.01,7.1,3.43,7.82,38.15-.3,96.46-3.91,113.61,39.37,15.13,38.19-9.54,71.54-47.98,77.51-35.71,5.54-70-5.73-101.4-21.52-.2,3.77-1.33,7.88-1.54,11.59-.39,7.06.17,21.77,2.67,28.13,2.89,7.34,18.12,13.19,25.46,15.79,61.06,21.65,165.93,13.53,189.93-58.35,15.34-45.92-2.25-91.22-50.04-105.49-4.85-1.45-20.72-3.38-23.01-5.86-.67-.72-1.55-2.94-1.69-3.95-1.37-10.21,8.85-9.72,15.89-12.51,34.99-13.86,49.99-45.03,47.81-81.9C242.05,16.34,152.06,8.97,92.94,26.88c-9.7,2.94-37.07,13.99-42.34,22.15-3.56,5.51-3.23,25.53-2.65,32.57.11,1.37.82,6.92,1.88,7.13,26.74-15.39,53.24-29.71,85.38-26.89,7.46.65,37.39,7.74,25.99,19.78-4.82,5.09-12.74-1.21-18.19-2.83-19.52-5.78-40.93.08-58.83,8.31-15.46,7.1-44.24,33.06-50.3,1.81-2.27-11.71-2.34-38.93,4.73-48.87C53.59,19,109.65,5.4,134.19,4.01h25.51Z" />
+                            <path d="M173.01,97.13c11.3-1.86,11.56,15.84.65,14.79-8.55-.82-8.9-13.43-.65-14.79Z" />
+                        </svg>
+                    </div>
+                    <h3 class="reg-card__title">حجز وتنسيق السكن</h3>
+                    <p class="reg-card__desc">يجب عليك التنسيق معنا مسبقاً من أجل حجز السكن، وذلك بعد دفع رسوم الفيزا
+                        وحجز المقعد الدراسي لضمان توفر الخيارات المناسبة.</p>
+                </div>
+
+                <!-- الخطوة الرابعة -->
+                <div class="reg-card">
+                    <div class="reg-card__badge">الخطوة الرابعة</div>
+                    <div class="reg-card__icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304.45 394">
+                            <path
+                                d="M211.48,5c5.11,1.18,10.64.92,15.92,1.71,7,1.04,18.15,3.78,22.21,10.03.43.66,2.37,4.8,2.37,5.13v214.75h26.62c6.55,0,12.45,9.51,14.22,15.02,4.16,12.99,5.68,59.93-14.97,59.93h-25.88v61.09c0,6.12-7.96,11.41-13.17,13.07s-10.79,1.74-16.08,3.04c-9.31-.5-19.28.68-28.5,0-6.28-.46-15.83-2.17-21.23-5.4-3.95-2.36-8.02-7.43-8.02-12.22v-59.59H30.35c-4.9,0-11.5-3.24-14.6-7.14-11.38-14.32-7.4-61.65.09-78.58L133.92,17.06c8.37-10.78,25.88-10.54,38.25-11.28.97-.06,1.71-.78,1.82-.78h37.5ZM276.6,296.46c4.65-7.48,5.64-38.19.17-43.77-.93-.95-1.41-.95-2.63-1.12-9.25-1.22-23.54,1.79-32.13-.12-2.83-.63-4.34-3.66-4.99-6.26l-.41-219.96c-.92-1.87-8.45-3.15-10.73-3.52-17.12-2.78-43.94-2.79-61.27-.96-4.81.51-16.08,1.92-19.03,5.72L30.19,230.47c-6.57,14.79-7.87,40-5.38,55.91.93,5.93,1.28,10.45,8.51,10.23l142.71.54c2.11,1.24,3.9,3.22,3.96,5.79l.1,66.61c.95,2.77,14.39,4.09,17.47,4.27,12.78.76,27.02.21,39.33-3.1l.05-66.29c.08-4.2,2.05-7.35,6.39-7.86,5.09-.6,31.56.95,33.27-.11Z" />
+                            <path
+                                d="M89.23,236.62h75.75V104.69l-19.11,32.24c-10.09,4.48-15.02-2.09-10.26-11.76,8.64-17.55,21.29-34.7,30.13-52.34,3.28-5.23,11.4-4.6,13.91,1.08l-.23,173.75c-1.65,2.82-3.34,3.69-6.52,3.98-30.71,2.81-65.66-2.2-96.82,0-5.88-.04-8.6-5.81-6.51-11.08,10.93-16.48,19.18-36.12,30.05-52.42,1.08-1.63,2.19-4.12,4.06-4.93,6.68-2.88,12.75,2.32,10.71,9.21l-25.14,44.2Z" />
+                            <path d="M129.47,165.9c-6.7,6.85-17.59-4.02-10.73-10.72s17.85,3.43,10.73,10.72Z" />
+                        </svg>
+                    </div>
+                    <h3 class="reg-card__title">الاستقبال والوصول</h3>
+                    <p class="reg-card__desc">يجب عليك التنسيق مسبقاً مع أحد مستشاري شركة بوابات العلوم لأجل قدومك، وذلك
+                        لإرسال ممثل الجامعة إلى المطار والقيام بالإجراءات القانونية اللازمة، ثم نقل الطالب من المطار إلى
+                        الجامعة أو السكن.</p>
+                </div>
+
+                <!-- الخطوة الخامسة -->
+                <div class="reg-card">
+                    <div class="reg-card__badge">الخطوة الخامسة</div>
+                    <div class="reg-card__icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 301.36 390">
+                            <path
+                                d="M239.18,3c12.35,3.66,15.09,16.7,15.79,28.08.75,12.15,1.13,40.12-10.28,47.52-.66.43-4.8,2.37-5.13,2.37h-124.88v61.48l40.16-.78c78.97,3.29,127.05,43.93,121.84,126.35-4.29,67.73-56.78,109.52-121.21,117.24-4.99.6-10.46.39-15.28,1.6-8.71-.33-17.56.45-26.25,0-2.36-.12-5.95-.52-8.62-.76-17.9-1.59-64.57-9.73-75.38-24.36-7.09-9.6-6.87-47.21-2.83-58.31,2.92-8.03,8.52-12.24,17.28-10.86,7.13,1.12,20.47,9.71,28.67,12.58,36.36,12.73,105.11,15.8,110.55-35.71.56-5.32-1.71-15,5.3-17.19,10.83-3.39,10.32,9.54,9.82,16.56-2.45,34.58-27.83,53.96-60.5,57.98s-67.01-2.85-95.91-19.38c-1.06.72-1.16,1.88-1.51,2.97-1.96,6.13-1.81,32.01-.15,38.42,1.52,5.88,3.96,6.59,9.04,8.96,32.24,15.05,84.58,17.3,119.01,10,67-14.21,103.44-68.06,91.26-136.22-11.57-64.71-72.62-76.53-129.17-74.87-7.22.21-17.86,2.37-24.74,1.55-2.91-.35-4.76-1.86-6.02-4.48l.03-82.53c.69-2.94,3.81-4.89,6.74-5.24l128.88-.12c2.65-.8,4.04-10.36,4.26-12.99.38-4.63.56-33.9-3.5-34.88H63.28c-6.45.11-8.84,3.27-9.38,9.37v165.75c.12,1.43.7,4.84,1.47,5.85,2.91,3.83,37.99-1.47,44.65-1.79,13.69-.66,44.66-.76,56.66,4.9,6.53,3.08,5.17,12.67-1.86,13.92-8.57-.72-16.88-3.32-25.49-3.82s-20.48-.44-29.31,0c-20.26,1.02-58.25,13.49-61.08-16.85l-.04-169.45c.76-11.63,8.37-21.32,20.28-22.84h180Z" />
+                            <path
+                                d="M179.72,219.83c10.95-2.49,12.99,13.72,2.66,14.68-9.02.84-10.98-12.79-2.66-14.68Z" />
+                        </svg>
+                    </div>
+                    <h3 class="reg-card__title">التسجيل وبدء الدراسة</h3>
+                    <p class="reg-card__desc">قبل البدء في الدراسة، يجب تسديد رسوم السنة الأولى للجامعة وعمل الفحص الطبي
+                        المطلوب في ماليزيا للبدء الفعلي في المحاضرات. تمنياتنا لك بالتوفيق والنجاح!</p>
+                </div>
+            </div>
+        </div>
+    </section>
     <div class="detail-related">
         {% include "components/related_articles.html" with articles=university.related_articles.all %}
     </div>
 
+
+
+    {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_super_admin %}
+    <!-- زر لوحة التحكم -->
+    <a href="{% url 'dashboard:home' %}" class="admin-dashboard-float" aria-label="لوحة التحكم">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="9"></rect>
+            <rect x="14" y="3" width="7" height="5"></rect>
+            <rect x="14" y="12" width="7" height="9"></rect>
+            <rect x="3" y="16" width="7" height="5"></rect>
+        </svg>
+        <span class="admin-dashboard-float__tooltip">لوحة التحكم</span>
+    </a>
+
+    <a href="{% url 'dashboard:university_edit' university.pk %}" class="admin-edit-float" aria-label="تعديل الجامعة">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        <span class="admin-edit-float__tooltip">تعديل الجامعة</span>
+    </a>
+    {% endif %}
+
+    <!-- Floating Registration Button -->
+    <button type="button" @click="openRegModal = true; regStep = 1" class="reg-float-btn transition-premium hover-lift"
+        aria-label="سجل الآن في الجامعة">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path>
+        </svg>
+        <div class="reg-float-text">
+            <span class="reg-float-title">سجل الآن</span>
+            <span class="reg-float-subtitle">{{ university.name|clean_university_name }}</span>
+        </div>
+    </button>
+
+    <!-- Registration Wizard Modal -->
+    <div x-show="openRegModal" class="reg-modal-overlay" style="display: none; z-index: 1000;"
+        @keydown.escape.window="openRegModal = false">
+        <div class="reg-modal-content" @click.away="openRegModal = false">
+
+            <!-- Modal Header -->
+            <div class="reg-modal-header">
+                <span class="reg-modal-title">سجل في {{ university.name|clean_university_name }}</span>
+                <button type="button" @click="openRegModal = false" class="reg-modal-close" aria-label="إغلاق">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Wizard Step Progress -->
+            <div class="reg-modal-body" style="padding-bottom: 8px;">
+                <div class="reg-wizard">
+                    <div class="reg-wizard-step" :class="regStep >= 1 ? 'reg-wizard-step--active' : ''">
+                        <div class="reg-wizard-number" :class="regStep > 1 ? 'reg-wizard-step--completed' : ''">
+                            <span x-show="regStep <= 1">1</span>
+                            <span x-show="regStep > 1">✓</span>
+                        </div>
+                        <span class="reg-wizard-label">البيانات الشخصية</span>
+                    </div>
+                    <div class="reg-wizard-line" :class="regStep >= 2 ? 'reg-wizard-line--active' : ''"></div>
+                    <div class="reg-wizard-step" :class="regStep >= 2 ? 'reg-wizard-step--active' : ''">
+                        <div class="reg-wizard-number">2</div>
+                        <span class="reg-wizard-label">تفاصيل الدراسة</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="regWizardForm" method="POST" action="{% url 'leads:submit' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="lead_type" value="registration">
+                <input type="hidden" name="source_page" value="{{ request.build_absolute_uri }}">
+
+                <!-- Combined field for Django Lead form submission -->
+                <textarea name="message" id="reg_combined_message" style="display: none;"></textarea>
+                <!-- Honeypot -->
+                <input type="text" name="website" style="display:none;" tabindex="-1" autocomplete="off">
+
+                <div class="reg-modal-body" style="padding-top: 0;">
+
+                    <!-- STEP 1: Personal Details -->
+                    <div x-show="regStep === 1" class="space-y-4">
+                        <div class="reg-form-group">
+                            <label for="reg_name">الاسم الكامل للطالب <span
+                                    style="color: var(--danger);">*</span></label>
+                            <input type="text" id="reg_name" name="name" class="reg-input"
+                                placeholder="أدخل اسم الطالب الكامل" required>
+                        </div>
+
+                        <div class="reg-form-group">
+                            <label for="reg_email">البريد الإلكتروني</label>
+                            <input type="email" id="reg_email" name="email" class="reg-input"
+                                placeholder="name@example.com" dir="ltr">
+                        </div>
+
+                        <div class="reg-form-group">
+                            <label>رقم الهاتف (يفضل واتس آب) <span style="color: var(--danger);">*</span></label>
+                            <div class="intl-phone-wrapper">
+                                <div class="intl-phone-select" id="regPhoneSelect" style="position: relative;">
+                                    <button type="button" class="intl-phone-selected" id="regPhoneBtn"
+                                        aria-haspopup="listbox" aria-expanded="false">
+                                        <img src="https://flagcdn.com/w20/{{ default_country }}.png" alt=""
+                                            class="intl-phone-flag" id="regPhoneFlag">
+                                        <span id="regPhoneCode">{{ default_code }}</span>
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" class="intl-phone-arrow">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </button>
+                                    <ul class="intl-phone-dropdown" id="regPhoneDropdown" role="listbox"
+                                        style="z-index: 1010; position: absolute; max-height: 200px; overflow-y: auto;">
+                                        <li class="intl-phone-search-wrap">
+                                            <input type="text" class="intl-phone-search" id="regPhoneSearch"
+                                                placeholder="ابحث عن دولة..." autocomplete="off">
+                                        </li>
+                                        {% for iso, name, code, placeholder in phone_countries %}
+                                        <li role="option" data-code="{{ code }}" data-flag="{{ iso }}"
+                                            data-placeholder="{{ placeholder }}">
+                                            <img data-src="https://flagcdn.com/w20/{{ iso }}.png" alt="" loading="lazy">
+                                            <span class="intl-phone-name">{{ name }}</span> <span
+                                                class="intl-phone-dial" dir="ltr">{{ code }}</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <input type="tel" id="reg_phone" class="intl-phone-input"
+                                    placeholder="{{ default_placeholder }}" dir="ltr" required style="flex: 1;">
+                            </div>
+                            <input type="hidden" name="country_code" id="reg_country_code" value="{{ default_code }}">
+                            <input type="hidden" name="phone" id="reg_phone_combined">
+                        </div>
+
+                        <div class="reg-form-group">
+                            <label for="reg_nationality">الجنسية <span style="color: var(--danger);">*</span></label>
+                            <select id="reg_nationality" class="reg-select" required>
+                                <option value="" disabled selected>اختر الجنسية...</option>
+                                <option value="سعودي">سعودي</option>
+                                <option value="إماراتي">إماراتي</option>
+                                <option value="سوداني">سوداني</option>
+                                <option value="مصري">مصري</option>
+                                <option value="أردني">أردني</option>
+                                <option value="عراقي">عراقي</option>
+                                <option value="كويتي">كويتي</option>
+                                <option value="بحريني">بحريني</option>
+                                <option value="قطري">قطري</option>
+                                <option value="عماني">عماني</option>
+                                <option value="يمني">يمني</option>
+                                <option value="ليبي">ليبي</option>
+                                <option value="مغربي">مغربي</option>
+                                <option value="جزائري">جزائري</option>
+                                <option value="تونسي">تونسي</option>
+                                <option value="فلسطيني">فلسطيني</option>
+                                <option value="لبناني">لبنان</option>
+                                <option value="سوري">سوري</option>
+                                <option value="موريتاني">موريتاني</option>
+                                <option value="صومالي">صومالي</option>
+                                <option value="جيبوتي">جيبوتي</option>
+                                <option value="ماليزي">ماليزي</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: Study Details -->
+                    <div x-show="regStep === 2" class="space-y-4">
+                        <div class="reg-form-group">
+                            <label for="reg_level">المرحلة الدراسية <span style="color: var(--danger);">*</span></label>
+                            <select id="reg_level" class="reg-select" required>
+                                <option value="" disabled selected>اختر المرحلة الدراسية...</option>
+                                <option value="بكالوريوس">بكالوريوس (Bachelor's)</option>
+                                <option value="ماجستير">ماجستير (Master's)</option>
+                                <option value="دكتوراه">دكتوراه (PhD)</option>
+                                <option value="معهد لغة">معهد لغة</option>
+                            </select>
+                        </div>
+
+                        <div class="reg-form-group">
+                            <label for="reg_residence">دولة الإقامة <span style="color: var(--danger);">*</span></label>
+                            <select id="reg_residence" class="reg-select" required>
+                                <option value="" disabled selected>اختر دولة الإقامة...</option>
+                                {% for iso, name, code, placeholder in phone_countries %}
+                                <option value="{{ name }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="reg-form-group">
+                            <label for="reg_address">عنوان الإقامة <span style="color: var(--danger);">*</span></label>
+                            <input type="text" id="reg_address" class="reg-input" placeholder="المدينة، المنطقة، الشارع"
+                                required>
+                        </div>
+
+                        <div class="reg-form-group">
+                            <label for="reg_notes">ملاحظات</label>
+                            <textarea id="reg_notes" class="reg-textarea"
+                                placeholder="أدخل أي تفاصيل أو متطلبات خاصة..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer Buttons -->
+                <div class="reg-modal-footer">
+                    <div>
+                        <button type="button" x-show="regStep === 2" @click="regStep = 1"
+                            class="reg-btn reg-btn--secondary">السابق</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" @click="openRegModal = false"
+                            class="reg-btn reg-btn--secondary">إلغاء</button>
+                        <button type="button" x-show="regStep === 1" @click="if(validateStep1()) { regStep = 2; }"
+                            class="reg-btn reg-btn--primary">التالي</button>
+                        <button type="submit" x-show="regStep === 2" id="regSubmitBtn"
+                            class="reg-btn reg-btn--primary">تسجيل الآن</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+<!-- Scripts for Registration Modal -->
+<script>
+    (function () {
+        // Validation for step 1
+        window.validateStep1 = function () {
+            var name = document.getElementById('reg_name').value.trim();
+            var phone = document.getElementById('reg_phone').value.trim();
+            var nationality = document.getElementById('reg_nationality').value;
+
+            if (!name) {
+                alert('يرجى إدخال اسم الطالب الكامل.');
+                return false;
+            }
+            if (!phone) {
+                alert('يرجى إدخال رقم الهاتف.');
+                return false;
+            }
+            if (!nationality) {
+                alert('يرجى اختيار الجنسية.');
+                return false;
+            }
+            return true;
+        };
+
+        // Custom phone country selector for modal
+        var wrapper = document.getElementById('regPhoneSelect');
+        if (!wrapper) return;
+
+        var btn = document.getElementById('regPhoneBtn');
+        var dropdown = document.getElementById('regPhoneDropdown');
+        var flagImg = document.getElementById('regPhoneFlag');
+        var codeSpan = document.getElementById('regPhoneCode');
+        var hiddenCode = document.getElementById('reg_country_code');
+        var form = document.getElementById('regWizardForm');
+
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var isOpen = dropdown.classList.contains('intl-phone-dropdown--open');
+            dropdown.classList.toggle('intl-phone-dropdown--open');
+            btn.setAttribute('aria-expanded', !isOpen);
+            if (!isOpen && !dropdown.dataset.loaded) {
+                dropdown.querySelectorAll('img[data-src]').forEach(function (img) {
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                });
+                dropdown.dataset.loaded = '1';
+            }
+            if (!isOpen) {
+                var search = document.getElementById('regPhoneSearch');
+                if (search) setTimeout(function () { search.focus(); }, 50);
+            }
+        });
+
+        var searchInput = document.getElementById('regPhoneSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                var query = this.value.trim().toLowerCase();
+                var items = dropdown.querySelectorAll('li[role="option"]');
+                items.forEach(function (li) {
+                    var name = li.querySelector('.intl-phone-name');
+                    var dial = li.querySelector('.intl-phone-dial');
+                    var text = (name ? name.textContent : '') + ' ' + (dial ? dial.textContent : '');
+                    li.style.display = text.toLowerCase().indexOf(query) > -1 ? '' : 'none';
+                });
+            });
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') e.preventDefault();
+            });
+        }
+
+        dropdown.addEventListener('click', function (e) {
+            var li = e.target.closest('li[role="option"]');
+            if (!li) return;
+            var code = li.getAttribute('data-code');
+            var flag = li.getAttribute('data-flag');
+            var placeholder = li.getAttribute('data-placeholder');
+            codeSpan.textContent = code;
+            flagImg.src = 'https://flagcdn.com/w20/' + flag + '.png';
+            hiddenCode.value = code;
+            var phoneInput = document.getElementById('reg_phone');
+            if (phoneInput && placeholder) phoneInput.placeholder = placeholder;
+            dropdown.classList.remove('intl-phone-dropdown--open');
+            btn.setAttribute('aria-expanded', 'false');
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!wrapper.contains(e.target)) {
+                dropdown.classList.remove('intl-phone-dropdown--open');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Combine inputs on form submit
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                // Combined phone
+                var number = document.getElementById('reg_phone');
+                var combined = document.getElementById('reg_phone_combined');
+                if (number && combined && hiddenCode) {
+                    combined.value = hiddenCode.value + number.value.replace(/^0+/, '');
+                }
+
+                // Combine other details into message
+                var nationality = document.getElementById('reg_nationality').value;
+                var level = document.getElementById('reg_level').value;
+                var residence = document.getElementById('reg_residence').value;
+                var address = document.getElementById('reg_address').value;
+                var notes = document.getElementById('reg_notes').value;
+
+                var combinedMsg = "طلب تسجيل جديد في جامعة: {{ university.name }}\n" +
+                    "--------------------------------------------------\n" +
+                    "الجنسية: " + nationality + "\n" +
+                    "المرحلة الدراسية: " + level + "\n" +
+                    "دولة الإقامة: " + residence + "\n" +
+                    "عنوان الإقامة: " + address + "\n" +
+                    "ملاحظات إضافية:\n" + (notes ? notes : "لا يوجد");
+
+                document.getElementById('reg_combined_message').value = combinedMsg;
+            });
+        }
+
+        // Floating buttons auto-hide on scroll inactivity
+        window.addEventListener('load', function () {
+            var floats = document.querySelectorAll('.reg-float-btn, .whatsapp-widget, .admin-dashboard-float, .admin-edit-float');
+            if (floats.length === 0) return;
+
+            var scrollTimeout = null;
+            var isHovered = false;
+
+            floats.forEach(function (el) {
+                el.addEventListener('mouseenter', function () {
+                    isHovered = true;
+                    showFloats();
+                });
+                el.addEventListener('mouseleave', function () {
+                    isHovered = false;
+                    resetScrollTimeout();
+                });
+            });
+
+            function showFloats() {
+                floats.forEach(function (el) {
+                    el.classList.remove('floating-hide');
+                });
+                if (scrollTimeout) clearTimeout(scrollTimeout);
+            }
+
+            function hideFloats() {
+                if (isHovered) return;
+
+                // Do not hide if modal is open
+                var alpineData = document.querySelector('.detail-page-container')?.__x?.$data;
+                var regModalOpen = alpineData ? alpineData.openRegModal : false;
+
+                // Check if WhatsApp popup is open
+                var waWidget = document.querySelector('.whatsapp-widget');
+                var waOpen = waWidget && waWidget.__x && waWidget.__x.$data ? waWidget.__x.$data.open : false;
+
+                if (regModalOpen || waOpen) return;
+
+                floats.forEach(function (el) {
+                    el.classList.add('floating-hide');
+                });
+            }
+
+            function resetScrollTimeout() {
+                if (scrollTimeout) clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(hideFloats, 2500); // hide after 2.5 seconds of scroll pause
+            }
+
+            window.addEventListener('scroll', function () {
+                showFloats();
+                resetScrollTimeout();
+            }, { passive: true });
+
+            // Initialize timeout on load
+            resetScrollTimeout();
+        });
+    })();
+</script>
 {% endblock %}

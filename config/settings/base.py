@@ -69,6 +69,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'apps.core.context_processors.dashboard_context',
                 'apps.core.context_processors.site_settings_context',
+                'apps.core.context_processors.phone_countries_context',
             ],
         },
     },
@@ -158,3 +159,4 @@ SITE_URL = config('SITE_URL', default='http://localhost:8000')
 SECURE_HSTS_SECONDS = 0  # Set to 31536000 in production
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'

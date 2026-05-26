@@ -88,6 +88,15 @@
                                 {% endwith %}
                             {% endif %}
                         
+                        {% elif column.type == 'status_badge' %}
+                            {# دائرة ملونة للحالة #}
+                            {% with status_value=row|get_item:column.key %}
+                                <div style="display: inline-flex; align-items: center; gap: 8px;">
+                                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: {% if status_value == 'published' %}#10b981{% else %}#ef4444{% endif %};"></div>
+                                    <span style="font-size: 13px;">{% if status_value == 'published' %}منشور{% else %}غير منشور{% endif %}</span>
+                                </div>
+                            {% endwith %}
+                        
                         {% elif column.type == 'date' %}
                             {# تاريخ #}
                             {% if row|get_item:column.key %}

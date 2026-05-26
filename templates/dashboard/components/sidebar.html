@@ -51,7 +51,7 @@
             </a>
         </div>
 
-        {% if user.profile.is_content_admin or user.profile.is_super_admin %}
+        {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_super_admin %}
         <!-- قسم المحتوى - مدير المحتوى والمدير العام -->
         <div  style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
             <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">المحتوى</h3>
@@ -313,7 +313,7 @@
         </div>
 
         <!-- قسم SEO - مدير SEO والمدير العام -->
-        {% if user.profile.is_seo_admin or user.profile.is_super_admin %}
+        {% if user.is_authenticated and user.profile.is_seo_admin or user.is_authenticated and user.profile.is_super_admin %}
         <div  style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
             <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">SEO</h3>
             <div class="space-y-1">
@@ -350,7 +350,7 @@
         {% endif %}
 
         <!-- قسم التقارير - المدير العام والمحررين -->
-        {% if user.profile.is_content_admin or user.profile.is_seo_admin or user.profile.is_super_admin %}
+        {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_seo_admin or user.is_authenticated and user.profile.is_super_admin %}
         <div  style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
             <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">التقارير</h3>
             <div class="space-y-1">
@@ -387,7 +387,7 @@
         {% endif %}
 
         <!-- قسم الإدارة - المدير العام فقط -->
-        {% if user.profile.is_super_admin %}
+        {% if user.is_authenticated and user.profile.is_super_admin %}
         <div  style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
             <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">الإدارة</h3>
             <div class="space-y-1">
@@ -407,12 +407,11 @@
 
                 <!-- الإعدادات العامة -->
                 <div :style="'{{ request.path }}'.includes('/dashboard/settings') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="#"
+                    <a href="{% url 'dashboard:settings' %}"
                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                       style="color: var(--text-secondary);"
-                       @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
-                       @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';"
-                       title="قريباً">
+                       style="{% if '/dashboard/settings' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
+                       @mouseenter="{% if '/dashboard/settings' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
+                       @mouseleave="{% if '/dashboard/settings' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -425,7 +424,7 @@
         {% endif %}
 
         <!-- قسم النظام - المدير العام فقط -->
-        {% if user.profile.is_super_admin %}
+        {% if user.is_authenticated and user.profile.is_super_admin %}
         <div>
             <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">النظام</h3>
             <div class="space-y-1">
@@ -495,7 +494,7 @@
                     {{ user.get_full_name|default:user.username }}
                 </p>
                 <p style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">
-                    {{ user.profile.get_role_display }}
+                    {% if user.is_authenticated and user.profile %}{{ user.profile.get_role_display }}{% endif %}
                 </p>
             </div>
             <a href="{% url 'dashboard:logout' %}"

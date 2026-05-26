@@ -18,6 +18,7 @@ def get_item(obj, key):
     Usage in template:
         {{ row|get_item:"name" }}
         {{ row|get_item:"user.email" }}
+        {{ row|get_item:"university_type_display" }}
     
     Args:
         obj: Dictionary or object to access

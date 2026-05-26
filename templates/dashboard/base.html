@@ -21,6 +21,10 @@
     <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
     <!-- نظام ألوان لوحة التحكم -->
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <!-- مكون زر اللصق -->
+    <link rel="stylesheet" href="{% static 'css/paste-button.min.css' %}">
+    <!-- مكون اللصق الجماعي -->
+    <link rel="stylesheet" href="{% static 'css/bulk-paste.min.css' %}">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -153,10 +157,10 @@
         </main>
     </div>
 
+    <!-- Alpine.js Collapse Plugin (must load BEFORE Alpine.js) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.13.3/dist/cdn.min.js"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
-    <!-- Alpine.js Collapse Plugin (must load after Alpine.js) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.13.3/dist/cdn.min.js"></script>
 
     <!-- السكريبتات -->
     {% if DEBUG %}
@@ -165,12 +169,16 @@
     <script src="{% static 'js/form-sync.js' %}"></script>
     <script src="{% static 'js/editor-form-integration.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/paste-button.js' %}"></script>
+    <script src="{% static 'js/bulk-paste.js' %}"></script>
     {% else %}
     <script src="{% static 'js/formset-management.min.js' %}"></script>
     <script src="{% static 'js/image-upload.min.js' %}"></script>
     <script src="{% static 'js/form-sync.js' %}"></script>
     <script src="{% static 'js/editor-form-integration.js' %}"></script>
     <script src="{% static 'js/main.min.js' %}"></script>
+    <script src="{% static 'js/paste-button.min.js' %}"></script>
+    <script src="{% static 'js/bulk-paste.min.js' %}"></script>
     {% endif %}
     {% block extra_js %}{% endblock %}
 </body>

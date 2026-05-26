@@ -112,34 +112,93 @@ class SimpleRichTextEditor {
     handlePaste(e) {
         e.preventDefault();
         
-        // Get pasted text
-        const text = e.clipboardData.getData('text/html') || e.clipboardData.getData('text/plain');
+        // نحفظ الـ selection الحالية
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
         
-        // Sanitize the pasted content
-        const sanitized = this.sanitizeHtml(text);
+        // نجيب الـ HTML أو النص العادي من الحافظة
+        const html = e.clipboardData.getData('text/html');
+        const text = e.clipboardData.getData('text/plain');
         
-        // Insert sanitized content
-        document.execCommand('insertHTML', false, sanitized);
+        let contentToInsert = '';
         
-        // Sync to textarea
+        if (html) {
+            contentToInsert = this.sanitizeHtml(html);
+        } else if (text) {
+            // نص عادي — نحول الأسطر لـ <br>
+            contentToInsert = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '<br>');
+        }
+        
+        if (contentToInsert) {
+            range.deleteContents();
+            const frag = document.createRange().createContextualFragment(contentToInsert);
+            range.insertNode(frag);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        
+        // مزامنة مع الـ textarea
         this.syncToTextarea();
     }
 
     sanitizeHtml(html) {
         /**
-         * Sanitize HTML to allow only safe tags:
-         * p, br, strong, em, h2, h3, h4, ul, ol, li, a
+         * تنظيف ذكي للـ HTML — يشيل شوائب اللصق من المصادر الخارجية
+         * يحافظ على: b, strong, em, i, div, br, h2-h4, ul, ol, li, a
+         * يشيل: span, font, style attributes, HTML comments, meta tags
          */
-        const allowedTags = ['p', 'br', 'strong', 'em', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a'];
+        
+        // إزالة HTML comments (مثل <!--StartFragment-->)
+        html = html.replace(/<!--[\s\S]*?-->/g, '');
+        
+        // إزالة opening/closing tags فقط (بدون محتواها) لـ html, head, body
+        html = html.replace(/<\/?(html|head|body)[^>]*>/gi, '');
+        
+        // إزالة style, script بمحتواها + meta, link tags
+        html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        html = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+        html = html.replace(/<(meta|link|title)[^>]*\/?>/gi, '');
+        html = html.replace(/<title[^>]*>[\s\S]*?<\/title>/gi, '');
+        html = html.replace(/<!doctype[^>]*>/gi, '');
+        
+        const allowedTags = ['b', 'strong', 'em', 'i', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'br', 'div', 'p'];
+        const unwrapTags = ['span', 'font', 'section', 'article', 'mark', 'small', 'big', 'center', 'abbr', 'code', 'pre', 'sub', 'sup'];
         const allowedAttributes = {
             'a': ['href', 'title', 'target']
         };
         
-        // Create temporary container
+        // إنشاء عنصر مؤقت
         const temp = document.createElement('div');
         temp.innerHTML = html;
         
-        // Recursively clean elements
+        // unwrap كل التاجات الزائدة بشكل آمن
+        let unwrapFound = true;
+        let safetyCounter = 0;
+        while (unwrapFound && safetyCounter < 100) {
+            safetyCounter++;
+            unwrapFound = false;
+            const allElements = temp.querySelectorAll('*');
+            for (let i = 0; i < allElements.length; i++) {
+                const el = allElements[i];
+                const tag = el.tagName.toLowerCase();
+                if (unwrapTags.includes(tag)) {
+                    while (el.firstChild) {
+                        el.parentNode.insertBefore(el.firstChild, el);
+                    }
+                    el.parentNode.removeChild(el);
+                    unwrapFound = true;
+                    break;
+                }
+            }
+        }
+        
+        // تنظيف التاجات والـ attributes
         this.cleanElement(temp, allowedTags, allowedAttributes);
         
         return temp.innerHTML;
@@ -147,42 +206,58 @@ class SimpleRichTextEditor {
 
     cleanElement(element, allowedTags, allowedAttributes) {
         /**
-         * Recursively clean element and its children
+         * تنظيف تكراري — يشيل التاجات الغير مسموحة والـ attributes الزائدة
          */
-        const nodesToRemove = [];
+        const children = Array.from(element.childNodes);
         
-        for (let node of element.childNodes) {
+        for (let node of children) {
+            // إزالة الـ comments
+            if (node.nodeType === Node.COMMENT_NODE) {
+                element.removeChild(node);
+                continue;
+            }
+            
             if (node.nodeType === Node.ELEMENT_NODE) {
                 const tagName = node.tagName.toLowerCase();
                 
+                // تاجات غير مسموحة — نحولها لنص
                 if (!allowedTags.includes(tagName)) {
-                    // Replace with text content
                     const textNode = document.createTextNode(node.textContent);
                     element.replaceChild(textNode, node);
-                } else {
-                    // Remove disallowed attributes
-                    const allowedAttrs = allowedAttributes[tagName] || [];
-                    const attrsToRemove = [];
-                    
-                    for (let attr of node.attributes) {
-                        if (!allowedAttrs.includes(attr.name)) {
-                            attrsToRemove.push(attr.name);
-                        }
-                    }
-                    
-                    attrsToRemove.forEach(attr => node.removeAttribute(attr));
-                    
-                    // Sanitize href for security
-                    if (tagName === 'a' && node.hasAttribute('href')) {
-                        const href = node.getAttribute('href');
-                        if (!this.isValidUrl(href)) {
-                            node.removeAttribute('href');
-                        }
-                    }
-                    
-                    // Recursively clean children
-                    this.cleanElement(node, allowedTags, allowedAttributes);
+                    continue;
                 }
+                
+                // إزالة كل الـ attributes الغير مسموحة (بما فيها style)
+                const allowedAttrs = allowedAttributes[tagName] || [];
+                const attrsToRemove = [];
+                for (let attr of node.attributes) {
+                    if (!allowedAttrs.includes(attr.name)) {
+                        attrsToRemove.push(attr.name);
+                    }
+                }
+                attrsToRemove.forEach(attr => node.removeAttribute(attr));
+                
+                // التحقق من أمان الروابط
+                if (tagName === 'a' && node.hasAttribute('href')) {
+                    const href = node.getAttribute('href');
+                    if (!this.isValidUrl(href)) {
+                        node.removeAttribute('href');
+                    }
+                }
+                
+                // تحويل <p> لـ <div>
+                if (tagName === 'p') {
+                    const div = document.createElement('div');
+                    while (node.firstChild) {
+                        div.appendChild(node.firstChild);
+                    }
+                    element.replaceChild(div, node);
+                    this.cleanElement(div, allowedTags, allowedAttributes);
+                    continue;
+                }
+                
+                // تنظيف الأولاد
+                this.cleanElement(node, allowedTags, allowedAttributes);
             }
         }
     }

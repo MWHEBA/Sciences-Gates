@@ -52,6 +52,53 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // 3b. Detail Accordion Logic with Smooth Scroll
+    // Handle detail-faculty-item accordions
+    const facultyAccordion = document.querySelector('.detail-faculties-accordion');
+    if (facultyAccordion) {
+        const facultyButtons = facultyAccordion.querySelectorAll('.detail-faculty-header');
+        facultyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Delay scroll to allow Alpine.js to update the DOM
+                setTimeout(() => {
+                    const item = button.closest('.detail-faculty-item');
+                    if (item) {
+                        // Scroll to the top of the accordion item with offset for header
+                        const headerHeight = document.querySelector('.header')?.offsetHeight || 80;
+                        const itemTop = item.getBoundingClientRect().top + window.scrollY - headerHeight - 20;
+                        window.scrollTo({
+                            top: itemTop,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 50);
+            });
+        });
+    }
+
+    // Handle detail-faq-item accordions
+    const faqAccordion = document.querySelector('.detail-faq-accordion');
+    if (faqAccordion) {
+        const faqButtons = faqAccordion.querySelectorAll('.detail-faq-header');
+        faqButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Delay scroll to allow Alpine.js to update the DOM
+                setTimeout(() => {
+                    const item = button.closest('.detail-faq-item');
+                    if (item) {
+                        // Scroll to the top of the accordion item with offset for header
+                        const headerHeight = document.querySelector('.header')?.offsetHeight || 80;
+                        const itemTop = item.getBoundingClientRect().top + window.scrollY - headerHeight - 20;
+                        window.scrollTo({
+                            top: itemTop,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 50);
+            });
+        });
+    }
+
     // 4. Form Validation Enhancements
     const forms = document.querySelectorAll('form[data-validate]');
     forms.forEach(form => {
@@ -104,13 +151,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 5. Scroll Reveal Animation Logic (No Gradients, Just Movement)
-    const revealElements = document.querySelectorAll('.card, .stat-card, .section-title, .hero__content > *, .hero__image-wrapper, .accordion__item');
-    
-    // Initial state: add 'reveal-hidden' to all elements we want to animate
+    // 5. Scroll Reveal — cards, titles, accordions (scroll-triggered)
+    const revealElements = document.querySelectorAll('.card, .stat-card, .section-title, .accordion__item');
+
     revealElements.forEach((el, index) => {
         el.classList.add('reveal-hidden');
-        // Add dynamic delay based on DOM order for staggered layout
         const delay = (index % 5) * 0.1;
         el.style.transitionDelay = `${delay}s`;
     });
@@ -119,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('reveal-visible');
-                // Optional: Stop observing once revealed
                 observer.unobserve(entry.target);
             }
         });
@@ -130,4 +174,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     revealElements.forEach(el => revealObserver.observe(el));
+
+    // 5b. Hero content — fade-in stagger immediately on load (above the fold)
+    const heroChildren = document.querySelectorAll('.hero__content > *');
+    heroChildren.forEach((el, index) => {
+        el.classList.add('reveal-hidden');
+        el.style.transitionDelay = `${index * 0.12}s`;
+        setTimeout(() => {
+            el.classList.add('reveal-visible');
+        }, 80);
+    });
+
+    // 6. Hero Layered Images — activate float loop exactly when entrance animation ends
+    const circleImg = document.querySelector('.hero__circle-img');
+    const studentsImg = document.querySelector('.hero__students-img');
+
+    if (circleImg) {
+        circleImg.addEventListener('animationend', () => {
+            circleImg.classList.add('is-visible');
+        }, { once: true });
+    }
+
+    if (studentsImg) {
+        studentsImg.addEventListener('animationend', () => {
+            studentsImg.classList.add('is-visible');
+        }, { once: true });
+    }
 });

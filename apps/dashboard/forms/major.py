@@ -247,9 +247,9 @@ class MajorForm(forms.ModelForm):
             'career_opportunities': 'فرص العمل المتاحة بعد التخرج',
             
             # Rich Text Sections
-            'description': 'وصف شامل عن التخصص (يدعم: غامق، مائل، عناوين، قوائم، روابط)',
-            'why_study_section': 'أسباب دراسة هذا التخصص (يدعم: غامق، مائل، عناوين، قوائم، روابط)',
-            'how_to_apply_section': 'خطوات التقديم للتخصص (يدعم: غامق، مائل، عناوين، قوائم، روابط)',
+            'description': 'وصف شامل عن التخصص',
+            'why_study_section': 'أسباب دراسة هذا التخصص',
+            'how_to_apply_section': 'خطوات التقديم للتخصص',
             
             # Relationships
             'best_universities': 'اختر أفضل الجامعات لهذا التخصص',

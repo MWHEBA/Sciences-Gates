@@ -101,15 +101,15 @@
                     </td>
                     <td class="px-6 py-4 text-sm">
                         <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold
-                            {% if user.profile.role == 'super_admin' %}
+                            {% if user.profile and user.profile.role == 'super_admin' %}
                                 bg-red-100 text-red-800
-                            {% elif user.profile.role == 'content_admin' %}
+                            {% elif user.profile and user.profile.role == 'content_admin' %}
                                 bg-blue-100 text-blue-800
                             {% else %}
                                 bg-green-100 text-green-800
                             {% endif %}
                         ">
-                            {{ user.profile.get_role_display }}
+                            {% if user.profile %}{{ user.profile.get_role_display }}{% endif %}
                         </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-600">

@@ -77,6 +77,9 @@ urlpatterns = [
     # SEO management (SEO Admin)
     path('seo/overview/', views.SEOOverviewView.as_view(), name='seo_overview'),
     
+    # General Settings (Super Admin)
+    path('settings/', views.SiteSettingsUpdateView.as_view(), name='settings'),
+    
     # Editor uploads
     path('editor/upload-image/', views.EditorImageUploadView.as_view(), name='editor_upload_image'),
 ]

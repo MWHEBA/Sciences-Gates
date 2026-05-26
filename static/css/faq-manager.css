@@ -1,0 +1,427 @@
+/**
+ * FAQ Manager Styles
+ * تصميم إدارة الأسئلة الشائعة
+ * 
+ * إعادة استخدام 80% من faculty-programs-manager.css
+ * مع تبسيط للهيكل (بدون nesting)
+ */
+
+/* ─── FAQ Items Container ─── */
+#faq-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 48px;
+}
+
+/* ─── FAQ Item ─── */
+.faq-item {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface);
+    transition: all 0.2s ease;
+    opacity: 0;
+    transform: translateY(-8px);
+    overflow: hidden;
+}
+
+.faq-item--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.faq-item--existing {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.faq-item:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-card);
+}
+
+/* ─── FAQ Item Header ─── */
+.faq-item__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.faq-item__header:hover {
+    background-color: var(--surface);
+}
+
+/* ─── FAQ Drag Handle ─── */
+.faq-item__drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: grab;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+
+.faq-item__drag-handle:hover {
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+}
+
+.faq-item__drag-handle:active {
+    cursor: grabbing;
+}
+
+/* ─── FAQ Item Number ─── */
+.faq-item__number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    border: 1px solid var(--primary-muted);
+    min-width: 28px;
+}
+
+/* ─── FAQ Question Preview ─── */
+.faq-item__question-preview {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.15s ease;
+}
+
+.faq-item:hover .faq-item__question-preview {
+    color: var(--primary);
+}
+
+/* ─── FAQ Toggle Button ─── */
+.faq-item__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.faq-item__toggle:hover {
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+}
+
+.faq-item__toggle svg {
+    transition: transform 0.2s ease;
+}
+
+.faq-item__toggle svg.rotated {
+    transform: rotate(180deg);
+}
+
+/* ─── FAQ Delete Button ─── */
+.faq-item__delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.faq-item__delete:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
+}
+
+/* ─── FAQ Item Content (Collapsible) ─── */
+.faq-item__content {
+    padding: 16px;
+    display: none;
+    animation: slideDown 0.2s ease;
+}
+
+.faq-item__content.expanded {
+    display: block;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ─── FAQ Item Field ─── */
+.faq-item__field {
+    margin-bottom: 16px;
+}
+
+.faq-item__field:last-child {
+    margin-bottom: 0;
+}
+
+.faq-item__field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/* ─── FAQ Input Fields ─── */
+.faq-item__question-input,
+.faq-item__answer-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.faq-item__question-input:focus,
+.faq-item__answer-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-muted);
+}
+
+.faq-item__question-input::placeholder,
+.faq-item__answer-input::placeholder {
+    color: var(--text-muted);
+}
+
+.faq-item__answer-input {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* ─── FAQ Dragging State ─── */
+.faq-item--dragging {
+    opacity: 0.5;
+    border-style: dashed;
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+}
+
+.faq-item--drag-over {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-muted);
+}
+
+/* ─── FAQ Deleted State ─── */
+.faq-item--deleted {
+    opacity: 0;
+    transform: translateX(20px);
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+/* ─── FAQ Empty State ─── */
+.faq-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-2);
+    text-align: center;
+    gap: 12px;
+}
+
+.faq-empty-state__icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.faq-empty-state__text {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+    font-weight: 500;
+}
+
+.faq-empty-state__hint {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin: 0;
+    opacity: 0.7;
+}
+
+/* ─── FAQ Section Header ─── */
+.faq-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.faq-section__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.faq-section__title h2 {
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* ─── FAQ Counter ─── */
+.faq-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 7px;
+    border-radius: 12px;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ─── FAQ Add Button ─── */
+.faq-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.faq-add-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background-color: var(--primary-muted);
+}
+
+.faq-add-btn svg {
+    flex-shrink: 0;
+}
+
+/* ─── Responsive Design ─── */
+@media (max-width: 768px) {
+    .faq-item__header {
+        gap: 8px;
+        padding: 10px 12px;
+    }
+
+    .faq-item__drag-handle,
+    .faq-item__toggle,
+    .faq-item__delete {
+        width: 28px;
+        height: 28px;
+    }
+
+    .faq-item__number {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
+
+    .faq-item__question-preview {
+        font-size: 13px;
+    }
+
+    .faq-item__content {
+        padding: 12px;
+    }
+
+    .faq-item__field {
+        margin-bottom: 12px;
+    }
+
+    .faq-item__question-input,
+    .faq-item__answer-input {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+
+    .faq-item__answer-input {
+        min-height: 80px;
+    }
+
+    .faq-section__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .faq-add-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+}
+
+/* ─── Dark Mode Support ─── */
+@media (prefers-color-scheme: dark) {
+    .faq-item__question-input,
+    .faq-item__answer-input {
+        background-color: var(--surface);
+        color: var(--text-primary);
+    }
+
+    .faq-item__question-input:focus,
+    .faq-item__answer-input:focus {
+        box-shadow: 0 0 0 3px var(--primary-muted);
+    }
+}

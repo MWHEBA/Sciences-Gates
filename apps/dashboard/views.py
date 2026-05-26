@@ -16,19 +16,21 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from django.urls import reverse_lazy
 from datetime import timedelta
+from django.db import transaction
 from apps.leads.models import Lead, LeadType
 from apps.redirects.models import Redirect
 from apps.universities.models import University, Faculty, Program
 from apps.institutes.models import Institute, Course
 from apps.majors.models import Major
 from apps.articles.models import Article, Category, Tag
+from apps.core.models import SiteSettings
 from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin
 from apps.dashboard.forms import (
     UserCreateForm, UserUpdateForm, RedirectForm, 
     UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, 
     InstituteForm, CourseFormSet,
     MajorForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet,
-    ArticleForm, CategoryForm, TagForm
+    ArticleForm, CategoryForm, TagForm, SiteSettingsForm
 )
 from apps.articles.models import Category, Tag
 from apps.seo.mixins import DashboardBreadcrumbMixin
@@ -52,12 +54,15 @@ class DashboardLoginView(View):
     @method_decorator(csrf_protect)
     def post(self, request):
         """Handle login form submission."""
+        from django.utils.http import url_has_allowed_host_and_scheme
+        
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
+        next_url = request.POST.get('next', request.GET.get('next', ''))
 
         if not username or not password:
             messages.error(request, 'يرجى إدخال اسم المستخدم وكلمة المرور')
-            return render(request, self.template_name)
+            return render(request, self.template_name, {'next': next_url})
 
         user = authenticate(request, username=username, password=password)
 
@@ -65,14 +70,18 @@ class DashboardLoginView(View):
             # Check if user is staff (has dashboard access)
             if not user.is_staff:
                 messages.error(request, 'ليس لديك صلاحيات للوصول إلى لوحة التحكم')
-                return render(request, self.template_name)
+                return render(request, self.template_name, {'next': next_url})
 
             login(request, user)
             messages.success(request, f'أهلاً وسهلاً {user.first_name or user.username}')
+            
+            # Redirect to next URL if provided and safe, otherwise to home
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                return redirect(next_url)
             return redirect('dashboard:home')
         else:
             messages.error(request, 'اسم المستخدم أو كلمة المرور غير صحيحة')
-            return render(request, self.template_name, {'username': username})
+            return render(request, self.template_name, {'username': username, 'next': next_url})
 
 
 class DashboardLogoutView(View):
@@ -254,7 +263,7 @@ class UserListView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة المستخدمين'
         # Add items for list_page.html template
-        context['items'] = context.get('users', [])
+        context['items'] = context.get('users', context.get('object_list', []))
         return context
 
 
@@ -411,7 +420,7 @@ class RedirectListView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         # Add items for list_page.html template
-        context['items'] = context.get('redirects', [])
+        context['items'] = context.get('redirects', context.get('object_list', []))
         return context
 
 
@@ -600,17 +609,75 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
 
     def get_context_data(self, **kwargs):
         """Add page title and search/filter info to context."""
+        from django.urls import reverse
+        
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة الجامعات'
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['type_filter'] = self.request.GET.get('type', '')
+        
         # Add items for list_page.html template
-        context['items'] = context.get('universities', [])
+        # context_object_name is 'universities', but list_page.html expects 'items'
+        context['items'] = context.get('universities', context.get('object_list', []))
+        
+        # Add required context variables for list_page.html
+        context['search_placeholder'] = 'ابحث عن اسم الجامعة...'
+        context['search_value'] = context['search_query']
+        context['base_url'] = reverse('dashboard:university_list')
+        
+        # Filters
+        context['filters'] = [
+            {
+                'name': 'status',
+                'label': 'حالة النشر',
+                'options': [
+                    {'value': 'published', 'label': 'منشور'},
+                    {'value': 'unpublished', 'label': 'غير منشور'},
+                ],
+                'selected': context['status_filter'],
+            },
+            {
+                'name': 'type',
+                'label': 'نوع الجامعة',
+                'options': [
+                    {'value': 'public', 'label': 'حكومية'},
+                    {'value': 'private', 'label': 'خاصة'},
+                ],
+                'selected': context['type_filter'],
+            },
+        ]
+        
+        # Columns for data table
+        context['columns'] = [
+            {'label': 'اسم الجامعة', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:university_edit', 'link_param': 'pk'},
+            {'label': 'النوع', 'key': 'university_type_display', 'type': 'text'},
+            {'label': 'الكليات', 'key': 'faculties_count', 'type': 'text'},
+            {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
+            {'label': 'التاريخ', 'key': 'created_at', 'type': 'date'},
+        ]
+        
+        context['edit_url_name'] = 'dashboard:university_edit'
+        context['delete_url_name'] = 'dashboard:university_delete'
+        
+        # Pagination info
+        context['is_paginated'] = self.paginator.num_pages > 1 if hasattr(self, 'paginator') else False
+        context['page_obj'] = context.get('page_obj')
+        
+        # Build query params for pagination
+        query_params = '&'.join([f'{k}={v}' for k, v in self.request.GET.items() if k != 'page'])
+        context['query_params'] = query_params
+        
+        # Add computed properties to each university
+        for university in context['items']:
+            university.faculties_count = university.faculties.count()
+            university.university_type_display = university.get_university_type_display()
+            university.publish_status_display = university.get_publish_status_display()
+        
         return context
 
 
-class UniversityCreateView(ContentAdminRequiredMixin, CreateView):
+class UniversityCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, CreateView):
     """
     Create a new university with inline FAQ formset.
     إنشاء جامعة جديدة مع نموذج الأسئلة الشائعة المدمج
@@ -623,53 +690,138 @@ class UniversityCreateView(ContentAdminRequiredMixin, CreateView):
     """
     model = University
     form_class = UniversityForm
-    template_name = 'dashboard/universities/create.html'
+    template_name = 'dashboard/universities/form.html'
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for university create page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_universities')
+            .current('إضافة جامعة')
+            .build())
 
     def get_context_data(self, **kwargs):
-        """Add formset to context."""
+        """Add formsets to context with nested program formsets."""
         context = super().get_context_data(**kwargs)
+        
         if self.request.POST:
             context['faq_formset'] = UniversityFAQFormSet(self.request.POST, instance=self.object)
             context['faculty_formset'] = UniversityFacultyFormSet(self.request.POST, instance=self.object)
         else:
             context['faq_formset'] = UniversityFAQFormSet(instance=self.object)
             context['faculty_formset'] = UniversityFacultyFormSet(instance=self.object)
+        
+        # Attach nested program formsets to each faculty form
+        context['faculty_formset'] = self._attach_program_formsets(
+            context['faculty_formset'],
+            self.request.POST if self.request.POST else None
+        )
+        
         context['page_title'] = 'إنشاء جامعة جديدة'
         return context
 
+    def _attach_program_formsets(self, faculty_formset, post_data=None):
+        """Attach nested program formsets to each faculty form."""
+        from apps.dashboard.forms.university import NestedProgramFormSet
+        
+        for i, faculty_form in enumerate(faculty_formset):
+            if faculty_form.instance.pk:
+                # Existing faculty — load programs from DB
+                if post_data:
+                    faculty_form.program_formset = NestedProgramFormSet(
+                        post_data,
+                        instance=faculty_form.instance,
+                        prefix=f'faculty-{i}-programs'
+                    )
+                else:
+                    faculty_form.program_formset = NestedProgramFormSet(
+                        instance=faculty_form.instance,
+                        prefix=f'faculty-{i}-programs'
+                    )
+            else:
+                # New faculty — empty formset
+                if post_data:
+                    faculty_form.program_formset = NestedProgramFormSet(
+                        post_data,
+                        prefix=f'faculty-{i}-programs'
+                    )
+                else:
+                    faculty_form.program_formset = NestedProgramFormSet(
+                        prefix=f'faculty-{i}-programs'
+                    )
+        
+        return faculty_formset
+
     def form_valid(self, form):
-        """Handle successful form submission with formsets."""
+        """Handle successful form submission with nested formsets.
+        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
+        """
         context = self.get_context_data()
         faq_formset = context['faq_formset']
         faculty_formset = context['faculty_formset']
         
-        # Debug: Log POST data
         import logging
         logger = logging.getLogger(__name__)
-        logger.debug(f"POST data keys: {list(self.request.POST.keys())}")
-        logger.debug(f"Form data: {form.cleaned_data}")
         
-        if faq_formset.is_valid() and faculty_formset.is_valid():
-            self.object = form.save()
-            faq_formset.instance = self.object
-            faq_formset.save()
-            faculty_formset.instance = self.object
-            faculty_formset.save()
-            messages.success(
-                self.request,
-                f'تم إنشاء الجامعة "{self.object.name}" بنجاح'
-            )
-            return redirect('dashboard:university_edit', pk=self.object.pk)
+        # التحقق من صحة كل الـ formsets قبل أي حفظ
+        all_valid = faq_formset.is_valid() and faculty_formset.is_valid()
+        
+        # Check nested program formsets
+        if all_valid:
+            for faculty_form in faculty_formset:
+                if hasattr(faculty_form, 'program_formset'):
+                    if not faculty_form.program_formset.is_valid():
+                        all_valid = False
+                        logger.debug(f"Program formset errors: {faculty_form.program_formset.errors}")
+                        break
+        
+        if all_valid:
+            try:
+                with transaction.atomic():
+                    # حفظ الجامعة
+                    self.object = form.save()
+                    
+                    # حفظ الأسئلة الشائعة
+                    faq_formset.instance = self.object
+                    faq_formset.save()
+                    
+                    # حفظ الكليات والبرامج
+                    faculty_formset.instance = self.object
+                    faculty_formset.save()
+                    
+                    for faculty_form in faculty_formset:
+                        if hasattr(faculty_form, 'program_formset'):
+                            faculty_form.program_formset.instance = faculty_form.instance
+                            faculty_form.program_formset.save()
+                
+                messages.success(
+                    self.request,
+                    f'تم إنشاء الجامعة "{self.object.name}" بنجاح'
+                )
+                return redirect('dashboard:university_edit', pk=self.object.pk)
+            except Exception as e:
+                logger.error(f"Error saving university: {e}")
+                messages.error(self.request, 'حدث خطأ أثناء حفظ الجامعة. لم يتم حفظ أي بيانات.')
+                return self.form_invalid(form)
         else:
-            # Formsets have errors, show them
+            # عرض الأخطاء بدون حفظ أي شيء
             logger.debug(f"FAQ Formset errors: {faq_formset.errors}")
             logger.debug(f"Faculty Formset errors: {faculty_formset.errors}")
+            
             for field, errors in faq_formset.errors.items():
                 for error in errors:
                     messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
+            
             for field, errors in faculty_formset.errors.items():
                 for error in errors:
                     messages.error(self.request, f'خطأ في الكليات: {error}')
+            
+            for faculty_form in faculty_formset:
+                if hasattr(faculty_form, 'program_formset'):
+                    for field, errors in faculty_form.program_formset.errors.items():
+                        for error in errors:
+                            messages.error(self.request, f'خطأ في البرامج: {error}')
+            
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -683,7 +835,7 @@ class UniversityCreateView(ContentAdminRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class UniversityUpdateView(ContentAdminRequiredMixin, UpdateView):
+class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, UpdateView):
     """
     Update an existing university with inline FAQ formset and faculty list display.
     تحديث جامعة موجودة مع نموذج الأسئلة الشائعة المدمج وعرض قائمة الكليات
@@ -698,19 +850,34 @@ class UniversityUpdateView(ContentAdminRequiredMixin, UpdateView):
     """
     model = University
     form_class = UniversityForm
-    template_name = 'dashboard/universities/edit.html'
+    template_name = 'dashboard/universities/form.html'
     success_url = reverse_lazy('dashboard:university_list')
 
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for university update page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_universities')
+            .current('تعديل الجامعة')
+            .build())
+
     def get_context_data(self, **kwargs):
-        """Add formset and faculties to context."""
+        """Add formsets and faculties to context with nested programs."""
         context = super().get_context_data(**kwargs)
+        
         if self.request.POST:
             context['faq_formset'] = UniversityFAQFormSet(self.request.POST, instance=self.object)
+            context['faculty_formset'] = UniversityFacultyFormSet(self.request.POST, instance=self.object)
         else:
             context['faq_formset'] = UniversityFAQFormSet(instance=self.object)
+            context['faculty_formset'] = UniversityFacultyFormSet(instance=self.object)
         
-        # Add faculties list
-        context['faculties'] = self.object.faculties.all().order_by('sort_order')
+        # Attach nested program formsets to each faculty form
+        context['faculty_formset'] = self._attach_program_formsets(
+            context['faculty_formset'],
+            self.request.POST if self.request.POST else None
+        )
+        
         context['page_title'] = f'تحديث الجامعة: {self.object.name}'
         
         # Check if slug was changed and show warning
@@ -720,53 +887,137 @@ class UniversityUpdateView(ContentAdminRequiredMixin, UpdateView):
         
         return context
 
-    def form_valid(self, form):
-        """Handle successful form submission with formset."""
-        context = self.get_context_data()
-        faq_formset = context['faq_formset']
+    def _attach_program_formsets(self, faculty_formset, post_data=None):
+        """Attach nested program formsets to each faculty form."""
+        from apps.dashboard.forms.university import NestedProgramFormSet
         
-        if faq_formset.is_valid():
-            # Store old slug before saving
-            old_slug = self.object.slug
-            
-            self.object = form.save()
-            faq_formset.instance = self.object
-            faq_formset.save()
-            
-            # Check if slug changed and create redirect if requested
-            new_slug = form.cleaned_data.get('slug')
-            if old_slug != new_slug and self.object.is_published:
-                # Check if user wants to create redirect
-                create_redirect = self.request.POST.get('create_redirect') == 'on'
-                if create_redirect:
-                    # Create redirect from old slug to new slug
-                    old_url = f'/universities/{old_slug}/'
-                    new_url = f'/universities/{new_slug}/'
-                    Redirect.objects.update_or_create(
-                        old_url=old_url,
-                        defaults={
-                            'new_url': new_url,
-                            'is_active': True,
-                            'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط الجامعة: {self.object.name}'
-                        }
-                    )
-                    messages.success(
-                        self.request,
-                        f'تم تحديث الجامعة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+        for i, faculty_form in enumerate(faculty_formset):
+            if faculty_form.instance.pk:
+                # Existing faculty — load programs from DB
+                if post_data:
+                    faculty_form.program_formset = NestedProgramFormSet(
+                        post_data,
+                        instance=faculty_form.instance,
+                        prefix=f'faculty-{i}-programs'
                     )
                 else:
-                    messages.warning(
-                        self.request,
-                        f'تم تحديث الجامعة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
+                    faculty_form.program_formset = NestedProgramFormSet(
+                        instance=faculty_form.instance,
+                        prefix=f'faculty-{i}-programs'
                     )
             else:
-                messages.success(
-                    self.request,
-                    f'تم تحديث الجامعة "{self.object.name}" بنجاح'
-                )
-            
-            return redirect(self.success_url)
+                # New faculty — empty formset
+                if post_data:
+                    faculty_form.program_formset = NestedProgramFormSet(
+                        post_data,
+                        prefix=f'faculty-{i}-programs'
+                    )
+                else:
+                    faculty_form.program_formset = NestedProgramFormSet(
+                        prefix=f'faculty-{i}-programs'
+                    )
+        
+        return faculty_formset
+
+    def form_valid(self, form):
+        """Handle successful form submission with nested formsets.
+        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
+        """
+        context = self.get_context_data()
+        faq_formset = context['faq_formset']
+        faculty_formset = context['faculty_formset']
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # التحقق من صحة كل الـ formsets قبل أي حفظ
+        all_valid = faq_formset.is_valid() and faculty_formset.is_valid()
+        
+        # Check nested program formsets
+        if all_valid:
+            for faculty_form in faculty_formset:
+                if hasattr(faculty_form, 'program_formset'):
+                    if not faculty_form.program_formset.is_valid():
+                        all_valid = False
+                        logger.debug(f"Program formset errors: {faculty_form.program_formset.errors}")
+                        break
+        
+        if all_valid:
+            try:
+                with transaction.atomic():
+                    # حفظ الـ slug القديم قبل الحفظ
+                    old_slug = self.object.slug
+                    
+                    # حفظ الجامعة
+                    self.object = form.save()
+                    
+                    # حفظ الأسئلة الشائعة
+                    faq_formset.instance = self.object
+                    faq_formset.save()
+                    
+                    # حفظ الكليات والبرامج
+                    faculty_formset.instance = self.object
+                    faculty_formset.save()
+                    
+                    for faculty_form in faculty_formset:
+                        if hasattr(faculty_form, 'program_formset'):
+                            faculty_form.program_formset.instance = faculty_form.instance
+                            faculty_form.program_formset.save()
+                    
+                    # إنشاء redirect لو الـ slug اتغير
+                    new_slug = form.cleaned_data.get('slug')
+                    if old_slug != new_slug and self.object.is_published:
+                        create_redirect = self.request.POST.get('create_redirect') == 'on'
+                        if create_redirect:
+                            old_url = f'/universities/{old_slug}/'
+                            new_url = f'/universities/{new_slug}/'
+                            Redirect.objects.update_or_create(
+                                old_url=old_url,
+                                defaults={
+                                    'new_url': new_url,
+                                    'is_active': True,
+                                    'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط الجامعة: {self.object.name}'
+                                }
+                            )
+                            messages.success(
+                                self.request,
+                                f'تم تحديث الجامعة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                            )
+                        else:
+                            messages.warning(
+                                self.request,
+                                f'تم تحديث الجامعة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
+                            )
+                    else:
+                        messages.success(
+                            self.request,
+                            f'تم تحديث الجامعة "{self.object.name}" بنجاح'
+                        )
+                
+                return redirect(self.success_url)
+            except Exception as e:
+                logger.error(f"Error updating university: {e}")
+                messages.error(self.request, 'حدث خطأ أثناء تحديث الجامعة. لم يتم حفظ أي تغييرات.')
+                return self.form_invalid(form)
         else:
+            # عرض الأخطاء بدون حفظ أي شيء
+            logger.debug(f"FAQ Formset errors: {faq_formset.errors}")
+            logger.debug(f"Faculty Formset errors: {faculty_formset.errors}")
+            
+            for field, errors in faq_formset.errors.items():
+                for error in errors:
+                    messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
+            
+            for field, errors in faculty_formset.errors.items():
+                for error in errors:
+                    messages.error(self.request, f'خطأ في الكليات: {error}')
+            
+            for faculty_form in faculty_formset:
+                if hasattr(faculty_form, 'program_formset'):
+                    for field, errors in faculty_form.program_formset.errors.items():
+                        for error in errors:
+                            messages.error(self.request, f'خطأ في البرامج: {error}')
+            
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -906,25 +1157,34 @@ class FacultyCreateView(DashboardBreadcrumbMixin, ContentAdminRequiredMixin, Cre
         return context
 
     def form_valid(self, form):
-        """Handle successful form submission with formset."""
+        """Handle successful form submission with formset.
+        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
+        """
         context = self.get_context_data()
         program_formset = context['program_formset']
         university_id = self.kwargs.get('university_id')
         university = get_object_or_404(University, pk=university_id)
         
         if program_formset.is_valid():
-            self.object = form.save(commit=False)
-            self.object.university = university
-            self.object.save()
-            
-            program_formset.instance = self.object
-            program_formset.save()
-            
-            messages.success(
-                self.request,
-                f'تم إنشاء الكلية "{self.object.name}" بنجاح'
-            )
-            return redirect('dashboard:faculty_list', university_id=university.pk)
+            try:
+                with transaction.atomic():
+                    self.object = form.save(commit=False)
+                    self.object.university = university
+                    self.object.save()
+                    
+                    program_formset.instance = self.object
+                    program_formset.save()
+                
+                messages.success(
+                    self.request,
+                    f'تم إنشاء الكلية "{self.object.name}" بنجاح'
+                )
+                return redirect('dashboard:faculty_list', university_id=university.pk)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error saving faculty: {e}")
+                messages.error(self.request, 'حدث خطأ أثناء حفظ الكلية. لم يتم حفظ أي بيانات.')
+                return self.form_invalid(form)
         else:
             return self.form_invalid(form)
 
@@ -979,20 +1239,29 @@ class FacultyUpdateView(DashboardBreadcrumbMixin, ContentAdminRequiredMixin, Upd
         return context
 
     def form_valid(self, form):
-        """Handle successful form submission with formset."""
+        """Handle successful form submission with formset.
+        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
+        """
         context = self.get_context_data()
         program_formset = context['program_formset']
         
         if program_formset.is_valid():
-            self.object = form.save()
-            program_formset.instance = self.object
-            program_formset.save()
-            
-            messages.success(
-                self.request,
-                f'تم تحديث الكلية "{self.object.name}" بنجاح'
-            )
-            return redirect('dashboard:faculty_list', university_id=self.object.university.pk)
+            try:
+                with transaction.atomic():
+                    self.object = form.save()
+                    program_formset.instance = self.object
+                    program_formset.save()
+                
+                messages.success(
+                    self.request,
+                    f'تم تحديث الكلية "{self.object.name}" بنجاح'
+                )
+                return redirect('dashboard:faculty_list', university_id=self.object.university.pk)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error updating faculty: {e}")
+                messages.error(self.request, 'حدث خطأ أثناء تحديث الكلية. لم يتم حفظ أي تغييرات.')
+                return self.form_invalid(form)
         else:
             return self.form_invalid(form)
 
@@ -1124,7 +1393,7 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
         context['status_filter'] = self.request.GET.get('status', '')
         context['type_filter'] = self.request.GET.get('type', '')
         # Add items for list_page.html template
-        context['items'] = context.get('institutes', [])
+        context['items'] = context.get('institutes', context.get('object_list', []))
         return context
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
@@ -1157,19 +1426,29 @@ class InstituteCreateView(ContentAdminRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        """Handle successful form submission with formset."""
+        """Handle successful form submission with formset.
+        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
+        """
         context = self.get_context_data()
         course_formset = context['course_formset']
         
         if course_formset.is_valid():
-            self.object = form.save()
-            course_formset.instance = self.object
-            course_formset.save()
-            messages.success(
-                self.request,
-                f'تم إنشاء المعهد "{self.object.name}" بنجاح'
-            )
-            return redirect('dashboard:institute_edit', pk=self.object.pk)
+            try:
+                with transaction.atomic():
+                    self.object = form.save()
+                    course_formset.instance = self.object
+                    course_formset.save()
+                
+                messages.success(
+                    self.request,
+                    f'تم إنشاء المعهد "{self.object.name}" بنجاح'
+                )
+                return redirect('dashboard:institute_edit', pk=self.object.pk)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error saving institute: {e}")
+                messages.error(self.request, 'حدث خطأ أثناء حفظ المعهد. لم يتم حفظ أي بيانات.')
+                return self.form_invalid(form)
         else:
             return self.form_invalid(form)
 
@@ -1218,51 +1497,58 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        """Handle successful form submission with formset."""
+        """Handle successful form submission with formset.
+        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
+        """
         context = self.get_context_data()
         course_formset = context['course_formset']
         
         if course_formset.is_valid():
-            # Store old slug before saving
-            old_slug = self.object.slug
-            
-            self.object = form.save()
-            course_formset.instance = self.object
-            course_formset.save()
-            
-            # Check if slug changed and create redirect if requested
-            new_slug = form.cleaned_data.get('slug')
-            if old_slug != new_slug and self.object.is_published:
-                # Check if user wants to create redirect
-                create_redirect = self.request.POST.get('create_redirect') == 'on'
-                if create_redirect:
-                    # Create redirect from old slug to new slug
-                    old_url = f'/institutes/{old_slug}/'
-                    new_url = f'/institutes/{new_slug}/'
-                    Redirect.objects.update_or_create(
-                        old_url=old_url,
-                        defaults={
-                            'new_url': new_url,
-                            'is_active': True,
-                            'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط المعهد: {self.object.name}'
-                        }
-                    )
-                    messages.success(
-                        self.request,
-                        f'تم تحديث المعهد وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
-                    )
-                else:
-                    messages.warning(
-                        self.request,
-                        f'تم تحديث المعهد، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                    )
-            else:
-                messages.success(
-                    self.request,
-                    f'تم تحديث المعهد "{self.object.name}" بنجاح'
-                )
-            
-            return redirect(self.success_url)
+            try:
+                with transaction.atomic():
+                    # حفظ الـ slug القديم قبل الحفظ
+                    old_slug = self.object.slug
+                    
+                    self.object = form.save()
+                    course_formset.instance = self.object
+                    course_formset.save()
+                    
+                    # إنشاء redirect لو الـ slug اتغير
+                    new_slug = form.cleaned_data.get('slug')
+                    if old_slug != new_slug and self.object.is_published:
+                        create_redirect = self.request.POST.get('create_redirect') == 'on'
+                        if create_redirect:
+                            old_url = f'/institutes/{old_slug}/'
+                            new_url = f'/institutes/{new_slug}/'
+                            Redirect.objects.update_or_create(
+                                old_url=old_url,
+                                defaults={
+                                    'new_url': new_url,
+                                    'is_active': True,
+                                    'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط المعهد: {self.object.name}'
+                                }
+                            )
+                            messages.success(
+                                self.request,
+                                f'تم تحديث المعهد وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                            )
+                        else:
+                            messages.warning(
+                                self.request,
+                                f'تم تحديث المعهد، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
+                            )
+                    else:
+                        messages.success(
+                            self.request,
+                            f'تم تحديث المعهد "{self.object.name}" بنجاح'
+                        )
+                
+                return redirect(self.success_url)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error updating institute: {e}")
+                messages.error(self.request, 'حدث خطأ أثناء تحديث المعهد. لم يتم حفظ أي تغييرات.')
+                return self.form_invalid(form)
         else:
             return self.form_invalid(form)
 
@@ -1371,7 +1657,7 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
         context['status_filter'] = self.request.GET.get('status', '')
         context['category_filter'] = self.request.GET.get('category', '')
         # Add items for list_page.html template
-        context['items'] = context.get('majors', [])
+        context['items'] = context.get('majors', context.get('object_list', []))
         return context
 
 
@@ -1407,7 +1693,9 @@ class MajorCreateView(ContentAdminRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        """Handle successful form submission with formsets."""
+        """Handle successful form submission with formsets.
+        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
+        """
         context = self.get_context_data()
         subjects_formset = context['subjects_formset']
         salary_formset = context['salary_formset']
@@ -1415,22 +1703,29 @@ class MajorCreateView(ContentAdminRequiredMixin, CreateView):
         
         if (subjects_formset.is_valid() and salary_formset.is_valid() and 
             countries_formset.is_valid()):
-            self.object = form.save()
-            
-            subjects_formset.instance = self.object
-            subjects_formset.save()
-            
-            salary_formset.instance = self.object
-            salary_formset.save()
-            
-            countries_formset.instance = self.object
-            countries_formset.save()
-            
-            messages.success(
-                self.request,
-                f'تم إنشاء التخصص "{self.object.name}" بنجاح'
-            )
-            return redirect('dashboard:major_edit', pk=self.object.pk)
+            try:
+                with transaction.atomic():
+                    self.object = form.save()
+                    
+                    subjects_formset.instance = self.object
+                    subjects_formset.save()
+                    
+                    salary_formset.instance = self.object
+                    salary_formset.save()
+                    
+                    countries_formset.instance = self.object
+                    countries_formset.save()
+                
+                messages.success(
+                    self.request,
+                    f'تم إنشاء التخصص "{self.object.name}" بنجاح'
+                )
+                return redirect('dashboard:major_edit', pk=self.object.pk)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error saving major: {e}")
+                messages.error(self.request, 'حدث خطأ أثناء حفظ التخصص. لم يتم حفظ أي بيانات.')
+                return self.form_invalid(form)
         else:
             return self.form_invalid(form)
 
@@ -1483,7 +1778,9 @@ class MajorUpdateView(ContentAdminRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        """Handle successful form submission with formsets."""
+        """Handle successful form submission with formsets.
+        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
+        """
         context = self.get_context_data()
         subjects_formset = context['subjects_formset']
         salary_formset = context['salary_formset']
@@ -1491,53 +1788,58 @@ class MajorUpdateView(ContentAdminRequiredMixin, UpdateView):
         
         if (subjects_formset.is_valid() and salary_formset.is_valid() and 
             countries_formset.is_valid()):
-            # Store old slug before saving
-            old_slug = self.object.slug
-            
-            self.object = form.save()
-            
-            subjects_formset.instance = self.object
-            subjects_formset.save()
-            
-            salary_formset.instance = self.object
-            salary_formset.save()
-            
-            countries_formset.instance = self.object
-            countries_formset.save()
-            
-            # Check if slug changed and create redirect if requested
-            new_slug = form.cleaned_data.get('slug')
-            if old_slug != new_slug and self.object.is_published:
-                # Check if user wants to create redirect
-                create_redirect = self.request.POST.get('create_redirect') == 'on'
-                if create_redirect:
-                    # Create redirect from old slug to new slug
-                    old_url = f'/majors/{old_slug}/'
-                    new_url = f'/majors/{new_slug}/'
-                    Redirect.objects.update_or_create(
-                        old_url=old_url,
-                        defaults={
-                            'new_url': new_url,
-                            'is_active': True,
-                            'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط التخصص: {self.object.name}'
-                        }
-                    )
-                    messages.success(
-                        self.request,
-                        f'تم تحديث التخصص وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
-                    )
-                else:
-                    messages.warning(
-                        self.request,
-                        f'تم تحديث التخصص، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                    )
-            else:
-                messages.success(
-                    self.request,
-                    f'تم تحديث التخصص "{self.object.name}" بنجاح'
-                )
-            
-            return redirect(self.success_url)
+            try:
+                with transaction.atomic():
+                    # حفظ الـ slug القديم قبل الحفظ
+                    old_slug = self.object.slug
+                    
+                    self.object = form.save()
+                    
+                    subjects_formset.instance = self.object
+                    subjects_formset.save()
+                    
+                    salary_formset.instance = self.object
+                    salary_formset.save()
+                    
+                    countries_formset.instance = self.object
+                    countries_formset.save()
+                    
+                    # إنشاء redirect لو الـ slug اتغير
+                    new_slug = form.cleaned_data.get('slug')
+                    if old_slug != new_slug and self.object.is_published:
+                        create_redirect = self.request.POST.get('create_redirect') == 'on'
+                        if create_redirect:
+                            old_url = f'/majors/{old_slug}/'
+                            new_url = f'/majors/{new_slug}/'
+                            Redirect.objects.update_or_create(
+                                old_url=old_url,
+                                defaults={
+                                    'new_url': new_url,
+                                    'is_active': True,
+                                    'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط التخصص: {self.object.name}'
+                                }
+                            )
+                            messages.success(
+                                self.request,
+                                f'تم تحديث التخصص وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                            )
+                        else:
+                            messages.warning(
+                                self.request,
+                                f'تم تحديث التخصص، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
+                            )
+                    else:
+                        messages.success(
+                            self.request,
+                            f'تم تحديث التخصص "{self.object.name}" بنجاح'
+                        )
+                
+                return redirect(self.success_url)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error updating major: {e}")
+                messages.error(self.request, 'حدث خطأ أثناء تحديث التخصص. لم يتم حفظ أي تغييرات.')
+                return self.form_invalid(form)
         else:
             return self.form_invalid(form)
 
@@ -1628,7 +1930,7 @@ class CategoryListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, List
         context['page_title'] = 'إدارة فئات المقالات'
         context['search_query'] = self.request.GET.get('search', '')
         # Add items for list_page.html template
-        context['items'] = context.get('categories', [])
+        context['items'] = context.get('categories', context.get('object_list', []))
         return context
 
 
@@ -1788,7 +2090,7 @@ class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView)
         context['page_title'] = 'إدارة وسوم المقالات'
         context['search_query'] = self.request.GET.get('search', '')
         # Add items for list_page.html template
-        context['items'] = context.get('tags', [])
+        context['items'] = context.get('tags', context.get('object_list', []))
         return context
 
 
@@ -1972,7 +2274,7 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
         context['status_filter'] = self.request.GET.get('status', '')
         context['categories'] = Category.objects.all().order_by('name')
         # Add items for list_page.html template
-        context['items'] = context.get('articles', [])
+        context['items'] = context.get('articles', context.get('object_list', []))
         return context
 
 
@@ -1994,23 +2296,32 @@ class ArticleCreateView(ContentAdminRequiredMixin, CreateView):
     template_name = 'dashboard/articles/create.html'
 
     def form_valid(self, form):
-        """Handle successful form submission."""
-        # Set author to current user
-        self.object = form.save(commit=False)
-        self.object.author = self.request.user
-        
-        # Sanitize HTML content before saving
-        from apps.html_editor.sanitizer import sanitize_article_html
-        self.object.content = sanitize_article_html(self.object.content)
-        
-        self.object.save()
-        form.save_m2m()  # Save many-to-many relationships
-        
-        messages.success(
-            self.request,
-            f'تم إنشاء المقالة "{self.object.title}" بنجاح'
-        )
-        return redirect('dashboard:article_edit', pk=self.object.pk)
+        """Handle successful form submission.
+        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
+        """
+        try:
+            with transaction.atomic():
+                # Set author to current user
+                self.object = form.save(commit=False)
+                self.object.author = self.request.user
+                
+                # Sanitize HTML content before saving
+                from apps.html_editor.sanitizer import sanitize_article_html
+                self.object.content = sanitize_article_html(self.object.content)
+                
+                self.object.save()
+                form.save_m2m()  # Save many-to-many relationships
+            
+            messages.success(
+                self.request,
+                f'تم إنشاء المقالة "{self.object.title}" بنجاح'
+            )
+            return redirect('dashboard:article_edit', pk=self.object.pk)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error saving article: {e}")
+            messages.error(self.request, 'حدث خطأ أثناء حفظ المقالة. لم يتم حفظ أي بيانات.')
+            return self.form_invalid(form)
 
     def form_invalid(self, form):
         """Handle form errors."""
@@ -2057,50 +2368,57 @@ class ArticleUpdateView(ContentAdminRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        """Handle successful form submission."""
-        # Store old slug before saving
-        old_slug = self.object.slug
-        
-        # Sanitize HTML content before saving
-        from apps.html_editor.sanitizer import sanitize_article_html
-        self.object = form.save(commit=False)
-        self.object.content = sanitize_article_html(self.object.content)
-        self.object.save()
-        form.save_m2m()  # Save many-to-many relationships
-        
-        # Check if slug changed and create redirect if requested
-        new_slug = form.cleaned_data.get('slug')
-        if old_slug != new_slug and self.object.is_published:
-            # Check if user wants to create redirect
-            create_redirect = self.request.POST.get('create_redirect') == 'on'
-            if create_redirect:
-                # Create redirect from old slug to new slug
-                old_url = f'/articles/{old_slug}/'
-                new_url = f'/articles/{new_slug}/'
-                Redirect.objects.update_or_create(
-                    old_url=old_url,
-                    defaults={
-                        'new_url': new_url,
-                        'is_active': True,
-                        'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط المقالة: {self.object.title}'
-                    }
-                )
-                messages.success(
-                    self.request,
-                    f'تم تحديث المقالة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
-                )
-            else:
-                messages.warning(
-                    self.request,
-                    f'تم تحديث المقالة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                )
-        else:
-            messages.success(
-                self.request,
-                f'تم تحديث المقالة "{self.object.title}" بنجاح'
-            )
-        
-        return redirect(self.success_url)
+        """Handle successful form submission.
+        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
+        """
+        try:
+            with transaction.atomic():
+                # حفظ الـ slug القديم قبل الحفظ
+                old_slug = self.object.slug
+                
+                # Sanitize HTML content before saving
+                from apps.html_editor.sanitizer import sanitize_article_html
+                self.object = form.save(commit=False)
+                self.object.content = sanitize_article_html(self.object.content)
+                self.object.save()
+                form.save_m2m()  # Save many-to-many relationships
+                
+                # إنشاء redirect لو الـ slug اتغير
+                new_slug = form.cleaned_data.get('slug')
+                if old_slug != new_slug and self.object.is_published:
+                    create_redirect = self.request.POST.get('create_redirect') == 'on'
+                    if create_redirect:
+                        old_url = f'/articles/{old_slug}/'
+                        new_url = f'/articles/{new_slug}/'
+                        Redirect.objects.update_or_create(
+                            old_url=old_url,
+                            defaults={
+                                'new_url': new_url,
+                                'is_active': True,
+                                'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط المقالة: {self.object.title}'
+                            }
+                        )
+                        messages.success(
+                            self.request,
+                            f'تم تحديث المقالة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                        )
+                    else:
+                        messages.warning(
+                            self.request,
+                            f'تم تحديث المقالة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
+                        )
+                else:
+                    messages.success(
+                        self.request,
+                        f'تم تحديث المقالة "{self.object.title}" بنجاح'
+                    )
+            
+            return redirect(self.success_url)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error updating article: {e}")
+            messages.error(self.request, 'حدث خطأ أثناء تحديث المقالة. لم يتم حفظ أي تغييرات.')
+            return self.form_invalid(form)
 
     def form_invalid(self, form):
         """Handle form errors."""
@@ -2260,7 +2578,7 @@ class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
         context['export_url'] = f'?{"&".join(query_params)}' if query_params else ''
         
         # Add items for list_page.html template
-        context['items'] = context.get('leads', [])
+        context['items'] = context.get('leads', context.get('object_list', []))
         
         return context
 
@@ -2726,3 +3044,39 @@ class EditorImageUploadView(LoginRequiredMixin, View):
     """
     def post(self, request):
         return editor_image_upload(request)
+
+
+class SiteSettingsUpdateView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, UpdateView):
+    """
+    View for updating site-wide settings.
+    عرض تعديل إعدادات الموقع العامة
+    """
+    model = SiteSettings
+    form_class = SiteSettingsForm
+    template_name = 'dashboard/settings.html'
+    success_url = reverse_lazy('dashboard:settings')
+
+    def get_object(self, queryset=None):
+        """Get the singleton SiteSettings instance."""
+        return SiteSettings.get_settings()
+
+    def get_breadcrumbs(self):
+        """Build breadcrumbs for settings page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('الإعدادات العامة')
+            .build())
+
+    def form_valid(self, form):
+        """Add success message upon successful saving."""
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم حفظ الإعدادات العامة بنجاح')
+        return response
+
+    def get_context_data(self, **kwargs):
+        """Add custom variables for page rendering."""
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'الإعدادات العامة للموقع'
+        context['cancel_url'] = reverse_lazy('dashboard:home')
+        return context
+

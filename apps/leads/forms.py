@@ -38,16 +38,12 @@ class LeadForm(forms.ModelForm):
         model = Lead
         fields = ['lead_type', 'name', 'email', 'phone', 'message']
         widgets = {
-            # Lead Type
-            'lead_type': forms.Select(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'required': True,
-                'dir': 'rtl',
-            }),
+            # Lead Type - hidden in sidebar form, visible in standalone form
+            'lead_type': forms.HiddenInput(),
             
             # Name
             'name': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'form-control',
                 'placeholder': 'الاسم الكامل',
                 'required': True,
                 'dir': 'rtl',
@@ -56,16 +52,14 @@ class LeadForm(forms.ModelForm):
             
             # Email
             'email': forms.EmailInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'form-control',
                 'placeholder': 'البريد الإلكتروني',
-                'required': True,
                 'dir': 'ltr',
-                'type': 'email',
             }),
             
             # Phone
             'phone': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'form-control',
                 'placeholder': 'رقم الهاتف',
                 'required': True,
                 'dir': 'ltr',
@@ -74,11 +68,10 @@ class LeadForm(forms.ModelForm):
             
             # Message
             'message': forms.Textarea(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'form-control',
                 'placeholder': 'الرسالة أو الاستفسار',
-                'required': True,
                 'dir': 'rtl',
-                'rows': 5,
+                'rows': 4,
             }),
         }
         labels = {
@@ -89,12 +82,19 @@ class LeadForm(forms.ModelForm):
             'message': 'الرسالة',
         }
         help_texts = {
-            'lead_type': 'اختر نوع رسالتك',
             'name': 'أدخل اسمك الكامل',
             'email': 'أدخل بريدك الإلكتروني الصحيح',
-            'phone': 'أدخل رقم هاتفك (يدعم الأرقام والرموز مثل + و -)',
+            'phone': 'أدخل رقم هاتفك',
             'message': 'اكتب رسالتك أو استفسارك',
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # lead_type defaults to 'contact' if not provided
+        self.fields['lead_type'].initial = 'contact'
+        # email and message are optional
+        self.fields['email'].required = False
+        self.fields['message'].required = False
     
     def clean_website(self):
         """
@@ -150,14 +150,10 @@ class LeadForm(forms.ModelForm):
     def clean_message(self):
         """
         Validate message content.
-        Check for minimum length and reject obvious spam patterns.
+        Message is optional, but if provided check for spam patterns.
         """
         message = self.cleaned_data.get('message')
-        if message:
-            # Check minimum length
-            if len(message.strip()) < 10:
-                raise ValidationError('الرسالة قصيرة جداً. يجب أن تكون على الأقل 10 أحرف')
-            
+        if message and message.strip():
             # Check for excessive URLs (spam indicator)
             url_count = len(re.findall(r'https?://', message))
             if url_count > 3:

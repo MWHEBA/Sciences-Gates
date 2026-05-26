@@ -1,0 +1,520 @@
+/**
+ * Faculty Programs Manager Styles
+ * تصميم إدارة الكليات والبرامج
+ */
+
+/* ─── Faculty Items Container ─── */
+#faculty-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 48px;
+}
+
+/* ─── Faculty Item ─── */
+.faculty-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface);
+    transition: all 0.2s ease;
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.faculty-item--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.faculty-item--existing {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.faculty-item:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-card);
+}
+
+/* ─── Faculty Drag Handle ─── */
+.faculty-item__drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: grab;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+
+.faculty-item__drag-handle:hover {
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+}
+
+.faculty-item__drag-handle:active {
+    cursor: grabbing;
+}
+
+/* ─── Faculty Content ─── */
+.faculty-item__content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.faculty-item__number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: var(--surface-2);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+}
+
+.faculty-item__input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.faculty-item__input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-muted);
+}
+
+.faculty-item__input::placeholder {
+    color: var(--text-muted);
+}
+
+/* ─── Faculty Delete Button ─── */
+.faculty-item__delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.faculty-item__delete:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
+}
+
+/* ─── Faculty Dragging State ─── */
+.faculty-item--dragging {
+    opacity: 0.5;
+    border-style: dashed;
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+}
+
+.faculty-item--drag-over {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-muted);
+}
+
+/* ─── Faculty Deleted State ─── */
+.faculty-item--deleted {
+    opacity: 0;
+    transform: translateX(20px);
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+/* ─── Empty State ─── */
+.faculty-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-2);
+    text-align: center;
+    gap: 12px;
+}
+
+.faculty-empty-state__icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.faculty-empty-state__text {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+}
+
+.faculty-empty-state__hint {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin: 0;
+    opacity: 0.7;
+}
+
+/* ─── Faculty Section Header ─── */
+.faculty-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.faculty-section__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.faculty-section__title h2 {
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.faculty-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 7px;
+    border-radius: 12px;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ─── Faculty Add Button ─── */
+.faculty-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.faculty-add-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background-color: var(--primary-muted);
+}
+
+.faculty-add-btn svg {
+    flex-shrink: 0;
+}
+
+/* ─── Programs Table ─── */
+.fpm-programs-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-top: 12px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.fpm-programs-table thead {
+    background: var(--primary);
+    color: white;
+}
+
+.fpm-programs-table th {
+    padding: 12px 16px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 14px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fpm-programs-table th:last-child {
+    border-left: none;
+    text-align: center;
+}
+
+.fpm-programs-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.15s ease;
+}
+
+.fpm-programs-table tbody tr:hover:not(.fpm-empty-row) {
+    background-color: var(--surface-2);
+}
+
+.fpm-programs-table td {
+    padding: 12px 16px;
+    vertical-align: middle;
+}
+
+/* ─── Program Input Fields ─── */
+.fpm-program-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    box-sizing: border-box;
+}
+
+.fpm-program-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-muted);
+}
+
+.fpm-program-input::placeholder {
+    color: var(--text-muted);
+}
+
+.fpm-program-input--short {
+    max-width: 140px;
+}
+
+/* ─── Empty Row ─── */
+.fpm-empty-row {
+    background-color: var(--surface-2);
+}
+
+.fpm-empty-message {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* ─── Deleted Program Row ─── */
+.fpm-program-row--deleted {
+    opacity: 0.3;
+    pointer-events: none;
+    background-color: var(--danger-light);
+}
+
+/* ─── Add Program Button ─── */
+.fpm-add-program-wrapper {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
+.fpm-add-program-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.fpm-add-program-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background-color: var(--primary-muted);
+}
+
+.fpm-add-program-btn svg {
+    flex-shrink: 0;
+}
+
+/* ─── Delete Program Button ─── */
+.fpm-delete-program-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.fpm-delete-program-btn:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
+}
+
+.fpm-program-actions {
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* ─── Faculty Item Programs Wrapper ─── */
+.faculty-item__programs-wrapper {
+    grid-column: 1 / -1;
+    padding: 16px;
+    background-color: var(--surface-2);
+    border-top: 1px solid var(--border);
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ─── Faculty Item Toggle Button ─── */
+.faculty-item__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.faculty-item__toggle:hover {
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+}
+
+.faculty-item__toggle svg {
+    transition: transform 0.2s ease;
+}
+
+.faculty-item__toggle svg.rotated {
+    transform: rotate(180deg);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+    .faculty-item {
+        grid-template-columns: auto 1fr auto auto;
+        gap: 8px;
+        padding: 10px 12px;
+    }
+
+    .faculty-item__content {
+        gap: 8px;
+    }
+
+    .faculty-item__number {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
+
+    .faculty-section__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .fpm-programs-table {
+        font-size: 13px;
+    }
+
+    .fpm-programs-table th,
+    .fpm-programs-table td {
+        padding: 10px 12px;
+    }
+
+    .fpm-program-input {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+
+    .fpm-program-input--short {
+        max-width: 100px;
+    }
+
+    .fpm-add-program-wrapper {
+        padding: 10px 12px;
+    }
+
+    .fpm-add-program-btn {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+
+    .fpm-delete-program-btn {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* ─── Dark Mode Support ─── */
+@media (prefers-color-scheme: dark) {
+    .fpm-program-input {
+        background-color: var(--surface);
+        color: var(--text-primary);
+    }
+
+    .fpm-program-input:focus {
+        box-shadow: 0 0 0 3px var(--primary-muted);
+    }
+}

@@ -29,29 +29,19 @@
             <form method="post" class="form" novalidate>
                 {% csrf_token %}
                 
-                <!-- Hidden source page field -->
+                <!-- Hidden fields -->
                 <input type="hidden" name="source_page" value="{{ source_page }}">
+                <input type="hidden" name="lead_type" value="contact">
                 
                 <!-- Honeypot field (hidden from users) -->
                 <div style="display: none;">
                     <input type="text" name="website" placeholder="Website">
                 </div>
 
-                <!-- Lead Type Field -->
-                <div class="form-group">
-                    <label for="{{ form.lead_type.id_for_label }}" class="form-label">
-                        {{ form.lead_type.label }} <span class="form-required">*</span>
-                    </label>
-                    {{ form.lead_type }}
-                    {% if form.lead_type.errors %}
-                        <p class="form-error" role="alert">{{ form.lead_type.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
                 <!-- Name Field -->
                 <div class="form-group">
                     <label for="{{ form.name.id_for_label }}" class="form-label">
-                        {{ form.name.label }} <span class="form-required">*</span>
+                        الاسم الكامل <span class="form-required">*</span>
                     </label>
                     {{ form.name }}
                     {% if form.name.errors %}
@@ -59,10 +49,42 @@
                     {% endif %}
                 </div>
 
+                <!-- Phone Field with Country Code -->
+                <div class="form-group">
+                    <label for="id_phone" class="form-label">
+                        رقم الهاتف <span class="form-required">*</span>
+                    </label>
+                    <div class="intl-phone-wrapper">
+                        <div class="intl-phone-select" id="intlPhoneSelect">
+                            <button type="button" class="intl-phone-selected" id="intlPhoneBtn" aria-haspopup="listbox" aria-expanded="false">
+                                <img src="https://flagcdn.com/w20/{{ default_country }}.png" alt="" class="intl-phone-flag" id="intlPhoneFlag">
+                                <span id="intlPhoneCode">{{ default_code }}</span>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="intl-phone-arrow"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <ul class="intl-phone-dropdown" id="intlPhoneDropdown" role="listbox">
+                                <li class="intl-phone-search-wrap">
+                                    <input type="text" class="intl-phone-search" id="intlPhoneSearch" placeholder="ابحث عن دولة..." autocomplete="off">
+                                </li>
+                                {% for iso, name, code, placeholder in phone_countries %}
+                                <li role="option" data-code="{{ code }}" data-flag="{{ iso }}" data-placeholder="{{ placeholder }}">
+                                    <img data-src="https://flagcdn.com/w20/{{ iso }}.png" alt="" loading="lazy"> <span class="intl-phone-name">{{ name }}</span> <span class="intl-phone-dial" dir="ltr">{{ code }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <input type="tel" name="phone_number" id="id_phone" class="intl-phone-input" placeholder="{{ default_placeholder }}" dir="ltr" required>
+                    </div>
+                    <input type="hidden" name="country_code" id="id_country_code" value="{{ default_code }}">
+                    <input type="hidden" name="phone" id="id_phone_combined">
+                    {% if form.phone.errors %}
+                        <p class="form-error" role="alert">{{ form.phone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
                 <!-- Email Field -->
                 <div class="form-group">
                     <label for="{{ form.email.id_for_label }}" class="form-label">
-                        {{ form.email.label }} <span class="form-required">*</span>
+                        البريد الإلكتروني
                     </label>
                     {{ form.email }}
                     {% if form.email.errors %}
@@ -70,21 +92,10 @@
                     {% endif %}
                 </div>
 
-                <!-- Phone Field -->
-                <div class="form-group">
-                    <label for="{{ form.phone.id_for_label }}" class="form-label">
-                        {{ form.phone.label }} <span class="form-required">*</span>
-                    </label>
-                    {{ form.phone }}
-                    {% if form.phone.errors %}
-                        <p class="form-error" role="alert">{{ form.phone.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
                 <!-- Message Field -->
                 <div class="form-group">
                     <label for="{{ form.message.id_for_label }}" class="form-label">
-                        {{ form.message.label }} <span class="form-required">*</span>
+                        الرسالة <span class="form-label-optional">(اختياري)</span>
                     </label>
                     {{ form.message }}
                     {% if form.message.errors %}
@@ -111,6 +122,87 @@
         </div>
     </div>
 </section>
+
+<!-- Phone field script -->
+<script>
+(function() {
+    var wrapper = document.getElementById('intlPhoneSelect');
+    if (!wrapper) return;
+    
+    var btn = document.getElementById('intlPhoneBtn');
+    var dropdown = document.getElementById('intlPhoneDropdown');
+    var flagImg = document.getElementById('intlPhoneFlag');
+    var codeSpan = document.getElementById('intlPhoneCode');
+    var hiddenCode = document.getElementById('id_country_code');
+    var form = wrapper.closest('form');
+    
+    btn.addEventListener('click', function() {
+        var isOpen = dropdown.classList.contains('intl-phone-dropdown--open');
+        dropdown.classList.toggle('intl-phone-dropdown--open');
+        btn.setAttribute('aria-expanded', !isOpen);
+        if (!isOpen && !dropdown.dataset.loaded) {
+            dropdown.querySelectorAll('img[data-src]').forEach(function(img) {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+            });
+            dropdown.dataset.loaded = '1';
+        }
+        if (!isOpen) {
+            var search = document.getElementById('intlPhoneSearch');
+            if (search) setTimeout(function() { search.focus(); }, 50);
+        }
+    });
+    
+    var searchInput = document.getElementById('intlPhoneSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            var query = this.value.trim().toLowerCase();
+            var items = dropdown.querySelectorAll('li[role="option"]');
+            items.forEach(function(li) {
+                var name = li.querySelector('.intl-phone-name');
+                var dial = li.querySelector('.intl-phone-dial');
+                var text = (name ? name.textContent : '') + ' ' + (dial ? dial.textContent : '');
+                li.style.display = text.toLowerCase().indexOf(query) > -1 ? '' : 'none';
+            });
+        });
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') e.preventDefault();
+        });
+    }
+    
+    dropdown.addEventListener('click', function(e) {
+        var li = e.target.closest('li[role="option"]');
+        if (!li) return;
+        var code = li.getAttribute('data-code');
+        var flag = li.getAttribute('data-flag');
+        var placeholder = li.getAttribute('data-placeholder');
+        codeSpan.textContent = code;
+        flagImg.src = 'https://flagcdn.com/w20/' + flag + '.png';
+        hiddenCode.value = code;
+        var phoneInput = document.getElementById('id_phone');
+        if (phoneInput && placeholder) phoneInput.placeholder = placeholder;
+        dropdown.classList.remove('intl-phone-dropdown--open');
+        btn.setAttribute('aria-expanded', 'false');
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!wrapper.contains(e.target)) {
+            dropdown.classList.remove('intl-phone-dropdown--open');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    });
+    
+    if (form) {
+        form.addEventListener('submit', function() {
+            var number = document.getElementById('id_phone');
+            var combined = document.getElementById('id_phone_combined');
+            if (number && combined && hiddenCode) {
+                combined.value = hiddenCode.value + number.value.replace(/^0+/, '');
+            }
+        });
+    }
+})();
+</script>
 
 <!-- CTA Band -->
 {% include 'partials/cta-band.html' %}

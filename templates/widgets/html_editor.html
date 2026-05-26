@@ -1,20 +1,12 @@
 {% load static %}
-{# Professional HTML Editor Widget — Sciences Gates Dashboard #}
-{# Renders a .pro-editor-mount div that html_editor.js bootstraps into a full editor #}
-
 <div class="pro-editor-mount"
      id="editor-mount-{{ widget.attrs.id }}"
      data-field-name="{{ widget.name }}">
-    {#
-        A hidden textarea carries the initial value.
-        html_editor.js reads data-initial-value and data-name,
-        then replaces this element with the real hidden textarea it manages.
-    #}
     <textarea
         name="{{ widget.name }}"
-        data-initial-value="{{ widget.value|default:'' }}"
         data-name="{{ widget.name }}"
+        data-is-initial="true"
         style="display:none;"
         aria-hidden="true"
-    ></textarea>
+    >{{ widget.value|default:'' }}</textarea>
 </div>
