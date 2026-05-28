@@ -33,7 +33,7 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
         max_length=20,
         choices=MAJOR_CATEGORY_CHOICES,
         default='other',
-        verbose_name='فئة التخصص',
+        verbose_name='تصنيف التخصص',
         help_text='تصنيف التخصص حسب المجال',
         db_index=True
     )

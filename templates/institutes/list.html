@@ -8,26 +8,26 @@
 <!-- Page Header -->
 <section class="section section-bg-white">
     <div class="container">
-        <div style="text-align:center; max-width:800px; margin:0 auto 4rem;">
-            <h1 style="color:var(--primary); margin-bottom:0.25rem; font-size:clamp(2rem, 5vw, 3rem);">معاهد اللغة الإنجليزية</h1>
+        <div class="inl-s-708d1aa91e">
+            <h1 class="inl-s-ae35c2942a">معاهد اللغة الإنجليزية</h1>
             {% include 'components/breadcrumb.html' %}
-            <p style="font-size:1.125rem; color:var(--text-body); line-height:1.8; margin-top:1rem;">اختر من بين أفضل معاهد اللغة الإنجليزية المعتمدة دولياً. برامج مكثفة وفعالة للإيلتس والتوفل والإعداد الأكاديمي.</p>
+            <p class="inl-s-a6cd7f019c">اختر من بين أفضل معاهد اللغة الإنجليزية المعتمدة دولياً. برامج مكثفة وفعالة للإيلتس والتوفل والإعداد الأكاديمي.</p>
         </div>
 
         <!-- Search and Filters - Marketplace Pattern -->
-        <div style="background:var(--bg-gray); padding:2rem; border-radius:var(--radius-lg); margin-bottom:3rem; display:flex; gap:1rem; flex-wrap:wrap; align-items:center; box-shadow:var(--shadow-soft);">
-            <form method="get" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; width:100%;">
-                <div style="flex-grow:1; min-width:250px;">
-                    <input type="text" name="q" class="form-control" placeholder="ابحث عن اسم المعهد..." value="{{ request.GET.q }}" style="border:none; box-shadow:var(--shadow-soft); padding:0.75rem 1rem; border-radius:var(--radius-md);" aria-label="البحث عن معهد">
+        <div class="inl-s-a6f6d72e1f">
+            <form method="get" class="inl-s-62976f47fa">
+                <div class="inl-s-9f8f6d57cb">
+                    <input type="text" name="q" class="form-control" placeholder="ابحث عن اسم المعهد..." value="{{ request.GET.q }}" class="inl-s-e88f3fe8aa" aria-label="البحث عن معهد">
                 </div>
-                <select name="city" class="form-control" style="width:200px; border:none; box-shadow:var(--shadow-soft); padding:0.75rem 1rem; border-radius:var(--radius-md);" aria-label="اختر المدينة">
+                <select name="city" class="form-control inl-s-981dd51229" aria-label="اختر المدينة">
                     <option value="">جميع المدن</option>
                     <option value="kl" {% if request.GET.city == 'kl' %}selected{% endif %}>كوالالمبور</option>
                     <option value="selangor" {% if request.GET.city == 'selangor' %}selected{% endif %}>سيلانجور</option>
                     <option value="penang" {% if request.GET.city == 'penang' %}selected{% endif %}>بينانج</option>
                     <option value="johor" {% if request.GET.city == 'johor' %}selected{% endif %}>جوهر</option>
                 </select>
-                <button type="submit" class="btn btn--primary" style="cursor:pointer;">بحــث</button>
+                <button type="submit" class="btn btn--primary inl-s-58aba5753b">بحــث</button>
             </form>
         </div>
 

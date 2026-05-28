@@ -1,8 +1,8 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}حذف الفئة - Science Gates{% endblock %}
+{% block title %}حذف التصنيف - Science Gates{% endblock %}
 
-{% block page_title %}حذف الفئة{% endblock %}
+{% block page_title %}حذف التصنيف{% endblock %}
 
 {% block content %}
 <!-- Back Link -->
@@ -11,7 +11,7 @@
         <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
-        العودة إلى قائمة الفئات
+        العودة إلى قائمة التصنيفات
     </a>
 </div>
 
@@ -27,9 +27,9 @@
     </div>
     
     <!-- Title and Message -->
-    <h2 class="text-2xl font-semibold text-gray-900 mb-4 text-center">حذف الفئة</h2>
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4 text-center">حذف التصنيف</h2>
     <p class="text-gray-600 text-center mb-6">
-        هل أنت متأكد من رغبتك في حذف الفئة <strong>{{ object.name }}</strong>؟
+        هل أنت متأكد من رغبتك في حذف التصنيف <strong>{{ object.name }}</strong>؟
     </p>
     
     <!-- Warning Message -->
@@ -41,8 +41,8 @@
             <div>
                 <h3 class="text-sm font-normal text-yellow-800">تنبيه مهم</h3>
                 <div class="text-sm text-yellow-700 mt-2">
-                    <p>هذه الفئة تحتوي على <strong>{{ article_count }}</strong> مقالة.</p>
-                    <p class="mt-1">عند حذف الفئة، ستبقى المقالات موجودة لكن بدون فئة.</p>
+                    <p>هذا التصنيف يحتوي على <strong>{{ article_count }}</strong> مقالة.</p>
+                    <p class="mt-1">عند حذف التصنيف، ستبقى المقالات موجودة لكن بدون تصنيف.</p>
                 </div>
             </div>
         </div>
@@ -50,7 +50,7 @@
     
     <!-- Category Details -->
     <div class="bg-gray-50 rounded-lg p-4 mb-6">
-        <h3 class="text-sm font-normal text-gray-900 mb-3">تفاصيل الفئة:</h3>
+        <h3 class="text-sm font-normal text-gray-900 mb-3">تفاصيل التصنيف:</h3>
         <dl class="space-y-2 text-sm">
             <div class="flex justify-between">
                 <dt class="text-gray-600">الاسم:</dt>
@@ -82,7 +82,7 @@
                 <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
-                نعم، احذف الفئة
+                نعم، احذف التصنيف
             </button>
         </form>
         

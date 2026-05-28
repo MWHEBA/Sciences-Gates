@@ -21,8 +21,8 @@
                     <input type="text" name="q" class="form-control" placeholder="ابحث عن مقالة..." value="{{ request.GET.q }}" aria-label="البحث عن مقالة">
                 </div>
                 {% if categories %}
-                <select name="category" class="form-control" aria-label="اختر الفئة">
-                    <option value="">جميع الفئات</option>
+                <select name="category" class="form-control" aria-label="اختر التصنيف">
+                    <option value="">جميع التصنيفات</option>
                     {% for category in categories %}
                         <option value="{{ category.id }}" {% if request.GET.category|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
                     {% endfor %}

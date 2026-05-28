@@ -14,25 +14,25 @@ class Category(TimestampedModel):
     """Article category model."""
     name = models.CharField(
         max_length=200,
-        verbose_name='اسم الفئة',
+        verbose_name='اسم التصنيف',
         db_index=True
     )
     slug = models.SlugField(
         max_length=200,
         unique=True,
         verbose_name='الرابط',
-        help_text='رابط الفئة (يدعم الأحرف العربية)',
+        help_text='رابط التصنيف (يدعم الأحرف العربية)',
         allow_unicode=True
     )
     description = models.TextField(
         blank=True,
         verbose_name='الوصف',
-        help_text='وصف الفئة'
+        help_text='وصف التصنيف'
     )
 
     class Meta:
-        verbose_name = 'فئة'
-        verbose_name_plural = 'الفئات'
+        verbose_name = 'تصنيف'
+        verbose_name_plural = 'التصنيفات'
         ordering = ['name']
         indexes = [
             models.Index(fields=['name']),
@@ -102,7 +102,7 @@ class Article(TimestampedModel, PublishableModel, SEOMixin):
         null=True,
         blank=True,
         related_name='articles',
-        verbose_name='الفئة'
+        verbose_name='التصنيف'
     )
     tags = models.ManyToManyField(
         Tag,

@@ -93,6 +93,28 @@ class ArticleDetailView(BreadcrumbMixin, DetailView):
         
         return trail.build()
     
+    def post(self, request, *args, **kwargs):
+        """Handle form submission."""
+        from apps.leads.forms import LeadForm
+        
+        form = LeadForm(request.POST)
+        if form.is_valid():
+            # Save the lead
+            lead = form.save(commit=False)
+            lead.source_page = request.path
+            lead.referrer = request.META.get('HTTP_REFERER', '')
+            lead.save()
+            
+            # Redirect to success page or return success message
+            from django.shortcuts import redirect
+            return redirect(request.path + '?success=true')
+        
+        # If form is invalid, re-render with errors
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        context['form'] = form
+        return self.render_to_response(context)
+    
     def get_context_data(self, **kwargs):
         """Add additional context for the template."""
         context = super().get_context_data(**kwargs)
@@ -102,6 +124,18 @@ class ArticleDetailView(BreadcrumbMixin, DetailView):
         context['related_universities'] = article.related_universities.all()
         context['related_institutes'] = article.related_institutes.all()
         context['related_majors'] = article.related_majors.all()
+        
+        # Get related articles from the same category
+        if article.category:
+            context['related_articles'] = Article.objects.filter(
+                publish_status='published',
+                category=article.category
+            ).exclude(pk=article.pk).select_related('category', 'author')[:3]
+        
+        # Add lead form
+        from apps.leads.forms import LeadForm
+        if 'form' not in context:
+            context['form'] = LeadForm()
         
         return context
 

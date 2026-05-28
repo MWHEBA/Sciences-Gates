@@ -1,26 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Mobile Menu Toggle
-    const hamburger = document.querySelector('.header__hamburger');
-    const mobileNav = document.querySelector('.header__nav');
+    const mobileMenuBtn = document.querySelector('.site-header__menu-btn');
+    const siteNav = document.querySelector('.site-header__nav');
     
-    if (hamburger && mobileNav) {
-        hamburger.addEventListener('click', () => {
-            hamburger.classList.toggle('is-active');
-            mobileNav.classList.toggle('is-open');
+    if (mobileMenuBtn && siteNav) {
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenuBtn.classList.toggle('is-active');
+            siteNav.classList.toggle('is-open');
             document.body.classList.toggle('no-scroll');
         });
     }
 
-    // 2. Sticky Header on Scroll
-    const header = document.querySelector('.header');
-    if (header) {
+    // 2. Scroll: hide topbar, slide header to top
+    const topbar = document.getElementById('site-topbar');
+    const siteHeader = document.getElementById('site-header');
+    if (siteHeader) {
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                header.classList.add('header--compact');
+            if (window.scrollY > 5) {
+                if (topbar) topbar.classList.add('topbar--hidden');
+                siteHeader.classList.add('site-header--scrolled');
             } else {
-                header.classList.remove('header--compact');
+                if (topbar) topbar.classList.remove('topbar--hidden');
+                siteHeader.classList.remove('site-header--scrolled');
             }
-        });
+        }, { passive: true });
     }
 
     // 3. Accordion Logic
@@ -64,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const item = button.closest('.detail-faculty-item');
                     if (item) {
                         // Scroll to the top of the accordion item with offset for header
-                        const headerHeight = document.querySelector('.header')?.offsetHeight || 80;
+                        const headerHeight = document.getElementById('site-header')?.offsetHeight || 72;
                         const itemTop = item.getBoundingClientRect().top + window.scrollY - headerHeight - 20;
                         window.scrollTo({
                             top: itemTop,
@@ -87,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const item = button.closest('.detail-faq-item');
                     if (item) {
                         // Scroll to the top of the accordion item with offset for header
-                        const headerHeight = document.querySelector('.header')?.offsetHeight || 80;
+                        const headerHeight = document.getElementById('site-header')?.offsetHeight || 72;
                         const itemTop = item.getBoundingClientRect().top + window.scrollY - headerHeight - 20;
                         window.scrollTo({
                             top: itemTop,

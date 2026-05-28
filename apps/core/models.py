@@ -302,3 +302,14 @@ class SiteSettings(models.Model):
         """Get or create the singleton instance."""
         settings, created = cls.objects.get_or_create(pk=1)
         return settings
+
+    @property
+    def facebook(self):
+        """Placeholder for facebook link since the field doesn't exist in the database."""
+        return None
+
+    @property
+    def instagram(self):
+        """Placeholder for instagram link since the field doesn't exist in the database."""
+        return None
+

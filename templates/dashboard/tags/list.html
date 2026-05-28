@@ -1,168 +1,159 @@
-{% extends 'dashboard/base.html' %}
+{% extends "dashboard/base.html" %}
+{% load static %}
 
-{% block title %}إدارة وسوم المقالات - Science Gates{% endblock %}
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
 
-{% block page_title %}إدارة وسوم المقالات{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+{% block page_description %}{{ page_description }}{% endblock %}
+
+{% block page_actions %}
+{% for btn in action_buttons %}
+<a href="{{ btn.url }}" class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'">
+    <svg class="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+    </svg>
+    {{ btn.label }}
+</a>
+{% endfor %}
+{% endblock %}
 
 {% block content %}
-<!-- Header with Create Button -->
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <p class="text-gray-600 text-sm">إدارة جميع وسوم المقالات والأخبار</p>
-    </div>
-    <a href="{% url 'dashboard:tag_create' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-normal">
-        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        إضافة وسم جديد
-    </a>
-</div>
+<div class="space-y-6">
+    {% if items %}
+        <!-- Filter Bar -->
+        {% include "dashboard/components/filter_bar.html" with search_placeholder=search_placeholder filters=filters search_value=search_query base_url=base_url %}
 
-<!-- Search Section -->
-<div class="bg-white rounded-lg shadow p-6 mb-6">
-    <form method="get" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Search Input -->
-            <div>
-                <label for="search" class="block text-sm font-normal text-gray-700 mb-2">البحث</label>
-                <input 
-                    type="text" 
-                    id="search" 
-                    name="search" 
-                    value="{{ search_query }}"
-                    placeholder="ابحث عن اسم الوسم أو الرابط..."
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-            </div>
-        </div>
+        <!-- Data Table -->
+        {% include "dashboard/components/data_table.html" with columns=columns rows=items edit_url_name=edit_url_name delete_url_name=delete_url_name %}
         
-        <!-- Search Button -->
-        <div class="flex gap-2">
-            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-normal">
-                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                بحث
-            </button>
-            <a href="{% url 'dashboard:tag_list' %}" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 font-normal">
-                إعادة تعيين
-            </a>
-        </div>
-    </form>
-</div>
-
-<!-- Tags Table -->
-<div class="bg-white rounded-lg shadow overflow-hidden">
-    {% if tags %}
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-gray-50 border-b border-gray-200">
-                <tr>
-                    <th class="px-6 py-3 text-right text-xs font-normal text-gray-700 uppercase tracking-wider">اسم الوسم</th>
-                    <th class="px-6 py-3 text-right text-xs font-normal text-gray-700 uppercase tracking-wider">الرابط</th>
-                    <th class="px-6 py-3 text-right text-xs font-normal text-gray-700 uppercase tracking-wider">عدد المقالات</th>
-                    <th class="px-6 py-3 text-right text-xs font-normal text-gray-700 uppercase tracking-wider">الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                {% for tag in tags %}
-                <tr class="hover:bg-gray-50 transition">
-                    <!-- Tag Name -->
-                    <td class="px-6 py-4 text-sm font-normal text-gray-900">
-                        {{ tag.name }}
-                    </td>
-                    
-                    <!-- Slug -->
-                    <td class="px-6 py-4 text-sm text-gray-600">
-                        <div class="font-mono text-xs bg-gray-100 px-2 py-1 rounded break-all">
-                            {{ tag.slug }}
-                        </div>
-                    </td>
-                    
-                    <!-- Article Count -->
-                    <td class="px-6 py-4 text-sm">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal bg-blue-100 text-blue-800">
-                            {{ tag.articles.count }}
-                        </span>
-                    </td>
-                    
-                    <!-- Actions -->
-                    <td class="px-6 py-4 text-sm">
-                        <div class="flex items-center gap-2">
-                            <!-- Edit Button -->
-                            <a href="{% url 'dashboard:tag_edit' tag.id %}" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition duration-200 text-xs font-normal">
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                                تعديل
-                            </a>
-                            
-                            <!-- Delete Button -->
-                            <form method="post" action="{% url 'dashboard:tag_delete' tag.id %}" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا الوسم؟');">
-                                {% csrf_token %}
-                                <button type="submit" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition duration-200 text-xs font-normal">
-                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    حذف
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- Pagination -->
-    {% if is_paginated %}
-    <div class="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div class="text-sm text-gray-600">
-            عرض <span class="font-normal">{{ page_obj.start_index }}</span> إلى <span class="font-normal">{{ page_obj.end_index }}</span> من <span class="font-normal">{{ paginator.count }}</span> وسم
-        </div>
-        
-        <div class="flex gap-2">
-            {% if page_obj.has_previous %}
-            <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200 text-sm">
-                الأولى
-            </a>
-            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200 text-sm">
-                السابق
-            </a>
-            {% endif %}
-            
-            <span class="px-3 py-1 text-sm text-gray-600">
-                صفحة {{ page_obj.number }} من {{ paginator.num_pages }}
-            </span>
-            
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200 text-sm">
-                التالي
-            </a>
-            <a href="?page={{ paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition duration-200 text-sm">
-                الأخيرة
-            </a>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
+        <!-- Pagination -->
+        {% if is_paginated %}
+            {% include "dashboard/components/pagination.html" with page_obj=page_obj query_params=query_params %}
+        {% endif %}
     
     {% else %}
-    <!-- Empty State -->
-    <div class="p-12 text-center">
-        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-        </svg>
-        <h3 class="text-lg font-normal text-gray-900 mb-2">لا توجد وسوم</h3>
-        <p class="text-gray-600 mb-6">لم يتم العثور على أي وسوم. ابدأ بإضافة وسم جديد.</p>
-        <a href="{% url 'dashboard:tag_create' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-normal">
-            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            إضافة وسم جديد
-        </a>
-    </div>
+        <!-- Empty State -->
+        {% if search_query %}
+            {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد نتائج" description="حاول تغيير معايير البحث" %}
+        {% else %}
+            {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد وسوم" description="ابدأ بإنشاء وسم جديد" action_url=action_buttons.0.url action_label=action_buttons.0.label %}
+        {% endif %}
     {% endif %}
 </div>
+
+<!-- Modal Container -->
+<div id="tag-modal" style="display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.5); padding: 16px;">
+    <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); width: 100%; max-width: 500px; overflow: hidden; display: flex; flex-direction: column;">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4" style="border-bottom: 1px solid var(--border);">
+            <h3 id="modal-title" class="text-lg font-semibold" style="color: var(--text-primary);">إضافة وسم جديد</h3>
+            <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer" style="background: transparent; border: none; font-size: 24px; padding: 0; line-height: 1;">&times;</button>
+        </div>
+        
+        <!-- Form -->
+        <form id="modal-form" method="post" action="">
+            {% csrf_token %}
+            <div class="p-6 space-y-4">
+                <!-- Name -->
+                <div>
+                    <label for="id_name" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">اسم الوسم <span style="color: var(--danger);">*</span></label>
+                    <input type="text" name="name" id="id_name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border); background-color: var(--surface);" dir="rtl">
+                </div>
+                
+                <!-- Slug -->
+                <div>
+                    <label for="id_slug" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">الرابط <span style="color: var(--danger);">*</span></label>
+                    <input type="text" name="slug" id="id_slug" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border); background-color: var(--surface);" dir="ltr">
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="flex justify-end gap-2 p-4" style="border-top: 1px solid var(--border); background-color: var(--surface-2); display: flex;">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200" style="border: none;">إلغاء</button>
+                <button type="submit" class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white" style="background-color: var(--primary); border: none;" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'">حفظ</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('tag-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalForm = document.getElementById('modal-form');
+    const nameInput = document.getElementById('id_name');
+    const slugInput = document.getElementById('id_slug');
+
+    document.addEventListener('click', function(e) {
+        // Intercept Create button
+        const createBtn = e.target.closest('a[href*="/tags/create/"]');
+        if (createBtn) {
+            e.preventDefault();
+            openCreateModal();
+            return;
+        }
+
+        // Intercept Edit button
+        const editBtn = e.target.closest('a[href*="/tags/"][href*="/edit/"]');
+        if (editBtn) {
+            e.preventDefault();
+            const url = editBtn.getAttribute('href');
+            openEditModal(url);
+            return;
+        }
+    });
+
+    window.openCreateModal = function() {
+        modalTitle.textContent = 'إضافة وسم جديد';
+        modalForm.action = '{% url "dashboard:tag_create" %}';
+        nameInput.value = '';
+        slugInput.value = '';
+        modal.style.display = 'flex';
+    };
+
+    window.openEditModal = function(url) {
+        fetch(url + '?json=1', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            modalTitle.textContent = 'تعديل الوسم';
+            modalForm.action = url;
+            nameInput.value = data.name;
+            slugInput.value = data.slug;
+            modal.style.display = 'flex';
+        })
+        .catch(error => {
+            console.error('Error fetching tag:', error);
+        });
+    };
+
+    window.closeModal = function() {
+        modal.style.display = 'none';
+    };
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    // Auto-generate slug from name in Create mode
+    nameInput.addEventListener('input', function() {
+        if (modalTitle.textContent.includes('إضافة')) {
+            const nameVal = this.value.trim();
+            slugInput.value = nameVal
+                .toLowerCase()
+                .replace(/[^\w\s\u0621-\u064A\u0660-\u0669-]/g, '')
+                .replace(/[\s_]+/g, '-')
+                .replace(/-+/g, '-');
+        }
+    });
+});
+</script>
 {% endblock %}

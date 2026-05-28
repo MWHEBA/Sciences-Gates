@@ -42,7 +42,7 @@ class AdvancedSearchForm(forms.Form):
     ]
     
     MAJOR_CATEGORY_CHOICES = [
-        ('', 'جميع الفئات'),
+        ('', 'جميع التصنيفات'),
         ('medical', 'التخصصات الطبية'),
         ('engineering', 'التخصصات الهندسية'),
         ('cs', 'الحاسوب والتكنولوجيا'),
@@ -120,5 +120,5 @@ class AdvancedSearchForm(forms.Form):
         widget=forms.Select(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg',
         }),
-        label='فئة التخصص'
+        label='تصنيف التخصص'
     )

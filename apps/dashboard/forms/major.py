@@ -192,7 +192,7 @@ class MajorForm(forms.ModelForm):
             # Basic Information
             'name': 'اسم التخصص',
             'slug': 'الرابط',
-            'major_category': 'فئة التخصص',
+            'major_category': 'تصنيف التخصص',
             'main_image': 'الصورة الرئيسية',
             
             # Quick Information Fields

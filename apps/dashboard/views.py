@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages
-from django.http import HttpResponseForbidden, HttpResponse
+from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
 from django.views.generic import View, ListView, CreateView, UpdateView, DeleteView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -1912,7 +1912,8 @@ class CategoryListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, List
 
     def get_queryset(self):
         """Get categories with optional search."""
-        queryset = Category.objects.all().prefetch_related('articles').order_by('name')
+        from django.db.models import Count
+        queryset = Category.objects.all().annotate(articles_count=Count('articles')).order_by('name')
         
         # Search by name or slug
         search_query = self.request.GET.get('search', '').strip()
@@ -1927,87 +1928,105 @@ class CategoryListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, List
     def get_context_data(self, **kwargs):
         """Add page title and search info to context."""
         context = super().get_context_data(**kwargs)
-        context['page_title'] = 'إدارة فئات المقالات'
+        context['page_title'] = 'إدارة تصنيفات المقالات'
+        context['page_description'] = 'إدارة جميع تصنيفات المقالات والأخبار'
         context['search_query'] = self.request.GET.get('search', '')
+        context['base_url'] = reverse_lazy('dashboard:category_list')
+        context['search_placeholder'] = 'ابحث عن اسم التصنيف أو الرابط...'
+        context['empty_state_icon'] = '<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>'
+        
+        # Action button for topbar
+        context['action_buttons'] = [
+            {
+                'url': reverse_lazy('dashboard:category_create'),
+                'label': 'إضافة تصنيف جديد',
+                'variant': 'primary',
+            }
+        ]
+        
+        # Columns definition
+        context['columns'] = [
+            {'label': 'اسم التصنيف', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:category_edit', 'link_param': 'id'},
+            {'label': 'الرابط', 'key': 'slug', 'type': 'text'},
+            {'label': 'عدد المقالات', 'key': 'articles_count', 'type': 'text'},
+            {'label': 'تاريخ الإنشاء', 'key': 'created_at', 'type': 'date'},
+        ]
+        
+        context['edit_url_name'] = 'dashboard:category_edit'
+        context['delete_url_name'] = 'dashboard:category_delete'
+        
         # Add items for list_page.html template
         context['items'] = context.get('categories', context.get('object_list', []))
+        context['query_params'] = '&'.join([f'{k}={v}' for k, v in self.request.GET.items() if k != 'page'])
         return context
 
 
 class CategoryCreateView(ContentAdminRequiredMixin, CreateView):
     """
-    Create a new article category.
-    إنشاء فئة مقالات جديدة
-    
-    Features:
-    - Create category with name, slug, and description
-    - Arabic success message
-    - Redirect to category list after creation
+    Create a new article category via modal/redirect.
     """
     model = Category
     form_class = CategoryForm
-    template_name = 'dashboard/categories/create.html'
     success_url = reverse_lazy('dashboard:category_list')
+
+    def get(self, request, *args, **kwargs):
+        """Redirect GET requests to list page since creation is done via modal."""
+        return redirect(self.success_url)
 
     def form_valid(self, form):
         """Handle successful form submission."""
         response = super().form_valid(form)
         messages.success(
             self.request,
-            f'تم إنشاء الفئة "{self.object.name}" بنجاح'
+            f'تم إنشاء التصنيف \"{self.object.name}\" بنجاح'
         )
         return response
 
     def form_invalid(self, form):
-        """Handle form errors."""
+        """Handle form errors and redirect to list page."""
         for field, errors in form.errors.items():
             for error in errors:
-                messages.error(self.request, f'{error}')
-        return super().form_invalid(form)
-
-    def get_context_data(self, **kwargs):
-        """Add page title to context."""
-        context = super().get_context_data(**kwargs)
-        context['page_title'] = 'إنشاء فئة مقالات جديدة'
-        return context
+                label = form.fields[field].label if field in form.fields else field
+                messages.error(self.request, f'{label}: {error}')
+        return redirect(self.success_url)
 
 
 class CategoryUpdateView(ContentAdminRequiredMixin, UpdateView):
     """
     Update an existing article category.
-    تحديث فئة مقالات موجودة
-    
-    Features:
-    - Edit category name, slug, and description
-    - Arabic success message
-    - Redirect to category list after update
     """
     model = Category
     form_class = CategoryForm
-    template_name = 'dashboard/categories/edit.html'
     success_url = reverse_lazy('dashboard:category_list')
+
+    def get(self, request, *args, **kwargs):
+        """Return JSON for AJAX modal populating, redirect to list page otherwise."""
+        self.object = self.get_object()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('json') == '1':
+            return JsonResponse({
+                'id': self.object.id,
+                'name': self.object.name,
+                'slug': self.object.slug,
+                'description': self.object.description
+            })
+        return redirect(self.success_url)
 
     def form_valid(self, form):
         """Handle successful form submission."""
         response = super().form_valid(form)
         messages.success(
             self.request,
-            f'تم تحديث الفئة "{self.object.name}" بنجاح'
+            f'تم تحديث التصنيف \"{self.object.name}\" بنجاح'
         )
         return response
 
     def form_invalid(self, form):
-        """Handle form errors."""
+        """Handle form errors and redirect to list page."""
         for field, errors in form.errors.items():
             for error in errors:
-                messages.error(self.request, f'{error}')
-        return super().form_invalid(form)
-
-    def get_context_data(self, **kwargs):
-        """Add page title to context."""
-        context = super().get_context_data(**kwargs)
-        context['page_title'] = f'تحديث الفئة: {self.object.name}'
-        return context
+                label = form.fields[field].label if field in form.fields else field
+                messages.error(self.request, f'{label}: {error}')
+        return redirect(self.success_url)
 
 
 class CategoryDeleteView(ContentAdminRequiredMixin, DeleteView):
@@ -2031,14 +2050,14 @@ class CategoryDeleteView(ContentAdminRequiredMixin, DeleteView):
         response = super().delete(request, *args, **kwargs)
         messages.success(
             request,
-            f'تم حذف الفئة "{category_name}" بنجاح'
+            f'تم حذف التصنيف "{category_name}" بنجاح'
         )
         return response
 
     def get_context_data(self, **kwargs):
         """Add page title and article count to context."""
         context = super().get_context_data(**kwargs)
-        context['page_title'] = f'حذف الفئة: {self.object.name}'
+        context['page_title'] = f'حذف التصنيف: {self.object.name}'
         context['article_count'] = self.object.articles.count()
         return context
 
@@ -2072,7 +2091,8 @@ class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView)
 
     def get_queryset(self):
         """Get tags with optional search."""
-        queryset = Tag.objects.all().prefetch_related('articles').order_by('name')
+        from django.db.models import Count
+        queryset = Tag.objects.all().annotate(articles_count=Count('articles')).order_by('name')
         
         # Search by name or slug
         search_query = self.request.GET.get('search', '').strip()
@@ -2088,64 +2108,98 @@ class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView)
         """Add page title and search info to context."""
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة وسوم المقالات'
+        context['page_description'] = 'إدارة جميع وسوم المقالات والأخبار'
         context['search_query'] = self.request.GET.get('search', '')
+        context['base_url'] = reverse_lazy('dashboard:tag_list')
+        context['search_placeholder'] = 'ابحث عن اسم الوسم أو الرابط...'
+        context['empty_state_icon'] = '<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>'
+        
+        # Action button for topbar
+        context['action_buttons'] = [
+            {
+                'url': reverse_lazy('dashboard:tag_create'),
+                'label': 'إضافة وسم جديد',
+                'variant': 'primary',
+            }
+        ]
+        
+        # Columns definition
+        context['columns'] = [
+            {'label': 'اسم الوسم', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:tag_edit', 'link_param': 'id'},
+            {'label': 'الرابط', 'key': 'slug', 'type': 'text'},
+            {'label': 'عدد المقالات', 'key': 'articles_count', 'type': 'text'},
+        ]
+        
+        context['edit_url_name'] = 'dashboard:tag_edit'
+        context['delete_url_name'] = 'dashboard:tag_delete'
+        
         # Add items for list_page.html template
         context['items'] = context.get('tags', context.get('object_list', []))
+        context['query_params'] = '&'.join([f'{k}={v}' for k, v in self.request.GET.items() if k != 'page'])
         return context
 
 
 class TagCreateView(ContentAdminRequiredMixin, CreateView):
     """
-    Create a new article tag.
-    إنشاء وسم مقالات جديد
-    
-    Features:
-    - Create tag with name and slug
-    - Arabic success message
-    - Redirect to tag list after creation
+    Create a new article tag via modal/redirect.
     """
     model = Tag
     form_class = TagForm
-    template_name = 'dashboard/tags/create.html'
     success_url = reverse_lazy('dashboard:tag_list')
+
+    def get(self, request, *args, **kwargs):
+        """Redirect GET requests to list page since creation is done via modal."""
+        return redirect(self.success_url)
 
     def form_valid(self, form):
         """Handle successful form submission."""
-        response = super().form_valid(form)
+        self.object = form.save()
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('json') == '1':
+            return JsonResponse({
+                'status': 'success',
+                'id': self.object.id,
+                'name': self.object.name,
+                'slug': self.object.slug
+            })
         messages.success(
             self.request,
             f'تم إنشاء الوسم "{self.object.name}" بنجاح'
         )
-        return response
+        return redirect(self.success_url)
 
     def form_invalid(self, form):
-        """Handle form errors."""
+        """Handle form errors and redirect or return JSON."""
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('json') == '1':
+            errors = {field: errs[0] for field, errs in form.errors.items()}
+            return JsonResponse({
+                'status': 'error',
+                'errors': errors
+            }, status=400)
         for field, errors in form.errors.items():
             for error in errors:
-                messages.error(self.request, f'{error}')
-        return super().form_invalid(form)
-
-    def get_context_data(self, **kwargs):
-        """Add page title to context."""
-        context = super().get_context_data(**kwargs)
-        context['page_title'] = 'إنشاء وسم مقالات جديد'
-        return context
+                label = form.fields[field].label if field in form.fields else field
+                messages.error(self.request, f'{label}: {error}')
+        return redirect(self.success_url)
 
 
 class TagUpdateView(ContentAdminRequiredMixin, UpdateView):
     """
     Update an existing article tag.
-    تحديث وسم مقالات موجود
-    
-    Features:
-    - Edit tag name and slug
-    - Arabic success message
-    - Redirect to tag list after update
     """
     model = Tag
     form_class = TagForm
-    template_name = 'dashboard/tags/edit.html'
     success_url = reverse_lazy('dashboard:tag_list')
+
+    def get(self, request, *args, **kwargs):
+        """Return JSON for AJAX modal populating, redirect to list page otherwise."""
+        self.object = self.get_object()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('json') == '1':
+            return JsonResponse({
+                'id': self.object.id,
+                'name': self.object.name,
+                'slug': self.object.slug,
+            })
+        return redirect(self.success_url)
 
     def form_valid(self, form):
         """Handle successful form submission."""
@@ -2157,17 +2211,12 @@ class TagUpdateView(ContentAdminRequiredMixin, UpdateView):
         return response
 
     def form_invalid(self, form):
-        """Handle form errors."""
+        """Handle form errors and redirect to list page."""
         for field, errors in form.errors.items():
             for error in errors:
-                messages.error(self.request, f'{error}')
-        return super().form_invalid(form)
-
-    def get_context_data(self, **kwargs):
-        """Add page title to context."""
-        context = super().get_context_data(**kwargs)
-        context['page_title'] = f'تحديث الوسم: {self.object.name}'
-        return context
+                label = form.fields[field].label if field in form.fields else field
+                messages.error(self.request, f'{label}: {error}')
+        return redirect(self.success_url)
 
 
 class TagDeleteView(ContentAdminRequiredMixin, DeleteView):
@@ -2267,14 +2316,71 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
 
     def get_context_data(self, **kwargs):
         """Add page title, search/filter info, and categories to context."""
+        from django.urls import reverse
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة المقالات'
         context['search_query'] = self.request.GET.get('search', '')
         context['category_filter'] = self.request.GET.get('category', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['categories'] = Category.objects.all().order_by('name')
-        # Add items for list_page.html template
+        
+        # Add items for list_page.html/data_table template
         context['items'] = context.get('articles', context.get('object_list', []))
+        
+        # Add required context variables for filter_bar.html
+        context['search_placeholder'] = 'ابحث عن عنوان المقالة أو الرابط...'
+        context['search_value'] = context['search_query']
+        context['base_url'] = reverse('dashboard:article_list')
+        context['add_new_url'] = reverse('dashboard:article_create')
+        
+        # Filters
+        category_options = [{'value': '', 'label': 'كل التصنيفات'}]
+        for cat in context['categories']:
+            category_options.append({'value': str(cat.id), 'label': cat.name})
+            
+        context['filters'] = [
+            {
+                'name': 'status',
+                'label': 'حالة النشر',
+                'options': [
+                    {'value': 'published', 'label': 'منشور'},
+                    {'value': 'unpublished', 'label': 'غير منشور'},
+                ],
+                'selected': context['status_filter'],
+            },
+            {
+                'name': 'category',
+                'label': 'التصنيف',
+                'options': category_options,
+                'selected': context['category_filter'],
+            },
+        ]
+        
+        # Columns for data table
+        context['columns'] = [
+            {'label': 'العنوان', 'key': 'title', 'type': 'link', 'link_url_name': 'dashboard:article_edit', 'link_param': 'pk'},
+            {'label': 'التصنيف', 'key': 'category_name', 'type': 'text'},
+            {'label': 'الكاتب', 'key': 'author_name', 'type': 'text'},
+            {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
+            {'label': 'تاريخ النشر', 'key': 'publish_date', 'type': 'date'},
+        ]
+        
+        context['edit_url_name'] = 'dashboard:article_edit'
+        context['delete_url_name'] = 'dashboard:article_delete'
+        
+        # Pagination info
+        context['is_paginated'] = self.paginator.num_pages > 1 if hasattr(self, 'paginator') else False
+        context['page_obj'] = context.get('page_obj')
+        
+        # Build query params for pagination
+        query_params = '&'.join([f'{k}={v}' for k, v in self.request.GET.items() if k != 'page'])
+        context['query_params'] = query_params
+        
+        # Add computed properties to each article
+        for article in context['items']:
+            article.category_name = article.category.name if article.category else 'بدون تصنيف'
+            article.author_name = article.author.get_full_name() or article.author.username if article.author else 'غير معروف'
+            
         return context
 
 
@@ -2293,7 +2399,7 @@ class ArticleCreateView(ContentAdminRequiredMixin, CreateView):
     """
     model = Article
     form_class = ArticleForm
-    template_name = 'dashboard/articles/create.html'
+    template_name = 'dashboard/articles/form.html'
 
     def form_valid(self, form):
         """Handle successful form submission.
@@ -2352,7 +2458,7 @@ class ArticleUpdateView(ContentAdminRequiredMixin, UpdateView):
     """
     model = Article
     form_class = ArticleForm
-    template_name = 'dashboard/articles/edit.html'
+    template_name = 'dashboard/articles/form.html'
     success_url = reverse_lazy('dashboard:article_list')
 
     def get_context_data(self, **kwargs):

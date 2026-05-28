@@ -14,450 +14,7 @@
 
 {% block extra_css %}
 {% render_breadcrumb_schema breadcrumbs request %}
-<style>
-    /* Admission Tabs styling */
-    .admission-tabs-container {
-        margin-top: 1.5rem;
-        background: var(--surface);
-        border-radius: var(--radius);
-        border: 1px solid var(--border);
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .admission-tabs-headers {
-        display: flex;
-        gap: 4px;
-        background-color: var(--surface-2);
-        border-bottom: 1px solid var(--border);
-        padding: 8px 12px 0 12px;
-    }
-
-    .admission-tab-btn {
-        padding: 10px 20px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        background: transparent;
-        border: none;
-        border-bottom: 3px solid transparent;
-        cursor: pointer;
-        transition: all 0.25s ease;
-        font-family: inherit;
-        border-top-left-radius: var(--radius-sm);
-        border-top-right-radius: var(--radius-sm);
-    }
-
-    .admission-tab-btn:hover {
-        color: var(--primary);
-        background-color: rgba(11, 45, 77, 0.03);
-    }
-
-    .admission-tab-btn--active {
-        color: var(--primary);
-        border-bottom-color: var(--secondary);
-        background-color: var(--surface);
-        font-weight: 700;
-    }
-
-    .admission-tabs-content {
-        padding: 24px;
-        background-color: var(--surface);
-    }
-
-    @media (max-width: 640px) {
-        .admission-tabs-headers {
-            flex-direction: column;
-            gap: 2px;
-            padding: 12px;
-        }
-
-        .admission-tab-btn {
-            border-bottom: none;
-            border-right: 3px solid transparent;
-            text-align: right;
-            border-radius: var(--radius-sm);
-            padding: 8px 12px;
-        }
-
-        .admission-tab-btn--active {
-            border-right-color: var(--secondary);
-            background-color: var(--surface-2);
-        }
-    }
-
-    .reg-float-btn {
-        position: fixed;
-        bottom: 32px;
-        right: 32px;
-        width: auto;
-        min-width: 48px;
-        max-width: 48px;
-        height: 48px;
-        background-color: var(--primary);
-        color: #ffffff;
-        border: none;
-        border-radius: 9999px;
-        box-shadow: 0 6px 20px rgba(11, 45, 77, 0.2);
-        cursor: pointer;
-        z-index: 996;
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 12px;
-        overflow: hidden;
-        transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s, transform 0.3s, box-shadow 0.3s, translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
-        text-decoration: none;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        white-space: nowrap;
-    }
-
-    .reg-float-btn svg {
-        width: 24px;
-        height: 24px;
-        flex-shrink: 0;
-        stroke: #ffffff;
-    }
-
-    .reg-float-btn:hover {
-        max-width: 450px;
-        padding: 10px 16px 10px 24px;
-        background-color: var(--primary-hover);
-        transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(11, 45, 77, 0.4);
-    }
-
-    .reg-float-text {
-        opacity: 0;
-        visibility: hidden;
-        margin-right: 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        text-align: right;
-        line-height: 1.25;
-        transition: opacity 0.3s ease, transform 0.3s ease;
-        transform: translateX(10px);
-    }
-
-    .reg-float-btn:hover .reg-float-text {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(0);
-    }
-
-    .reg-float-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #ffffff;
-    }
-
-    .reg-float-subtitle {
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-top: 4px;
-        color: var(--secondary);
-    }
-
-    @media (max-width: 768px) {
-        .reg-float-btn {
-            bottom: 24px;
-            right: 24px;
-            width: 48px;
-            height: 48px;
-            padding: 12px;
-        }
-
-        .reg-float-btn:hover {
-            width: 48px;
-            padding: 12px;
-            transform: none;
-            box-shadow: 0 6px 20px rgba(11, 45, 77, 0.2);
-        }
-
-        .reg-float-text {
-            display: none !important;
-        }
-    }
-
-    /* Modal Styles */
-    .reg-modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(11, 45, 77, 0.5);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-    }
-
-    .reg-modal-content {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow-lg);
-        width: 100%;
-        max-width: 600px;
-        overflow: visible;
-        display: flex;
-        flex-direction: column;
-        animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        direction: rtl;
-        text-align: right;
-    }
-
-    @keyframes modalFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    .reg-modal-header {
-        background: var(--primary);
-        color: #ffffff;
-        padding: 20px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-top-left-radius: var(--radius-xl);
-        border-top-right-radius: var(--radius-xl);
-    }
-
-    .reg-modal-title {
-        font-size: 1.15rem;
-        font-weight: 700;
-    }
-
-    .reg-modal-close {
-        background: transparent;
-        border: none;
-        color: rgba(255, 255, 255, 0.8);
-        cursor: pointer;
-        padding: 4px;
-        border-radius: 50%;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .reg-modal-close:hover {
-        color: #ffffff;
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .reg-modal-body {
-        padding: 24px;
-        overflow: visible;
-    }
-
-    .reg-modal-footer {
-        padding: 16px 24px;
-        background: var(--surface-2);
-        border-top: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        border-bottom-left-radius: var(--radius-xl);
-        border-bottom-right-radius: var(--radius-xl);
-    }
-
-    /* Floating Widget Slide-Out Animations */
-    .whatsapp-widget,
-    .admin-dashboard-float,
-    .admin-edit-float {
-        transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, transform 0.3s !important;
-    }
-
-    /* Right side hide */
-    .reg-float-btn.floating-hide {
-        translate: 80px 0;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    /* Left side hide */
-    .whatsapp-widget.floating-hide,
-    .admin-dashboard-float.floating-hide,
-    .admin-edit-float.floating-hide {
-        translate: -80px 0;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    /* Step Wizard Indicators */
-    .reg-wizard {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 24px;
-        padding: 8px 0;
-    }
-
-    .reg-wizard-step {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .reg-wizard-number {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background-color: var(--surface-2);
-        border: 2px solid var(--border-strong);
-        color: var(--text-secondary);
-        font-weight: 700;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-    }
-
-    .reg-wizard-step--active .reg-wizard-number {
-        background-color: var(--primary);
-        border-color: var(--primary);
-        color: #ffffff;
-    }
-
-    .reg-wizard-step--completed .reg-wizard-number {
-        background-color: var(--success);
-        border-color: var(--success);
-        color: #ffffff;
-    }
-
-    .reg-wizard-label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-    }
-
-    .reg-wizard-step--active .reg-wizard-label {
-        color: var(--primary);
-        font-weight: 700;
-    }
-
-    .reg-wizard-line {
-        flex: 1;
-        height: 2px;
-        background-color: var(--border-strong);
-        margin: 0 16px;
-        max-width: 80px;
-    }
-
-    .reg-wizard-line--active {
-        background-color: var(--primary);
-    }
-
-    /* Form fields styling */
-    .reg-form-group {
-        margin-bottom: 18px;
-    }
-
-    .reg-form-group label {
-        display: block;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 6px;
-    }
-
-    .reg-input {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-sm);
-        font-size: 0.95rem;
-        font-family: inherit;
-        color: var(--text-primary);
-        background-color: var(--surface);
-        transition: border-color 0.2s, box-shadow 0.2s;
-        outline: none;
-    }
-
-    .reg-input:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px var(--primary-light);
-    }
-
-    .reg-select {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-sm);
-        font-size: 0.95rem;
-        font-family: inherit;
-        color: var(--text-primary);
-        background-color: var(--surface);
-        outline: none;
-        cursor: pointer;
-    }
-
-    .reg-select:focus {
-        border-color: var(--primary);
-    }
-
-    .reg-textarea {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-sm);
-        font-size: 0.95rem;
-        font-family: inherit;
-        color: var(--text-primary);
-        background-color: var(--surface);
-        outline: none;
-        resize: vertical;
-        min-height: 80px;
-    }
-
-    .reg-textarea:focus {
-        border-color: var(--primary);
-    }
-
-    .reg-btn {
-        padding: 10px 20px;
-        border-radius: var(--radius-sm);
-        font-size: 0.95rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: none;
-        font-family: inherit;
-    }
-
-    .reg-btn--primary {
-        background-color: var(--primary);
-        color: #ffffff;
-    }
-
-    .reg-btn--primary:hover {
-        background-color: var(--primary-hover);
-    }
-
-    .reg-btn--secondary {
-        background-color: transparent;
-        color: var(--text-secondary);
-        border: 1px solid var(--border-strong);
-    }
-
-    .reg-btn--secondary:hover {
-        background-color: var(--surface-2);
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/tpl-universities_detail-styles.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -576,8 +133,7 @@
                     <div class="admission-tabs-headers">
                         {% if university.admission_requirements_bachelor %}
                         <button @click="activeTab = 'bachelor'"
-                            :class="activeTab === 'bachelor' ? 'admission-tab-btn--active' : ''"
-                            class="admission-tab-btn" type="button">
+                            :class="activeTab === 'bachelor' ? 'admission-tab-btn--active' : ''" class="admission-tab-btn" type="button">
                             البكالوريوس (Bachelor’s)
                         </button>
                         {% endif %}
@@ -877,6 +433,15 @@
 
     {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_super_admin %}
     <!-- زر لوحة التحكم -->
+    <a href="{% url 'dashboard:university_edit' university.pk %}" class="admin-edit-float" aria-label="تعديل الجامعة">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        <span class="admin-edit-float__tooltip">تعديل الجامعة</span>
+    </a>
+
     <a href="{% url 'dashboard:home' %}" class="admin-dashboard-float" aria-label="لوحة التحكم">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -886,15 +451,6 @@
             <rect x="3" y="16" width="7" height="5"></rect>
         </svg>
         <span class="admin-dashboard-float__tooltip">لوحة التحكم</span>
-    </a>
-
-    <a href="{% url 'dashboard:university_edit' university.pk %}" class="admin-edit-float" aria-label="تعديل الجامعة">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
-        <span class="admin-edit-float__tooltip">تعديل الجامعة</span>
     </a>
     {% endif %}
 
@@ -913,7 +469,7 @@
     </button>
 
     <!-- Registration Wizard Modal -->
-    <div x-show="openRegModal" class="reg-modal-overlay" style="display: none; z-index: 1000;"
+    <div x-show="openRegModal" class="reg-modal-overlay"
         @keydown.escape.window="openRegModal = false">
         <div class="reg-modal-content" @click.away="openRegModal = false">
 
@@ -930,7 +486,7 @@
             </div>
 
             <!-- Wizard Step Progress -->
-            <div class="reg-modal-body" style="padding-bottom: 8px;">
+            <div class="reg-modal-body inl-s-427b12583a">
                 <div class="reg-wizard">
                     <div class="reg-wizard-step" :class="regStep >= 1 ? 'reg-wizard-step--active' : ''">
                         <div class="reg-wizard-number" :class="regStep > 1 ? 'reg-wizard-step--completed' : ''">
@@ -954,17 +510,17 @@
                 <input type="hidden" name="source_page" value="{{ request.build_absolute_uri }}">
 
                 <!-- Combined field for Django Lead form submission -->
-                <textarea name="message" id="reg_combined_message" style="display: none;"></textarea>
+                <textarea name="message" id="reg_combined_message" class="inl-s-224b51a7b4"></textarea>
                 <!-- Honeypot -->
-                <input type="text" name="website" style="display:none;" tabindex="-1" autocomplete="off">
+                <input type="text" name="website" class="inl-s-93b8ea5b2f" tabindex="-1" autocomplete="off">
 
-                <div class="reg-modal-body" style="padding-top: 0;">
+                <div class="reg-modal-body inl-s-25e5217456">
 
                     <!-- STEP 1: Personal Details -->
                     <div x-show="regStep === 1" class="space-y-4">
                         <div class="reg-form-group">
                             <label for="reg_name">الاسم الكامل للطالب <span
-                                    style="color: var(--danger);">*</span></label>
+                                    class="inl-s-973ad1998f">*</span></label>
                             <input type="text" id="reg_name" name="name" class="reg-input"
                                 placeholder="أدخل اسم الطالب الكامل" required>
                         </div>
@@ -976,9 +532,9 @@
                         </div>
 
                         <div class="reg-form-group">
-                            <label>رقم الهاتف (يفضل واتس آب) <span style="color: var(--danger);">*</span></label>
+                            <label>رقم الهاتف (يفضل واتس آب) <span class="inl-s-973ad1998f">*</span></label>
                             <div class="intl-phone-wrapper">
-                                <div class="intl-phone-select" id="regPhoneSelect" style="position: relative;">
+                                <div class="intl-phone-select" id="regPhoneSelect" class="inl-s-d85c4e6467">
                                     <button type="button" class="intl-phone-selected" id="regPhoneBtn"
                                         aria-haspopup="listbox" aria-expanded="false">
                                         <img src="https://flagcdn.com/w20/{{ default_country }}.png" alt=""
@@ -990,7 +546,7 @@
                                         </svg>
                                     </button>
                                     <ul class="intl-phone-dropdown" id="regPhoneDropdown" role="listbox"
-                                        style="z-index: 1010; position: absolute; max-height: 200px; overflow-y: auto;">
+                                        class="inl-s-8ed3dfdf51">
                                         <li class="intl-phone-search-wrap">
                                             <input type="text" class="intl-phone-search" id="regPhoneSearch"
                                                 placeholder="ابحث عن دولة..." autocomplete="off">
@@ -1006,14 +562,14 @@
                                     </ul>
                                 </div>
                                 <input type="tel" id="reg_phone" class="intl-phone-input"
-                                    placeholder="{{ default_placeholder }}" dir="ltr" required style="flex: 1;">
+                                    placeholder="{{ default_placeholder }}" dir="ltr" required class="inl-s-49cdf8748d">
                             </div>
                             <input type="hidden" name="country_code" id="reg_country_code" value="{{ default_code }}">
                             <input type="hidden" name="phone" id="reg_phone_combined">
                         </div>
 
                         <div class="reg-form-group">
-                            <label for="reg_nationality">الجنسية <span style="color: var(--danger);">*</span></label>
+                            <label for="reg_nationality">الجنسية <span class="inl-s-973ad1998f">*</span></label>
                             <select id="reg_nationality" class="reg-select" required>
                                 <option value="" disabled selected>اختر الجنسية...</option>
                                 <option value="سعودي">سعودي</option>
@@ -1046,7 +602,7 @@
                     <!-- STEP 2: Study Details -->
                     <div x-show="regStep === 2" class="space-y-4">
                         <div class="reg-form-group">
-                            <label for="reg_level">المرحلة الدراسية <span style="color: var(--danger);">*</span></label>
+                            <label for="reg_level">المرحلة الدراسية <span class="inl-s-973ad1998f">*</span></label>
                             <select id="reg_level" class="reg-select" required>
                                 <option value="" disabled selected>اختر المرحلة الدراسية...</option>
                                 <option value="بكالوريوس">بكالوريوس (Bachelor's)</option>
@@ -1057,7 +613,7 @@
                         </div>
 
                         <div class="reg-form-group">
-                            <label for="reg_residence">دولة الإقامة <span style="color: var(--danger);">*</span></label>
+                            <label for="reg_residence">دولة الإقامة <span class="inl-s-973ad1998f">*</span></label>
                             <select id="reg_residence" class="reg-select" required>
                                 <option value="" disabled selected>اختر دولة الإقامة...</option>
                                 {% for iso, name, code, placeholder in phone_countries %}
@@ -1067,7 +623,7 @@
                         </div>
 
                         <div class="reg-form-group">
-                            <label for="reg_address">عنوان الإقامة <span style="color: var(--danger);">*</span></label>
+                            <label for="reg_address">عنوان الإقامة <span class="inl-s-973ad1998f">*</span></label>
                             <input type="text" id="reg_address" class="reg-input" placeholder="المدينة، المنطقة، الشارع"
                                 required>
                         </div>
@@ -1101,183 +657,8 @@
 </div>
 
 <!-- Scripts for Registration Modal -->
-<script>
-    (function () {
-        // Validation for step 1
-        window.validateStep1 = function () {
-            var name = document.getElementById('reg_name').value.trim();
-            var phone = document.getElementById('reg_phone').value.trim();
-            var nationality = document.getElementById('reg_nationality').value;
 
-            if (!name) {
-                alert('يرجى إدخال اسم الطالب الكامل.');
-                return false;
-            }
-            if (!phone) {
-                alert('يرجى إدخال رقم الهاتف.');
-                return false;
-            }
-            if (!nationality) {
-                alert('يرجى اختيار الجنسية.');
-                return false;
-            }
-            return true;
-        };
-
-        // Custom phone country selector for modal
-        var wrapper = document.getElementById('regPhoneSelect');
-        if (!wrapper) return;
-
-        var btn = document.getElementById('regPhoneBtn');
-        var dropdown = document.getElementById('regPhoneDropdown');
-        var flagImg = document.getElementById('regPhoneFlag');
-        var codeSpan = document.getElementById('regPhoneCode');
-        var hiddenCode = document.getElementById('reg_country_code');
-        var form = document.getElementById('regWizardForm');
-
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            var isOpen = dropdown.classList.contains('intl-phone-dropdown--open');
-            dropdown.classList.toggle('intl-phone-dropdown--open');
-            btn.setAttribute('aria-expanded', !isOpen);
-            if (!isOpen && !dropdown.dataset.loaded) {
-                dropdown.querySelectorAll('img[data-src]').forEach(function (img) {
-                    img.src = img.dataset.src;
-                    img.removeAttribute('data-src');
-                });
-                dropdown.dataset.loaded = '1';
-            }
-            if (!isOpen) {
-                var search = document.getElementById('regPhoneSearch');
-                if (search) setTimeout(function () { search.focus(); }, 50);
-            }
-        });
-
-        var searchInput = document.getElementById('regPhoneSearch');
-        if (searchInput) {
-            searchInput.addEventListener('input', function () {
-                var query = this.value.trim().toLowerCase();
-                var items = dropdown.querySelectorAll('li[role="option"]');
-                items.forEach(function (li) {
-                    var name = li.querySelector('.intl-phone-name');
-                    var dial = li.querySelector('.intl-phone-dial');
-                    var text = (name ? name.textContent : '') + ' ' + (dial ? dial.textContent : '');
-                    li.style.display = text.toLowerCase().indexOf(query) > -1 ? '' : 'none';
-                });
-            });
-            searchInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') e.preventDefault();
-            });
-        }
-
-        dropdown.addEventListener('click', function (e) {
-            var li = e.target.closest('li[role="option"]');
-            if (!li) return;
-            var code = li.getAttribute('data-code');
-            var flag = li.getAttribute('data-flag');
-            var placeholder = li.getAttribute('data-placeholder');
-            codeSpan.textContent = code;
-            flagImg.src = 'https://flagcdn.com/w20/' + flag + '.png';
-            hiddenCode.value = code;
-            var phoneInput = document.getElementById('reg_phone');
-            if (phoneInput && placeholder) phoneInput.placeholder = placeholder;
-            dropdown.classList.remove('intl-phone-dropdown--open');
-            btn.setAttribute('aria-expanded', 'false');
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!wrapper.contains(e.target)) {
-                dropdown.classList.remove('intl-phone-dropdown--open');
-                btn.setAttribute('aria-expanded', 'false');
-            }
-        });
-
-        // Combine inputs on form submit
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                // Combined phone
-                var number = document.getElementById('reg_phone');
-                var combined = document.getElementById('reg_phone_combined');
-                if (number && combined && hiddenCode) {
-                    combined.value = hiddenCode.value + number.value.replace(/^0+/, '');
-                }
-
-                // Combine other details into message
-                var nationality = document.getElementById('reg_nationality').value;
-                var level = document.getElementById('reg_level').value;
-                var residence = document.getElementById('reg_residence').value;
-                var address = document.getElementById('reg_address').value;
-                var notes = document.getElementById('reg_notes').value;
-
-                var combinedMsg = "طلب تسجيل جديد في جامعة: {{ university.name }}\n" +
-                    "--------------------------------------------------\n" +
-                    "الجنسية: " + nationality + "\n" +
-                    "المرحلة الدراسية: " + level + "\n" +
-                    "دولة الإقامة: " + residence + "\n" +
-                    "عنوان الإقامة: " + address + "\n" +
-                    "ملاحظات إضافية:\n" + (notes ? notes : "لا يوجد");
-
-                document.getElementById('reg_combined_message').value = combinedMsg;
-            });
-        }
-
-        // Floating buttons auto-hide on scroll inactivity
-        window.addEventListener('load', function () {
-            var floats = document.querySelectorAll('.reg-float-btn, .whatsapp-widget, .admin-dashboard-float, .admin-edit-float');
-            if (floats.length === 0) return;
-
-            var scrollTimeout = null;
-            var isHovered = false;
-
-            floats.forEach(function (el) {
-                el.addEventListener('mouseenter', function () {
-                    isHovered = true;
-                    showFloats();
-                });
-                el.addEventListener('mouseleave', function () {
-                    isHovered = false;
-                    resetScrollTimeout();
-                });
-            });
-
-            function showFloats() {
-                floats.forEach(function (el) {
-                    el.classList.remove('floating-hide');
-                });
-                if (scrollTimeout) clearTimeout(scrollTimeout);
-            }
-
-            function hideFloats() {
-                if (isHovered) return;
-
-                // Do not hide if modal is open
-                var alpineData = document.querySelector('.detail-page-container')?.__x?.$data;
-                var regModalOpen = alpineData ? alpineData.openRegModal : false;
-
-                // Check if WhatsApp popup is open
-                var waWidget = document.querySelector('.whatsapp-widget');
-                var waOpen = waWidget && waWidget.__x && waWidget.__x.$data ? waWidget.__x.$data.open : false;
-
-                if (regModalOpen || waOpen) return;
-
-                floats.forEach(function (el) {
-                    el.classList.add('floating-hide');
-                });
-            }
-
-            function resetScrollTimeout() {
-                if (scrollTimeout) clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(hideFloats, 2500); // hide after 2.5 seconds of scroll pause
-            }
-
-            window.addEventListener('scroll', function () {
-                showFloats();
-                resetScrollTimeout();
-            }, { passive: true });
-
-            // Initialize timeout on load
-            resetScrollTimeout();
-        });
-    })();
-</script>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/tpl-universities_detail-scripts.js' %}"></script>
 {% endblock %}

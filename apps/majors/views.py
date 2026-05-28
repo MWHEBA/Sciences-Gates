@@ -109,6 +109,28 @@ class MajorDetailView(BreadcrumbMixin, DetailView):
             .current(self.object.name)
             .build())
     
+    def post(self, request, *args, **kwargs):
+        """Handle form submission."""
+        from apps.leads.forms import LeadForm
+        
+        form = LeadForm(request.POST)
+        if form.is_valid():
+            # Save the lead
+            lead = form.save(commit=False)
+            lead.source_page = request.path
+            lead.referrer = request.META.get('HTTP_REFERER', '')
+            lead.save()
+            
+            # Redirect to success page or return success message
+            from django.shortcuts import redirect
+            return redirect(request.path + '?success=true')
+        
+        # If form is invalid, re-render with errors
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        context['form'] = form
+        return self.render_to_response(context)
+    
     def get_context_data(self, **kwargs):
         """Add additional context for the template."""
         context = super().get_context_data(**kwargs)
@@ -120,6 +142,11 @@ class MajorDetailView(BreadcrumbMixin, DetailView):
         context['countries_tables'] = major.countries_tables.all()
         context['best_universities'] = major.best_universities.all()
         context['cheap_universities'] = major.cheap_universities.all()
+        
+        # Add lead form
+        from apps.leads.forms import LeadForm
+        if 'form' not in context:
+            context['form'] = LeadForm()
         
         return context
 

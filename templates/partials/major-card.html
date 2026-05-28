@@ -1,6 +1,6 @@
-<article class="card" onclick="window.location='{% url 'majors:detail' major.slug %}'" style="cursor:pointer;">
+<article class="card" class="inl-s-58aba5753b" id="inl-el-ed7442642d">
     <!-- صورة التخصص -->
-    <a href="{% url 'majors:detail' major.slug %}" class="card__image" style="height: 180px;">
+    <a href="{% url 'majors:detail' major.slug %}" class="card__image inl-s-648ec5c899">
         <img 
             src="{% if major.image %}{{ major.image.url }}{% else %}https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800{% endif %}" 
             alt="{{ major.name }}"
@@ -9,20 +9,19 @@
     </a>
     
     <!-- محتوى الكرت -->
-    <div class="card__content" style="padding: 1.5rem;">
+    <div class="card__content inl-s-aa0da8a6b4">
         <!-- اسم التخصص -->
-        <h3 class="card__title" style="font-size:1.1rem;">
+        <h3 class="card__title inl-s-e061ff0221">
             <a href="{% url 'majors:detail' major.slug %}">{{ major.name }}</a>
         </h3>
         
         <!-- الوصف -->
-        <p class="card__desc" style="margin-bottom:1rem;">{{ major.description|striptags|truncatewords:15 }}</p>
+        <p class="card__desc inl-s-09cbfd89d3">{{ major.description|striptags|truncatewords:15 }}</p>
         
         <!-- زر التفاصيل -->
         <a 
             href="{% url 'majors:detail' major.slug }}" 
-            class="btn btn--outline btn--block btn--sm"
-            style="margin-top: auto;"
+            class="btn btn--outline btn--block btn--sm inl-s-2049deb330"
         >
             التفاصيل والجامعات
         </a>

@@ -8,7 +8,7 @@ app_name = 'articles'
 
 urlpatterns = [
     path('', views.ArticleListView.as_view(), name='list'),
-    path('category/<slug:slug>/', views.CategoryArticleListView.as_view(), name='category'),
-    path('tag/<slug:slug>/', views.TagArticleListView.as_view(), name='tag'),
-    path('<slug:slug>/', views.ArticleDetailView.as_view(), name='detail'),
+    path('category/<str:slug>/', views.CategoryArticleListView.as_view(), name='category'),
+    path('tag/<str:slug>/', views.TagArticleListView.as_view(), name='tag'),
+    path('<str:slug>/', views.ArticleDetailView.as_view(), name='detail'),
 ]

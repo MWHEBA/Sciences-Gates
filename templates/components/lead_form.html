@@ -1,3 +1,4 @@
+{% load static %}
 <form method="POST" data-validate="true" class="space-y-6">
     {% csrf_token %}
     
@@ -13,12 +14,12 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             احصل على استشارة مجانية
         </h3>
-        <p class="text-sm" style="color: var(--text-secondary);">املأ البيانات أدناه وسيتواصل معك أحد مستشارينا خلال 24 ساعة.</p>
+        <p class="text-sm inl-s-35042daded">املأ البيانات أدناه وسيتواصل معك أحد مستشارينا خلال 24 ساعة.</p>
     </div>
     
     <!-- Non-field Errors -->
     {% if form.non_field_errors %}
-        <div class="rounded-lg p-4 space-y-2" style="background-color: var(--danger-light); border: 1px solid var(--danger); color: var(--danger);">
+        <div class="rounded-lg p-4 space-y-2 inl-s-a52a0f94ed">
             {% for error in form.non_field_errors %}
                 <p class="text-sm font-medium">{{ error }}</p>
             {% endfor %}
@@ -27,19 +28,19 @@
     
     <!-- Full Name Field -->
     <div class="space-y-2">
-        <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium" style="color: var(--text-primary);">
-            الاسم الكامل <span style="color: var(--danger);">*</span>
+        <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium inl-s-b25d56eeee">
+            الاسم الكامل <span class="inl-s-973ad1998f">*</span>
         </label>
         {{ form.name }}
         {% if form.name.errors %}
-            <div class="text-xs font-medium" style="color: var(--danger);">{{ form.name.errors.0 }}</div>
+            <div class="text-xs font-medium inl-s-973ad1998f">{{ form.name.errors.0 }}</div>
         {% endif %}
     </div>
     
     <!-- Phone Field with Country Code -->
     <div class="space-y-2">
-        <label class="block text-sm font-medium" style="color: var(--text-primary);">
-            رقم الهاتف <span style="color: var(--danger);">*</span>
+        <label class="block text-sm font-medium inl-s-b25d56eeee">
+            رقم الهاتف <span class="inl-s-973ad1998f">*</span>
         </label>
         <div class="intl-phone-wrapper">
             <!-- Custom Country Code Dropdown -->
@@ -66,129 +67,44 @@
         <input type="hidden" name="country_code" id="id_country_code" value="{{ default_code }}">
         <input type="hidden" name="phone" id="id_phone_combined">
         {% if form.phone.errors %}
-            <div class="text-xs font-medium" style="color: var(--danger);">{{ form.phone.errors.0 }}</div>
+            <div class="text-xs font-medium inl-s-973ad1998f">{{ form.phone.errors.0 }}</div>
         {% endif %}
     </div>
     
     <!-- Email Field -->
     <div class="space-y-2">
-        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium" style="color: var(--text-primary);">
+        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium inl-s-b25d56eeee">
             البريد الإلكتروني
         </label>
         {{ form.email }}
         {% if form.email.errors %}
-            <div class="text-xs font-medium" style="color: var(--danger);">{{ form.email.errors.0 }}</div>
+            <div class="text-xs font-medium inl-s-973ad1998f">{{ form.email.errors.0 }}</div>
         {% endif %}
     </div>
     
     <!-- Message Field -->
     <div class="space-y-2">
-        <label for="{{ form.message.id_for_label }}" class="block text-sm font-medium" style="color: var(--text-primary);">
-            رسالتك أو استفسارك <span class="text-xs" style="color: var(--text-muted);">(اختياري)</span>
+        <label for="{{ form.message.id_for_label }}" class="block text-sm font-medium inl-s-b25d56eeee">
+            رسالتك أو استفسارك <span class="text-xs inl-s-7abb3a4e64">(اختياري)</span>
         </label>
         {{ form.message }}
         {% if form.message.errors %}
-            <div class="text-xs font-medium" style="color: var(--danger);">{{ form.message.errors.0 }}</div>
+            <div class="text-xs font-medium inl-s-973ad1998f">{{ form.message.errors.0 }}</div>
         {% endif %}
     </div>
     
     <!-- Submit Button -->
-    <button type="submit" class="w-full px-4 py-3 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-primary text-white hover:bg-primary-hover" style="background-color: var(--primary);">
+    <button type="submit" class="w-full px-4 py-3 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-primary text-white hover:bg-primary-hover inl-s-cfad47e8da">
         إرسال الطلب الآن
     </button>
     
     <!-- Privacy Notice -->
-    <p class="text-xs text-center" style="color: var(--text-muted);">
+    <p class="text-xs text-center inl-s-7abb3a4e64">
         نحن نحمي بياناتك ولا نشاركها مع أطراف خارجية.
     </p>
 </form>
 
 <!-- Phone field script -->
-<script>
-(function() {
-    var wrapper = document.getElementById('intlPhoneSelect');
-    if (!wrapper) return;
-    
-    var btn = document.getElementById('intlPhoneBtn');
-    var dropdown = document.getElementById('intlPhoneDropdown');
-    var flagImg = document.getElementById('intlPhoneFlag');
-    var codeSpan = document.getElementById('intlPhoneCode');
-    var hiddenCode = document.getElementById('id_country_code');
-    var form = wrapper.closest('form');
-    
-    // Toggle dropdown
-    btn.addEventListener('click', function() {
-        var isOpen = dropdown.classList.contains('intl-phone-dropdown--open');
-        dropdown.classList.toggle('intl-phone-dropdown--open');
-        btn.setAttribute('aria-expanded', !isOpen);
-        // Lazy load flags on first open
-        if (!isOpen && !dropdown.dataset.loaded) {
-            dropdown.querySelectorAll('img[data-src]').forEach(function(img) {
-                img.src = img.dataset.src;
-                img.removeAttribute('data-src');
-            });
-            dropdown.dataset.loaded = '1';
-        }
-        // Focus search on open
-        if (!isOpen) {
-            var search = document.getElementById('intlPhoneSearch');
-            if (search) setTimeout(function() { search.focus(); }, 50);
-        }
-    });
-    
-    // Search filter
-    var searchInput = document.getElementById('intlPhoneSearch');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            var query = this.value.trim().toLowerCase();
-            var items = dropdown.querySelectorAll('li[role="option"]');
-            items.forEach(function(li) {
-                var name = li.querySelector('.intl-phone-name');
-                var dial = li.querySelector('.intl-phone-dial');
-                var text = (name ? name.textContent : '') + ' ' + (dial ? dial.textContent : '');
-                li.style.display = text.toLowerCase().indexOf(query) > -1 ? '' : 'none';
-            });
-        });
-        // Prevent form submit on Enter in search
-        searchInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') e.preventDefault();
-        });
-    }
-    
-    // Select option
-    dropdown.addEventListener('click', function(e) {
-        var li = e.target.closest('li[role="option"]');
-        if (!li) return;
-        var code = li.getAttribute('data-code');
-        var flag = li.getAttribute('data-flag');
-        var placeholder = li.getAttribute('data-placeholder');
-        codeSpan.textContent = code;
-        flagImg.src = 'https://flagcdn.com/w20/' + flag + '.png';
-        hiddenCode.value = code;
-        // Update placeholder
-        var phoneInput = document.getElementById('id_phone');
-        if (phoneInput && placeholder) phoneInput.placeholder = placeholder;
-        dropdown.classList.remove('intl-phone-dropdown--open');
-        btn.setAttribute('aria-expanded', 'false');
-    });
-    
-    // Close on outside click
-    document.addEventListener('click', function(e) {
-        if (!wrapper.contains(e.target)) {
-            dropdown.classList.remove('intl-phone-dropdown--open');
-            btn.setAttribute('aria-expanded', 'false');
-        }
-    });
-    
-    // Combine phone on submit
-    if (form) {
-        form.addEventListener('submit', function() {
-            var number = document.getElementById('id_phone');
-            var combined = document.getElementById('id_phone_combined');
-            if (number && combined && hiddenCode) {
-                combined.value = hiddenCode.value + number.value.replace(/^0+/, '');
-            }
-        });
-    }
-})();
-</script>
+
+
+<script src="{% static 'js/tpl-components_lead_form-scripts.js' %}"></script>

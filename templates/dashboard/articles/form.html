@@ -1,0 +1,640 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/html_editor.css' %}">
+{% endblock %}
+
+{% block content_wrapper %}
+<form method="post" enctype="multipart/form-data" id="main-form">
+    {% csrf_token %}
+
+    <!-- Non-field Errors -->
+    {% if form.non_field_errors %}
+    <div class="mb-4 p-4 rounded-lg" style="background-color: var(--danger-light); border: 1px solid var(--danger); color: var(--danger);">
+        {% for error in form.non_field_errors %}
+        <p class="text-sm">{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Slug Change Warning (Edit Mode) -->
+    {% if slug_changed %}
+    <div class="mb-6 p-4 rounded-lg" style="background-color: var(--warning-light); border: 1px solid var(--warning); color: var(--warning-dark);">
+        <div class="flex gap-3">
+            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" style="color: var(--warning);" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h3 class="font-normal" style="color: var(--warning-dark); font-weight: 600;">تحذير: تم تغيير الرابط</h3>
+                <p class="text-sm mt-1" style="color: var(--text-secondary);">
+                    تم تغيير رابط المقالة من <code class="px-2 py-1 rounded" style="background-color: rgba(0,0,0,0.05);">{{ old_slug }}</code> إلى <code class="px-2 py-1 rounded" style="background-color: rgba(0,0,0,0.05);">{{ object.slug }}</code>
+                </p>
+                <label class="flex items-center gap-2 mt-3 cursor-pointer">
+                    <input type="checkbox" name="create_redirect" class="w-4 h-4 rounded" style="border-color: var(--border);">
+                    <span class="text-sm" style="color: var(--text-primary);">إنشاء إعادة توجيه تلقائية من الرابط القديم</span>
+                </label>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Layout: سكنسين منفصلين — يمين 70% وشمال 30% -->
+    <div class="flex-1 flex" style="align-items: stretch; gap: 20px;">
+
+        <!-- السكشن الرئيسي — 70% -->
+        <div class="flex-1 min-w-0" style="flex: 7;">
+            <div class="space-y-6">
+
+                <!-- المعلومات الأساسية — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">المعلومات الأساسية</h2>
+                        <div class="space-y-6">
+                            <!-- العنوان — Full Width -->
+                            <div>
+                                <label for="{{ form.title.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.title.label }}
+                                    <span style="color: var(--danger);">*</span>
+                                </label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.title.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- الرابط — Full Width -->
+                            <div>
+                                <label for="{{ form.slug.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.slug.label }}
+                                    <span style="color: var(--danger);">*</span>
+                                </label>
+                                {{ form.slug }}
+                                {% if form.slug.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.slug.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.slug.help_text }}</p>
+                            </div>
+
+                            <!-- الصورة البارزة -->
+                            <div>
+                                {% if form.instance.featured_image %}
+                                    {% include "dashboard/components/image_upload.html" with field=form.featured_image required=True current_image=form.instance.featured_image.url %}
+                                {% else %}
+                                    {% include "dashboard/components/image_upload.html" with field=form.featured_image required=True %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- المحتوى — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">المحتوى</h2>
+                        <div class="space-y-6">
+                            <!-- الفئة -->
+                            <div>
+                                <label for="{{ form.category.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.category.label }}
+                                    <span style="color: var(--danger);">*</span>
+                                </label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.category.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.category.help_text }}</p>
+                            </div>
+
+                            <!-- الوسوم -->
+                            <div>
+                                <label class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.tags.label }}
+                                </label>
+                                
+                                <!-- المخفي: قائمة الاختيار الافتراضية من Django -->
+                                <div id="django-tags-checkboxes" style="display: none;">
+                                    {{ form.tags }}
+                                </div>
+
+                                <!-- الظاهر: مكون التاجات المخصص -->
+                                <div class="relative" style="position: relative;">
+                                    <div id="tag-input-box" class="w-full min-h-10 px-3 py-2 border rounded-lg flex flex-wrap gap-2 items-center cursor-text transition-colors duration-200" style="border-color: var(--border); background-color: var(--surface); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; cursor: text;">
+                                        <!-- التاجات المختارة ستظهر هنا -->
+                                        <div id="selected-tags-wrapper" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                                        <!-- مدخل البحث والكتابة -->
+                                        <input type="text" id="tag-search-input" placeholder="اكتب للبحث أو إضافة وسم جديد واضغط Enter..." style="flex: 1; border: none; outline: none; background: transparent; min-width: 150px; font-size: 13px; color: var(--text-primary); padding: 4px 0;" autocomplete="off">
+                                    </div>
+
+                                    <!-- القائمة المنسدلة للوسوم المتاحة -->
+                                    <div id="tag-dropdown-list" style="display: none; position: absolute; top: 100%; right: 0; left: 0; z-index: 50; max-height: 200px; overflow-y: auto; background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); margin-top: 4px;">
+                                        <!-- العناصر ستولد بالجافا سكريبت -->
+                                    </div>
+                                </div>
+
+                                {% if form.tags.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.tags.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.tags.help_text }}</p>
+                            </div>
+
+                            <!-- المحتوى باستخدام محرر HTML -->
+                            <div>
+                                <label for="{{ form.content.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.content.label }}
+                                    <span style="color: var(--danger);">*</span>
+                                </label>
+                                {{ form.content }}
+                                {% if form.content.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.content.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.content.help_text }}</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- السايد بار — 30% -->
+        <div style="flex: 3; min-width: 0; align-self: stretch;">
+            <div style="position: sticky; top: 80px;">
+
+                <!-- النشر — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 20px;
+                            margin-bottom: 24px;">
+                    <section>
+                        <h3 class="text-base font-semibold" style="color: var(--text-primary); margin-bottom: 16px;">النشر</h3>
+                        
+                        <!-- الحالة الحالية -->
+                        <div class="flex items-center gap-2 mb-4 p-3 rounded-lg" style="background-color: var(--surface-2); border: 1px solid var(--border);">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background-color: {% if form.publish_status.value == 'published' %}var(--success){% else %}var(--danger){% endif %};"></span>
+                            <span class="text-sm" style="color: var(--text-secondary);">الحالة:</span>
+                            <span class="text-sm font-normal" style="color: var(--text-primary);">
+                                {% if form.publish_status.value == 'published' %}منشور{% else %}مسودة{% endif %}
+                            </span>
+                        </div>
+
+                        <!-- حقل مخفي -->
+                        <input type="hidden" name="publish_status" id="id_publish_status" value="{{ form.publish_status.value|default:'unpublished' }}">
+
+                        <!-- أزرار -->
+                        <div class="flex flex-col gap-2">
+                            {% if form.publish_status.value == 'published' %}
+                                {% if form.instance.pk and form.instance.slug %}
+                                <a href="{% url 'articles:detail' form.instance.slug %}" target="_blank" rel="noopener noreferrer"
+                                   class="w-full px-4 py-2 rounded-lg font-normal text-center transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2"
+                                   style="background-color: var(--info-light); color: var(--info); border: 1px solid var(--info);">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    استعراض
+                                </a>
+                                {% endif %}
+                                <button type="submit" class="w-full px-4 py-2 rounded-lg font-normal text-white transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'" onclick="document.getElementById('id_publish_status').value='published'">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                        <polyline points="7 3 7 8 15 8"></polyline>
+                                    </svg>
+                                    تحديث
+                                </button>
+                            {% else %}
+                                <button type="submit" class="w-full px-4 py-2 rounded-lg font-normal text-white transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'" onclick="document.getElementById('id_publish_status').value='published'">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M12 5v14"></path>
+                                        <path d="M5 12h14"></path>
+                                    </svg>
+                                    نشر
+                                </button>
+                                <button type="submit" class="w-full px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border);" onclick="document.getElementById('id_publish_status').value='unpublished'">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M19 21H5a2 2 0 0 1-2-2V7h18v12a2 2 0 0 1-2 2z"></path>
+                                        <path d="M16 3v4"></path>
+                                        <path d="M8 3v4"></path>
+                                        <path d="M3 11h18"></path>
+                                    </svg>
+                                    حفظ كمسودة
+                                </button>
+                            {% endif %}
+                        </div>
+                    </section>
+                </div>
+
+                <!-- الارتباطات — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 20px;
+                            margin-bottom: 24px;">
+                    <section>
+                        <h3 class="text-base font-semibold" style="color: var(--text-primary); margin-bottom: 16px;">الارتباطات</h3>
+                        <div class="space-y-4">
+                            <!-- الجامعات المرتبطة -->
+                            <div>
+                                <label for="{{ form.related_universities.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.related_universities.label }}
+                                </label>
+                                <div class="max-h-36 overflow-y-auto rounded-lg p-3" style="border: 1px solid var(--border); background-color: var(--surface-2);">
+                                    {{ form.related_universities }}
+                                </div>
+                                {% if form.related_universities.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_universities.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- المعاهد المرتبطة -->
+                            <div>
+                                <label for="{{ form.related_institutes.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.related_institutes.label }}
+                                </label>
+                                <div class="max-h-36 overflow-y-auto rounded-lg p-3" style="border: 1px solid var(--border); background-color: var(--surface-2);">
+                                    {{ form.related_institutes }}
+                                </div>
+                                {% if form.related_institutes.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_institutes.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- التخصصات المرتبطة -->
+                            <div>
+                                <label for="{{ form.related_majors.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.related_majors.label }}
+                                </label>
+                                <div class="max-h-36 overflow-y-auto rounded-lg p-3" style="border: 1px solid var(--border); background-color: var(--surface-2);">
+                                    {{ form.related_majors }}
+                                </div>
+                                {% if form.related_majors.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_majors.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- تحسين محركات البحث — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 20px;">
+                    <section x-data="{ showAdvanced: false }">
+                        <h3 class="text-base font-semibold" style="color: var(--text-primary); margin-bottom: 16px;">تحسين محركات البحث</h3>
+                        <div class="space-y-4">
+                            <!-- عنوان SEO -->
+                            <div>
+                                <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.meta_title.label }}
+                                </label>
+                                {{ form.meta_title }}
+                                {% if form.meta_title.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.meta_title.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- وصف SEO -->
+                            <div>
+                                <label for="{{ form.meta_description.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.meta_description.label }}
+                                </label>
+                                {{ form.meta_description }}
+                                {% if form.meta_description.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.meta_description.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- الكلمة المفتاحية -->
+                            <div>
+                                <label for="{{ form.focus_keyword.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.focus_keyword.label }}
+                                </label>
+                                {{ form.focus_keyword }}
+                                {% if form.focus_keyword.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.focus_keyword.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- زر الإعدادات المتقدمة -->
+                            <button type="button"
+                                    @click="showAdvanced = !showAdvanced"
+                                    class="flex items-center gap-2 w-full pt-3 cursor-pointer"
+                                    style="padding-top: 10px; border-top: 1px solid var(--border); background: transparent; border-left: none; border-right: none; border-bottom: none;">
+                                <svg :class="showAdvanced ? 'rotate-90' : ''" style="width: 14px; height: 14px; color: var(--text-muted); transition: transform 0.2s ease;" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                                <span class="text-sm" style="color: var(--text-muted);">إعدادات متقدمة</span>
+                            </button>
+
+                            <!-- الإعدادات المتقدمة — Collapsible -->
+                            <div x-show="showAdvanced" x-collapse>
+                                <div class="space-y-4 pt-3">
+                                    <!-- الرابط الأساسي -->
+                                    <div>
+                                        <label for="{{ form.canonical_url.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                            {{ form.canonical_url.label }}
+                                        </label>
+                                        {{ form.canonical_url }}
+                                        {% if form.canonical_url.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.canonical_url.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- إعدادات الروبوتات -->
+                                    <div class="space-y-2">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            {{ form.robots_index }}
+                                            <span class="text-sm" style="color: var(--text-secondary);">{{ form.robots_index.label }}</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            {{ form.robots_follow }}
+                                            <span class="text-sm" style="color: var(--text-secondary);">{{ form.robots_follow.label }}</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            {{ form.sitemap_include }}
+                                            <span class="text-sm" style="color: var(--text-secondary);">{{ form.sitemap_include.label }}</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Open Graph -->
+                                    <div class="pt-3" style="padding-top: 10px; border-top: 1px solid var(--border);">
+                                        <p class="text-sm font-normal mb-3" style="color: var(--text-primary);">Open Graph</p>
+                                        <div class="space-y-4">
+                                            <!-- عنوان OG -->
+                                            <div>
+                                                <label for="{{ form.og_title.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                                    {{ form.og_title.label }}
+                                                </label>
+                                                {{ form.og_title }}
+                                                {% if form.og_title.errors %}
+                                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.og_title.errors.0 }}</p>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- وصف OG -->
+                                            <div>
+                                                <label for="{{ form.og_description.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                                    {{ form.og_description.label }}
+                                                </label>
+                                                {{ form.og_description }}
+                                                {% if form.og_description.errors %}
+                                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.og_description.errors.0 }}</p>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- صورة OG -->
+                                            <div>
+                                                {% if form.instance.og_image %}
+                                                    {% include "dashboard/components/image_upload.html" with field=form.og_image current_image=form.instance.og_image.url %}
+                                                {% else %}
+                                                    {% include "dashboard/components/image_upload.html" with field=form.og_image %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</form>
+
+<!-- سكريبت التمرير لأول خطأ -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const errorFields = document.querySelectorAll('[aria-invalid="true"]');
+    if (errorFields.length > 0) {
+        errorFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        errorFields[0].focus();
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/html_editor.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const djangoCheckboxesContainer = document.getElementById('django-tags-checkboxes');
+    const selectedTagsWrapper = document.getElementById('selected-tags-wrapper');
+    const tagSearchInput = document.getElementById('tag-search-input');
+    const tagDropdownList = document.getElementById('tag-dropdown-list');
+    const tagInputBox = document.getElementById('tag-input-box');
+
+    // 1. Get all available tags from the Django form markup
+    function getAvailableTags() {
+        const checkboxes = djangoCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
+        const tags = [];
+        checkboxes.forEach(cb => {
+            const labelText = cb.closest('label').textContent.trim();
+            tags.push({
+                id: cb.value,
+                name: labelText,
+                checkbox: cb
+            });
+        });
+        return tags;
+    }
+
+    let availableTags = getAvailableTags();
+
+    // 2. Render selected tags
+    function renderSelectedTags() {
+        selectedTagsWrapper.innerHTML = '';
+        availableTags.forEach(tag => {
+            if (tag.checkbox.checked) {
+                const tagElement = document.createElement('span');
+                tagElement.style.cssText = 'background-color: var(--info-light); color: var(--info); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 12px;';
+                tagElement.innerHTML = `
+                    <span>${tag.name}</span>
+                    <button type="button" style="background: transparent; border: none; padding: 0; margin-right: 4px; color: var(--info); font-weight: bold; cursor: pointer; line-height: 1;" onclick="removeTag('${tag.id}')">&times;</button>
+                `;
+                selectedTagsWrapper.appendChild(tagElement);
+            }
+        });
+    }
+
+    window.removeTag = function(id) {
+        const tag = availableTags.find(t => t.id === id);
+        if (tag) {
+            tag.checkbox.checked = false;
+            tag.checkbox.dispatchEvent(new Event('change'));
+            renderSelectedTags();
+            renderDropdown();
+        }
+    };
+
+    // 3. Render dropdown items
+    function renderDropdown() {
+        const query = tagSearchInput.value.trim().toLowerCase();
+        tagDropdownList.innerHTML = '';
+        let count = 0;
+
+        availableTags.forEach(tag => {
+            if (!tag.checkbox.checked && (tag.name.toLowerCase().includes(query) || query === '')) {
+                const item = document.createElement('div');
+                item.style.cssText = 'padding: 8px 16px; cursor: pointer; font-size: 13px; color: var(--text-primary); transition: background-color 0.15s;';
+                item.textContent = tag.name;
+                item.addEventListener('mouseover', () => {
+                    item.style.backgroundColor = 'var(--surface-2)';
+                });
+                item.addEventListener('mouseout', () => {
+                    item.style.backgroundColor = 'transparent';
+                });
+                item.addEventListener('click', function() {
+                    selectTag(tag.id);
+                });
+                tagDropdownList.appendChild(item);
+                count++;
+            }
+        });
+
+        if (count > 0) {
+            tagDropdownList.style.display = 'block';
+        } else {
+            if (query !== '') {
+                tagDropdownList.innerHTML = `<div class="px-4 py-2 text-xs text-gray-500" style="padding: 8px 16px; font-size: 12px; color: var(--text-muted);">اضغط Enter لإنشاء وسم جديد باسم "${tagSearchInput.value.trim()}"</div>`;
+                tagDropdownList.style.display = 'block';
+            } else {
+                tagDropdownList.style.display = 'none';
+            }
+        }
+    }
+
+    function selectTag(id) {
+        const tag = availableTags.find(t => t.id === id);
+        if (tag) {
+            tag.checkbox.checked = true;
+            tag.checkbox.dispatchEvent(new Event('change'));
+            tagSearchInput.value = '';
+            renderSelectedTags();
+            tagDropdownList.style.display = 'none';
+            tagSearchInput.focus();
+        }
+    }
+
+    // 4. Focus input when clicking tag container
+    tagInputBox.addEventListener('click', function(e) {
+        if (e.target !== tagSearchInput && !e.target.closest('button')) {
+            tagSearchInput.focus();
+        }
+    });
+
+    // 5. Input key events and search
+    tagSearchInput.addEventListener('focus', function() {
+        renderDropdown();
+    });
+
+    tagSearchInput.addEventListener('input', function() {
+        renderDropdown();
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#tag-input-box') && !e.target.closest('#tag-dropdown-list')) {
+            tagDropdownList.style.display = 'none';
+        }
+    });
+
+    // Prevent enter key from submitting the form, instead create tag
+    tagSearchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = this.value.trim();
+            if (val === '') return;
+
+            // Check if tag already exists and select it
+            const existing = availableTags.find(t => t.name.toLowerCase() === val.toLowerCase());
+            if (existing) {
+                selectTag(existing.id);
+                return;
+            }
+
+            // Otherwise create new tag via AJAX
+            createNewTag(val);
+        }
+    });
+
+    function createNewTag(name) {
+        const slug = name
+            .toLowerCase()
+            .replace(/[^\w\s\u0621-\u064A\u0660-\u0669-]/g, '')
+            .replace(/[\s_]+/g, '-')
+            .replace(/-+/g, '-');
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch('/dashboard/tags/create/?json=1', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            },
+            body: new URLSearchParams({
+                'name': name,
+                'slug': slug
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const ul = djangoCheckboxesContainer.querySelector('ul') || djangoCheckboxesContainer;
+                const li = document.createElement('li');
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = 'tags';
+                checkbox.value = data.id;
+                checkbox.checked = true;
+                
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(' ' + data.name));
+                li.appendChild(label);
+                ul.appendChild(li);
+
+                availableTags.push({
+                    id: String(data.id),
+                    name: data.name,
+                    checkbox: checkbox
+                });
+
+                tagSearchInput.value = '';
+                renderSelectedTags();
+                tagDropdownList.style.display = 'none';
+                tagSearchInput.focus();
+            } else {
+                alert('فشل إنشاء الوسم. قد يكون هذا الاسم أو الرابط مستخدماً بالفعل.');
+            }
+        })
+        .catch(error => {
+            console.error('Error creating tag:', error);
+        });
+    }
+
+    renderSelectedTags();
+});
+</script>
+{% endblock %}

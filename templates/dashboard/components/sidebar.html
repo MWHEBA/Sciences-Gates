@@ -490,10 +490,10 @@
                 {{ user.get_full_name|default:user.username|first|upper }}
             </div>
             <div style="flex: 1; min-width: 0;">
-                <p style="font-size: 13px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <p style="font-size: 13px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 0;">
                     {{ user.get_full_name|default:user.username }}
                 </p>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 1px; margin-bottom: 0;">
                     {% if user.is_authenticated and user.profile %}{{ user.profile.get_role_display }}{% endif %}
                 </p>
             </div>

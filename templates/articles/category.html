@@ -3,14 +3,14 @@
 {% load image_tags %}
 
 {% block title %}{{ category.name }} - المقالات - بوابات العلوم{% endblock %}
-{% block meta_description %}اقرأ جميع مقالات فئة {{ category.name }}{% endblock %}
+{% block meta_description %}اقرأ جميع مقالات تصنيف {{ category.name }}{% endblock %}
 
 {% block content %}
 <div class="container">
     <!-- Page Header -->
     <div class="articles-page-header">
         <div class="articles-page-header-accent"></div>
-        <span class="articles-page-header-label">تصفح حسب الفئة</span>
+        <span class="articles-page-header-label">تصفح حسب التصنيف</span>
         <h1 class="articles-page-header-title">{{ category.name }}</h1>
         {% if category.description %}
             <p class="articles-page-header-description">{{ category.description }}</p>
@@ -98,7 +98,7 @@
 
     {% else %}
         <!-- No Articles Message -->
-        {% include 'partials/empty-state.html' with message="لا توجد مقالات في هذه الفئة حالياً" description="يرجى العودة لاحقاً لقراءة أحدث الأخبار." %}
+        {% include 'partials/empty-state.html' with message="لا توجد مقالات في هذا التصنيف حالياً" description="يرجى العودة لاحقاً لقراءة أحدث الأخبار." %}
     {% endif %}
 </div>
 {% endblock %}

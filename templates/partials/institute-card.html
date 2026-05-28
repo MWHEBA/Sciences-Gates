@@ -1,4 +1,4 @@
-<article class="card" onclick="window.location='{% url 'institutes:detail' institute.slug %}'" style="cursor:pointer;">
+<article class="card" class="inl-s-58aba5753b" id="inl-el-323644610e">
     <!-- صورة المعهد -->
     <a href="{% url 'institutes:detail' institute.slug %}" class="card__image">
         <span class="card__badge">معهد</span>
@@ -21,16 +21,16 @@
         
         <!-- التذييل -->
         <div class="card__footer">
-            <span style="display:flex; align-items:center; gap:0.5rem; color: var(--text-light);">
+            <span class="inl-s-b74e94faa3">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                     <circle cx="12" cy="10" r="3"></circle>
                 </svg>
                 <span>{{ institute.location|truncatewords:3 }}</span>
             </span>
-            <a href="{% url 'institutes:detail' institute.slug %}" style="display:flex; align-items:center; gap:0.5rem; color: var(--primary); font-weight:600; text-decoration:none; transition: color 0.2s;" onmouseover="this.style.color='var(--secondary)'" onmouseout="this.style.color='var(--primary)'">
+            <a href="{% url 'institutes:detail' institute.slug %}" class="inl-s-0ba4dac58a" id="inl-el-437eeae055">
                 استعرض البرامج
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(180deg);" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inl-s-8657ef20e4" aria-hidden="true">
                     <path d="M5 12h14M12 5l7 7-7 7"></path>
                 </svg>
             </a>
