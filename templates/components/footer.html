@@ -1,75 +1,185 @@
-<footer class="footer">
-    <div class="container">
-        <div class="footer__grid">
-            <div class="footer__col">
-                <a href="/" class="footer__logo">
-                    <svg class="footer__logo-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
-                    </svg>
-                    بوابات العلوم
-                </a>
-                <p class="footer__desc">
-                    الوجهة الأولى للطلاب العرب الباحثين عن التميز الأكاديمي. نقدم خدمات القبول الجامعي، الاستشارات التعليمية، والتوجيه الأكاديمي للدراسة في ماليزيا.
-                </p>
-                <div class="footer__social">
-                    <a href="#" class="footer__social-link" aria-label="فيسبوك">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-                    </a>
-                    <a href="#" class="footer__social-link" aria-label="انستغرام">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                    </a>
-                    <a href="#" class="footer__social-link" aria-label="تويتر">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="footer__col">
-                <h4 class="footer__title">روابط سريعة</h4>
-                <div class="footer__links">
-                    <a href="{% url 'universities:list' %}" class="footer__link">الجامعات الماليزية</a>
-                    <a href="{% url 'institutes:list' %}" class="footer__link">معاهد اللغة</a>
-                    <a href="{% url 'majors:list' %}" class="footer__link">التخصصات الدراسية</a>
-                    <a href="{% url 'articles:list' %}" class="footer__link">المدونة والأخبار</a>
-                    <a href="{% url 'leads:submit' %}" class="footer__link">اتصل بنا</a>
-                </div>
-            </div>
+{% load static %}
 
-            <div class="footer__col">
-                <h4 class="footer__title">أهم الجامعات</h4>
-                <div class="footer__links">
-                    <a href="#" class="footer__link">جامعة مالايا (UM)</a>
-                    <a href="#" class="footer__link">جامعة تايلورز</a>
-                    <a href="#" class="footer__link">جامعة APU</a>
-                    <a href="#" class="footer__link">جامعة سيجي</a>
-                    <a href="#" class="footer__link">جامعة UCSI</a>
-                </div>
-            </div>
+<footer class="site-footer" role="contentinfo" aria-label="تذييل الصفحة">
 
-            <div class="footer__col">
-                <h4 class="footer__title">تواصل معنا</h4>
-                <div class="footer__links">
-                    <span class="footer__link inl-s-9a31a3620f">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                        +60 12 345 6789
-                    </span>
-                    <span class="footer__link inl-s-9a31a3620f">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                        info@sciencesgates.com
-                    </span>
-                    <span class="footer__link inl-s-9a31a3620f">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        كوالالمبور، ماليزيا
-                    </span>
+    <!-- الجسم الرئيسي للفوتر -->
+    <div class="site-footer__body">
+        <div class="container">
+            <div class="site-footer__grid">
+
+                <!-- العمود 1: الهوية والوصف -->
+                <div class="site-footer__col site-footer__col--brand">
+                    <a href="/" class="site-footer__logo" aria-label="بوابات العلوم - الصفحة الرئيسية">
+                        <img src="{% static 'images/logo.png' %}" alt="بوابات العلوم" class="site-footer__logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <span class="site-footer__logo-fallback" style="display:none;">
+                            <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                            بوابات العلوم
+                        </span>
+                    </a>
+                    <p class="site-footer__desc">
+                        وابات العلوم هي منصة لتوفير التعليم عالي الجودة والاستشارات للطلاب الراغبين في متابعة دراستهم في ماليزيا ، قدمت خدمات متنوعة لآلاف الطلاب وأنشأت علاقة جيدة مع المؤسسات التعليمية الحكومية والخاصة في ماليزيا لتسهيل وضمان التسجيل السلس للطلاب الجدد.
+                    </p>
+                    <!-- أيقونات التواصل الاجتماعي -->
+                    <div class="site-footer__social" aria-label="روابط التواصل الاجتماعي">
+                        <a href="#" class="site-footer__social-btn" aria-label="فيسبوك" title="فيسبوك">
+                            <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                        </a>
+                        <a href="#" class="site-footer__social-btn" aria-label="انستغرام" title="انستغرام">
+                            <i class="fab fa-instagram" aria-hidden="true"></i>
+                        </a>
+                        <a href="#" class="site-footer__social-btn" aria-label="يوتيوب" title="يوتيوب">
+                            <i class="fab fa-youtube" aria-hidden="true"></i>
+                        </a>
+                        <a href="#" class="site-footer__social-btn site-footer__social-btn--whatsapp" aria-label="واتساب" title="واتساب">
+                            <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                        </a>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="footer__bottom">
-            <div>&copy; 2026 بوابات العلوم (Science Gates). جميع الحقوق محفوظة.</div>
-            <div>
-                <a href="/privacy" class="inl-s-63bcd60232">سياسة الخصوصية</a>
-                <a href="/terms" class="inl-s-c610b883a9">الشروط والأحكام</a>
+
+                <!-- العمود 2: روابط سريعة -->
+                <div class="site-footer__col">
+                    <h3 class="site-footer__col-title">
+                        <span class="site-footer__col-title-accent"></span>
+                        روابط سريعة
+                    </h3>
+                    <ul class="site-footer__links" role="list">
+                        <li>
+                            <a href="{% url 'universities:list' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                الجامعات الماليزية
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'institutes:list' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                معاهد اللغة الإنجليزية
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'majors:list' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                التخصصات الدراسية
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'articles:list' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                المدونة والأخبار
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'leads:submit' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                تواصل معنا
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- العمود 3: أبرز الجامعات -->
+                <div class="site-footer__col">
+                    <h3 class="site-footer__col-title">
+                        <span class="site-footer__col-title-accent"></span>
+                        أبرز الجامعات
+                    </h3>
+                    <ul class="site-footer__links" role="list">
+                        <li>
+                            <a href="{% url 'universities:list' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                جامعة مالايا (UM)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'universities:list' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                جامعة تايلورز
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'universities:list' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                جامعة APU
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'universities:list' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                جامعة سيجي
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'universities:list' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                جامعة UCSI
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- العمود 4: التواصل -->
+                <div class="site-footer__col">
+                    <h3 class="site-footer__col-title">
+                        <span class="site-footer__col-title-accent"></span>
+                        تواصل معنا
+                    </h3>
+                    <ul class="site-footer__contact-list" role="list">
+                        <li class="site-footer__contact-item">
+                            <span class="site-footer__contact-icon" aria-hidden="true">
+                                <i class="fas fa-phone-alt"></i>
+                            </span>
+                            <div class="site-footer__contact-text">
+                                <span class="site-footer__contact-label">هاتف</span>
+                                <a href="tel:+60123456789" class="site-footer__contact-value" dir="ltr">+60 12 345 6789</a>
+                            </div>
+                        </li>
+                        <li class="site-footer__contact-item">
+                            <span class="site-footer__contact-icon" aria-hidden="true">
+                                <i class="fab fa-whatsapp"></i>
+                            </span>
+                            <div class="site-footer__contact-text">
+                                <span class="site-footer__contact-label">واتساب</span>
+                                <a href="https://wa.me/60123456789" class="site-footer__contact-value" dir="ltr" target="_blank" rel="noopener">+60 12 345 6789</a>
+                            </div>
+                        </li>
+                        <li class="site-footer__contact-item">
+                            <span class="site-footer__contact-icon" aria-hidden="true">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <div class="site-footer__contact-text">
+                                <span class="site-footer__contact-label">البريد الإلكتروني</span>
+                                <a href="mailto:info@sciencesgates.com" class="site-footer__contact-value" dir="ltr">info@sciencesgates.com</a>
+                            </div>
+                        </li>
+                        <li class="site-footer__contact-item">
+                            <span class="site-footer__contact-icon" aria-hidden="true">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </span>
+                            <div class="site-footer__contact-text">
+                                <span class="site-footer__contact-label">الموقع</span>
+                                <span class="site-footer__contact-value">كوالالمبور، ماليزيا</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
             </div>
         </div>
     </div>
+
+    <!-- البار السفلي -->
+    <div class="site-footer__bottom">
+        <div class="container">
+            <div class="site-footer__bottom-inner">
+                <p class="site-footer__copyright">
+                    &copy; {{ "now"|date:"Y" }} <strong>بوابات العلوم</strong>. جميع الحقوق محفوظة.
+                </p>
+                <div class="site-footer__legal-links">
+                    <a href="/privacy" class="site-footer__legal-link">سياسة الخصوصية</a>
+                    <span class="site-footer__legal-sep" aria-hidden="true">·</span>
+                    <a href="/terms" class="site-footer__legal-link">الشروط والأحكام</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </footer>

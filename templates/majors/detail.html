@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static university_tags major_tags %}
 {% load image_tags %}
 {% load breadcrumbs %}
 
 {% block title %}{{ major.name }} - بوابات العلوم{% endblock %}
-{% block meta_description %}{{ major.meta_description|default:major.description|striptags|truncatewords:30 }}{% endblock %}
+{% block meta_description %}{{ major.meta_description|default:major.description|clean_desc|truncatewords:30 }}{% endblock %}
 
 {% block og_title %}{{ major.og_title|default:major.name }}{% endblock %}
-{% block og_description %}{{ major.og_description|default:major.description|striptags|truncatewords:30 }}{% endblock %}
+{% block og_description %}{{ major.og_description|default:major.description|clean_desc|truncatewords:30 }}{% endblock %}
 
 {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
 
@@ -259,7 +259,7 @@
                                     </div>
                                 {% endif %}
                                 <h3 class="detail-university-name">{{ university.name }}</h3>
-                                <p class="detail-university-location">{{ university.location }}</p>
+                                <p class="detail-university-location">{{ university.location|clean_desc }}</p>
                                 <a 
                                     href="{{ university.get_absolute_url }}"
                                     class="btn btn--primary btn--sm btn--block"
@@ -294,7 +294,7 @@
                                     </div>
                                 {% endif %}
                                 <h3 class="detail-university-name">{{ university.name }}</h3>
-                                <p class="detail-university-location">{{ university.location }}</p>
+                                <p class="detail-university-location">{{ university.location|clean_desc }}</p>
                                 <a 
                                     href="{{ university.get_absolute_url }}"
                                     class="btn btn--primary btn--sm btn--block"

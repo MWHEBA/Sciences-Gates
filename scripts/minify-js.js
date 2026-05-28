@@ -15,8 +15,8 @@ const path = require('path');
 // Simple JavaScript minification function
 // Removes comments, whitespace, and unnecessary characters
 function minifyJS(code) {
-  // Remove single-line comments
-  code = code.replace(/\/\/.*$/gm, '');
+  // Remove single-line comments (ignoring double slashes in URLs)
+  code = code.replace(/(?<!:)\/\/.*$/gm, '');
   
   // Remove multi-line comments
   code = code.replace(/\/\*[\s\S]*?\*\//g, '');

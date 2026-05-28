@@ -1,10 +1,41 @@
-<div class="cta-band">
-    <div class="container">
-        <h2>هل أنت مستعد لبدء رحلتك الدراسية في ماليزيا؟</h2>
-        <p>فريقنا من المستشارين الأكاديميين جاهز لمساعدتك في الحصول على قبولك الجامعي مجاناً.</p>
-        <div class="hero__actions">
-            <a href="{% url 'leads:submit' %}" class="btn btn--secondary btn--lg">احصل على استشارة مجانية</a>
-            <a href="{% url 'universities:list' %}" class="btn btn--outline btn--lg inl-s-d26e25f3ba">تصفح الجامعات</a>
+<!-- CTA Band -->
+<section class="cta-band" aria-labelledby="cta-band-title">
+
+    <!-- عناصر ديكور الأركان -->
+    <div class="cta-band__corner cta-band__corner--tl" aria-hidden="true">
+        <div class="cta-band__circle cta-band__circle--lg"></div>
+        <div class="cta-band__circle cta-band__circle--sm"></div>
+    </div>
+    <div class="cta-band__corner cta-band__corner--br" aria-hidden="true">
+        <div class="cta-band__circle cta-band__circle--lg"></div>
+        <div class="cta-band__dots" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
         </div>
     </div>
-</div>
+
+    <!-- المحتوى -->
+    <div class="container">
+        <div class="cta-band__inner">
+            <div class="cta-band__text">
+                <h2 class="cta-band__title" id="cta-band-title">
+                    هل أنت مستعد لبدء رحلتك الدراسية في ماليزيا؟
+                </h2>
+                <p class="cta-band__desc">فريقنا جاهز لمساعدتك في الحصول على قبولك الجامعي مجاناً.</p>
+            </div>
+            <div class="cta-band__actions">
+                <a href="{% url 'leads:submit' %}" class="cta-band__btn cta-band__btn--primary">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    استشارة مجانية
+                </a>
+                <a href="{% url 'universities:list' %}" class="cta-band__btn cta-band__btn--outline">
+                    <i class="fas fa-university" aria-hidden="true"></i>
+                    تصفح الجامعات
+                </a>
+            </div>
+        </div>
+    </div>
+
+</section>
+

@@ -1,29 +1,33 @@
-<article class="card" class="inl-s-58aba5753b" id="inl-el-ed7442642d">
+{% load major_tags %}
+<article class="card card--horizontal" onclick="window.location.href='{% url 'majors:detail' major.slug %}'">
     <!-- صورة التخصص -->
-    <a href="{% url 'majors:detail' major.slug %}" class="card__image inl-s-648ec5c899">
+    <div class="card__image">
         <img 
             src="{% if major.image %}{{ major.image.url }}{% else %}https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800{% endif %}" 
             alt="{{ major.name }}"
             loading="lazy"
         >
-    </a>
+    </div>
     
     <!-- محتوى الكرت -->
-    <div class="card__content inl-s-aa0da8a6b4">
+    <div class="card__content">
         <!-- اسم التخصص -->
-        <h3 class="card__title inl-s-e061ff0221">
-            <a href="{% url 'majors:detail' major.slug %}">{{ major.name }}</a>
+        <h3 class="card__title">
+            <a href="{% url 'majors:detail' major.slug %}" onclick="event.stopPropagation();">{{ major.name }}</a>
         </h3>
         
         <!-- الوصف -->
-        <p class="card__desc inl-s-09cbfd89d3">{{ major.description|striptags|truncatewords:15 }}</p>
+        <p class="card__desc">{{ major.description|clean_desc|truncatewords:15 }}</p>
         
         <!-- زر التفاصيل -->
-        <a 
-            href="{% url 'majors:detail' major.slug }}" 
-            class="btn btn--outline btn--block btn--sm inl-s-2049deb330"
-        >
-            التفاصيل والجامعات
-        </a>
+        <div class="card__actions">
+            <a 
+                href="{% url 'majors:detail' major.slug %}" 
+                class="btn btn--outline btn--sm"
+                onclick="event.stopPropagation();"
+            >
+                التفاصيل والجامعات
+            </a>
+        </div>
     </div>
 </article>

@@ -85,28 +85,97 @@
     </div>
 </div>
 
-
-<!-- Featured Universities -->
-<section class="section section-bg-white">
+<!-- سيكشن التعريف بالشركة (About Company Section) -->
+<section class="section section-bg-white about-section">
     <div class="container">
-        <div class="section-header">
-            <h2 class="section-title">جامعات ماليزية متميزة</h2>
-            <a href="{% url 'universities:list' %}" class="btn btn--outline">عرض كل الجامعات</a>
-        </div>
-        <div class="grid grid--3">
-            {% for university in featured_universities %}
-            {% include 'partials/university-card.html' with university=university %}
-            {% empty %}
-            <p class="grid-empty">لا توجد جامعات متاحة حالياً</p>
-            {% endfor %}
+        <div class="grid grid--2 align-items-center">
+
+            <!-- محتوى التعريف (Right side: Text content) -->
+            <div class="about-content">
+                <span class="section-tag">شركة بوابات العلوم</span>
+                <h2 class="section-title-premium">بوابتك الموثوقة للدراسة في ماليزيا</h2>
+                <p class="section-desc-premium">
+                    شركة بوابات العلوم هي منصة لتوفير التعليم عالي الجودة والاستشارات للطلاب الراغبين في متابعة دراستهم
+                    في ماليزيا ، وقد قدمت بوابة العلوم مختلف الخدمات لآلاف الطلاب وأنشأت علاقة جيدة مع المؤسسات
+                    التعليمية الحكومية والخاصة في ماليزيا لتسهيل وضمان التسجيل السلس للطلاب الجدد.
+                </p>
+
+                <!-- قائمة المميزات بأيقونات تشيك مارك (Checklist with icons) -->
+                <ul class="about-features">
+                    <li class="about-feature-item">
+                        <span class="about-feature-icon">
+                            <i class="fas fa-check"></i>
+                        </span>
+                        <span class="about-feature-text">نفتح لك الطريق نحو أفضل الجامعات في ماليزيا</span>
+                    </li>
+                    <li class="about-feature-item">
+                        <span class="about-feature-icon">
+                            <i class="fas fa-check"></i>
+                        </span>
+                        <span class="about-feature-text">استشارات أكاديمية دقيقة لبرامج البكالوريوس والدراسات
+                            العليا</span>
+                    </li>
+                    <li class="about-feature-item">
+                        <span class="about-feature-icon">
+                            <i class="fas fa-check"></i>
+                        </span>
+                        <span class="about-feature-text">نتابع ملفك خطوة بخطوة حتى صدور القبول والفيزا</span>
+                    </li>
+                    <li class="about-feature-item">
+                        <span class="about-feature-icon">
+                            <i class="fas fa-check"></i>
+                        </span>
+                        <span class="about-feature-text">نسهّل عليك كل الإجراءات لتبدأ رحلتك بثقة وراحة</span>
+                    </li>
+                </ul>
+
+                <!-- كارت المدير التنفيذي والتوقيع (CEO signature card) -->
+                <div class="about-ceo-card">
+                    <div class="ceo-meta">
+                        <h4 class="ceo-name">د. محمد كيالي</h4>
+                        <p class="ceo-role">المدير التنفيذي</p>
+                    </div>
+                    <div class="ceo-sig-img">
+                        <img src="{% static 'images/ceo-signature.png' %}" alt="توقيع د. محمد كيالي">
+                    </div>
+                </div>
+            </div>
+
+            <!-- الصور الجانبية (Left side: Overlapping Images) -->
+            <div class="about-images">
+                <div class="about-images__wrapper">
+                    <!-- الصورة الخلفية (Main background image) -->
+                    <div class="about-image-card main-image">
+                        <img src="{% static 'images/visa-application.webp' %}" alt="تأشيرة الطالب والقبول في ماليزيا"
+                            class="about-img">
+                    </div>
+                    <!-- الصورة الأمامية المتداخلة (Overlapping secondary image) -->
+                    <div class="about-image-card secondary-image">
+                        <img src="{% static 'images/square-academic-hat.webp' %}" alt="الدراسة في ماليزيا"
+                            class="about-img">
+                    </div>
+
+                    <!-- شارة سنوات الخبرة (Experience Badge) -->
+                    <div class="experience-badge">
+                        <span class="experience-badge__number">+10</span>
+                        <span class="experience-badge__label">سنوات خبرة</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </section>
 
 <!-- Why Choose Us -->
-<section class="section section-bg-gray">
+<section class="section why-choose-us">
     <div class="container">
-        <h2 class="section-title text-center">لماذا تختار بوابات العلوم؟</h2>
+        <div class="section-header">
+            <span class="section-tag">مميزات بوابات العلوم</span>
+            <h2 class="section-title-premium text-center">لماذا تختار بوابات العلوم؟</h2>
+            <p class="section-desc-premium">شريكك الأكاديمي الموثوق للدراسة في ماليزيا. نقدم لك تجربة تعليمية متكاملة
+                تبدأ من تقديم الاستشارة وحتى استقرارك الجامعي.</p>
+        </div>
         <div class="grid grid--4 features-grid">
             <!-- Feature 1 -->
             <div class="feature-card">
@@ -118,7 +187,8 @@
                     </svg>
                 </div>
                 <h3 class="feature-card__title">قبولات مضمونة ومجانية</h3>
-                <p class="feature-card__desc">نحن وكلاء رسميون، مما يعني سهولة وسرعة الإجراءات بدون رسوم خفية.</p>
+                <p class="feature-card__desc">نحن وكلاء رسميون للجامعات الماليزية، مما يضمن لك سرعة الإجراءات وبدون أي
+                    رسوم خفية.</p>
             </div>
 
             <!-- Feature 2 -->
@@ -133,7 +203,8 @@
                     </svg>
                 </div>
                 <h3 class="feature-card__title">استشارات أكاديمية</h3>
-                <p class="feature-card__desc">توجيهك لاختيار التخصص والجامعة الأنسب لميزانيتك وطموحك.</p>
+                <p class="feature-card__desc">توجيه أكاديمي مخصص لمساعدتك في اختيار التخصص الأنسب لميزانيتك ومستقبلك
+                    المهني.</p>
             </div>
 
             <!-- Feature 3 -->
@@ -146,7 +217,8 @@
                     </svg>
                 </div>
                 <h3 class="feature-card__title">تأمين السكن والفيزا</h3>
-                <p class="feature-card__desc">خدمات متكاملة تشمل استخراج فيزا الطالب وتأمين سكن ملائم.</p>
+                <p class="feature-card__desc">تغطية كاملة للملف الإجرائي واستخراج فيزا الطالب وتأمين خيارات سكن مريحة
+                    وقريبة.</p>
             </div>
 
             <!-- Feature 4 -->
@@ -160,8 +232,28 @@
                     </svg>
                 </div>
                 <h3 class="feature-card__title">متابعة بعد الوصول</h3>
-                <p class="feature-card__desc">استقبال في المطار ومساعدة في إجراءات التسجيل وفتح الحساب البنكي.</p>
+                <p class="feature-card__desc">نستقبلك في المطار ونرافقك لإنهاء إجراءات التسجيل في الجامعة وبدء دراستك
+                    بسلاسة.</p>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Universities -->
+<section class="section section-bg-white">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-header__titles">
+                <h2 class="section-title">أبرز الجامعات الماليزية</h2>
+            </div>
+            <a href=" {% url 'universities:list' %}" class="btn btn--outline">عرض كل الجامعات</a>
+        </div>
+        <div class="grid grid--3">
+            {% for university in featured_universities %}
+            {% include 'partials/university-card.html' with university=university %}
+            {% empty %}
+            <p class="grid-empty">لا توجد جامعات متاحة حالياً</p>
+            {% endfor %}
         </div>
     </div>
 </section>
@@ -172,7 +264,7 @@
         <!-- Majors -->
         <div>
             <div class="section-header section-header--sm">
-                <h2 class="section-title section-title--sm">أبرز التخصصات</h2>
+                <h2 class="section-title section-title--sm">أبرز التخصصات في ماليزيا</h2>
                 <a href="{% url 'majors:list' %}" class="btn btn--outline btn--sm">الكل</a>
             </div>
             <div class="cards-stack">
@@ -187,7 +279,7 @@
         <!-- Institutes -->
         <div>
             <div class="section-header section-header--sm">
-                <h2 class="section-title section-title--sm">معاهد اللغة الإنجليزية</h2>
+                <h2 class="section-title section-title--sm">أبرز المعاهد في ماليزيا</h2>
                 <a href="{% url 'institutes:list' %}" class="btn btn--outline btn--sm">الكل</a>
             </div>
             <div class="cards-stack">
@@ -202,30 +294,84 @@
 </section>
 
 <!-- Steps Section -->
-<section class="section section-bg-primary">
+<section class="steps-section">
     <div class="container">
-        <h2 class="section-title text-center steps-title">خطوات التسجيل معنا</h2>
-        <div class="grid grid--4 steps-grid">
-            <div class="step-item">
-                <div class="step-item__number">01</div>
-                <h3 class="step-item__title">تواصل معنا</h3>
-                <p class="step-item__desc">املأ نموذج التسجيل للحصول على الاستشارة.</p>
+        <!-- Section Header -->
+        <div class="steps-section__header">
+            <span class="section-tag steps-tag">كيف نبدأ معك؟</span>
+            <h2 class="section-title text-center">خطوات التسجيل معنا</h2>
+            <p class="steps-section__desc">أربع خطوات بسيطة تبدأ بها رحلتك الأكاديمية نحو الدراسة في ماليزيا</p>
+        </div>
+
+        <!-- Steps Grid -->
+        <div class="steps-grid">
+            <!-- Step 1 -->
+            <div class="step-card">
+                <div class="step-card__icon-wrap">
+                    <div class="step-card__badge">01</div>
+                    <div class="step-card__icon">
+                        <i class="fas fa-comments" aria-hidden="true"></i>
+                    </div>
+                </div>
+                <div class="step-card__body">
+                    <h3 class="step-card__title">تواصل معنا</h3>
+                    <p class="step-card__desc">املأ نموذج التسجيل أو تواصل معنا مباشرةً للحصول على استشارة أكاديمية
+                        مجانية.</p>
+                </div>
             </div>
-            <div class="step-item">
-                <div class="step-item__number">02</div>
-                <h3 class="step-item__title">تقديم المستندات</h3>
-                <p class="step-item__desc">أرسل أوراقك وسنقوم بترجمتها وتصديقها إن لزم الأمر.</p>
+
+            <!-- Step 2 -->
+            <div class="step-card">
+                <div class="step-card__icon-wrap">
+                    <div class="step-card__badge">02</div>
+                    <div class="step-card__icon">
+                        <i class="fas fa-file-alt" aria-hidden="true"></i>
+                    </div>
+                </div>
+                <div class="step-card__body">
+                    <h3 class="step-card__title">تقديم المستندات</h3>
+                    <p class="step-card__desc">أرسل أوراقك وسنتولى ترجمتها وتصديقها وتقديمها للجامعة المناسبة نيابةً
+                        عنك.</p>
+                </div>
             </div>
-            <div class="step-item">
-                <div class="step-item__number">03</div>
-                <h3 class="step-item__title">استلام القبول المجاني</h3>
-                <p class="step-item__desc">استلام القبول الجامعي خلال أيام قليلة.</p>
+
+            <!-- Step 3 -->
+            <div class="step-card">
+                <div class="step-card__icon-wrap">
+                    <div class="step-card__badge">03</div>
+                    <div class="step-card__icon">
+                        <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                    </div>
+                </div>
+                <div class="step-card__body">
+                    <h3 class="step-card__title">استلام القبول</h3>
+                    <p class="step-card__desc">احصل على خطاب القبول الجامعي الرسمي خلال أيام معدودة وبدون أي رسوم خفية.
+                    </p>
+                </div>
             </div>
-            <div class="step-item">
-                <div class="step-item__number">04</div>
-                <h3 class="step-item__title">السفر والدراسة</h3>
-                <p class="step-item__desc">سوف نستقبلك في المطار ونرافقك للجامعة.</p>
+
+            <!-- Step 4 -->
+            <div class="step-card">
+                <div class="step-card__icon-wrap">
+                    <div class="step-card__badge">04</div>
+                    <div class="step-card__icon step-card__icon--accent">
+                        <i class="fas fa-plane-departure" aria-hidden="true"></i>
+                    </div>
+                </div>
+                <div class="step-card__body">
+                    <h3 class="step-card__title">السفر والدراسة</h3>
+                    <p class="step-card__desc">نستقبلك في المطار ونرافقك لإنهاء إجراءات التسجيل حتى تبدأ دراستك بثقة
+                        واطمئنان.</p>
+                </div>
             </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="steps-section__cta">
+            <a href="{% url 'leads:submit' %}" class="btn steps-cta-btn">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                ابدأ رحلتك الآن
+            </a>
         </div>
     </div>
 </section>
@@ -234,7 +380,7 @@
 <section class="section section-bg-white">
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">المقالات والأخبار</h2>
+            <h2 class="section-title">أحدث المقالات</h2>
             <a href="{% url 'articles:list' %}" class="btn btn--outline">المزيد</a>
         </div>
         <div class="grid grid--3">

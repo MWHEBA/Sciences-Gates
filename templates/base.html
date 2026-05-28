@@ -99,11 +99,9 @@
     </main>
     
     <!-- Footer -->
-    <footer role="contentinfo">
-        {% block footer %}
-        {% include 'components/footer.html' %}
-        {% endblock %}
-    </footer>
+    {% block footer %}
+    {% include 'components/footer.html' %}
+    {% endblock %}
     
     <!-- Alpine.js Collapse Plugin (must load BEFORE Alpine.js core) -->
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.13.3/dist/cdn.min.js"></script>

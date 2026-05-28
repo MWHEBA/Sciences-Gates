@@ -42,13 +42,30 @@ function initializeHeaderActions() {
     const desktopMenu = document.querySelector('.it-menu-content');
     const mobileMenu = document.querySelector('.it-menu-mobile');
 
-    // 1. Sticky Header
+    // 1. الهيدر المثبت (Sticky Header)
     if (headerSticky) {
         window.addEventListener('scroll', function() {
             if (window.scrollY >= 400) {
+                headerSticky.classList.remove('header-sticky-out');
                 headerSticky.classList.add('header-sticky');
-            } else {
+            } else if (window.scrollY < 100) {
+                // لو قربنا من فوق خالص، بنشيل الكلاسين فوراً عشان نمنع تداخل الهيدر المثبت مع الهيدر الطبيعي
                 headerSticky.classList.remove('header-sticky');
+                headerSticky.classList.remove('header-sticky-out');
+            } else {
+                // لما السكرول يرجع لفوق ويبقى بين 100 و 400، بنشغل تأثير الاختفاء التدريجي
+                if (headerSticky.classList.contains('header-sticky')) {
+                    headerSticky.classList.remove('header-sticky');
+                    headerSticky.classList.add('header-sticky-out');
+                    
+                    // بنشيل كلاس الاختفاء بعد ما الأنيميشن يخلص (950 مللي ثانية)
+                    setTimeout(function() {
+                        // بنتأكد إننا مارجعناش عملنا سكرول لتحت تاني في الوقت ده
+                        if (window.scrollY < 400) {
+                            headerSticky.classList.remove('header-sticky-out');
+                        }
+                    }, 950);
+                }
             }
         });
     }

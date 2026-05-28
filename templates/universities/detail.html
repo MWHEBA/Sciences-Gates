@@ -1,14 +1,14 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 {% load image_tags %}
 {% load breadcrumbs %}
 {% load university_tags %}
 
 {% block title %}{{ university.name }} - بوابات العلوم{% endblock %}
-{% block meta_description %}{{ university.meta_description|default:university.description|striptags|truncatewords:30 }}{% endblock %}
+{% block meta_description %}{{ university.meta_description|default:university.description|clean_desc|truncatewords:30 }}{% endblock %}
 
 {% block og_title %}{{ university.og_title|default:university.name }}{% endblock %}
-{% block og_description %}{{ university.og_description|default:university.description|striptags|truncatewords:30 }}{% endblock %}
+{% block og_description %}{{ university.og_description|default:university.description|clean_desc|truncatewords:30 }}{% endblock %}
 
 {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
 

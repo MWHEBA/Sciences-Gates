@@ -502,3 +502,40 @@ def optimize_image_for_web(image_file, max_width=None, quality=85, generate_webp
     except Exception as e:
         result['error'] = f'خطأ في معالجة الصورة: {str(e)}'
         return result
+
+
+def clean_description(value):
+    """
+    Cleans up HTML description for card preview:
+    1. Removes HTML comments.
+    2. Unescapes HTML entities twice (to handle double escaping like &amp;nbsp;).
+    3. Replaces non-breaking spaces (\xa0, &nbsp;) with standard spaces.
+    4. Strips all HTML tags.
+    5. Collapses multiple spaces into a single space.
+    """
+    import html
+    import re
+    from django.utils.html import strip_tags
+
+    if not value:
+        return ""
+    
+    # Remove HTML comments
+    pattern = r'<!--.*?-->'
+    value = re.sub(pattern, '', value, flags=re.DOTALL)
+    
+    # Unescape HTML entities (twice, just in case)
+    value = html.unescape(html.unescape(value))
+    
+    # Replace non-breaking spaces with standard spaces
+    value = value.replace('\xa0', ' ').replace('&nbsp;', ' ')
+    value = value.replace('&amp;nbsp;', ' ')
+    
+    # Strip HTML tags
+    value = strip_tags(value)
+    
+    # Collapse multiple whitespaces and strip leading/trailing whitespace
+    value = re.sub(r'\s+', ' ', value).strip()
+    
+    return value
+

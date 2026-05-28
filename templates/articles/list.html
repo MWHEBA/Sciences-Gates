@@ -1,30 +1,35 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}المقالات والأخبار | بوابات العلوم{% endblock %}
-{% block meta_description %}اقرأ أحدث المقالات والأخبار عن الدراسة في ماليزيا. نصائح أكاديمية وتجارب الطلاب.{% endblock %}
+{% block title %}المقالات | بوابات العلوم{% endblock %}
+{% block meta_description %}اقرأ أحدث المقالات عن الدراسة في ماليزيا. نصائح أكاديمية وتجارب الطلاب.{% endblock
+%}
 
 {% block content %}
 <!-- Page Header -->
 <section class="section section-bg-white">
     <div class="container">
         <div class="articles-list-header">
-            <h1 class="articles-list-header-title">المقالات والأخبار</h1>
+            <h1 class="articles-list-header-title">المقالات</h1>
             {% include 'components/breadcrumb.html' %}
-            <p class="articles-list-header-description">اقرأ أحدث المقالات والأخبار عن الدراسة في ماليزيا. نصائح أكاديمية، تجارب الطلاب، وأخبار الجامعات.</p>
+            <p class="articles-list-header-description">اقرأ أحدث المقالات عن الدراسة في ماليزيا. نصائح
+                أكاديمية، تجارب الطلاب، وأخبار الجامعات.</p>
         </div>
 
         <!-- Search -->
         <div class="articles-list-search">
             <form method="get" class="articles-list-search-form">
                 <div class="articles-list-search-input">
-                    <input type="text" name="q" class="form-control" placeholder="ابحث عن مقالة..." value="{{ request.GET.q }}" aria-label="البحث عن مقالة">
+                    <input type="text" name="q" class="form-control" placeholder="ابحث عن مقالة..."
+                        value="{{ request.GET.q }}" aria-label="البحث عن مقالة">
                 </div>
                 {% if categories %}
                 <select name="category" class="form-control" aria-label="اختر التصنيف">
                     <option value="">جميع التصنيفات</option>
                     {% for category in categories %}
-                        <option value="{{ category.id }}" {% if request.GET.category|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                    <option value="{{ category.id }}" {% if
+                        request.GET.category|stringformat:"s"==category.id|stringformat:"s" %}selected{% endif %}>{{
+                        category.name }}</option>
                     {% endfor %}
                 </select>
                 {% endif %}
@@ -34,17 +39,18 @@
 
         <!-- Articles Grid -->
         {% if articles %}
-            <div class="grid grid--3">
-                {% for article in articles %}
-                    {% include 'partials/article-card.html' with article=article %}
-                {% endfor %}
-            </div>
+        <div class="grid grid--3">
+            {% for article in articles %}
+            {% include 'partials/article-card.html' with article=article %}
+            {% endfor %}
+        </div>
 
-            <!-- Pagination -->
-            {% include 'components/pagination.html' %}
+        <!-- Pagination -->
+        {% include 'components/pagination.html' %}
         {% else %}
-            <!-- Empty State -->
-            {% include 'partials/empty-state.html' with title="لا توجد مقالات" message="لم نجد مقالات تطابق معايير البحث الحالية. حاول تغيير الفلاتر أو البحث عن كلمات مفتاحية مختلفة." %}
+        <!-- Empty State -->
+        {% include 'partials/empty-state.html' with title="لا توجد مقالات" message="لم نجد مقالات تطابق معايير البحث
+        الحالية. حاول تغيير الفلاتر أو البحث عن كلمات مفتاحية مختلفة." %}
         {% endif %}
     </div>
 </section>

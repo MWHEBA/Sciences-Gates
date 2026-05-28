@@ -60,3 +60,13 @@ def clean_university_name(value):
     if not value:
         return value
     return value.split('|')[0].strip()
+
+
+@register.filter
+def clean_desc(value):
+    """
+    Cleans up description text, removing tags, comments and non-breaking spaces.
+    """
+    from apps.core.utils import clean_description
+    return clean_description(value)
+

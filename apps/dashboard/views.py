@@ -1929,7 +1929,7 @@ class CategoryListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, List
         """Add page title and search info to context."""
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة تصنيفات المقالات'
-        context['page_description'] = 'إدارة جميع تصنيفات المقالات والأخبار'
+        context['page_description'] = 'إدارة جميع تصنيفات المقالات'
         context['search_query'] = self.request.GET.get('search', '')
         context['base_url'] = reverse_lazy('dashboard:category_list')
         context['search_placeholder'] = 'ابحث عن اسم التصنيف أو الرابط...'
@@ -2108,7 +2108,7 @@ class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView)
         """Add page title and search info to context."""
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة وسوم المقالات'
-        context['page_description'] = 'إدارة جميع وسوم المقالات والأخبار'
+        context['page_description'] = 'إدارة جميع وسوم المقالات'
         context['search_query'] = self.request.GET.get('search', '')
         context['base_url'] = reverse_lazy('dashboard:tag_list')
         context['search_placeholder'] = 'ابحث عن اسم الوسم أو الرابط...'

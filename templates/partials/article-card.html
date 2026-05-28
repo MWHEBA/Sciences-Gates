@@ -1,20 +1,49 @@
-<article class="card">
-    <a href="{% url 'articles:detail' article.slug %}" class="card__image">
-        <img src="{% if article.featured_image %}{{ article.featured_image.url }}{% else %}https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800{% endif %}" alt="{{ article.title }}">
-    </a>
-    <div class="card__content">
-        <div class="inl-s-7ed62be503">
-            <span>{{ article.published_date|date:"d F Y" }}</span>
-            {% if article.category %}
-                <span>{{ article.category.name }}</span>
-            {% endif %}
+{% load static %}
+<article class="it-course-item cursor-pointer">
+    <!-- صورة المقال -->
+    <div class="it-course-thumb mb-4 p-relative">
+        <a href="{% url 'articles:detail' article.slug %}">
+            <img src="{% if article.featured_image %}{{ article.featured_image.url }}{% else %}https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800{% endif %}" alt="{{ article.title }}" loading="lazy">
+        </a>
+        {% if article.category %}
+        <div class="it-course-thumb-text">
+            <span>{{ article.category.name }}</span>
         </div>
-        <h3 class="card__title"><a href="{% url 'articles:detail' article.slug %}">{{ article.title }}</a></h3>
-        <p class="card__desc">{{ article.excerpt|truncatewords:20 }}</p>
-        <div class="card__footer inl-s-c02be5337b">
-            <a href="{% url 'articles:detail' article.slug %}" class="inl-s-f88b77917a">
-                اقرأ المقال
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inl-s-8657ef20e4"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        {% endif %}
+    </div>
+    
+    <!-- محتوى الكرت -->
+    <div class="it-course-content">
+        <!-- عنوان المقال -->
+        <h4 class="it-course-title">
+            <a href="{% url 'articles:detail' article.slug %}">{{ article.title }}</a>
+        </h4>
+        
+        <!-- وصف مختصر -->
+        <p class="card__desc text-text-secondary text-sm leading-relaxed mb-15 flex-grow" style="font-size: 0.875rem; color: var(--text-body); line-height: 1.6; margin-bottom: 15px;">
+            {{ article.excerpt|truncatewords:15 }}
+        </p>
+        
+        <!-- معلومات المقال -->
+        <div class="it-course-info">
+            <span>
+                <i class="fa-solid fa-calendar-days ml-2 text-secondary"></i>
+                {{ article.published_date|date:"d F Y" }}
+            </span>
+            <span>
+                <i class="fa-solid fa-user ml-2 text-secondary"></i>
+                {{ article.author.get_full_name|default:article.author.username }}
+            </span>
+        </div>
+        
+        <!-- رابط قراءة المقال -->
+        <div class="it-course-price-box">
+            <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-body);">
+                بوابات العلوم للأخبار
+            </span>
+            <a href="{% url 'articles:detail' article.slug %}">
+                <span>اقرأ المقال</span>
+                <i class="fa-solid fa-arrow-left mr-2"></i>
             </a>
         </div>
     </div>
