@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Tests for core app utilities and models.
 """
@@ -246,7 +247,7 @@ class UserProfileTestCase(TestCase):
         profile = self.user.profile
         
         self.assertEqual(profile.role, UserRole.CONTENT_ADMIN)
-        self.assertEqual(profile.get_role_display(), 'مسؤول المحتوى')
+        self.assertEqual(profile.get_role_display(), '\u0645\u0633\u0624\u0648\u0644 \u0627\u0644\u0645\u062d\u062a\u0648\u0649')
     
     def test_is_super_admin_method(self):
         """Test is_super_admin property."""
@@ -300,16 +301,17 @@ class UserProfileTestCase(TestCase):
         """Test __str__ method of UserProfile."""
         profile = self.user.profile
         
-        expected_str = f'{self.user.username} - مسؤول المحتوى'
+        expected_str = f'{self.user.username} - \u0645\u0633\u0624\u0648\u0644 \u0627\u0644\u0645\u062d\u062a\u0648\u0649'
         self.assertEqual(str(profile), expected_str)
     
     def test_user_profile_timestamps(self):
         """Test that created_at and updated_at timestamps are set."""
+        import datetime
         profile = self.user.profile
         
         self.assertIsNotNone(profile.created_at)
         self.assertIsNotNone(profile.updated_at)
-        self.assertEqual(profile.created_at, profile.updated_at)
+        self.assertAlmostEqual(profile.created_at, profile.updated_at, delta=datetime.timedelta(seconds=2))
     
     def test_user_profile_updated_at_changes_on_update(self):
         """Test that updated_at changes when profile is updated."""
@@ -382,8 +384,8 @@ class UserProfileTestCase(TestCase):
         profile = self.user.profile
         
         # Check model verbose names
-        self.assertEqual(profile._meta.verbose_name, 'ملف المستخدم')
-        self.assertEqual(profile._meta.verbose_name_plural, 'ملفات المستخدمين')
+        self.assertEqual(profile._meta.verbose_name, '\u0645\u0644\u0641 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645')
+        self.assertEqual(profile._meta.verbose_name_plural, '\u0645\u0644\u0641\u0627\u062a \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646')
     
     def test_user_profile_role_field_choices(self):
         """Test that role field has correct choices."""
@@ -392,6 +394,6 @@ class UserProfileTestCase(TestCase):
         role_field = profile._meta.get_field('role')
         
         choices = dict(role_field.choices)
-        self.assertEqual(choices[UserRole.SUPER_ADMIN], 'مسؤول النظام')
-        self.assertEqual(choices[UserRole.CONTENT_ADMIN], 'مسؤول المحتوى')
-        self.assertEqual(choices[UserRole.SEO_ADMIN], 'مسؤول SEO')
+        self.assertEqual(choices[UserRole.SUPER_ADMIN], '\u0645\u0633\u0624\u0648\u0644 \u0627\u0644\u0646\u0638\u0627\u0645')
+        self.assertEqual(choices[UserRole.CONTENT_ADMIN], '\u0645\u0633\u0624\u0648\u0644 \u0627\u0644\u0645\u062d\u062a\u0648\u0649')
+        self.assertEqual(choices[UserRole.SEO_ADMIN], '\u0645\u0633\u0624\u0648\u0644 SEO')

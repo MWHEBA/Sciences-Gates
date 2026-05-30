@@ -37,11 +37,12 @@ class DataTableComponentTest(TestCase):
         self.factory = RequestFactory()
         self.request = self.factory.get('/')
         
+        import datetime
         # Create mock rows
         self.rows = [
-            MockRow(1, 'Article 1', 'published', '2024-01-15'),
-            MockRow(2, 'Article 2', 'unpublished', '2024-01-14'),
-            MockRow(3, 'Article 3', 'new', '2024-01-13'),
+            MockRow(1, 'Article 1', 'published', datetime.date(2024, 1, 15)),
+            MockRow(2, 'Article 2', 'unpublished', datetime.date(2024, 1, 14)),
+            MockRow(3, 'Article 3', 'new', datetime.date(2024, 1, 13)),
         ]
         
         # Define columns

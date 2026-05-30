@@ -830,6 +830,8 @@ class UniversityCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
         import logging
         logger = logging.getLogger(__name__)
         logger.debug(f"Form errors: {form.errors}")
+        if self._is_ajax():
+            return JsonResponse({"status": "error", "errors": form.errors}, status=400)
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{error}')
@@ -853,6 +855,9 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
     form_class = UniversityForm
     template_name = 'dashboard/universities/form.html'
     success_url = reverse_lazy('dashboard:university_list')
+
+    def _is_ajax(self):
+        return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     def get_breadcrumbs(self):
         """Build breadcrumb trail for university update page."""
@@ -995,6 +1000,8 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
                             f'تم تحديث الجامعة "{self.object.name}" بنجاح'
                         )
                 
+                if self._is_ajax():
+                    return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
                 return redirect(self.success_url)
             except Exception as e:
                 logger.error(f"Error updating university: {e}")
@@ -1023,6 +1030,8 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
 
     def form_invalid(self, form):
         """Handle form errors."""
+        if self._is_ajax():
+            return JsonResponse({"status": "error", "errors": form.errors}, status=400)
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{error}')
@@ -1191,6 +1200,8 @@ class FacultyCreateView(DashboardBreadcrumbMixin, ContentAdminRequiredMixin, Cre
 
     def form_invalid(self, form):
         """Handle form errors."""
+        if self._is_ajax():
+            return JsonResponse({"status": "error", "errors": form.errors}, status=400)
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{error}')
@@ -1268,6 +1279,8 @@ class FacultyUpdateView(DashboardBreadcrumbMixin, ContentAdminRequiredMixin, Upd
 
     def form_invalid(self, form):
         """Handle form errors."""
+        if self._is_ajax():
+            return JsonResponse({"status": "error", "errors": form.errors}, status=400)
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{error}')
@@ -1532,6 +1545,9 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
     template_name = 'dashboard/institutes/edit.html'
     success_url = reverse_lazy('dashboard:institute_list')
 
+    def _is_ajax(self):
+        return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     def get_context_data(self, **kwargs):
         """Add formset and courses to context."""
         context = super().get_context_data(**kwargs)
@@ -1598,6 +1614,8 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
                             f'تم تحديث المعهد "{self.object.name}" بنجاح'
                         )
                 
+                if self._is_ajax():
+                    return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
                 return redirect(self.success_url)
             except Exception as e:
                 import logging
@@ -1811,6 +1829,9 @@ class MajorUpdateView(ContentAdminRequiredMixin, UpdateView):
     template_name = 'dashboard/majors/edit.html'
     success_url = reverse_lazy('dashboard:major_list')
 
+    def _is_ajax(self):
+        return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     def get_context_data(self, **kwargs):
         """Add formsets to context."""
         context = super().get_context_data(**kwargs)
@@ -1889,6 +1910,8 @@ class MajorUpdateView(ContentAdminRequiredMixin, UpdateView):
                             f'تم تحديث التخصص "{self.object.name}" بنجاح'
                         )
                 
+                if self._is_ajax():
+                    return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
                 return redirect(self.success_url)
             except Exception as e:
                 import logging
@@ -2517,6 +2540,9 @@ class ArticleUpdateView(ContentAdminRequiredMixin, UpdateView):
     template_name = 'dashboard/articles/form.html'
     success_url = reverse_lazy('dashboard:article_list')
 
+    def _is_ajax(self):
+        return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     def get_context_data(self, **kwargs):
         """Add page title and slug change warning to context."""
         context = super().get_context_data(**kwargs)
@@ -2575,6 +2601,8 @@ class ArticleUpdateView(ContentAdminRequiredMixin, UpdateView):
                         f'تم تحديث المقالة "{self.object.title}" بنجاح'
                     )
             
+            if self._is_ajax():
+                return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
             return redirect(self.success_url)
         except Exception as e:
             import logging

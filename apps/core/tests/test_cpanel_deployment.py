@@ -801,6 +801,8 @@ class IntegrationTest(TestCase):
     def test_database_migrations_applied(self):
         """Test that database migrations are applied."""
         # Check that we can query the database
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
         try:
             User.objects.count()
         except Exception as e:

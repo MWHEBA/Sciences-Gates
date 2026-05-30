@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from .models import Major, SubjectsTable, SalaryTable, CountriesTable
 from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
+from apps.seo.preview import apply_preview_filter
 
 
 class MajorListView(BreadcrumbMixin, ListView):
@@ -107,10 +108,9 @@ class MajorDetailView(BreadcrumbMixin, DetailView):
             CountriesTable.objects.all().order_by('sort_order')
         )
         
-        return Major.objects.filter(
-            publish_status='published'
-        ).prefetch_related(
+        return apply_preview_filter(self.request, Major.objects).prefetch_related(
             subjects_prefetch,
+            # prefetch_related is still used here
             salary_prefetch,
             countries_prefetch,
             'best_universities',

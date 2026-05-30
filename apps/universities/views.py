@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from .models import University, Faculty, Program, UniversityFAQ
 from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
+from apps.seo.preview import apply_preview_filter
 
 
 class UniversityListView(BreadcrumbMixin, ListView):
@@ -128,9 +129,7 @@ class UniversityDetailView(BreadcrumbMixin, DetailView):
             UniversityFAQ.objects.all().order_by('sort_order')
         )
         
-        return University.objects.filter(
-            publish_status='published'
-        ).prefetch_related(
+        return apply_preview_filter(self.request, University.objects).prefetch_related(
             faculties_prefetch,
             faqs_prefetch,
             'related_majors',

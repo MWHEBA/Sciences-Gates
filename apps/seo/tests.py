@@ -13,6 +13,8 @@ import pytest
 from django.test import RequestFactory
 from django.contrib.auth.models import User
 from django.utils import timezone
+from apps.articles.models import Category, Article
+from apps.seo.schema import SchemaGenerator
 
 
 @pytest.mark.django_db
@@ -70,6 +72,7 @@ class TestSitemapClasses:
     
     def test_base_sitemap_configuration(self):
         """Test BaseSitemap has correct configuration."""
+        from apps.seo.sitemaps import BaseSitemap
         sitemap = BaseSitemap()
         assert sitemap.changefreq == 'weekly'
         assert sitemap.priority == 0.8

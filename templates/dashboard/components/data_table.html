@@ -114,8 +114,8 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-2">
                             <!-- زر التحرير - يتم تقديمه فقط إذا كان edit_url_name موجود -->
-                            {% if edit_url_name and edit_url_name != "edit" %}
-                            <a href="{% url edit_url_name row.id %}"
+                            {% if edit_url_name %}
+                            <a href="{% if edit_url_name == 'edit' %}#{% else %}{% url edit_url_name row.id %}{% endif %}"
                                class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 cursor-pointer
                                       focus:outline-none focus:ring-2 focus:ring-offset-2"
                                style="--tw-ring-color: var(--primary);"
@@ -128,8 +128,8 @@
                             {% endif %}
                             
                             <!-- زر الحذف - يتم تقديمه فقط إذا كان delete_url_name موجود -->
-                            {% if delete_url_name and delete_url_name != "delete" %}
-                            <a href="{% url delete_url_name row.id %}"
+                            {% if delete_url_name %}
+                            <a href="{% if delete_url_name == 'delete' %}#{% else %}{% url delete_url_name row.id %}{% endif %}"
                                class="p-2 rounded-lg text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer
                                       focus:outline-none focus:ring-2 focus:ring-offset-2"
                                style="--tw-ring-color: var(--danger);"

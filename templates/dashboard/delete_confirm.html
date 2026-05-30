@@ -37,14 +37,14 @@
         <!-- Action Buttons -->
         <div class="flex gap-3">
             <!-- Cancel Button (Secondary) -->
-            <a href="{{ cancel_url }}" class="flex-1 px-4 py-2 rounded-lg font-normal transition-colors duration-200 text-center text-sm hover:bg-gray-200" style="background-color: var(--bg-light); color: var(--text-primary); border: 1px solid var(--border);">
+            <a href="{{ cancel_url }}" class="flex-1 px-4 py-2 rounded-lg font-medium transition-colors duration-200 text-center text-sm hover:bg-gray-200" style="background-color: var(--bg-light); color: var(--text-primary); border: 1px solid var(--border);">
                 إلغاء
             </a>
             
             <!-- Delete Button (Danger) -->
             <form method="post" action="{{ delete_url }}" class="flex-1">
                 {% csrf_token %}
-                <button type="submit" class="w-full px-4 py-2 rounded-lg font-normal transition-colors duration-200 text-white text-sm cursor-pointer hover:opacity-90" style="background-color: var(--danger);">
+                <button type="submit" class="w-full px-4 py-2 rounded-lg font-medium transition-colors duration-200 text-white text-sm cursor-pointer hover:opacity-90" style="background-color: var(--danger);">
                     حذف نهائياً
                 </button>
             </form>

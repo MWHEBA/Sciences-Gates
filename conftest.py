@@ -10,7 +10,7 @@ import os
 import sys
 
 # Configure Django settings BEFORE anything else
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
 
 # Setup Django early - this must happen before any Django imports
 import django

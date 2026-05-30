@@ -1,6 +1,11 @@
 """
 Pytest configuration and fixtures for SEO app tests.
 """
+import os
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
+django.setup()
+
 import pytest
 from django.test import RequestFactory
 from django.template import Template, Context

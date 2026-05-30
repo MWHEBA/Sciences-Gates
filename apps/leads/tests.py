@@ -1,8 +1,10 @@
 import pytest
-from django.test import override_settings
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.core import mail
 from hypothesis import given, strategies as st
+from hypothesis.extra.django import TestCase as HypothesisTestCase
+from apps.leads.models import Lead, LeadType
 
 
 @pytest.mark.django_db
@@ -20,22 +22,22 @@ class TestLeadTypeChoices:
         """Test CONTACT choice exists."""
         from .models import LeadType
         
-        self.assertEqual(LeadType.CONTACT, 'contact')
-        self.assertEqual(LeadType.CONTACT, LeadType.CONTACT)
+        assert LeadType.CONTACT == 'contact'
+        assert LeadType.CONTACT == LeadType.CONTACT
     
     def test_lead_type_choices_count(self):
         """Test that exactly two lead types exist."""
         from .models import LeadType
         
-        self.assertEqual(len(LeadType.choices), 2)
+        assert len(LeadType.choices) == 2
     
     def test_lead_type_display_names(self):
         """Test that lead types have Arabic display names."""
         from .models import LeadType
         
         choices_dict = dict(LeadType.choices)
-        self.assertEqual(choices_dict['registration'], 'طلب تسجيل')
-        self.assertEqual(choices_dict['contact'], 'استفسار')
+        assert choices_dict['registration'] == 'طلب تسجيل'
+        assert choices_dict['contact'] == 'استفسار'
 
 
 class LeadModelCreationTests(TestCase):

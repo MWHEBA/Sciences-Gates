@@ -5,6 +5,10 @@ Converted from Django TestCase to pytest for faster test execution.
 """
 import pytest
 from django.urls import reverse
+from django.contrib.auth import get_user_model
+from apps.articles.models import Article, Category, Tag
+
+User = get_user_model()
 
 
 @pytest.mark.django_db

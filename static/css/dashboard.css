@@ -40,6 +40,8 @@ p:last-child {
    Scrollbar Styling — Thin
 ═══════════════════════════════════ */
 html {
+    /* Root size for all rem units inside dashboard */
+    font-size: 14px;
     scrollbar-width: thin;
     scrollbar-color: var(--primary) transparent;
 }
@@ -95,6 +97,7 @@ html::-webkit-scrollbar-thumb:hover {
        Surfaces & Backgrounds
     ═══════════════════════════════════ */
     --surface:          #FFFFFF;
+    --white:            #FFFFFF;
     --surface-2:        #F7FAFC;
     --bg-page:          #EEF4F7;   /* خلفية الصفحة الكاملة */
     --bg-light:         #F7FAFC;   /* للـ hover states الخفيفة */

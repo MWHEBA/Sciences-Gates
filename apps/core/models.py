@@ -122,6 +122,30 @@ class SEOMixin(models.Model):
         help_text='الصورة عند المشاركة على وسائل التواصل (1200x630 بكسل)'
     )
 
+    # Phase 1 Analyzer Fields
+    seo_score = models.PositiveIntegerField(
+        default=0,
+        verbose_name='درجة SEO'
+    )
+    seo_grade = models.CharField(
+        max_length=20,
+        default='needs_improvement',
+        verbose_name='تقييم SEO'
+    )
+    seo_critical_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name='الأخطاء الحرجة'
+    )
+    seo_warning_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name='التحذيرات'
+    )
+    seo_last_analysis = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='تاريخ آخر تحليل'
+    )
+
     class Meta:
         abstract = True
 

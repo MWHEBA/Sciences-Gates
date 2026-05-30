@@ -71,7 +71,7 @@
                     </svg>
                     <h2 class="detail-section-title">محتوى المقالة</h2>
                 </div>
-                <div class="detail-section-content article-content">
+                <div class="detail-section-content article-content" data-seo-content>
                     {{ article.content|safe }}
                 </div>
             </section>
@@ -230,7 +230,7 @@
 
     <!-- Related Articles Section (Full width bottom tab/grid) -->
     {% if related_articles %}
-    <div class="detail-related">
+    <div class="detail-related" data-seo-ignore>
         <section class="detail-section">
             <div class="detail-section-header">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

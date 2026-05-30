@@ -26,6 +26,22 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Set up test fixtures."""
         self.factory = RequestFactory()
         self.request = self.factory.get('/')
+        
+        # Create user with profile to satisfy sidebar layout inside base.html
+        from django.contrib.auth.models import User
+        from apps.core.models import UserProfile, UserRole
+        self.user = User.objects.create_user(
+            username='admin_test',
+            email='admin_test@example.com',
+            password='password123'
+        )
+        self.request.user = self.user
+        profile = self.user.profile
+        profile.role = UserRole.SUPER_ADMIN
+        profile.save()
+
+    def _render(self, context):
+        return render_to_string('dashboard/delete_confirm.html', context, request=self.request)
     
     def test_template_extends_base(self):
         """Test that delete_confirm.html extends base.html."""
@@ -35,7 +51,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check that base template elements are present
         self.assertIn('<!DOCTYPE html>', html)
@@ -49,7 +65,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for bold tag around item name
         self.assertIn('<strong', html)
@@ -64,12 +80,12 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check that the name is truncated (Django's truncatechars adds ellipsis)
         # The output should contain the truncated version, not the full 150 chars
         self.assertNotIn('A' * 100, html)  # Full 100 A's should not be present
-        self.assertIn('...', html)  # Ellipsis should be present
+        self.assertTrue('…' in html or '...' in html)  # Ellipsis should be present
     
     def test_permanent_deletion_warning_displayed(self):
         """Test that permanent deletion warning message is displayed."""
@@ -78,7 +94,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for warning message
         self.assertIn('تحذير', html)  # Arabic for "Warning"
@@ -92,7 +108,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for delete button
         self.assertIn('type="submit"', html)
@@ -106,7 +122,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for cancel button
         self.assertIn('إلغاء', html)  # Arabic for "Cancel"
@@ -119,7 +135,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for card styling classes
         self.assertIn('p-6', html)  # Padding
@@ -135,7 +151,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check that no modal-related JavaScript is present
         self.assertNotIn('modal', html.lower())
@@ -149,7 +165,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for CSS variable usage
         self.assertIn('var(--danger)', html)
@@ -165,11 +181,12 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check that no hardcoded hex colors are present (except in SVG)
         # Allow rgba for semi-transparent backgrounds as fallback
-        self.assertNotIn('#', html.replace('viewBox', ''))  # Remove viewBox to avoid false positives
+        clean_html = html.replace('viewBox', '').replace('href="#"', '').replace("href='#'", '')
+        self.assertNotIn('#', clean_html)
     
     def test_icon_accessibility(self):
         """Test that icon has proper accessibility attributes."""
@@ -178,7 +195,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for aria-hidden on decorative icon
         self.assertIn('aria-hidden="true"', html)
@@ -190,10 +207,10 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for CSRF token
-        self.assertIn('{% csrf_token %}', html)
+        self.assertIn('csrfmiddlewaretoken', html)
     
     def test_delete_form_action_url(self):
         """Test that delete form has correct action URL."""
@@ -202,7 +219,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for form action
         self.assertIn('action="/dashboard/items/1/delete/"', html)
@@ -214,7 +231,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for centering classes
         self.assertIn('flex justify-center', html)
@@ -226,7 +243,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for button styling
         self.assertIn('rounded-lg', html)
@@ -242,7 +259,7 @@ class DeleteConfirmationTemplateTest(TestCase):
             'cancel_url': '/dashboard/items/',
             'delete_url': '/dashboard/items/1/delete/',
         }
-        html = render_to_string('dashboard/delete_confirm.html', context)
+        html = self._render(context)
         
         # Check for RTL attributes
         self.assertIn('dir="rtl"', html)

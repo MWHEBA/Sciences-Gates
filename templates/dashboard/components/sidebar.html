@@ -42,7 +42,7 @@
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
             <a href="{% url 'dashboard:home' %}"
                 class="flex items-center px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer"
-                style="{% if request.path == '/dashboard/' %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                style="{% if request.path == '/dashboard/' %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
                 onmouseover="{% if request.path != '/dashboard/' %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
                 onmouseout="{% if request.path != '/dashboard/' %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}">
                 <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -58,7 +58,7 @@
         {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_super_admin %}
         <!-- قسم المحتوى - مدير المحتوى والمدير العام -->
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
-            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">المحتوى</h3>
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">المحتوى</h3>
             <div class="space-y-1">
 
                 <!-- الجامعات (Expandable) -->
@@ -67,9 +67,10 @@
                     <button @click="activeSection = activeSection === 'universities' ? null : 'universities'"
                         data-toggle="true"
                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/universities' not in request.path and '/dashboard/faculties' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/universities' not in request.path and '/dashboard/faculties' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        style="{% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
+                        :style="activeSection === 'universities' ? 'background-color: var(--primary); color: var(--white);' : ''"
+                        @mouseenter="{% if '/dashboard/universities' not in request.path and '/dashboard/faculties' not in request.path %}if (activeSection !== 'universities') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
+                        @mouseleave="{% if '/dashboard/universities' not in request.path and '/dashboard/faculties' not in request.path %}if (activeSection !== 'universities') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -142,9 +143,10 @@
                     <button @click="activeSection = activeSection === 'institutes' ? null : 'institutes'"
                         data-toggle="true"
                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/institutes' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/institutes' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/institutes' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        style="{% if '/dashboard/institutes' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
+                        :style="activeSection === 'institutes' ? 'background-color: var(--primary); color: var(--white);' : ''"
+                        @mouseenter="{% if '/dashboard/institutes' not in request.path %}if (activeSection !== 'institutes') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
+                        @mouseleave="{% if '/dashboard/institutes' not in request.path %}if (activeSection !== 'institutes') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -220,9 +222,10 @@
                     :style="activeSection === 'majors' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
                     <button @click="activeSection = activeSection === 'majors' ? null : 'majors'" data-toggle="true"
                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/majors' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/majors' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/majors' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        style="{% if '/dashboard/majors' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
+                        :style="activeSection === 'majors' ? 'background-color: var(--primary); color: var(--white);' : ''"
+                        @mouseenter="{% if '/dashboard/majors' not in request.path %}if (activeSection !== 'majors') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
+                        @mouseleave="{% if '/dashboard/majors' not in request.path %}if (activeSection !== 'majors') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -280,9 +283,10 @@
                     :style="activeSection === 'articles' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
                     <button @click="activeSection = activeSection === 'articles' ? null : 'articles'" data-toggle="true"
                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/articles' not in request.path and '/dashboard/categories' not in request.path and '/dashboard/tags' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/articles' not in request.path and '/dashboard/categories' not in request.path and '/dashboard/tags' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        style="{% if '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
+                        :style="activeSection === 'articles' ? 'background-color: var(--primary); color: var(--white);' : ''"
+                        @mouseenter="{% if '/dashboard/articles' not in request.path and '/dashboard/categories' not in request.path and '/dashboard/tags' not in request.path %}if (activeSection !== 'articles') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
+                        @mouseleave="{% if '/dashboard/articles' not in request.path and '/dashboard/categories' not in request.path and '/dashboard/tags' not in request.path %}if (activeSection !== 'articles') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -367,7 +371,7 @@
 
         <!-- قسم الطلبات - متاح لجميع المستخدمين -->
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
-            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">الطلبات
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">الطلبات
                 والتفاعل</h3>
             <div class="space-y-1">
                 <!-- طلبات التسجيل -->
@@ -402,7 +406,7 @@
         <!-- قسم SEO - مدير SEO والمدير العام -->
         {% if user.is_authenticated and user.profile.is_seo_admin or user.is_authenticated and user.profile.is_super_admin %}
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
-            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">SEO</h3>
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">SEO</h3>
             <div class="space-y-1">
                 <!-- إعادة التوجيه -->
                 <div
@@ -427,7 +431,7 @@
                     :style="'{{ request.path }}'.includes('/dashboard/seo') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="{% url 'dashboard:seo_overview' %}"
                         class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/seo' in request.path %}background-color: var(--primary); color: #ffffff;{% else %}color: var(--text-secondary);{% endif %}"
+                        style="{% if '/dashboard/seo' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
                         @mouseenter="{% if '/dashboard/seo' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
                         @mouseleave="{% if '/dashboard/seo' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -448,7 +452,7 @@
         <!-- قسم التقارير - المدير العام والمحررين -->
         {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_seo_admin or user.is_authenticated and user.profile.is_super_admin %}
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
-            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">التقارير</h3>
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">التقارير</h3>
             <div class="space-y-1">
                 <!-- تقرير الطلبات -->
                 <!-- تصدير الطلبات -->
@@ -493,7 +497,7 @@
         <!-- قسم الإدارة - المدير العام فقط -->
         {% if user.is_authenticated and user.profile.is_super_admin %}
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
-            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">الإدارة</h3>
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">الإدارة</h3>
             <div class="space-y-1">
                 <!-- إدارة المستخدمين -->
                 <div
@@ -539,7 +543,7 @@
         <!-- قسم النظام - المدير العام فقط -->
         {% if user.is_authenticated and user.profile.is_super_admin %}
         <div>
-            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">النظام</h3>
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">النظام</h3>
             <div class="space-y-1">
                 <!-- سجل النشاط -->
                 <div
@@ -609,7 +613,7 @@
                     border: 1px solid var(--border);">
             <!-- Avatar -->
             <div style="width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-                        background-color: var(--primary); color: #fff;
+                        background-color: var(--primary); color: var(--white);
                         display: grid; place-items: center; font-weight: 600; font-size: 14px;">
                 {{ user.get_full_name|default:user.username|first|upper }}
             </div>

@@ -14,7 +14,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+def _safe_bool_env(name: str, default: bool) -> bool:
+    """
+    Parse boolean-like env vars with a safe fallback.
+    """
+    value = config(name, default=str(default))
+    if isinstance(value, bool):
+        return value
+
+    normalized = str(value).strip().lower()
+    if normalized in {'1', 'true', 't', 'yes', 'y', 'on', 'debug', 'dev'}:
+        return True
+    if normalized in {'0', 'false', 'f', 'no', 'n', 'off', 'release', 'prod', 'production'}:
+        return False
+    return default
+
+
+DEBUG = _safe_bool_env('DEBUG', True)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver', cast=Csv())
 

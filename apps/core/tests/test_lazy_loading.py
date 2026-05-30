@@ -319,8 +319,12 @@ class LazyLoadingAssetsTests(TestCase):
         response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
         
-        # Check for lazy loading JS
-        self.assertContains(response, 'lazy-loading.js')
+        # Check for lazy loading JS (either source or minified version)
+        content = response.content.decode()
+        self.assertTrue(
+            'lazy-loading.js' in content or 'lazy-loading.min.js' in content,
+            "Base template should include lazy-loading.js or lazy-loading.min.js"
+        )
     
     def test_lazy_loading_css_file_exists(self):
         """Test that lazy loading CSS file exists."""

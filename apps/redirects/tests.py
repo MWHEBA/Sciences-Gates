@@ -3,6 +3,7 @@ Tests for Redirect model and middleware.
 """
 from django.test import TestCase, RequestFactory
 from django.http import HttpResponsePermanentRedirect
+from apps.redirects.models import Redirect
 
 
 class RedirectModelTests(TestCase):

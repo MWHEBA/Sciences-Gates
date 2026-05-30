@@ -3,6 +3,7 @@ URL configuration for the dashboard app.
 """
 from django.urls import path
 from . import views
+from apps.seo import views as seo_views
 
 app_name = 'dashboard'
 
@@ -76,6 +77,8 @@ urlpatterns = [
     
     # SEO management (SEO Admin)
     path('seo/overview/', views.SEOOverviewView.as_view(), name='seo_overview'),
+    path('seo/analyze/<str:content_type>/<int:pk>/', seo_views.dashboard_analyze_seo, name='seo_analyze'),
+    path('seo/detail/<str:content_type>/<int:pk>/', seo_views.dashboard_seo_detail, name='seo_detail'),
     
     # General Settings (Super Admin)
     path('settings/', views.SiteSettingsUpdateView.as_view(), name='settings'),

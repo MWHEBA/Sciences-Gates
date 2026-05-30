@@ -52,12 +52,31 @@
         <div class="flex items-center gap-2">
             {% for button in action_buttons|slice:":3" %}
             <a href="{{ button.url }}"
-               class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-normal text-[14px] leading-none transition-colors duration-200 cursor-pointer
                       {% if button.variant == 'primary' %}bg-primary text-white hover:bg-primary-hover
                       {% elif button.variant == 'danger' %}bg-danger text-white hover:bg-danger-hover
                       {% elif button.variant == 'ghost' %}bg-transparent text-primary hover:bg-gray-100
                       {% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}"
                style="{% if button.variant == 'primary' %}background-color: var(--primary);{% elif button.variant == 'danger' %}background-color: var(--danger);{% endif %}">
+                {% if button.icon %}
+                <i class="{{ button.icon }}" aria-hidden="true"></i>
+                {% elif 'إضافة' in button.label or 'جديد' in button.label or 'إنشاء' in button.label %}
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                {% elif 'حذف' in button.label %}
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                {% elif 'تعديل' in button.label or 'تحرير' in button.label %}
+                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                {% elif 'حفظ' in button.label %}
+                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                {% elif 'تصدير' in button.label or 'تحميل' in button.label %}
+                <i class="fa-solid fa-download" aria-hidden="true"></i>
+                {% elif 'رجوع' in button.label or 'عودة' in button.label %}
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                {% elif 'عرض' in button.label or 'تفاصيل' in button.label %}
+                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                {% else %}
+                <i class="fa-solid fa-circle-dot" aria-hidden="true"></i>
+                {% endif %}
                 {{ button.label }}
             </a>
             {% endfor %}

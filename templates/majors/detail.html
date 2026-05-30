@@ -56,7 +56,7 @@
     <div class="detail-layout">
         
         <!-- Right Column: Detail Content (2/3 width) -->
-        <div class="detail-main">
+        <div class="detail-main" data-seo-content>
             
             <!-- About Section -->
             <section class="detail-section">
@@ -328,6 +328,12 @@
                         <dt class="detail-sidebar-label">المدة الإجمالية:</dt>
                         <dd class="detail-sidebar-value">{{ major.study_duration }}</dd>
                     </div>
+                    {% if major.tuition_fees %}
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">الرسوم الدراسية:</dt>
+                        <dd class="detail-sidebar-value">{{ major.tuition_fees }}</dd>
+                    </div>
+                    {% endif %}
                     {% if major.study_language %}
                     <div class="detail-sidebar-item">
                         <dt class="detail-sidebar-label">لغة الدراسة:</dt>
@@ -353,7 +359,7 @@
     </div>
 
     <!-- Related Articles Section (Full width bottom tab/grid) -->
-    <div class="detail-related">
+    <div class="detail-related" data-seo-ignore>
         {% include "components/related_articles.html" with articles=major.related_articles.all %}
     </div>
 

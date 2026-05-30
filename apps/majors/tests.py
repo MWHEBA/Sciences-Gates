@@ -3,6 +3,8 @@ Tests for Major model.
 """
 from django.test import TestCase
 from django.urls import reverse
+from apps.majors.models import Major, SubjectsTable, SalaryTable, CountriesTable
+from apps.core.models import PublishStatus
 
 
 class MajorModelTest(TestCase):
@@ -151,7 +153,12 @@ class MajorPublicViewsTest(TestCase):
     def setUp(self):
         """Set up test data."""
         from apps.majors.models import Major, SubjectsTable, SalaryTable, CountriesTable
-        from apps.core.models import PublishStatus
+        from apps.core.models import PublishStatus, SiteSettings
+        
+        SiteSettings.objects.create(
+            site_name='Science Gates',
+            registration_steps_title='خطوات التسجيل'
+        )
         
         # Create published major
         self.major = Major.objects.create(
@@ -308,8 +315,8 @@ class MajorPublicViewsTest(TestCase):
         url = reverse('majors:detail', kwargs={'slug': self.major.slug})
         
         # This test verifies the view uses prefetch_related for optimization
-        # Expected queries: 1 redirect check + 1 major + 3 dynamic tables + 3 relationships = 8
-        with self.assertNumQueries(8):
+        # Expected queries: 1 redirect check + 1 major + 3 dynamic tables + 3 relationships + 1 site settings = 9
+        with self.assertNumQueries(9):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 

@@ -91,8 +91,13 @@ class InstituteDetailViewTest(TestCase):
     def setUp(self):
         """Set up test data."""
         from .models import Institute, Course
+        from apps.core.models import SiteSettings
         
         self.client = Client()
+        SiteSettings.objects.create(
+            site_name='Science Gates',
+            registration_steps_title='خطوات التسجيل'
+        )
         
         # Create published institute
         self.institute = Institute.objects.create(
@@ -189,8 +194,8 @@ class InstituteDetailViewTest(TestCase):
         
         # This test verifies that prefetch_related is working
         # by checking that accessing related objects doesn't cause additional queries
-        # Queries: 1 for redirect check, 1 for institute, 1 for courses, 1 for articles
-        with self.assertNumQueries(4):
+        # Queries: 1 for redirect check, 1 for institute, 1 for courses, 1 for articles, 1 for site settings
+        with self.assertNumQueries(5):
             response = self.client.get(url)
             # Access the courses to ensure they're prefetched
             list(response.context['courses'])

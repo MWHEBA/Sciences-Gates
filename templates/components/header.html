@@ -151,11 +151,27 @@
                      </li>
                      <li class="topbar-separator-item">|</li>
                      <li class="topbar-login-item">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard:home' %}" class="topbar-login-btn">
+                           <i class="fa-solid fa-tachometer-alt"></i>
+                           لوحة التحكم
+                        </a>
+                        {% else %}
                         <a href="{% url 'dashboard:login' %}" class="topbar-login-btn">
                            <i class="fa-regular fa-user"></i>
                            تسجيل الدخول
                         </a>
+                        {% endif %}
                      </li>
+                     {% if user.is_authenticated %}
+                     <li class="topbar-separator-item">|</li>
+                     <li class="topbar-login-item">
+                        <a href="{% url 'dashboard:logout' %}" class="topbar-login-btn">
+                           <i class="fa-solid fa-sign-out-alt"></i>
+                           تسجيل الخروج
+                        </a>
+                     </li>
+                     {% endif %}
                   </ul>
                </div>
             </div>

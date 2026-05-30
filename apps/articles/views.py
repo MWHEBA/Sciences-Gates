@@ -6,6 +6,7 @@ from django.db.models import Prefetch, Q
 from .models import Article, Category, Tag
 from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
+from apps.seo.preview import apply_preview_filter
 
 
 class ArticleListView(BreadcrumbMixin, ListView):
@@ -91,9 +92,7 @@ class ArticleDetailView(BreadcrumbMixin, DetailView):
         - select_related: for foreign key relationships (category, author)
         - prefetch_related: for many-to-many relationships (tags, related content)
         """
-        return Article.objects.filter(
-            publish_status='published'
-        ).select_related(
+        return apply_preview_filter(self.request, Article.objects).select_related(
             'category',
             'author'
         ).prefetch_related(

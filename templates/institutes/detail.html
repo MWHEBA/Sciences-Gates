@@ -56,7 +56,7 @@
     <div class="detail-layout">
         
         <!-- Right Column: Detail Content (2/3 width) -->
-        <div class="detail-main">
+        <div class="detail-main" data-seo-content>
             
             <!-- About Section -->
             <section class="detail-section">
@@ -184,7 +184,7 @@
     </div>
 
     <!-- Related Articles Section (Full width bottom tab/grid) -->
-    <div class="detail-related">
+    <div class="detail-related" data-seo-ignore>
         {% include "components/related_articles.html" with articles=institute.related_articles.all %}
     </div>
 

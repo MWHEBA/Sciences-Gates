@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from .models import Institute, Course
 from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
+from apps.seo.preview import apply_preview_filter
 
 
 class InstituteListView(BreadcrumbMixin, ListView):
@@ -81,9 +82,7 @@ class InstituteDetailView(BreadcrumbMixin, DetailView):
             Course.objects.all().order_by('name')
         )
         
-        return Institute.objects.filter(
-            publish_status='published'
-        ).prefetch_related(
+        return apply_preview_filter(self.request, Institute.objects).prefetch_related(
             courses_prefetch,
             'related_articles'
         )
