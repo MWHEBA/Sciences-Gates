@@ -2,7 +2,7 @@
 Public views for displaying major content to end users.
 """
 from django.views.generic import ListView, DetailView, TemplateView
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.core.paginator import Paginator
 from .models import Major, SubjectsTable, SalaryTable, CountriesTable
 from apps.seo.mixins import BreadcrumbMixin
@@ -23,19 +23,36 @@ class MajorListView(BreadcrumbMixin, ListView):
     
     def get_queryset(self):
         """
-        Return only published majors, ordered by name.
+        Return only published majors, ordered by name, filtered by search query if provided.
         
         Query Optimization:
         - Uses prefetch_related for many-to-many relationships
         """
-        return Major.objects.filter(
+        queryset = Major.objects.filter(
             publish_status='published'
         ).prefetch_related(
             'best_universities',
             'cheap_universities',
             'related_articles'
         ).order_by('name')
+
+        # Apply search filter (q)
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            queryset = queryset.filter(
+                Q(name__icontains=q) |
+                Q(description__icontains=q)
+            )
+
+        return queryset
     
+    def get_context_data(self, **kwargs):
+        """Add clear_url to context for resetting filters."""
+        context = super().get_context_data(**kwargs)
+        from django.urls import reverse
+        context['clear_url'] = reverse('majors:list')
+        return context
+
     def get_breadcrumbs(self):
         """Build breadcrumb trail for major list page."""
         return (BreadcrumbTrail()

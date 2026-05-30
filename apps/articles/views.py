@@ -24,8 +24,9 @@ class ArticleListView(BreadcrumbMixin, ListView):
     def get_queryset(self):
         """
         Return only published articles, ordered by publish date (newest first).
+        Filtered by search query and category if provided.
         """
-        return Article.objects.filter(
+        queryset = Article.objects.filter(
             publish_status='published'
         ).select_related(
             'category',
@@ -33,6 +34,29 @@ class ArticleListView(BreadcrumbMixin, ListView):
         ).prefetch_related(
             'tags'
         ).order_by('-publish_date')
+
+        # Apply search filter (q)
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            queryset = queryset.filter(
+                Q(title__icontains=q) |
+                Q(content__icontains=q)
+            )
+
+        # Apply category filter
+        category_id = self.request.GET.get('category', '').strip()
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """Add categories to context for search filter."""
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.all().order_by('name')
+        from django.urls import reverse
+        context['clear_url'] = reverse('articles:list')
+        return context
     
     def get_breadcrumbs(self):
         """Build breadcrumb trail for article list page."""
@@ -187,6 +211,8 @@ class CategoryArticleListView(BreadcrumbMixin, ListView):
     def get_context_data(self, **kwargs):
         """Add category information to context."""
         context = super().get_context_data(**kwargs)
+        from django.urls import reverse
+        context['clear_url'] = reverse('articles:list')
         
         # Get the category
         category_slug = self.kwargs.get('slug')
@@ -246,6 +272,8 @@ class TagArticleListView(BreadcrumbMixin, ListView):
     def get_context_data(self, **kwargs):
         """Add tag information to context."""
         context = super().get_context_data(**kwargs)
+        from django.urls import reverse
+        context['clear_url'] = reverse('articles:list')
         
         # Get the tag
         tag_slug = self.kwargs.get('slug')

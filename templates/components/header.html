@@ -180,6 +180,7 @@
                         <nav class="it-menu-content">
                            <ul>
                               <li><a href="/" class="{% if request.path == '/' %}is-active{% endif %}">الرئيسية</a></li>
+                              <li><a href="{% url 'about_us' %}" class="{% if request.path == '/about-us/' %}is-active{% endif %}">عن الشركة</a></li>
                               <li><a href="{% url 'universities:list' %}"
                                     class="{% if 'universities' in request.path %}is-active{% endif %}">الجامعات</a>
                               </li>
@@ -188,8 +189,7 @@
                               <li><a href="{% url 'majors:list' %}"
                                     class="{% if 'majors' in request.path %}is-active{% endif %}">التخصصات</a></li>
                               <li><a href="{% url 'articles:list' %}"
-                                    class="{% if 'articles' in request.path %}is-active{% endif %}">المقالات
-                                    والأخبار</a></li>
+                                    class="{% if 'articles' in request.path %}is-active{% endif %}">المقالات</a></li>
                               <li><a href="{% url 'leads:submit' %}"
                                     class="{% if 'leads' in request.path %}is-active{% endif %}">تواصل معنا</a></li>
                            </ul>

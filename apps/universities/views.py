@@ -23,18 +23,58 @@ class UniversityListView(BreadcrumbMixin, ListView):
     
     def get_queryset(self):
         """
-        Return only published universities, ordered by name.
+        Return only published universities, ordered by name, filtered by search query, type, and city if provided.
         
         Query Optimization:
         - Uses select_related for any foreign key relationships
         - Uses prefetch_related for reverse foreign key relationships
         """
-        return University.objects.filter(
+        queryset = University.objects.filter(
             publish_status='published'
         ).prefetch_related(
             'related_majors',
             'related_articles'
         ).order_by('name')
+        
+        # Apply search filter (q)
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(name__icontains=q) |
+                Q(description__icontains=q) |
+                Q(location__icontains=q)
+            )
+            
+        # Apply university type filter (public/private/foreign)
+        university_type = self.request.GET.get('type', '').strip()
+        if university_type:
+            queryset = queryset.filter(university_type=university_type)
+            
+        # Apply city/location filter (kl/selangor/penang/johor)
+        city = self.request.GET.get('city', '').strip().lower()
+        if city:
+            city_map = {
+                'kl': ['كوالالمبور', 'kuala lumpur', 'kl'],
+                'selangor': ['سيلانجور', 'سيلانغور', 'selangor'],
+                'penang': ['بينانج', 'بينانغ', 'penang'],
+                'johor': ['جوهر', 'johor'],
+            }
+            if city in city_map:
+                from django.db.models import Q
+                city_queries = Q()
+                for term in city_map[city]:
+                    city_queries |= Q(location__icontains=term)
+                queryset = queryset.filter(city_queries)
+                
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """Add clear_url to context for resetting filters."""
+        context = super().get_context_data(**kwargs)
+        from django.urls import reverse
+        context['clear_url'] = reverse('universities:list')
+        return context
     
     def get_breadcrumbs(self):
         """Build breadcrumb trail for university list page."""

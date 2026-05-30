@@ -44,6 +44,12 @@
                     </h3>
                     <ul class="site-footer__links" role="list">
                         <li>
+                            <a href="{% url 'about_us' %}" class="site-footer__link">
+                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                عن الشركة
+                            </a>
+                        </li>
+                        <li>
                             <a href="{% url 'universities:list' %}" class="site-footer__link">
                                 <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
                                 الجامعات الماليزية
@@ -52,7 +58,7 @@
                         <li>
                             <a href="{% url 'institutes:list' %}" class="site-footer__link">
                                 <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
-                                معاهد اللغة الإنجليزية
+                                المعاهد في ماليزيا
                             </a>
                         </li>
                         <li>

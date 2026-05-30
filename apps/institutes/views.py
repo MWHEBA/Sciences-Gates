@@ -34,6 +34,13 @@ class InstituteListView(BreadcrumbMixin, ListView):
             'related_articles'
         ).order_by('name')
     
+    def get_context_data(self, **kwargs):
+        """Add clear_url to context for resetting filters."""
+        context = super().get_context_data(**kwargs)
+        from django.urls import reverse
+        context['clear_url'] = reverse('institutes:list')
+        return context
+
     def get_breadcrumbs(self):
         """Build breadcrumb trail for institute list page."""
         return (BreadcrumbTrail()
@@ -139,7 +146,7 @@ class InstituteTypeListView(BreadcrumbMixin, TemplateView):
         """Build breadcrumb trail for institute type list page."""
         institute_type = self.kwargs.get('type', 'academic')
         type_labels = {
-            'language': 'معاهد اللغة الإنجليزية',
+            'language': 'معاهد اللغات',
             'academic': 'المعاهد الأكاديمية'
         }
         type_label = type_labels.get(institute_type, 'المعاهد')
@@ -180,7 +187,7 @@ class InstituteTypeListView(BreadcrumbMixin, TemplateView):
         
         # Type labels
         type_labels = {
-            'language': 'معاهد اللغة الإنجليزية',
+            'language': 'معاهد اللغات',
             'academic': 'المعاهد الأكاديمية'
         }
         

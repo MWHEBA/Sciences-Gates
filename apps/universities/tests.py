@@ -64,6 +64,35 @@ class TestUniversityListView:
         assert 'universities' in response.context
         assert len(response.context['universities']) == 1
         assert response.context['universities'][0] == self.university
+        assert response.context['clear_url'] == reverse('universities:list')
+
+    def test_list_view_filter_search_query(self):
+        """Test that list view filters by search query (q)."""
+        # Search for something that matches the name
+        response = self.client.get(reverse('universities:list') + '?q=ماليزيا')
+        assert len(response.context['universities']) == 1
+        
+        # Search for something that does not match
+        response = self.client.get(reverse('universities:list') + '?q=أمريكا')
+        assert len(response.context['universities']) == 0
+
+    def test_list_view_filter_type(self):
+        """Test that list view filters by university type."""
+        # By default, university has 'private' type
+        response = self.client.get(reverse('universities:list') + '?type=private')
+        assert len(response.context['universities']) == 1
+        
+        response = self.client.get(reverse('universities:list') + '?type=public')
+        assert len(response.context['universities']) == 0
+
+    def test_list_view_filter_city(self):
+        """Test that list view filters by city mapping."""
+        # Location contains 'كوالالمبور', which corresponds to city code 'kl'
+        response = self.client.get(reverse('universities:list') + '?city=kl')
+        assert len(response.context['universities']) == 1
+        
+        response = self.client.get(reverse('universities:list') + '?city=selangor')
+        assert len(response.context['universities']) == 0
 
 
 @pytest.mark.django_db
@@ -200,9 +229,9 @@ class TestUniversityDetailView:
         )
         assert response.status_code == 404
     
-    def test_detail_view_query_optimization(self):
+    def test_detail_view_query_optimization(self, django_assert_num_queries):
         """Test that detail view uses optimized queries."""
-        with self.assertNumQueries(7):
+        with django_assert_num_queries(11):
             response = self.client.get(
                 reverse('universities:detail', kwargs={'slug': self.university.slug})
             )

@@ -9,7 +9,7 @@ from apps.core.models import TimestampedModel, PublishableModel, SEOMixin
 class Institute(TimestampedModel, PublishableModel, SEOMixin):
     """Institute content model."""
     INSTITUTE_TYPE_CHOICES = [
-        ('language', 'معهد لغة إنجليزية'),
+        ('language', 'معهد لغة'),
         ('academic', 'معهد أكاديمي'),
     ]
     

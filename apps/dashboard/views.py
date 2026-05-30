@@ -613,6 +613,7 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة الجامعات'
+        context['page_type'] = 'universities'
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['type_filter'] = self.request.GET.get('type', '')
@@ -1387,16 +1388,70 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
 
     def get_context_data(self, **kwargs):
         """Add page title and search/filter info to context."""
+        from django.urls import reverse
+        
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة المعاهد'
+        context['page_type'] = 'institutes'
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['type_filter'] = self.request.GET.get('type', '')
+        
         # Add items for list_page.html template
         context['items'] = context.get('institutes', context.get('object_list', []))
-        return context
-        context['search_query'] = self.request.GET.get('search', '')
-        context['status_filter'] = self.request.GET.get('status', '')
+        
+        # Add required context variables for list_page.html
+        context['search_placeholder'] = 'ابحث عن اسم المعهد...'
+        context['search_value'] = context['search_query']
+        context['base_url'] = reverse('dashboard:institute_list')
+        
+        # Filters
+        context['filters'] = [
+            {
+                'name': 'status',
+                'label': 'حالة النشر',
+                'options': [
+                    {'value': 'published', 'label': 'منشور'},
+                    {'value': 'unpublished', 'label': 'غير منشور'},
+                ],
+                'selected': context['status_filter'],
+            },
+            {
+                'name': 'type',
+                'label': 'نوع المعهد',
+                'options': [
+                    {'value': 'language', 'label': 'معهد لغة'},
+                    {'value': 'academic', 'label': 'معهد أكاديمي'},
+                ],
+                'selected': context['type_filter'],
+            },
+        ]
+        
+        # Columns for data table
+        context['columns'] = [
+            {'label': 'اسم المعهد', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:institute_edit', 'link_param': 'pk'},
+            {'label': 'النوع', 'key': 'institute_type_display', 'type': 'text'},
+            {'label': 'الدورات', 'key': 'courses_count', 'type': 'text'},
+            {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
+            {'label': 'التاريخ', 'key': 'created_at', 'type': 'date'},
+        ]
+        
+        context['edit_url_name'] = 'dashboard:institute_edit'
+        context['delete_url_name'] = 'dashboard:institute_delete'
+        
+        # Pagination info
+        context['is_paginated'] = self.paginator.num_pages > 1 if hasattr(self, 'paginator') else False
+        context['page_obj'] = context.get('page_obj')
+        
+        # Build query params for pagination
+        query_params = '&'.join([f'{k}={v}' for k, v in self.request.GET.items() if k != 'page'])
+        context['query_params'] = query_params
+        
+        # Add computed properties to each institute
+        for institute in context['items']:
+            institute.courses_count = institute.courses.count()
+            institute.institute_type_display = 'معهد لغة' if institute.institute_type == 'language' else 'معهد أكاديمي'
+            
         return context
 
 
@@ -2319,6 +2374,7 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
         from django.urls import reverse
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة المقالات'
+        context['page_type'] = 'articles'
         context['search_query'] = self.request.GET.get('search', '')
         context['category_filter'] = self.request.GET.get('category', '')
         context['status_filter'] = self.request.GET.get('status', '')

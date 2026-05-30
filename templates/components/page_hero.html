@@ -1,13 +1,57 @@
-<!-- Page Hero Component — Shared across all list pages -->
-<!-- Usage: {% include "components/page_hero.html" with title="..." subtitle="..." badge="..." %} -->
-<div class="page-hero">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {% if badge %}
-        <span class="hero-badge mb-6 inline-flex">{{ badge }}</span>
-        {% endif %}
-        <h1>{{ title }}</h1>
-        {% if subtitle %}
-        <p>{{ subtitle }}</p>
+<!-- Premium Page Header Component — Shared across all list pages -->
+{# Usage: {% include "components/page_hero.html" with title="..." subtitle="..." search_template="..." %} #}
+<section class="py-12 border-b border-border page-header-premium">
+    <!-- Decorative Background Shapes -->
+    <div class="page-header-premium__bg-wrapper">
+        <!-- Static Faint Grid Pattern -->
+        <svg class="page-header-premium__grid-pattern page-header-premium__grid-pattern--static"
+            xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+            <defs>
+                <pattern id="grid-pattern-static-hero" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <path d="M 16 0 L 0 0 0 16" fill="none" class="grid-path" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-pattern-static-hero)" />
+        </svg>
+        <!-- Interactive Spotlight Highlighted Grid Pattern -->
+        <svg class="page-header-premium__grid-pattern page-header-premium__grid-pattern--spotlight"
+            xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+            <defs>
+                <pattern id="grid-pattern-spotlight-hero" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <path d="M 16 0 L 0 0 0 16" fill="none" class="grid-path" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-pattern-spotlight-hero)" />
+        </svg>
+        <div class="page-header-premium__shape page-header-premium__shape--circle"></div>
+        <div class="page-header-premium__shape page-header-premium__shape--square"></div>
+        <div class="page-header-premium__shape page-header-premium__shape--triangle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12,3 2,21 22,21" stroke-dasharray="3 3" />
+            </svg>
+        </div>
+        <svg class="page-header-premium__shape page-header-premium__shape--dots" xmlns="http://www.w3.org/2000/svg"
+            width="120" height="120">
+            <defs>
+                <pattern id="dots-pattern-hero" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="2" class="dot-circle" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dots-pattern-hero)" />
+        </svg>
+    </div>
+
+    <div class="container mx-auto px-4 max-w-7xl">
+        <div class="max-w-3xl mb-8">
+            {% include 'components/breadcrumb.html' %}
+            <h1 class="text-3xl md:text-4xl font-extrabold text-primary mt-3 mb-4">{{ title }}</h1>
+            {% if subtitle %}
+            <p class="text-text-secondary text-base md:text-lg leading-relaxed">{{ subtitle }}</p>
+            {% endif %}
+        </div>
+
+        {% if search_template %}
+            {% include search_template %}
         {% endif %}
     </div>
-</div>
+</section>

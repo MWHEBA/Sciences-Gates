@@ -1,0 +1,504 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}عن الشركة - بوابات العلوم{% endblock %}
+{% block meta_description %}تعرف على شركة بوابات العلوم للاستشارات التعليمية والدراسة في ماليزيا. شريكك الأكاديمي الموثوق لتأمين القبولات الجامعية والدراسات العليا.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/marquee.css' %}">
+<style>
+    /* Testimonial Carousel Custom Styles */
+    .testimonials-carousel-wrapper {
+        position: relative;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 56px;
+    }
+
+    .testimonial-slides {
+        position: relative;
+        min-height: 280px; 
+    }
+
+    @media (max-width: 768px) {
+        .testimonials-carousel-wrapper {
+            padding: 0 40px;
+        }
+        .testimonial-slides {
+            min-height: 340px;
+        }
+    }
+
+    .carousel-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background-color: var(--surface);
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 10;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .carousel-nav-btn:hover {
+        background-color: var(--primary) !important;
+        color: var(--white) !important;
+        border-color: var(--primary) !important;
+        box-shadow: var(--shadow-md);
+    }
+
+    /* RTL Specific Positioning for Arrows */
+    .testimonials-carousel-wrapper .prev-btn {
+        right: 0;
+    }
+
+    .testimonials-carousel-wrapper .next-btn {
+        left: 0;
+    }
+
+    .carousel-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+    }
+
+    .carousel-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: none;
+        background-color: var(--border-strong);
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .carousel-dot.active-dot {
+        background-color: var(--secondary) !important;
+        width: 24px;
+        border-radius: 5px;
+    }
+
+    .carousel-dot:hover:not(.active-dot) {
+        background-color: var(--primary-light);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero/Breadcrumb Section -->
+{% include "components/page_hero.html" with title="عن الشركة" subtitle="بوابتك الموثوقة لعالم الدراسة والبحث العلمي في ماليزيا" %}
+
+<!-- Main Intro Section (من نحن) -->
+<section id="about-intro" class="section section-bg-white about-section">
+    <div class="container">
+        <div class="grid grid--2 align-items-center gap-6">
+            
+            <!-- Text Content -->
+            <div class="about-content">
+                <span class="section-tag">من نحن</span>
+                <h2 class="section-title-premium">شريكك الأكاديمي الموثوق في ماليزيا</h2>
+                <p class="section-desc-premium">
+                    بوابات العلوم (Sciences Gates) تأسست لتكون المركز الاستشاري الأبرز للطلاب والباحثين العرب في ماليزيا، متجاوزةً الدور التقليدي لمكاتب الخدمات التعليمية. نحن نقدم استشارات أكاديمية متخصصة تُبنى على فهم عميق للمنظومة التعليمية العالمية من مقرنا في ماليزيا.
+                </p>
+                
+                <p class="section-desc-premium">
+                    نسعى جاهدين لتسهيل رحلتكم التعليمية من خلال توفير الدعم المتكامل والإرشادات الدقيقة التي تضمن لكم اختيار البرنامج الدراسي والجامعة الأنسب لطموحاتكم ومستقبلكم المهني.
+                </p>
+
+                <!-- Key Features checklist -->
+                <ul class="about-features">
+                    <li class="about-feature-item">
+                        <span class="about-feature-icon">
+                            <i class="fas fa-check" aria-hidden="true"></i>
+                        </span>
+                        <span class="about-feature-text">قبولات جامعية معتمدة: بصفتنا وكلاء رسميين لأفضل الجامعات الماليزية، نضمن لك إجراءات سريعة وشفافة.</span>
+                    </li>
+                    <li class="about-feature-item">
+                        <span class="about-feature-icon">
+                            <i class="fas fa-check" aria-hidden="true"></i>
+                        </span>
+                        <span class="about-feature-text">دعم الباحثين: تميز فريد في صياغة مقترحات البحث (Proposals) وتوجيه الطلاب لاختيار المشرف الأكاديمي الأنسب.</span>
+                    </li>
+                    <li class="about-feature-item">
+                        <span class="about-feature-icon">
+                            <i class="fas fa-check" aria-hidden="true"></i>
+                        </span>
+                        <span class="about-feature-text">رعاية متكاملة: خدماتنا تبدأ من الاستشارة الأولى وتشمل الفيزا، الاستقبال، وتأمين السكن لضمان استقرارك الأكاديمي.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Overlapping Images Box -->
+            <div class="about-images">
+                <div class="about-images__wrapper">
+                    <!-- Main image (background) -->
+                    <div class="about-image-card main-image">
+                        <img src="{% static 'images/visa-application.webp' %}" alt="تأشيرة الطالب والقبول في ماليزيا" class="about-img">
+                    </div>
+                    <!-- Secondary image (overlapping) -->
+                    <div class="about-image-card secondary-image">
+                        <img src="{% static 'images/square-academic-hat.webp' %}" alt="الدراسة في ماليزيا" class="about-img">
+                    </div>
+
+                    <!-- Experience Badge -->
+                    <div class="experience-badge">
+                        <span class="experience-badge__number">+10</span>
+                        <span class="experience-badge__label">سنوات خبرة</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Our Goals (هدفنا) -->
+<section id="about-goals" class="section why-choose-us" style="background-color: var(--surface-2); border-bottom: 1px solid var(--border);">
+    <div class="container">
+        <div class="section-header" style="max-width: 800px; margin: 0 auto 56px;">
+            <span class="section-tag" style="display: table; margin: 0 auto 16px;">رؤيتنا ورسالتنا</span>
+            <h2 class="section-title-premium text-center">أهدافنا وتطلعاتنا الأكاديمية</h2>
+            <p class="section-desc-premium text-center" style="font-size: 1.15rem; color: var(--text-primary); font-weight: 600;">
+                "هدفنا ليس مجرد تأمين قبول جامعي، بل أن نكون الشريك الأكاديمي الأول للطلاب والباحثين العرب في ماليزيا. نحن نسعى إلى تذليل العقبات الإدارية والتقنية أمام الباحث العربي، لنمنحه الفرصة للتركيز على تميزه العلمي وتطوره المهني."
+            </p>
+        </div>
+
+        <div class="grid grid--3 gap-6">
+            <!-- Goal 1 -->
+            <div class="feature-card" style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; text-align: center;">
+                <div class="feature-card__icon" style="width: 56px; height: 56px; background-color: var(--primary-light); color: var(--primary); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="fas fa-user-graduate fa-lg" aria-hidden="true"></i>
+                </div>
+                <h3 class="feature-card__title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">تمكين الباحثين</h3>
+                <p class="feature-card__desc" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6;">
+                    من خلال تقديم استشارات تخصصية مبنية على معايير الجودة العالمية في التعليم العالي.
+                </p>
+            </div>
+
+            <!-- Goal 2 -->
+            <div class="feature-card" style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; text-align: center;">
+                <div class="feature-card__icon" style="width: 56px; height: 56px; background-color: var(--primary-light); color: var(--primary); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="fas fa-handshake fa-lg" aria-hidden="true"></i>
+                </div>
+                <h3 class="feature-card__title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">بناء الجسور</h3>
+                <p class="feature-card__desc" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6;">
+                    ربط الكفاءات العربية بأفضل المراكز البحثية والجامعات الماليزية المرموقة.
+                </p>
+            </div>
+
+            <!-- Goal 3 -->
+            <div class="feature-card" style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; text-align: center;">
+                <div class="feature-card__icon" style="width: 56px; height: 56px; background-color: var(--primary-light); color: var(--primary); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="fas fa-laptop-code fa-lg" aria-hidden="true"></i>
+                </div>
+                <h3 class="feature-card__title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">الريادة التقنية</h3>
+                <p class="feature-card__desc" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6;">
+                    استخدام خبرتنا في علوم الحاسوب لتطوير أدوات وحلول رقمية تسهل على الطالب رحلته الأكاديمية من التقديم وحتى التخرج.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us (التميز الأكاديمي) -->
+<section id="about-choose" class="section section-bg-white" style="border-bottom: 1px solid var(--border);">
+    <div class="container">
+        <div class="grid grid--2 align-items-center gap-6">
+            
+            <!-- Advantage Illustration Placeholder -->
+            <div class="about-images d-none d-lg-block">
+                <div class="about-images__wrapper" style="height: 350px;">
+                    <div class="about-image-card main-image" style="width: 85%; height: 300px; left: 0; right: auto;">
+                        <img src="{% static 'images/hero-2.png' %}" alt="الاستشارات التعليمية والتميز الدراسي" class="about-img" style="object-position: center top;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content details -->
+            <div class="about-content">
+                <span class="section-tag">لماذا تختارنا؟</span>
+                <h2 class="section-title-premium">ميزتنا التنافسية وخبراتنا الأكاديمية</h2>
+                <p class="section-desc-premium">
+                    تتميز <strong>Sciences Gates</strong> بكونها تحت إشراف مباشر من <strong>د. محمد كيالي</strong>، الحاصل على دكتوراه علوم الحاسوب من الجامعة الوطنية الماليزية (UKM).
+                </p>
+                <p class="section-desc-premium">
+                    هذه الخلفية الأكاديمية القوية تمنحنا ميزة فريدة وخبرة علمية دقيقة في تقييم الملفات العلمية وتوجيه طلاب الدراسات العليا (الماجستير والدكتوراه) نحو القبول المضمون واختيار مقترح البحث الأنسب والمشرف الأكاديمي المتوافق مع تطلعاتهم في أعرق الجامعات البحثية الماليزية.
+                </p>
+
+                <!-- Value metrics -->
+                <div class="grid grid--3 gap-4 mt-4 text-center">
+                    <div style="background-color: var(--primary-light); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border);">
+                        <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary);">100%</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">قبولات معتمدة</div>
+                    </div>
+                    <div style="background-color: var(--primary-light); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border);">
+                        <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary);">+3000</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">طالب تم مساعدتهم</div>
+                    </div>
+                    <div style="background-color: var(--primary-light); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border);">
+                        <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary);">UKM</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">إشراف أكاديمي</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Success Partners Section -->
+<section id="about-partners" class="section section-bg-white" style="border-bottom: 1px solid var(--border); padding-bottom: 0;">
+    <div class="container">
+        <div class="section-heading text-center" style="margin-bottom: 40px;">
+            <span class="section-tag">شركاء النجاح</span>
+            <h2 class="section-title text-center">أبرز الجامعات الماليزية المعترف بها</h2>
+            <p style="margin-top: 24px;">وكلاء رسميون معتمدون لأرقى مؤسسات التعليم العالي والجامعات البحثية في ماليزيا</p>
+        </div>
+    </div>
+
+    <!-- Infinite Scrolling Marquee for Logos -->
+    <div class="logo-marquee-wrapper">
+        <div class="logo-marquee" dir="ltr">
+            <div class="logo-marquee__track">
+                <!-- Group 1 -->
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_inti.png' %}" alt="INTI University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_segi.png' %}" alt="SEGi University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_upm.png' %}" alt="UPM University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_ukm.png' %}" alt="UKM University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_iukl.png' %}" alt="IUKL University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_apu.png' %}" alt="APU University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_ftms.png' %}" alt="FTMS College" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_mmu.png' %}" alt="MMU University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_uthm.png' %}" alt="UTHM University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_mahsa.png' %}" alt="MAHSA University" class="logo-marquee__img">
+                </div>
+
+                <!-- Duplicate Group 1 for Seamless Infinite Loop -->
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_inti.png' %}" alt="INTI University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_segi.png' %}" alt="SEGi University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_upm.png' %}" alt="UPM University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_ukm.png' %}" alt="UKM University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_iukl.png' %}" alt="IUKL University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_apu.png' %}" alt="APU University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_ftms.png' %}" alt="FTMS College" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_mmu.png' %}" alt="MMU University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_uthm.png' %}" alt="UTHM University" class="logo-marquee__img">
+                </div>
+                <div class="logo-marquee__item">
+                    <img src="{% static 'images/univ_mahsa.png' %}" alt="MAHSA University" class="logo-marquee__img">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section id="about-testimonials" class="section section-bg-gray" style="border-bottom: 1px solid var(--border);">
+    <div class="container">
+        <div class="section-heading text-center">
+            <span class="section-tag">آراء الطلاب</span>
+            <h2 class="section-title text-center">آراء بعض طلابنا</h2>
+            <p style="margin-top: 24px;">تجارب حقيقية لطلابنا الذين بدأوا رحلتهم الأكاديمية بنجاح في ماليزيا من خلال بوابات العلوم</p>
+        </div>
+
+        <!-- Alpine.js Testimonials Carousel -->
+        <div class="testimonials-carousel-wrapper" 
+             x-data="{ 
+                 activeIndex: 0, 
+                 totalSlides: 4, 
+                 autoPlayInterval: null,
+                 startAutoplay() {
+                     this.stopAutoplay();
+                     this.autoPlayInterval = setInterval(() => {
+                         this.activeIndex = (this.activeIndex + 1) % this.totalSlides;
+                     }, 4000);
+                 },
+                 stopAutoplay() {
+                     if (this.autoPlayInterval) {
+                         clearInterval(this.autoPlayInterval);
+                         this.autoPlayInterval = null;
+                     }
+                 }
+             }" 
+             x-init="startAutoplay()" 
+             @mouseenter="stopAutoplay()" 
+             @mouseleave="startAutoplay()">
+            
+            <!-- Slides Container -->
+            <div class="testimonial-slides">
+                
+                <!-- Slide 1 -->
+                <div class="testimonial-slide-item" x-show="activeIndex === 0" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" style="position: absolute; width: 100%; top: 0; left: 0;">
+                    <div class="testimonial-card">
+                        <div class="stars">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                        </div>
+                        <div class="quote-icon">
+                            <i class="fas fa-quote-left fa-2x" style="opacity: 0.1;" aria-hidden="true"></i>
+                        </div>
+                        <p class="testimonial-text" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px;">
+                            "تجربة جميلة جدا ماشاءالله تبارك الله ساعدوني كثيراً في الاجراءات و مميزة جدا اشكر المدير محمد على كل الاجتهاد والمتابعة وتقديم كل المساعدات الازمة و نتمنى لكم دوام التوفيق و الاجتهاد على هذا الخير المقدم منكم."
+                        </p>
+                        <div style="display: flex; align-items: center; gap: 16px; margin-top: 16px;">
+                            <div class="avatar" aria-hidden="true">ع</div>
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0;">عطية محمد</h4>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">تعليقات جوجل</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="testimonial-slide-item" x-show="activeIndex === 1" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" style="position: absolute; width: 100%; top: 0; left: 0; display: none;">
+                    <div class="testimonial-card">
+                        <div class="stars">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                        </div>
+                        <div class="quote-icon">
+                            <i class="fas fa-quote-left fa-2x" style="opacity: 0.1;" aria-hidden="true"></i>
+                        </div>
+                        <p class="testimonial-text" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px;">
+                            "لقد واجهتني الكثير من المصاعب خلال رحلتي للتعليم بالخارج وقد كنتم خير مساعد ومعاون ليه على اجتياز هذه الصعاب شكرا لكم بوابة العلوم."
+                        </p>
+                        <div style="display: flex; align-items: center; gap: 16px; margin-top: 16px;">
+                            <div class="avatar" aria-hidden="true">ع</div>
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0;">علي أحمد</h4>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">كلية طب ماليزيا</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 3 -->
+                <div class="testimonial-slide-item" x-show="activeIndex === 2" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" style="position: absolute; width: 100%; top: 0; left: 0; display: none;">
+                    <div class="testimonial-card">
+                        <div class="stars">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                        </div>
+                        <div class="quote-icon">
+                            <i class="fas fa-quote-left fa-2x" style="opacity: 0.1;" aria-hidden="true"></i>
+                        </div>
+                        <p class="testimonial-text" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px;">
+                            "تجهيز الأوراق وتنسيق الأوراق المطلوبة للدراسة بالخارج من المهام الشاقة ولكم جزيرل الشكر لتوفير السكن المناسب أيضا تحياتي لكم."
+                        </p>
+                        <div style="display: flex; align-items: center; gap: 16px; margin-top: 16px;">
+                            <div class="avatar" aria-hidden="true">م</div>
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0;">مصطفى خالد</h4>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">صيدلة ماليزيا</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 4 -->
+                <div class="testimonial-slide-item" x-show="activeIndex === 3" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" style="position: absolute; width: 100%; top: 0; left: 0; display: none;">
+                    <div class="testimonial-card">
+                        <div class="stars">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                        </div>
+                        <div class="quote-icon">
+                            <i class="fas fa-quote-left fa-2x" style="opacity: 0.1;" aria-hidden="true"></i>
+                        </div>
+                        <p class="testimonial-text" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px;">
+                            "بفضل الدورات التدريبية المقترحة من بوابة العلوم تمكنت من اجتياز الصعاب الدراسية وبالأخص مشاكل اللغة التي كانت لي من أكبر الصعاب."
+                        </p>
+                        <div style="display: flex; align-items: center; gap: 16px; margin-top: 16px;">
+                            <div class="avatar" aria-hidden="true">أ</div>
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0;">أسعد الغامدي</h4>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">هندسة ماليزيا</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Navigation Arrows -->
+            <button @click="activeIndex = (activeIndex === 0) ? totalSlides - 1 : activeIndex - 1; startAutoplay()" class="carousel-nav-btn prev-btn" aria-label="التقييم السابق">
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </button>
+            <button @click="activeIndex = (activeIndex === totalSlides - 1) ? 0 : activeIndex + 1; startAutoplay()" class="carousel-nav-btn next-btn" aria-label="التقييم التالي">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+
+            <!-- Pagination Dots -->
+            <div class="carousel-dots">
+                <template x-for="(item, index) in Array.from({ length: totalSlides })" :key="index">
+                    <button @click="activeIndex = index; startAutoplay()" :class="{ 'active-dot': activeIndex === index }" class="carousel-dot" :aria-label="'الذهاب للتقييم ' + (index + 1)"></button>
+                </template>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- CTA Band -->
+{% include 'partials/cta-band.html' %}
+
+{% endblock %}

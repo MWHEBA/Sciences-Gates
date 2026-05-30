@@ -6,16 +6,9 @@
 {% block meta_description %}اقرأ جميع مقالات تصنيف {{ category.name }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Page Header -->
-    <div class="articles-page-header">
-        <div class="articles-page-header-accent"></div>
-        <span class="articles-page-header-label">تصفح حسب التصنيف</span>
-        <h1 class="articles-page-header-title">{{ category.name }}</h1>
-        {% if category.description %}
-            <p class="articles-page-header-description">{{ category.description }}</p>
-        {% endif %}
-    </div>
+{% include "components/page_hero.html" with title=category.name subtitle=category.description|default:"تصفح جميع مقالات التصنيف" %}
+
+<div class="container py-16">
 
     <!-- Articles List -->
     {% if articles %}
@@ -98,7 +91,7 @@
 
     {% else %}
         <!-- No Articles Message -->
-        {% include 'partials/empty-state.html' with message="لا توجد مقالات في هذا التصنيف حالياً" description="يرجى العودة لاحقاً لقراءة أحدث الأخبار." %}
+        {% include 'partials/empty-state.html' with message="لا توجد مقالات في هذا التصنيف حالياً" clear_url=clear_url %}
     {% endif %}
 </div>
 {% endblock %}

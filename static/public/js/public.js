@@ -203,4 +203,22 @@ document.addEventListener('DOMContentLoaded', () => {
             studentsImg.classList.add('is-visible');
         }, { once: true });
     }
+
+    // 7. Page Header Spotlight effect
+    const pageHeader = document.querySelector('.page-header-premium');
+    if (pageHeader) {
+        pageHeader.addEventListener('mousemove', (e) => {
+            const rect = pageHeader.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            pageHeader.style.setProperty('--mouse-x', `${x}px`);
+            pageHeader.style.setProperty('--mouse-y', `${y}px`);
+        });
+
+        // إعادة تعيين موضع الماوس عند خروج المؤشر لإخفاء تأثير الإضاءة
+        pageHeader.addEventListener('mouseleave', () => {
+            pageHeader.style.setProperty('--mouse-x', '-999px');
+            pageHeader.style.setProperty('--mouse-y', '-999px');
+        });
+    }
 });

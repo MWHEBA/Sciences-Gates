@@ -6,14 +6,9 @@
 {% block meta_description %}اقرأ جميع مقالات الوسم {{ tag.name }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Page Header -->
-    <div class="articles-page-header">
-        <div class="articles-page-header-accent"></div>
-        <span class="articles-page-header-label">تصفح حسب الوسم</span>
-        <h1 class="articles-page-header-title">الوسم: #{{ tag.name }}</h1>
-        <p class="articles-page-header-description">اكتشف جميع المقالات والنصائح التعليمية المرتبطة بالوسم "{{ tag.name }}".</p>
-    </div>
+{% include "components/page_hero.html" with title="#"|add:tag.name subtitle="اكتشف جميع المقالات والنصائح التعليمية المرتبطة بهذا الوسم." %}
+
+<div class="container py-16">
 
     <!-- Articles List -->
     {% if articles %}
@@ -105,7 +100,7 @@
 
     {% else %}
         <!-- No Articles Message -->
-        {% include 'partials/empty-state.html' with message="لا توجد مقالات بهذا الوسم حالياً" description="يرجى العودة لاحقاً لقراءة أحدث الأخبار." %}
+        {% include 'partials/empty-state.html' with message="لا توجد مقالات بهذا الوسم حالياً" clear_url=clear_url %}
     {% endif %}
 </div>
 {% endblock %}

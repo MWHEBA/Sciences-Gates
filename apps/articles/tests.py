@@ -201,6 +201,7 @@ class TestArticleListView:
         """Test that article list view returns 200."""
         response = self.client.get(reverse('articles:list'))
         assert response.status_code == 200
+        assert response.context['clear_url'] == reverse('articles:list')
     
     def test_article_list_view_template(self):
         """Test that article list view uses correct template."""
@@ -361,6 +362,7 @@ class TestCategoryArticleListView:
         response = self.client.get(self.category1.get_absolute_url())
         
         assert response.context['category'] == self.category1
+        assert response.context['clear_url'] == reverse('articles:list')
 
 
 @pytest.mark.django_db
@@ -432,3 +434,4 @@ class TestTagArticleListView:
         response = self.client.get(self.tag1.get_absolute_url())
         
         assert response.context['tag'] == self.tag1
+        assert response.context['clear_url'] == reverse('articles:list')

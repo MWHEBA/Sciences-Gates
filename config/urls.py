@@ -6,12 +6,13 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
-from apps.core.views import HomeView
+from apps.core.views import HomeView, AboutView
 from apps.seo.views import robots_txt
 from apps.seo.sitemaps import sitemaps
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
+    path('about-us/', AboutView.as_view(), name='about_us'),
     path('admin/', admin.site.urls),
     path('dashboard/', include('apps.dashboard.urls')),
     path('universities/', include('apps.universities.urls')),

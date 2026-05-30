@@ -217,6 +217,7 @@ class MajorPublicViewsTest(TestCase):
         self.assertIn('majors', response.context)
         self.assertEqual(len(response.context['majors']), 1)
         self.assertEqual(response.context['majors'][0].name, 'هندسة البرمجيات')
+        self.assertEqual(response.context['clear_url'], reverse('majors:list'))
 
     def test_major_list_view_only_published(self):
         """Test that only published majors are shown in list."""

@@ -118,3 +118,21 @@ class HomeView(TemplateView):
         })
         
         return context
+
+
+class AboutView(TemplateView):
+    """
+    About Us page view displaying details about Sciences Gates company.
+    """
+    template_name = 'about.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Fetch all published universities that have logos
+        universities_with_logos = University.objects.filter(
+            publish_status=PublishStatus.PUBLISHED
+        ).exclude(logo='').only('name', 'logo')
+        context['universities_with_logos'] = universities_with_logos
+        return context
+
+

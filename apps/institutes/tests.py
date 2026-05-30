@@ -1,5 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
+from .models import Institute
 
 
 class InstituteListViewTest(TestCase):
@@ -81,6 +82,7 @@ class InstituteListViewTest(TestCase):
         self.assertIn('institutes', response.context)
         self.assertIn('is_paginated', response.context)
         self.assertIn('page_obj', response.context)
+        self.assertEqual(response.context['clear_url'], reverse('institutes:list'))
 
 
 class InstituteDetailViewTest(TestCase):

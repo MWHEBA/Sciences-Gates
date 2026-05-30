@@ -3143,6 +3143,10 @@ img#intlPhoneFlag {
 
 /* Empty State */
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 4rem 2rem;
   background: var(--bg-white);
@@ -3154,7 +3158,24 @@ img#intlPhoneFlag {
   width: 64px;
   height: 64px;
   color: var(--text-light);
-  margin: 0 auto 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.empty-state__title {
+  color: var(--primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.empty-state__message {
+  color: var(--text-body);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  max-width: 480px;
+  text-align: center;
 }
 
 /* Stats */
@@ -3584,3 +3605,212 @@ img#intlPhoneFlag {
     display: none;
   }
 }
+
+/* Premium Page Header Component Styles */
+.page-header-premium {
+  position: relative;
+  background-color: var(--bg-gray) !important;
+  overflow: hidden;
+  padding-top: 160px !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  /* Default cursor positions offscreen */
+  --mouse-x: -999px;
+  --mouse-y: -999px;
+}
+
+.page-header-premium__bg-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.page-header-premium__grid-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.page-header-premium__grid-pattern--static .grid-path {
+  stroke: var(--border-color);
+  stroke-width: 1;
+  stroke-opacity: 0.45;
+}
+
+.page-header-premium__grid-pattern--spotlight {
+  -webkit-mask-image: radial-gradient(circle 120px at var(--mouse-x) var(--mouse-y), black 20%, transparent 100%);
+  mask-image: radial-gradient(circle 120px at var(--mouse-x) var(--mouse-y), black 20%, transparent 100%);
+}
+
+.page-header-premium__grid-pattern--spotlight .grid-path {
+  stroke: var(--primary);
+  stroke-width: 1.25;
+  stroke-opacity: 0.45;
+}
+
+.page-header-premium__shape {
+  position: absolute;
+  pointer-events: none;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-header-premium__shape--circle {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border: 2px dashed var(--primary);
+  opacity: 0.28;
+  border-radius: 50%;
+  top: 140px;
+  right: -60px;
+  animation: floatCirclePremium 36s ease-in-out infinite;
+}
+
+.page-header-premium__shape--dots {
+  position: absolute;
+  bottom: -20px;
+  left: 8%;
+  width: 120px;
+  height: 120px;
+  animation: floatDotsPremium 24s ease-in-out infinite alternate;
+}
+
+.page-header-premium__shape--dots .dot-circle {
+  fill: var(--primary);
+  fill-opacity: 0.35;
+  transition: fill 0.6s ease, fill-opacity 0.6s ease;
+}
+
+.page-header-premium__shape--square {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border: 1.5px dashed var(--secondary);
+  opacity: 0.35;
+  border-radius: var(--radius-sm);
+  top: 40px;
+  left: 4%;
+  transform: rotate(15deg);
+  animation: floatSquarePremium 28s ease-in-out infinite alternate;
+}
+
+.page-header-premium__shape--plus {
+  position: absolute;
+  top: 25%;
+  right: 28%;
+  color: var(--primary);
+  opacity: 0.4;
+  animation: floatPlusPremium 20s ease-in-out infinite alternate;
+}
+
+.page-header-premium__shape--triangle {
+  position: absolute;
+  top: 20%;
+  left: 35%;
+  color: var(--primary);
+  opacity: 0.35;
+  animation: floatTrianglePremium 22s ease-in-out infinite alternate;
+}
+
+/* Hover Interactivity & Playful States */
+.page-header-premium:hover .page-header-premium__shape--circle {
+  opacity: 0.45;
+}
+
+.page-header-premium:hover .page-header-premium__shape--dots .dot-circle {
+  fill-opacity: 0.5;
+}
+
+.page-header-premium:hover .page-header-premium__shape--square {
+  opacity: 0.55;
+}
+
+.page-header-premium:hover .page-header-premium__shape--plus {
+  opacity: 0.6;
+}
+
+.page-header-premium:hover .page-header-premium__shape--triangle {
+  opacity: 0.55;
+}
+
+@keyframes floatCirclePremium {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg) scale(1.03);
+  }
+}
+
+@keyframes floatDotsPremium {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+  }
+  100% {
+    transform: translateY(15px) translateX(-10px) scale(0.95);
+  }
+}
+
+@keyframes floatSquarePremium {
+  0% {
+    transform: rotate(15deg) translateY(0) translateX(0);
+  }
+  100% {
+    transform: rotate(60deg) translateY(12px) translateX(8px);
+  }
+}
+
+@keyframes floatPlusPremium {
+  0% {
+    transform: rotate(0deg) scale(0.9);
+  }
+  100% {
+    transform: rotate(180deg) scale(1.1);
+  }
+}
+
+@keyframes floatTrianglePremium {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-10px) rotate(360deg);
+  }
+}
+
+.page-header-premium .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Completely transparent site header when page has premium header for clean background overlap */
+body:has(.page-header-premium) .header-offset {
+  display: none !important;
+}
+
+body:has(.page-header-premium) .it-header-2-area:not(.header-sticky) {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid transparent !important;
+}
+
+body:has(.page-header-premium) .it-header-2-top-area {
+  background-color: transparent !important;
+}
+
+body:has(.page-header-premium) .it-header-2-top-area a,
+body:has(.page-header-premium) .it-header-2-top-area span,
+body:has(.page-header-premium) .it-header-2-top-area li,
+body:has(.page-header-premium) .it-header-2-top-area i {
+  color: var(--text-body) !important;
+}

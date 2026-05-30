@@ -1,0 +1,27 @@
+<!-- Search and Filters Form -->
+<div class="bg-surface-2 border border-border rounded-xl p-6 shadow-lg">
+    <form method="get" class="w-full">
+        <!-- Search Box -->
+        <div class="w-full">
+            <label class="block text-xs font-semibold text-text-secondary mb-2">البحث عن تخصص</label>
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <input type="text" name="q" placeholder="ابحث عن تخصص..."
+                        value="{{ request.GET.q|default:'' }}"
+                        class="w-full bg-surface border border-border rounded-lg py-2.5 px-4 pr-10 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all">
+                    <span
+                        class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-muted">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </span>
+                </div>
+                <button type="submit"
+                    class="bg-primary hover:bg-primary-hover text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2">
+                    <span>بحث</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

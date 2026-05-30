@@ -22,13 +22,11 @@
 <div class="space-y-6">
     {% if articles %}
     <!-- Filter Bar -->
-    {% include "dashboard/components/filter_bar.html" with search_placeholder="ابحث عن عنوان المقالة أو الرابط..."
-    filters=filters search_value=search_query base_url=base_url %}
+    {% include "dashboard/components/filter_bar.html" with search_placeholder="ابحث عن عنوان المقالة أو الرابط..." filters=filters search_value=search_query base_url=base_url %}
 
 
     <!-- Data Table -->
-    {% include "dashboard/components/data_table.html" with columns=columns rows=articles
-    edit_url_name="dashboard:article_edit" delete_url_name="dashboard:article_delete" %}
+    {% include "dashboard/components/data_table.html" with columns=columns rows=articles edit_url_name="dashboard:article_edit" delete_url_name="dashboard:article_delete" %}
 
     <!-- Pagination -->
     {% if is_paginated %}
@@ -37,8 +35,7 @@
 
     {% else %}
     <!-- Empty State -->
-    {% include "dashboard/components/empty_state.html" with heading="لا توجد مقالات" description="ابدأ بإنشاء مقالة
-    جديدة" action_url=add_new_url action_label="إضافة مقالة جديدة" %}
+    {% include "dashboard/components/empty_state.html" with heading="لا توجد مقالات" description="ابدأ بإنشاء مقالة جديدة" action_url=add_new_url action_label="إضافة مقالة جديدة" %}
     {% endif %}
 </div>
 {% endblock %}

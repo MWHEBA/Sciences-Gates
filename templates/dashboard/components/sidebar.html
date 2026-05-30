@@ -55,8 +55,7 @@
             </a>
         </div>
 
-        {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and
-        user.profile.is_super_admin %}
+        {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_super_admin %}
         <!-- قسم المحتوى - مدير المحتوى والمدير العام -->
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
             <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">المحتوى</h3>
@@ -401,8 +400,7 @@
         </div>
 
         <!-- قسم SEO - مدير SEO والمدير العام -->
-        {% if user.is_authenticated and user.profile.is_seo_admin or user.is_authenticated and
-        user.profile.is_super_admin %}
+        {% if user.is_authenticated and user.profile.is_seo_admin or user.is_authenticated and user.profile.is_super_admin %}
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
             <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">SEO</h3>
             <div class="space-y-1">
@@ -448,8 +446,7 @@
         {% endif %}
 
         <!-- قسم التقارير - المدير العام والمحررين -->
-        {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and
-        user.profile.is_seo_admin or user.is_authenticated and user.profile.is_super_admin %}
+        {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_seo_admin or user.is_authenticated and user.profile.is_super_admin %}
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
             <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: #bfbfbf;">التقارير</h3>
             <div class="space-y-1">
