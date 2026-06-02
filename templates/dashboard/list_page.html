@@ -1,139 +1,53 @@
 {% extends "dashboard/base.html" %}
 {% load static %}
 
-{% comment %}
-CRUD List Page Template Pattern - نمط قالب صفحة قائمة CRUD
-============================================================
-
-A reusable template pattern for displaying, searching, and filtering collections of content items.
-Follows a consistent vertical structure: page header, filter bar, data table, pagination.
-
-This template is designed to be extended by specific list pages (articles, universities, etc.)
-and provides a standardized layout that implements all design system requirements.
-
-Structure:
-1. Page Header (topbar with title + "Add New" button)
-2. Empty State (if no items exist)
-3. Filter Bar (if items exist)
-4. Data Table (if items exist)
-5. Pagination (if items exist and exceed 20 per page)
-
-Context Variables (required):
-- page_title: str - Page heading text (e.g., "المقالات")
-- page_description: str - Subtitle/description text
-- action_buttons: list - Action buttons for topbar (optional, but recommended for "Add New")
-Each button: {url, label, variant}
-variant: "primary" | "secondary" | "danger" | "ghost"
-- items: QuerySet - List of items to display
-- search_placeholder: str - Placeholder text for search input
-- search_value: str - Current search query value
-- base_url: str - Base URL for filter reset
-- filters: list - Filter definitions (optional)
-- columns: list - Column definitions for data table
-- edit_url_name: str - URL name for edit action
-- delete_url_name: str - URL name for delete action
-- is_paginated: bool - Whether pagination is enabled
-- page_obj: Page - Django paginator page object
-- query_params: str - Preserved query parameters for pagination
-
-Context Variables (optional):
-- empty_state_icon: str - SVG icon for empty state
-- empty_state_heading: str - Empty state title (Arabic)
-- empty_state_description: str - Empty state description (Arabic)
-- filtered_empty_state_heading: str - Heading when filters return no results
-- filtered_empty_state_description: str - Description when filters return no results
-
-Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8
-
-Usage Example (in view):
-
-from django.urls import reverse
-from django.core.paginator import Paginator
-
-def article_list(request):
-articles = Article.objects.all()
-
-# Search
-search_query = request.GET.get('search', '')
-if search_query:
-articles = articles.filter(title__icontains=search_query)
-
-# Pagination (20 items per page)
-paginator = Paginator(articles, 20)
-page_number = request.GET.get('page', 1)
-page_obj = paginator.get_page(page_number)
-
-# Build query params for pagination
-query_params = '&'.join([f'{k}={v}' for k, v in request.GET.items() if k != 'page'])
-
-context = {
-'page_title': 'المقالات',
-'page_description': 'إدارة جميع المقالات',
-'action_buttons': [
-{
-'url': reverse('dashboard:article_create'),
-'label': 'إضافة مقالة جديدة',
-'variant': 'primary',
-}
-],
-'items': page_obj.object_list,
-'search_placeholder': 'ابحث عن عنوان المقالة...',
-'search_value': search_query,
-'base_url': reverse('dashboard:article_list'),
-'filters': [
-{
-'name': 'status',
-'label': 'حالة النشر',
-'options': [
-{'value': 'published', 'label': 'منشور'},
-{'value': 'unpublished', 'label': 'غير منشور'},
-],
-'selected': request.GET.get('status', ''),
-},
-],
-'columns': [
-{'label': 'العنوان', 'key': 'title', 'type': 'link', 'link_url_name': 'dashboard:article_edit', 'link_param': 'id'},
-{'label': 'الحالة', 'key': 'is_published', 'type': 'badge', 'badge_status_key': 'is_published'},
-{'label': 'التاريخ', 'key': 'created_at', 'type': 'date'},
-],
-'edit_url_name': 'dashboard:article_edit',
-'delete_url_name': 'dashboard:article_delete',
-'is_paginated': paginator.num_pages > 1,
-'page_obj': page_obj,
-'query_params': query_params,
-}
-
-return render(request, 'dashboard/list_page.html', context)
-{% endcomment %}
-
 {% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Page Header with Title and "Add New" Button -->
     {% include "dashboard/components/topbar.html" with page_title=page_title page_description=page_description action_buttons=action_buttons %}
 
-    <!-- Main Content Area -->
-    {% if items %}
-    <!-- Filter Bar (visible when items exist) -->
     {% include "dashboard/components/filter_bar.html" with search_placeholder=search_placeholder filters=filters search_value=search_value base_url=base_url %}
 
-    <!-- Data Table (visible when items exist) -->
+    {% if items %}
     {% include "dashboard/components/data_table.html" with columns=columns rows=items edit_url_name=edit_url_name delete_url_name=delete_url_name %}
 
-    <!-- Pagination (visible when items exist and exceed 20 per page) -->
     {% if is_paginated %}
     {% include "dashboard/components/pagination.html" with page_obj=page_obj query_params=query_params %}
     {% endif %}
 
     {% else %}
-    <!-- Empty State (when no items exist, replacing filter bar, table, and pagination) -->
-    {% if search_value or filters %}
-    {# Filtered empty state - filters applied but no results #}
-    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading=filtered_empty_state_heading|default:"لا توجد نتائج" description=filtered_empty_state_description|default:"حاول تغيير معايير البحث أو التصفية" %}
+    {% if request.GET %}
+    {% if request.resolver_match.url_name == "article_list" %}
+    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد مقالات" description="لم نجد مقالات تطابق معايير البحث أو التصفية الحالية." action_url=base_url action_label="مسح الفلاتر" %}
+    {% elif request.resolver_match.url_name == "institute_list" %}
+    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد معاهد" description="لم نجد معاهد تطابق معايير البحث أو التصفية الحالية." action_url=base_url action_label="مسح الفلاتر" %}
+    {% elif request.resolver_match.url_name == "university_list" %}
+    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد جامعات" description="لم نجد جامعات تطابق معايير البحث أو التصفية الحالية." action_url=base_url action_label="مسح الفلاتر" %}
+    {% elif request.resolver_match.url_name == "major_list" %}
+    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد تخصصات" description="لم نجد تخصصات تطابق معايير البحث أو التصفية الحالية." action_url=base_url action_label="مسح الفلاتر" %}
     {% else %}
-    {# Complete empty state - no items at all #}
+    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading=filtered_empty_state_heading|default:"لا توجد عناصر" description=filtered_empty_state_description|default:"لم نجد عناصر تطابق معايير البحث أو التصفية الحالية." action_url=base_url action_label=clear_filters_label|default:"مسح الفلاتر" %}
+    {% endif %}
+
+    {% else %}
+    {% if request.resolver_match.url_name == "article_list" %}
+    {% url "dashboard:article_create" as create_url %}
+    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد مقالات" description="ابدأ بإنشاء مقالة جديدة" action_url=create_url action_label="إضافة مقالة جديدة" %}
+    {% elif request.resolver_match.url_name == "institute_list" %}
+    {% url "dashboard:institute_create" as create_url %}
+    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد معاهد" description="ابدأ بإنشاء معهد جديد" action_url=create_url action_label="إضافة معهد جديد" %}
+    {% elif request.resolver_match.url_name == "university_list" %}
+    {% url "dashboard:university_create" as create_url %}
+    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد جامعات" description="ابدأ بإنشاء جامعة جديدة" action_url=create_url action_label="إضافة جامعة جديدة" %}
+    {% elif request.resolver_match.url_name == "major_list" %}
+    {% url "dashboard:major_create" as create_url %}
+    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد تخصصات" description="ابدأ بإنشاء تخصص جديد" action_url=create_url action_label="إضافة تخصص جديد" %}
+    {% elif add_new_url and add_new_label %}
     {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading=empty_state_heading|default:"لا توجد عناصر" description=empty_state_description|default:"ابدأ بإنشاء عنصر جديد" action_url=add_new_url action_label=add_new_label %}
+    {% else %}
+    {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading=empty_state_heading|default:"لا توجد عناصر" description=empty_state_description|default:"ابدأ بإضافة أول عنصر من زر الإضافة أعلى الصفحة" %}
+    {% endif %}
     {% endif %}
     {% endif %}
 </div>

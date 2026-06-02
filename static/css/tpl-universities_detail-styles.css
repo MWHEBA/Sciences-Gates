@@ -244,6 +244,7 @@
     .reg-modal-body {
         padding: 24px;
         overflow: visible;
+        margin-top: 0 !important;
     }
 
     .reg-modal-footer {
@@ -285,7 +286,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 24px;
         padding: 8px 0;
     }
 
@@ -440,3 +440,288 @@
     .reg-btn--secondary:hover {
         background-color: var(--surface-2);
     }
+
+    /* Quick Info Section */
+    .quick-info-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .quick-info-card {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        background-color: var(--primary);
+        background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm1 1v18h18V1H1z' fill='%23ffffff' fill-opacity='0.012' fill-rule='evenodd'/%3E%3C/svg%3E");
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    }
+
+    .quick-info-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 3px;
+        height: 100%;
+        background-color: var(--secondary);
+    }
+
+    .quick-info-card:hover {
+        border-color: var(--secondary);
+        box-shadow: 0 8px 24px rgba(11, 45, 77, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .quick-info-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background-color: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: var(--radius-md);
+        color: var(--secondary);
+        flex-shrink: 0;
+    }
+
+    .quick-info-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .quick-info-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .quick-info-label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.55);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .quick-info-value {
+        font-size: 1rem;
+        color: var(--white);
+        font-weight: 700;
+    }
+
+    @media (max-width: 1024px) {
+        .quick-info-container {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .quick-info-container {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .quick-info-card {
+            padding: 1.25rem;
+        }
+    }
+
+    /* Header Logo Layout Styles */
+    .detail-header-main-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 2rem;
+        width: 100%;
+    }
+
+    .detail-header-info {
+        flex: 1;
+    }
+
+    .detail-header-logo-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ffffff5c;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.75rem;
+        box-shadow: var(--shadow-soft);
+        width: 120px;
+        height: 120px;
+        flex-shrink: 0;
+    }
+
+    .detail-header-logo {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    @media (max-width: 768px) {
+        .detail-header-main-row {
+            flex-direction: column-reverse;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+
+        .detail-header-logo-container {
+            width: 80px;
+            height: 80px;
+            padding: 0.5rem;
+        }
+    }
+
+    /* Dynamic Banner Height */
+    .detail-header-banner {
+        height: calc(100vh - 280px);
+        min-height: 250px;
+        max-height: 480px;
+    }
+
+    @media (max-width: 768px) {
+        .detail-header-banner {
+            height: 200px;
+        }
+    }
+
+    /* Admission Section Highlights */
+    .detail-section--admission {
+        background-color: var(--primary) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        position: relative;
+        overflow: hidden;
+        padding: 2.5rem 2rem !important;
+        background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm1 1v18h18V1H1z' fill='%23ffffff' fill-opacity='0.012' fill-rule='evenodd'/%3E%3C/svg%3E") !important;
+    }
+
+    .detail-section--admission::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 4px;
+        height: 100%;
+        background-color: var(--secondary);
+    }
+
+    .detail-section--admission .detail-section-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+        margin-bottom: 2rem;
+    }
+
+    .detail-section--admission .detail-section-title {
+        color: var(--white) !important;
+        font-size: 1.6rem;
+    }
+
+    .detail-section--admission .detail-section-header svg {
+        color: var(--secondary) !important;
+    }
+
+    /* Tabs inside dark section */
+    .detail-section--admission .admission-tabs-container {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        box-shadow: none !important;
+    }
+
+    .detail-section--admission .admission-tabs-headers {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .detail-section--admission .admission-tab-btn {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .detail-section--admission .admission-tab-btn:hover {
+        color: var(--white) !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .detail-section--admission .admission-tab-btn--active {
+        color: var(--white) !important;
+        border-bottom-color: var(--secondary) !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        font-weight: 700 !important;
+    }
+
+    .detail-section--admission .admission-tabs-content {
+        background-color: transparent !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .detail-section--admission .detail-section-content {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .detail-section--admission .detail-section-content strong,
+    .detail-section--admission .detail-section-content h3,
+    .detail-section--admission .detail-section-content h4 {
+        color: var(--white) !important;
+    }
+
+    .detail-section--admission .detail-section-content li {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    .detail-section--admission:hover {
+        border-color: var(--secondary) !important;
+    }
+
+    /* CTA Buttons inside last registration step card */
+    .reg-card__cta-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.625rem;
+        margin-top: 1.25rem;
+    }
+
+    .reg-card__cta-btn {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        font-weight: 700;
+        font-family: inherit;
+        text-align: center;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        border: 2px solid transparent;
+    }
+
+    .reg-card__cta-btn--primary {
+        background-color: var(--secondary);
+        color: var(--primary);
+        border-color: var(--secondary);
+    }
+
+    .reg-card__cta-btn--primary:hover {
+        background-color: var(--secondary-hover, var(--secondary));
+        filter: brightness(0.92);
+    }
+
+    .reg-card__cta-btn--secondary {
+        background-color: transparent;
+        color: var(--white);
+        border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .reg-card__cta-btn--secondary:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.6);
+    }
+

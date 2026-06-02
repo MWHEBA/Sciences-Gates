@@ -1718,11 +1718,12 @@ img#intlPhoneFlag {
 }
 
 .detail-header-content {
-  padding: 2rem;
+  padding: 1rem 2rem;
   position: relative;
   z-index: 5;
-  margin-top: -3rem;
-  background: var(--bg-white);
+  margin-top: -10rem;
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(2px);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
@@ -3320,7 +3321,7 @@ img#intlPhoneFlag {
 .detail-faq-accordion {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .detail-faculty-item,
@@ -3348,7 +3349,7 @@ img#intlPhoneFlag {
   font-weight: 400;
   font-size: 16px;
   color: var(--text-dark);
-  background: transparent;
+  background: var(--bg-gray);
   text-align: right;
   transition: var(--transition);
   cursor: pointer;
@@ -3813,4 +3814,4 @@ body:has(.page-header-premium) .it-header-2-top-area span,
 body:has(.page-header-premium) .it-header-2-top-area li,
 body:has(.page-header-premium) .it-header-2-top-area i {
   color: var(--text-body) !important;
-}
+}

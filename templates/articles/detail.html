@@ -8,7 +8,7 @@
 {% block og_title %}{{ article.og_title|default:article.title }}{% endblock %}
 {% block og_description %}{{ article.og_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}
 
-{% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+{% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">{% endblock %}
 
 {% block extra_css %}
     {% render_breadcrumb_schema breadcrumbs request %}
@@ -252,7 +252,7 @@
 </div>
 
 {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_super_admin %}
-<!-- زر لوحة التحكم والتعديل -->
+<!-- زر تعديل المقالة -->
 <a href="{% url 'dashboard:article_edit' article.pk %}" class="admin-edit-float" aria-label="تعديل المقالة">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -260,17 +260,6 @@
         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
     </svg>
     <span class="admin-edit-float__tooltip">تعديل المقالة</span>
-</a>
-
-<a href="{% url 'dashboard:home' %}" class="admin-dashboard-float" aria-label="لوحة التحكم">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="3" y="3" width="7" height="9"></rect>
-        <rect x="14" y="3" width="7" height="5"></rect>
-        <rect x="14" y="12" width="7" height="9"></rect>
-        <rect x="3" y="16" width="7" height="5"></rect>
-    </svg>
-    <span class="admin-dashboard-float__tooltip">لوحة التحكم</span>
 </a>
 {% endif %}
 

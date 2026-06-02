@@ -1,59 +1,384 @@
-﻿(function () {
-  var match = window.location.pathname.match(/^\/dashboard\/(articles|universities|institutes|majors)\/(\d+)\/edit\/$/);
-  if (!match) return;
-
-  var contentType = match[1];
-  var objectId = match[2];
-  var form = document.querySelector('form[method="post"], form');
+(function () {
+  var form = document.getElementById('main-form') || document.querySelector('form[method="post"], form');
   if (!form) return;
+
+  var objectId = form.getAttribute('data-object-id');
+  if (!objectId) return; // Server-side PK check: only load on pages where object is saved
+
+  var pathParts = window.location.pathname.split('/');
+  var dashboardIndex = pathParts.indexOf('dashboard');
+  if (dashboardIndex === -1 || dashboardIndex + 1 >= pathParts.length) return;
+  var contentType = pathParts[dashboardIndex + 1];
+
+  var supportedTypes = ['articles', 'universities', 'institutes', 'majors'];
+  if (!supportedTypes.includes(contentType)) return;
 
   function getCSRFToken() {
     var m = document.cookie.match(/csrftoken=([^;]+)/);
     return m ? decodeURIComponent(m[1]) : '';
   }
 
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;');
+  }
+
+  function renderReport(detailJson, seoScore, seoGrade, container, isPreview) {
+    var score = seoScore !== undefined ? seoScore : 0;
+    var grade = seoGrade || 'needs_improvement';
+    var gradeLabel = 'تحتاج تحسين';
+    var color = 'var(--warning)';
+    var bg = 'var(--warning-light)';
+    
+    if (grade === 'good') {
+      gradeLabel = 'ممتاز (Good)';
+      color = 'var(--success)';
+      bg = 'var(--success-light)';
+    } else if (grade === 'critical') {
+      gradeLabel = 'حرج (Critical)';
+      color = 'var(--danger)';
+      bg = 'var(--danger-light)';
+    } else {
+      gradeLabel = 'تحتاج تحسين (Needs Improvement)';
+      color = 'var(--warning)';
+      bg = 'var(--warning-light)';
+    }
+
+    var criticalCount = (detailJson.critical_issues && detailJson.critical_issues.length) || 0;
+    var warningCount = (detailJson.warnings && detailJson.warnings.length) || 0;
+    var passedCount = (detailJson.score_summary && detailJson.score_summary.passed_count) || 0;
+
+    var categoryLabels = {
+      'meta_indexability': 'الأرشفة والبيانات الوصفية (Meta & Indexability)',
+      'content_completeness': 'اكتمال وجودة المحتوى (Content Completeness)',
+      'eeat_signals': 'مؤشرات الخبرة والمصداقية (E-E-A-T)',
+      'schema_quality': 'جودة البيانات المنظمة (Schema Quality)',
+      'media_links': 'الروابط والوسائط المتعددة (Links & Media)'
+    };
+
+    var categoriesHTML = '';
+    var categories = detailJson.categories || {};
+    for (var key in categories) {
+      var cat = categories[key];
+      var max = cat.max || 0;
+      var earned = cat.earned || 0;
+      var pct = max > 0 ? Math.round((earned / max) * 100) : 0;
+      
+      var barColor = 'var(--danger)';
+      if (pct >= 85) {
+        barColor = 'var(--success)';
+      } else if (pct >= 60) {
+        barColor = 'var(--warning)';
+      }
+      
+      var label = categoryLabels[key] || key;
+      categoriesHTML += `
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px;">
+            <span style="color:var(--text-primary);">${label}</span>
+            <span style="color:var(--text-secondary);direction:ltr;">${earned} / ${max} (${pct}%)</span>
+          </div>
+          <div style="height:6px;background:var(--border);border-radius:var(--radius-sm);overflow:hidden;">
+            <div style="width:${pct}%;height:100%;background:${barColor};border-radius:var(--radius-sm);"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    var issuesHTML = '';
+    var hasIssues = false;
+    var critical_issues = detailJson.critical_issues || [];
+    var warnings = detailJson.warnings || [];
+
+    if (critical_issues.length > 0) {
+      hasIssues = true;
+      critical_issues.forEach(function (issue) {
+        var msg = issue.message || (typeof issue === 'string' ? issue : JSON.stringify(issue));
+        issuesHTML += `
+          <div style="background:var(--danger-light);border-right:4px solid var(--danger);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--text-primary);display:flex;align-items:flex-start;gap:8px;">
+            <span style="color:var(--danger);">❌</span>
+            <div><strong>مشكلة حرجة:</strong> ${escapeHtml(msg)}</div>
+          </div>
+        `;
+      });
+    }
+
+    if (warnings.length > 0) {
+      hasIssues = true;
+      warnings.forEach(function (issue) {
+        var msg = issue.message || (typeof issue === 'string' ? issue : JSON.stringify(issue));
+        issuesHTML += `
+          <div style="background:var(--warning-light);border-right:4px solid var(--warning);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--text-primary);display:flex;align-items:flex-start;gap:8px;">
+            <span style="color:var(--warning);">⚠️</span>
+            <div><strong>تنبيه:</strong> ${escapeHtml(msg)}</div>
+          </div>
+        `;
+      });
+    }
+
+    if (!hasIssues) {
+      issuesHTML = `
+        <div style="background:var(--success-light);border-right:4px solid var(--success);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+          <span style="color:var(--success);">✅</span>
+          <div>الصفحة ممتازة ومطابقة لكافة معايير الـ SEO الأساسية! لا توجد مشاكل أو تنبيهات.</div>
+        </div>
+      `;
+    }
+
+    var headingsHTML = '';
+    var heading_tree = detailJson.heading_tree || [];
+    if (heading_tree.length > 0) {
+      heading_tree.forEach(function (h) {
+        var level = h.level || 1;
+        var text = h.text || '';
+        var indent = (level - 1) * 16;
+        var badgeBg = 'var(--primary-light)';
+        var badgeColor = 'var(--primary)';
+        if (level === 1) {
+          badgeBg = 'var(--secondary-light)';
+          badgeColor = 'var(--secondary)';
+        }
+        headingsHTML += `
+          <div style="margin-right:${indent}px;display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="font-size:9px;font-weight:700;background:${badgeBg};color:${badgeColor};padding:2px 6px;border-radius:4px;font-family:monospace;min-width:24px;text-align:center;">H${level}</span>
+            <span style="font-size:12px;color:var(--text-primary);font-weight:${level === 1 ? '700' : (level === 2 ? '600' : '500')};">${escapeHtml(text)}</span>
+          </div>
+        `;
+      });
+    } else {
+      headingsHTML = '<div style="font-size:12px;color:var(--text-muted);font-style:italic;">لم يتم العثور على أي عناوين (H1-H6) في محتوى الصفحة.</div>';
+    }
+
+    var schemaTypesHTML = '';
+    var schema_status = detailJson.schema_status || {};
+    var detected_types = schema_status.detected_types || [];
+    if (detected_types.length > 0) {
+      detected_types.forEach(function (type) {
+        schemaTypesHTML += `
+          <span style="font-size:11px;font-weight:600;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:12px;margin-left:4px;">
+            ${escapeHtml(type)}
+          </span>
+        `;
+      });
+    } else {
+      schemaTypesHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">لم يتم اكتشاف بيانات مهيكلة (Schema).</span>';
+    }
+
+    var serp_preview = detailJson.serp_preview || {};
+    var serpTitle = serp_preview.title || 'العنوان غير متوفر';
+    var serpDesc = serp_preview.description || 'الوصف الوصفي غير متوفر.';
+    var serpUrl = serp_preview.url || '';
+
+    var previewBannerHTML = '';
+    if (isPreview) {
+      previewBannerHTML = `
+        <div style="background-color: var(--secondary-light); color: var(--secondary); 
+                    border: 1px solid var(--secondary); border-radius: var(--radius-sm); 
+                    padding: 12px; margin-bottom: 16px; font-weight: 600; text-align: center; font-size: 13px;">
+          ⚠️ هذه نتائج مؤقتة للمسودة — لن تُحفَظ في قاعدة البيانات
+        </div>
+      `;
+    }
+
+    container.innerHTML = previewBannerHTML + `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:20px;">
+        <div style="background:${bg};border:2px solid ${color};border-radius:var(--radius);padding:16px;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100px;">
+          <div style="font-size:36px;font-weight:800;color:${color};line-height:1;">${score}</div>
+          <div style="font-size:13px;font-weight:600;color:${color};margin-top:6px;">التقييم: ${gradeLabel}</div>
+        </div>
+
+        <div style="background:var(--surface-2);border:2px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:6px;">
+            <span style="color:var(--text-secondary);font-weight:600;">❌ مشاكل حرجة:</span>
+            <span style="color:${criticalCount > 0 ? 'var(--danger)' : 'var(--text-primary)'};font-weight:700;">${criticalCount}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:6px;">
+            <span style="color:var(--text-secondary);font-weight:600;">⚠️ تنبيهات:</span>
+            <span style="color:${warningCount > 0 ? 'var(--warning)' : 'var(--text-primary)'};font-weight:700;">${warningCount}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--text-secondary);font-weight:600;">✅ اختبارات ناجحة:</span>
+            <span style="color:var(--success);font-weight:700;">${passedCount}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:20px;margin-bottom:20px;">
+        <div style="background:var(--surface-2);border:2px solid var(--border);border-radius:var(--radius);padding:16px;">
+          <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:700;color:var(--text-primary);border-bottom:1px solid var(--border);padding-bottom:8px;">📊 فئات التقييم الأساسية</h4>
+          <div>${categoriesHTML}</div>
+        </div>
+
+        <div style="background:var(--surface-2);border:2px solid var(--border);border-radius:var(--radius);padding:16px;">
+          <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:700;color:var(--text-primary);border-bottom:1px solid var(--border);padding-bottom:8px;">🔍 تفاصيل التحسينات المطلوبة</h4>
+          <div style="max-height:240px;overflow-y:auto;padding-left:4px;">${issuesHTML}</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface-2);border:2px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;">
+        <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:700;color:var(--text-primary);border-bottom:1px solid var(--border);padding-bottom:8px;">🌐 معاينة محرك البحث (Google Snippet Preview)</h4>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-family:system-ui, -apple-system, sans-serif;direction:rtl;text-align:right;">
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:3px;word-break:break-all;font-family:sans-serif;text-align:right;direction:ltr;">
+            ${escapeHtml(serpUrl)}
+          </div>
+          <div style="font-size:16px;color:var(--info);font-weight:normal;margin-bottom:4px;text-decoration:none;display:inline-block;">
+            ${escapeHtml(serpTitle)}
+          </div>
+          <div style="font-size:13px;color:var(--text-primary);line-height:1.4;word-wrap:break-word;">
+            ${escapeHtml(serpDesc)}
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:20px;">
+        <div style="background:var(--surface-2);border:2px solid var(--border);border-radius:var(--radius);padding:16px;">
+          <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:700;color:var(--text-primary);border-bottom:1px solid var(--border);padding-bottom:8px;">🏷️ شجرة وبنية العناوين (Heading Tree)</h4>
+          <div style="max-height:220px;overflow-y:auto;padding-left:4px;direction:rtl;">${headingsHTML}</div>
+        </div>
+
+        <div style="background:var(--surface-2);border:2px solid var(--border);border-radius:var(--radius);padding:16px;">
+          <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:700;color:var(--text-primary);border-bottom:1px solid var(--border);padding-bottom:8px;">🛠️ البيانات المنظمة (Structured Data / Schema)</h4>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+              <span style="color:var(--text-secondary);font-weight:600;">حالة التحقق:</span>
+              <span style="color:${schema_status.valid_json ? 'var(--success)' : 'var(--danger)'};font-weight:700;">
+                ${schema_status.valid_json ? 'صالحة وسليمة (Valid Schema) ✅' : 'غير صالحة أو مفقودة ❌'}
+              </span>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text-secondary);font-weight:600;margin-bottom:6px;">الأنواع التي تم اكتشافها:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">${schemaTypesHTML}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function createPanel() {
     var wrapper = document.createElement('section');
     wrapper.id = 'seo-analyzer-panel';
-    wrapper.style.cssText = 'margin-top:16px;border:1px solid #d1d5db;border-radius:12px;padding:12px;background:#fff';
+    wrapper.style.cssText = 'margin-top:24px;border-top:2px solid var(--border);padding-top:24px;direction:rtl;';
+
+    var headerDiv = document.createElement('div');
+    headerDiv.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;';
 
     var title = document.createElement('h3');
-    title.textContent = 'SEO Analyzer (Phase 1)';
-    title.style.cssText = 'margin:0 0 8px 0;font-size:16px;font-weight:700';
+    title.textContent = 'تحليل تحسين محركات البحث';
+    title.style.cssText = 'margin:0;font-size:15px;font-weight:700;color:var(--text-primary);';
 
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = 'Analyze SEO';
-    btn.style.cssText = 'background:#0f766e;color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer';
+    var buttonGroup = document.createElement('div');
+    buttonGroup.style.cssText = 'display:flex;gap:8px;align-items:center;';
+
+    var publishInput = document.getElementById('id_publish_status');
+    var isPublished = publishInput && publishInput.value === 'published';
+
+    // 1. Analyze Button
+    var analyzeBtn = document.createElement('button');
+    analyzeBtn.type = 'button';
+    analyzeBtn.textContent = isPublished ? 'تحليل الصفحة' : 'تحليل المسودة';
+    analyzeBtn.className = 'px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer';
+    analyzeBtn.style.cssText = 'background:var(--primary);color:var(--white);border:none;border-radius:var(--radius-sm);padding:8px 16px;cursor:pointer;font-family:inherit;font-size:13px;transition:background 0.2s ease;';
+
+    analyzeBtn.addEventListener('mouseenter', function () {
+      if (!analyzeBtn.disabled) {
+        analyzeBtn.style.background = 'var(--primary-hover)';
+      }
+    });
+    analyzeBtn.addEventListener('mouseleave', function () {
+      if (!analyzeBtn.disabled) {
+        analyzeBtn.style.background = 'var(--primary)';
+      }
+    });
+
+    // 2. Preview Button
+    var singularType = contentType;
+    if (singularType === 'universities') {
+      singularType = 'university';
+    } else if (singularType.endsWith('s')) {
+      singularType = singularType.slice(0, -1);
+    }
+    var previewUrl = '/dashboard/preview/' + singularType + '/' + objectId + '/';
+
+    var previewBtn = document.createElement('button');
+    previewBtn.type = 'button';
+    previewBtn.textContent = 'معاينة الصفحة';
+    previewBtn.className = 'px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer';
+    previewBtn.style.cssText = 'background:transparent;color:var(--primary);border:1px solid var(--primary);border-radius:var(--radius-sm);padding:8px 16px;cursor:pointer;font-family:inherit;font-size:13px;transition:background 0.2s ease, color 0.2s ease;';
+
+    previewBtn.addEventListener('mouseenter', function () {
+      previewBtn.style.background = 'var(--primary-light)';
+    });
+    previewBtn.addEventListener('mouseleave', function () {
+      previewBtn.style.background = 'transparent';
+    });
+    previewBtn.addEventListener('click', function () {
+      window.open(previewUrl, '_blank');
+    });
+
+    buttonGroup.appendChild(previewBtn);
+    buttonGroup.appendChild(analyzeBtn);
+
+    headerDiv.appendChild(title);
+    headerDiv.appendChild(buttonGroup);
 
     var status = document.createElement('div');
     status.id = 'seo-analyzer-status';
-    status.style.cssText = 'margin-top:10px;font-size:13px;color:#334155';
+    status.style.cssText = 'margin-top:10px;font-size:13px;color:var(--text-secondary);font-weight:500;';
 
-    var details = document.createElement('pre');
+    var details = document.createElement('div');
     details.id = 'seo-analyzer-details';
-    details.style.cssText = 'margin-top:10px;white-space:pre-wrap;background:#f8fafc;border-radius:8px;padding:10px;font-size:12px;max-height:360px;overflow:auto';
+    details.style.cssText = 'margin-top:16px;display:none;';
 
-    btn.addEventListener('click', function () {
-      runAnalyze(btn, status, details);
+    analyzeBtn.addEventListener('click', function () {
+      var currentIsPublished = publishInput && publishInput.value === 'published';
+      runAnalyze(analyzeBtn, status, details, !currentIsPublished);
     });
 
-    wrapper.appendChild(title);
-    wrapper.appendChild(btn);
+    wrapper.appendChild(headerDiv);
     wrapper.appendChild(status);
     wrapper.appendChild(details);
 
-    var target = form.querySelector('button[type="submit"]')?.closest('div') || form;
-    target.parentNode.insertBefore(wrapper, target.nextSibling);
+    // Find the SEO card target
+    var target = null;
+    var headings = document.querySelectorAll('h2, h3');
+    for (var i = 0; i < headings.length; i++) {
+      var txt = headings[i].textContent.trim();
+      if (txt.indexOf('تحسين محركات البحث') !== -1) {
+        var sect = headings[i].closest('section');
+        if (sect && sect.parentNode && sect.parentNode !== form) {
+          target = sect;
+        } else {
+          target = headings[i].closest('div');
+        }
+        break;
+      }
+    }
+
+    if (target) {
+      target.appendChild(wrapper);
+    } else {
+      var fallback = form.querySelector('button[type="submit"]')?.closest('div') || form;
+      fallback.parentNode.insertBefore(wrapper, fallback.nextSibling);
+
+      wrapper.style.cssText = 'margin-top:24px;border:2px solid var(--border);border-radius:var(--radius);padding:24px;background:var(--surface);box-shadow:var(--shadow-sm);direction:rtl;';
+      headerDiv.style.borderBottom = '1px solid var(--border)';
+      headerDiv.style.paddingBottom = '12px';
+      headerDiv.style.marginBottom = '16px';
+    }
   }
 
-  async function runAnalyze(btn, status, details) {
+  async function runAnalyze(btn, status, details, isPreviewMode) {
     try {
       btn.disabled = true;
-      status.textContent = 'Saving draft...';
-
-      var publishInput = document.getElementById('id_publish_status');
-      if (publishInput) publishInput.value = 'unpublished';
+      btn.style.opacity = 'var(--disabled-opacity)';
+      details.style.display = 'none';
+      status.style.display = 'block';
+      status.innerHTML = '<span style="color:var(--text-secondary)">🔄 جاري حفظ المسودة المؤقتة...</span>';
 
       var fd = new FormData(form);
       var saveResp = await fetch(window.location.pathname, {
@@ -68,46 +393,63 @@
 
       var saveJson = await saveResp.json().catch(function () { return {}; });
       if (!saveResp.ok || saveJson.status !== 'success') {
-        status.textContent = 'Save draft failed';
-        details.textContent = JSON.stringify(saveJson, null, 2);
+        status.innerHTML = '<span style="color:var(--danger)">⚠️ فشل حفظ المسودة المؤقتة لتشغيل التحليل.</span>';
+        details.innerHTML = '<pre style="white-space:pre-wrap;background:var(--danger-light);color:var(--danger);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:10px;font-size:12px;direction:ltr;text-align:left;">' + escapeHtml(JSON.stringify(saveJson, null, 2)) + '</pre>';
+        details.style.display = 'block';
         return;
       }
 
-      status.textContent = 'Running SEO analysis...';
-      var analyzeResp = await fetch('/dashboard/seo/analyze/' + contentType + '/' + objectId + '/', {
+      status.innerHTML = '<span style="color:var(--text-secondary)">🔄 جاري تشغيل فحص الـ SEO...</span>';
+      var analyzeUrl = '/dashboard/seo/analyze/' + contentType + '/' + objectId + '/';
+      if (isPreviewMode) {
+        analyzeUrl += '?preview=1';
+      }
+
+      var analyzeResp = await fetch(analyzeUrl, {
         method: 'POST',
         headers: {
           'X-CSRFToken': getCSRFToken()
         },
         credentials: 'same-origin'
       });
-      var analyzeJson = await analyzeResp.json();
+      var analyzeJson = await analyzeResp.json().catch(function () { return {}; });
       if (!analyzeResp.ok || analyzeJson.status !== 'success') {
-        status.textContent = 'Analyze failed';
-        details.textContent = JSON.stringify(analyzeJson, null, 2);
+        status.innerHTML = '<span style="color:var(--danger)">⚠️ فشل تشغيل التحليل.</span>';
+        details.innerHTML = '<pre style="white-space:pre-wrap;background:var(--danger-light);color:var(--danger);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:10px;font-size:12px;direction:ltr;text-align:left;">' + escapeHtml(JSON.stringify(analyzeJson, null, 2)) + '</pre>';
+        details.style.display = 'block';
         return;
       }
 
-      status.textContent = 'Loading analysis details...';
-      var detailResp = await fetch('/dashboard/seo/detail/' + contentType + '/' + objectId + '/', {
-        method: 'GET',
-        credentials: 'same-origin'
-      });
-      var detailJson = await detailResp.json();
+      var detailJson;
+      if (isPreviewMode) {
+        detailJson = analyzeJson.report;
+      } else {
+        status.innerHTML = '<span style="color:var(--text-secondary)">🔄 جاري تحميل تقارير التحليل...</span>';
+        var detailResp = await fetch('/dashboard/seo/detail/' + contentType + '/' + objectId + '/', {
+          method: 'GET',
+          credentials: 'same-origin'
+        });
+        detailJson = await detailResp.json().catch(function () { return {}; });
 
-      if (!detailResp.ok || detailJson.status !== 'success') {
-        status.textContent = 'Could not load details';
-        details.textContent = JSON.stringify(detailJson, null, 2);
-        return;
+        if (!detailResp.ok || detailJson.status !== 'success') {
+          status.innerHTML = '<span style="color:var(--danger)">⚠️ فشل جلب تفاصيل تقرير الـ SEO.</span>';
+          details.innerHTML = '<pre style="white-space:pre-wrap;background:var(--danger-light);color:var(--danger);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:10px;font-size:12px;direction:ltr;text-align:left;">' + escapeHtml(JSON.stringify(detailJson, null, 2)) + '</pre>';
+          details.style.display = 'block';
+          return;
+        }
       }
 
-      status.textContent = 'Done: score ' + analyzeJson.seo_score + ' (' + analyzeJson.seo_grade + ')';
-      details.textContent = JSON.stringify(detailJson, null, 2);
+      status.style.display = 'none';
+      renderReport(detailJson, analyzeJson.seo_score, analyzeJson.seo_grade, details, isPreviewMode);
+      details.style.display = 'block';
+
     } catch (err) {
-      status.textContent = 'Unexpected error';
-      details.textContent = String(err);
+      status.innerHTML = '<span style="color:var(--danger)">⚠️ حدث خطأ غير متوقع أثناء التحليل.</span>';
+      details.innerHTML = '<pre style="white-space:pre-wrap;background:var(--danger-light);color:var(--danger);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:10px;font-size:12px;direction:ltr;text-align:left;">' + escapeHtml(String(err)) + '</pre>';
+      details.style.display = 'block';
     } finally {
       btn.disabled = false;
+      btn.style.opacity = '1';
     }
   }
 

@@ -99,7 +99,7 @@ html::-webkit-scrollbar-thumb:hover {
     --surface:          #FFFFFF;
     --white:            #FFFFFF;
     --surface-2:        #F7FAFC;
-    --bg-page:          #EEF4F7;   /* خلفية الصفحة الكاملة */
+    --bg-page:          #e5ebf0;   /* خلفية الصفحة الكاملة */
     --bg-light:         #F7FAFC;   /* للـ hover states الخفيفة */
 
     /* ═══════════════════════════════════
@@ -164,6 +164,10 @@ aside .flex-shrink-0:hover {
     color: var(--primary);
 }
 
+#id_related_articles label {
+    font-size: 0.85rem;
+}
+
 /* Form Styles */
 input[type="text"],
 input[type="email"],
@@ -176,7 +180,7 @@ textarea,
 select {
     width: 100%;
     padding: 0.75rem 2.35rem;
-    font-size: 14px;
+    font-size: 0.9rem;
     border: 2px solid var(--border);
     border-radius: 0.5rem;
     background-color: var(--surface);

@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize YouTube Video Popups
     initializeVideoPopups();
+
+    // Initialize floating buttons behavior (fade on idle, show on scroll)
+    initializeFloatingButtons();
 });
 
 /**
@@ -261,4 +264,66 @@ function initializeVideoPopups() {
         });
     });
 }
+
+/**
+ * Initialize global floating buttons behaviour (WhatsApp, Admin Dashboard, Admin Edit, Reg button)
+ * Handles auto-hide on scroll idle and show on scroll/hover.
+ */
+function initializeFloatingButtons() {
+    var floats = document.querySelectorAll('.reg-float-btn, .whatsapp-widget, .admin-dashboard-float, .admin-edit-float');
+    if (floats.length === 0) return;
+
+    var scrollTimeout = null;
+    var isHovered = false;
+
+    floats.forEach(function (el) {
+        el.addEventListener('mouseenter', function () {
+            isHovered = true;
+            showFloats();
+        });
+        el.addEventListener('mouseleave', function () {
+            isHovered = false;
+            resetScrollTimeout();
+        });
+    });
+
+    function showFloats() {
+        floats.forEach(function (el) {
+            el.classList.remove('floating-hide');
+        });
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+    }
+
+    function hideFloats() {
+        if (isHovered) return;
+
+        // Do not hide if modal is open (Alpine data check)
+        var alpineData = document.querySelector('.detail-page-container')?.__x?.$data;
+        var regModalOpen = alpineData ? alpineData.openRegModal : false;
+
+        // Check if WhatsApp popup is open
+        var waWidget = document.querySelector('.whatsapp-widget');
+        var waOpen = waWidget && waWidget.__x && waWidget.__x.$data ? waWidget.__x.$data.open : false;
+
+        if (regModalOpen || waOpen) return;
+
+        floats.forEach(function (el) {
+            el.classList.add('floating-hide');
+        });
+    }
+
+    function resetScrollTimeout() {
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(hideFloats, 2500); // hide after 2.5 seconds of scroll pause
+    }
+
+    window.addEventListener('scroll', function () {
+        showFloats();
+        resetScrollTimeout();
+    }, { passive: true });
+
+    // Initialize timeout on load
+    resetScrollTimeout();
+}
+
 

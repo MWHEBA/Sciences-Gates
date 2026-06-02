@@ -1,4 +1,4 @@
-﻿"""
+"""
 SEO views for robots.txt and dashboard analyzer endpoints.
 """
 from django.http import HttpResponse, JsonResponse
@@ -44,9 +44,65 @@ Sitemap: {sitemap_url}
     return HttpResponse(robots_content, content_type='text/plain')
 
 
-def _is_super_admin(request):
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.urls import resolve, reverse
+
+
+class PreviewPageSEOAnalyzer(PageSEOAnalyzer):
+    def __init__(self, is_preview_mode=False):
+        super().__init__()
+        self.is_preview_mode = is_preview_mode
+
+    def _render_object_html(self, *, content_type: str, obj, user, host: str, secure: bool):
+        if not self.is_preview_mode:
+            return super()._render_object_html(
+                content_type=content_type, obj=obj, user=user, host=host, secure=secure
+            )
+
+        key = content_type.lower().strip()
+        if key == "universities":
+            key = "university"
+        elif key.endswith("s"):
+            key = key[:-1]
+
+        url = reverse(f"dashboard:preview_{key}", kwargs={"pk": obj.pk})
+
+        request = self.factory.get(
+            url,
+            secure=secure,
+            HTTP_HOST=host,
+            SERVER_NAME=host,
+            SERVER_PORT="443" if secure else "80",
+        )
+        request.user = user if user is not None else AnonymousUser()
+
+        middleware = SessionMiddleware(lambda req: None)
+        middleware.process_request(request)
+        request.session.save()
+
+        # Resolve preview view dynamically to avoid circular import dependency
+        match = resolve(url)
+        response = match.func(request, **match.kwargs)
+
+        if getattr(response, "status_code", 200) >= 400:
+            raise AnalyzerError(f"failed_rendering_status_{response.status_code}")
+
+        if hasattr(response, "render"):
+            response.render()
+
+        content = response.content.decode("utf-8", errors="replace")
+        if "testserver" in content:
+            raise AnalyzerError("rendered_html_uses_testserver")
+        return content
+
+
+def _is_authorized_analyzer(request):
     user = getattr(request, "user", None)
-    return bool(user and user.is_authenticated and hasattr(user, "profile") and user.profile.is_super_admin)
+    if not (user and user.is_authenticated and hasattr(user, "profile")):
+        return False
+    profile = user.profile
+    return bool(profile.is_content_admin or profile.is_super_admin)
 
 
 def _json_error(code, message, status):
@@ -55,10 +111,11 @@ def _json_error(code, message, status):
 
 @require_http_methods(["POST"])
 def dashboard_analyze_seo(request, content_type, pk):
-    if not _is_super_admin(request):
+    if not _is_authorized_analyzer(request):
         return _json_error("UNAUTHORIZED", "غير مصرح لك بتنفيذ التحليل.", 403)
 
-    analyzer = PageSEOAnalyzer()
+    is_preview_mode = request.GET.get("preview") == "1"
+    analyzer = PreviewPageSEOAnalyzer(is_preview_mode=is_preview_mode)
     try:
         obj = analyzer.get_object(content_type, pk)
     except KeyError:
@@ -83,6 +140,20 @@ def dashboard_analyze_seo(request, content_type, pk):
     if report.get("main_content", {}).get("selector_missing"):
         return _json_error("MISSING_CONTENT_SELECTOR", "لم يتم العثور على [data-seo-content] في الصفحة.", 422)
 
+    if is_preview_mode:
+        return JsonResponse(
+            {
+                "status": "success",
+                "source": "preview",
+                "seo_score": score["score"],
+                "seo_grade": score["grade"],
+                "seo_critical_count": score["critical_count"],
+                "seo_warning_count": score["warning_count"],
+                "seo_last_analysis": timezone.now().isoformat(),
+                "report": report,
+            }
+        )
+
     obj.seo_score = score["score"]
     obj.seo_grade = score["grade"]
     obj.seo_critical_count = score["critical_count"]
@@ -98,6 +169,7 @@ def dashboard_analyze_seo(request, content_type, pk):
     return JsonResponse(
         {
             "status": "success",
+            "source": "published",
             "seo_score": obj.seo_score,
             "seo_grade": obj.seo_grade,
             "seo_critical_count": obj.seo_critical_count,
@@ -109,10 +181,10 @@ def dashboard_analyze_seo(request, content_type, pk):
 
 @require_http_methods(["GET"])
 def dashboard_seo_detail(request, content_type, pk):
-    if not _is_super_admin(request):
+    if not _is_authorized_analyzer(request):
         return _json_error("UNAUTHORIZED", "غير مصرح لك بعرض تفاصيل التحليل.", 403)
 
-    analyzer = PageSEOAnalyzer()
+    analyzer = PreviewPageSEOAnalyzer()
     try:
         obj = analyzer.get_object(content_type, pk)
     except KeyError:

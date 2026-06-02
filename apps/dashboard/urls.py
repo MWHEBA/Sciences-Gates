@@ -80,6 +80,12 @@ urlpatterns = [
     path('seo/analyze/<str:content_type>/<int:pk>/', seo_views.dashboard_analyze_seo, name='seo_analyze'),
     path('seo/detail/<str:content_type>/<int:pk>/', seo_views.dashboard_seo_detail, name='seo_detail'),
     
+    # Draft Preview System
+    path('preview/article/<int:pk>/', views.PreviewArticleDetailView.as_view(), name='preview_article'),
+    path('preview/university/<int:pk>/', views.PreviewUniversityDetailView.as_view(), name='preview_university'),
+    path('preview/institute/<int:pk>/', views.PreviewInstituteDetailView.as_view(), name='preview_institute'),
+    path('preview/major/<int:pk>/', views.PreviewMajorDetailView.as_view(), name='preview_major'),
+    
     # General Settings (Super Admin)
     path('settings/', views.SiteSettingsUpdateView.as_view(), name='settings'),
     

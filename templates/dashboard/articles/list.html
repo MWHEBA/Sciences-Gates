@@ -1,41 +1,7 @@
-{% extends "dashboard/base.html" %}
+{% extends "dashboard/list_page.html" %}
 {% load static %}
 
 {% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
 
 {% block page_title %}{{ page_title }}{% endblock %}
 {% block page_description %}إدارة جميع المقالات{% endblock %}
-
-{% block page_actions %}
-<a href="{% url 'dashboard:article_create' %}"
-    class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white"
-    style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'"
-    onmouseout="this.style.backgroundColor='var(--primary)'">
-    <svg class="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-    </svg>
-    إضافة مقالة جديدة
-</a>
-{% endblock %}
-
-{% block content %}
-<div class="space-y-6">
-    {% if articles %}
-    <!-- Filter Bar -->
-    {% include "dashboard/components/filter_bar.html" with search_placeholder="ابحث عن عنوان المقالة أو الرابط..." filters=filters search_value=search_query base_url=base_url %}
-
-
-    <!-- Data Table -->
-    {% include "dashboard/components/data_table.html" with columns=columns rows=articles edit_url_name="dashboard:article_edit" delete_url_name="dashboard:article_delete" %}
-
-    <!-- Pagination -->
-    {% if is_paginated %}
-    {% include "dashboard/components/pagination.html" with page_obj=page_obj query_params=query_params %}
-    {% endif %}
-
-    {% else %}
-    <!-- Empty State -->
-    {% include "dashboard/components/empty_state.html" with heading="لا توجد مقالات" description="ابدأ بإنشاء مقالة جديدة" action_url=add_new_url action_label="إضافة مقالة جديدة" %}
-    {% endif %}
-</div>
-{% endblock %}

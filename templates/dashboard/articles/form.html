@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content_wrapper %}
-<form method="post" enctype="multipart/form-data" id="main-form">
+<form method="post" enctype="multipart/form-data" id="main-form" {% if form.instance.pk %}data-object-id="{{ form.instance.pk }}"{% endif %}>
     {% csrf_token %}
 
     <!-- Non-field Errors -->

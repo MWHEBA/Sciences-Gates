@@ -985,20 +985,23 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
                                     'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط الجامعة: {self.object.name}'
                                 }
                             )
+                            if not self._is_ajax():
+                                messages.success(
+                                    self.request,
+                                    f'تم تحديث الجامعة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                                )
+                        else:
+                            if not self._is_ajax():
+                                messages.warning(
+                                    self.request,
+                                    f'تم تحديث الجامعة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
+                                )
+                    else:
+                        if not self._is_ajax():
                             messages.success(
                                 self.request,
-                                f'تم تحديث الجامعة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                                f'تم تحديث الجامعة "{self.object.name}" بنجاح'
                             )
-                        else:
-                            messages.warning(
-                                self.request,
-                                f'تم تحديث الجامعة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                            )
-                    else:
-                        messages.success(
-                            self.request,
-                            f'تم تحديث الجامعة "{self.object.name}" بنجاح'
-                        )
                 
                 if self._is_ajax():
                     return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
@@ -1599,20 +1602,23 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
                                     'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط المعهد: {self.object.name}'
                                 }
                             )
+                            if not self._is_ajax():
+                                messages.success(
+                                    self.request,
+                                    f'تم تحديث المعهد وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                                )
+                        else:
+                            if not self._is_ajax():
+                                messages.warning(
+                                    self.request,
+                                    f'تم تحديث المعهد، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
+                                )
+                    else:
+                        if not self._is_ajax():
                             messages.success(
                                 self.request,
-                                f'تم تحديث المعهد وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                                f'تم تحديث المعهد "{self.object.name}" بنجاح'
                             )
-                        else:
-                            messages.warning(
-                                self.request,
-                                f'تم تحديث المعهد، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                            )
-                    else:
-                        messages.success(
-                            self.request,
-                            f'تم تحديث المعهد "{self.object.name}" بنجاح'
-                        )
                 
                 if self._is_ajax():
                     return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
@@ -1895,20 +1901,23 @@ class MajorUpdateView(ContentAdminRequiredMixin, UpdateView):
                                     'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط التخصص: {self.object.name}'
                                 }
                             )
+                            if not self._is_ajax():
+                                messages.success(
+                                    self.request,
+                                    f'تم تحديث التخصص وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                                )
+                        else:
+                            if not self._is_ajax():
+                                messages.warning(
+                                    self.request,
+                                    f'تم تحديث التخصص، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
+                                )
+                    else:
+                        if not self._is_ajax():
                             messages.success(
                                 self.request,
-                                f'تم تحديث التخصص وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                                f'تم تحديث التخصص "{self.object.name}" بنجاح'
                             )
-                        else:
-                            messages.warning(
-                                self.request,
-                                f'تم تحديث التخصص، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                            )
-                    else:
-                        messages.success(
-                            self.request,
-                            f'تم تحديث التخصص "{self.object.name}" بنجاح'
-                        )
                 
                 if self._is_ajax():
                     return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
@@ -2586,20 +2595,23 @@ class ArticleUpdateView(ContentAdminRequiredMixin, UpdateView):
                                 'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط المقالة: {self.object.title}'
                             }
                         )
+                        if not self._is_ajax():
+                            messages.success(
+                                self.request,
+                                f'تم تحديث المقالة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                            )
+                    else:
+                        if not self._is_ajax():
+                            messages.warning(
+                                self.request,
+                                f'تم تحديث المقالة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
+                            )
+                else:
+                    if not self._is_ajax():
                         messages.success(
                             self.request,
-                            f'تم تحديث المقالة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                            f'تم تحديث المقالة "{self.object.title}" بنجاح'
                         )
-                    else:
-                        messages.warning(
-                            self.request,
-                            f'تم تحديث المقالة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                        )
-                else:
-                    messages.success(
-                        self.request,
-                        f'تم تحديث المقالة "{self.object.title}" بنجاح'
-                    )
             
             if self._is_ajax():
                 return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
@@ -3269,4 +3281,163 @@ class SiteSettingsUpdateView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, 
         context['page_title'] = 'الإعدادات العامة للموقع'
         context['cancel_url'] = reverse_lazy('dashboard:home')
         return context
+
+
+# ============================================================================
+# Draft Preview System Views
+# ============================================================================
+import re
+from django.db.models import Prefetch
+from apps.dashboard.mixins import ContentAdminRequiredMixin
+from apps.articles.views import ArticleDetailView
+from apps.universities.views import UniversityDetailView
+from apps.institutes.views import InstituteDetailView
+from apps.majors.views import MajorDetailView
+
+from apps.articles.models import Article
+from apps.universities.models import University, Faculty, Program, UniversityFAQ
+from apps.institutes.models import Institute, Course
+from apps.majors.models import Major, SubjectsTable, SalaryTable, CountriesTable
+
+
+class PreviewMetaAndBannerMixin:
+    """
+    Mixin to inject draft warning banner and robots noindex meta tags
+    into the HTML response for dashboard preview views, and set noindex header.
+    """
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        response['X-Robots-Tag'] = 'noindex, nofollow'
+        return response
+
+    def render_to_response(self, context, **response_kwargs):
+        response = super().render_to_response(context, **response_kwargs)
+        response.render()
+        
+        try:
+            html_content = response.content.decode('utf-8', errors='replace')
+            modified = False
+
+            # 1. Inject robots noindex meta tag into the <head>
+            # Match <head ...> case-insensitively
+            head_pattern = re.compile(r'<head[^>]*>', re.IGNORECASE)
+            head_match = head_pattern.search(html_content)
+            if head_match:
+                insert_pos = head_match.end()
+                meta_tag = '\n    <meta name="robots" content="noindex,nofollow">'
+                html_content = html_content[:insert_pos] + meta_tag + html_content[insert_pos:]
+                modified = True
+
+            # 2. Inject draft warning banner into the <body>
+            # Match <body ...> case-insensitively
+            body_pattern = re.compile(r'<body[^>]*>', re.IGNORECASE)
+            body_match = body_pattern.search(html_content)
+            if body_match:
+                insert_pos = body_match.end()
+                banner_html = (
+                    '\n    <div class="draft-preview-banner" style="background-color: var(--secondary-light); '
+                    'color: var(--secondary); text-align: center; padding: 12px 24px; font-weight: bold; '
+                    'font-size: 1.1rem; border-bottom: 2px solid var(--secondary); z-index: 99999; '
+                    'position: relative; font-family: var(--font-sans, sans-serif); direction: rtl;">'
+                    'هذه معاينة مسودة — غير منشورة للعموم'
+                    '</div>'
+                )
+                html_content = html_content[:insert_pos] + banner_html + html_content[insert_pos:]
+                modified = True
+
+            if modified:
+                response.content = html_content.encode('utf-8')
+        except Exception:
+            # Fallback: return the rendered HTML response unchanged to avoid breaking the page
+            pass
+
+        return response
+
+
+class PreviewArticleDetailView(ContentAdminRequiredMixin, PreviewMetaAndBannerMixin, ArticleDetailView):
+    pk_url_kwarg = 'pk'
+    slug_field = None
+    slug_url_kwarg = None
+
+    def get_queryset(self):
+        return Article.objects.select_related(
+            'category',
+            'author'
+        ).prefetch_related(
+            'tags',
+            'related_universities',
+            'related_institutes',
+            'related_majors'
+        )
+
+
+class PreviewUniversityDetailView(ContentAdminRequiredMixin, PreviewMetaAndBannerMixin, UniversityDetailView):
+    pk_url_kwarg = 'pk'
+    slug_field = None
+    slug_url_kwarg = None
+
+    def get_queryset(self):
+        faculties_prefetch = Prefetch(
+            'faculties',
+            Faculty.objects.prefetch_related(
+                Prefetch(
+                    'programs',
+                    Program.objects.all().order_by('sort_order')
+                )
+            ).order_by('sort_order')
+        )
+        faqs_prefetch = Prefetch(
+            'faqs',
+            UniversityFAQ.objects.all().order_by('sort_order')
+        )
+        return University.objects.prefetch_related(
+            faculties_prefetch,
+            faqs_prefetch,
+            'related_majors',
+            'related_articles'
+        )
+
+
+class PreviewInstituteDetailView(ContentAdminRequiredMixin, PreviewMetaAndBannerMixin, InstituteDetailView):
+    pk_url_kwarg = 'pk'
+    slug_field = None
+    slug_url_kwarg = None
+
+    def get_queryset(self):
+        courses_prefetch = Prefetch(
+            'courses',
+            Course.objects.all().order_by('name')
+        )
+        return Institute.objects.prefetch_related(
+            courses_prefetch,
+            'related_articles'
+        )
+
+
+class PreviewMajorDetailView(ContentAdminRequiredMixin, PreviewMetaAndBannerMixin, MajorDetailView):
+    pk_url_kwarg = 'pk'
+    slug_field = None
+    slug_url_kwarg = None
+
+    def get_queryset(self):
+        subjects_prefetch = Prefetch(
+            'subjects_tables',
+            SubjectsTable.objects.all().order_by('sort_order')
+        )
+        salary_prefetch = Prefetch(
+            'salary_tables',
+            SalaryTable.objects.all().order_by('sort_order')
+        )
+        countries_prefetch = Prefetch(
+            'countries_tables',
+            CountriesTable.objects.all().order_by('sort_order')
+        )
+        return Major.objects.prefetch_related(
+            subjects_prefetch,
+            salary_prefetch,
+            countries_prefetch,
+            'best_universities',
+            'cheap_universities',
+            'related_articles'
+        )
 

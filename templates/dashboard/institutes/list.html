@@ -1,4 +1,4 @@
-{% extends "dashboard/list_page.html" %}
+﻿{% extends "dashboard/list_page.html" %}
 {% load static %}
 
 {% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
@@ -8,7 +8,13 @@
 {% block page_description %}إدارة جميع المعاهد والدورات التدريبية{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'dashboard:institute_create' %}" class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white" style="background-color: var(--primary);">
+<a href="{% url 'dashboard:institute_create' %}"
+    class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white"
+    style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'"
+    onmouseout="this.style.backgroundColor='var(--primary)'">
+    <svg class="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+    </svg>
     إضافة معهد جديد
 </a>
 {% endblock %}

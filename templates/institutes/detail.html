@@ -9,14 +9,15 @@
 {% block og_title %}{{ institute.og_title|default:institute.name }}{% endblock %}
 {% block og_description %}{{ institute.og_description|default:institute.description|clean_desc|truncatewords:30 }}{% endblock %}
 
-{% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+{% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">{% endblock %}
 
 {% block extra_css %}
     {% render_breadcrumb_schema breadcrumbs request %}
+    <link rel="stylesheet" href="{% static 'css/tpl-universities_detail-styles.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="detail-page-container">
+<div class="detail-page-container" x-data="{ openRegModal: false, regStep: 1 }">
     
     <!-- Institute Profile Header Section -->
     <div class="detail-header">
@@ -188,5 +189,224 @@
         {% include "components/related_articles.html" with articles=institute.related_articles.all %}
     </div>
 
+    {% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_super_admin %}
+    <!-- زر تعديل المعهد -->
+    <a href="{% url 'dashboard:institute_edit' institute.pk %}" class="admin-edit-float" aria-label="تعديل المعهد">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        <span class="admin-edit-float__tooltip">تعديل المعهد</span>
+    </a>
+    {% endif %}
+
+    <!-- Floating Registration Button -->
+    <button type="button" @click="openRegModal = true; regStep = 1" class="reg-float-btn transition-premium hover-lift"
+        aria-label="سجل الآن في المعهد">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path>
+        </svg>
+        <div class="reg-float-text">
+            <span class="reg-float-title">سجل الآن</span>
+            <span class="reg-float-subtitle">{{ institute.name }}</span>
+        </div>
+    </button>
+
+    <!-- Registration Wizard Modal -->
+    <div x-show="openRegModal" class="reg-modal-overlay"
+        @keydown.escape.window="openRegModal = false" style="display: none;">
+        <div class="reg-modal-content" @click.away="openRegModal = false">
+
+            <!-- Modal Header -->
+            <div class="reg-modal-header">
+                <span class="reg-modal-title">سجل في {{ institute.name }}</span>
+                <button type="button" @click="openRegModal = false" class="reg-modal-close" aria-label="إغلاق">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Wizard Step Progress -->
+            <div class="reg-modal-body inl-s-427b12583a">
+                <div class="reg-wizard">
+                    <div class="reg-wizard-step" :class="regStep >= 1 ? 'reg-wizard-step--active' : ''">
+                        <div class="reg-wizard-number" :class="regStep > 1 ? 'reg-wizard-step--completed' : ''">
+                            <span x-show="regStep <= 1">1</span>
+                            <span x-show="regStep > 1">✓</span>
+                        </div>
+                        <span class="reg-wizard-label">البيانات الشخصية</span>
+                    </div>
+                    <div class="reg-wizard-line" :class="regStep >= 2 ? 'reg-wizard-line--active' : ''"></div>
+                    <div class="reg-wizard-step" :class="regStep >= 2 ? 'reg-wizard-step--active' : ''">
+                        <div class="reg-wizard-number">2</div>
+                        <span class="reg-wizard-label">تفاصيل الدراسة</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="regWizardForm" method="POST" action="{% url 'leads:submit' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="lead_type" value="registration">
+                <input type="hidden" name="source_page" value="{{ request.build_absolute_uri }}">
+                
+                <!-- Entity details for dynamic JS handling -->
+                <input type="hidden" id="reg_entity_name" value="{{ institute.name }}">
+                <input type="hidden" id="reg_entity_type" value="معهد">
+
+                <!-- Combined field for Django Lead form submission -->
+                <textarea name="message" id="reg_combined_message" style="display: none;"></textarea>
+                <!-- Honeypot -->
+                <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
+
+                <div class="reg-modal-body inl-s-25e5217456">
+
+                    <!-- STEP 1: Personal Details -->
+                    <div x-show="regStep === 1" class="space-y-4">
+                        <div class="reg-form-group">
+                            <label for="reg_name">الاسم الكامل للطالب <span
+                                    style="color: red;">*</span></label>
+                            <input type="text" id="reg_name" name="name" class="reg-input"
+                                placeholder="أدخل اسم الطالب الكامل" required>
+                        </div>
+
+                        <div class="reg-form-group">
+                            <label for="reg_email">البريد الإلكتروني</label>
+                            <input type="email" id="reg_email" name="email" class="reg-input"
+                                placeholder="name@example.com" dir="ltr">
+                        </div>
+
+                        <div class="reg-form-group">
+                            <label>رقم الهاتف (يفضل واتس آب) <span style="color: red;">*</span></label>
+                            <div class="intl-phone-wrapper">
+                                <div class="intl-phone-select" id="regPhoneSelect">
+                                    <button type="button" class="intl-phone-selected" id="regPhoneBtn"
+                                        aria-haspopup="listbox" aria-expanded="false">
+                                        <img src="https://flagcdn.com/w20/{{ default_country|default:'ye' }}.png" alt=""
+                                            class="intl-phone-flag" id="regPhoneFlag">
+                                        <span id="regPhoneCode">{{ default_code|default:'+967' }}</span>
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" class="intl-phone-arrow">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </button>
+                                    <ul class="intl-phone-dropdown" id="regPhoneDropdown" role="listbox">
+                                        <li class="intl-phone-search-wrap">
+                                            <input type="text" class="intl-phone-search" id="regPhoneSearch"
+                                                placeholder="ابحث عن دولة..." autocomplete="off">
+                                        </li>
+                                        {% for iso, name, code, placeholder in phone_countries %}
+                                        <li role="option" data-code="{{ code }}" data-flag="{{ iso }}"
+                                            data-placeholder="{{ placeholder }}">
+                                            <img data-src="https://flagcdn.com/w20/{{ iso }}.png" alt="" loading="lazy">
+                                            <span class="intl-phone-name">{{ name }}</span> <span
+                                                class="intl-phone-dial" dir="ltr">{{ code }}</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <input type="tel" id="reg_phone" class="intl-phone-input"
+                                    placeholder="{{ default_placeholder|default:'777 777 777' }}" dir="ltr" required>
+                            </div>
+                            <input type="hidden" name="country_code" id="reg_country_code" value="{{ default_code|default:'+967' }}">
+                            <input type="hidden" name="phone" id="reg_phone_combined">
+                        </div>
+
+                       <div class="reg-form-group">
+                           <label for="reg_nationality">الجنسية <span style="color: red;">*</span></label>
+                           <select id="reg_nationality" class="reg-select" required>
+                               <option value="" disabled selected>اختر الجنسية...</option>
+                               <option value="سعودي">سعودي</option>
+                               <option value="إماراتي">إماراتي</option>
+                               <option value="سوداني">سوداني</option>
+                               <option value="مصري">مصري</option>
+                               <option value="أردني">أردني</option>
+                               <option value="عراقي">عراقي</option>
+                               <option value="كويتي">كويتي</option>
+                               <option value="بحريني">بحريني</option>
+                               <option value="قطري">قطري</option>
+                               <option value="عماني">عماني</option>
+                               <option value="يمني">يمني</option>
+                               <option value="ليبي">ليبي</option>
+                               <option value="مغربي">مغربي</option>
+                               <option value="جزائري">جزائري</option>
+                               <option value="تونسي">تونسي</option>
+                               <option value="فلسطيني">فلسطيني</option>
+                               <option value="لبناني">لبنان</option>
+                               <option value="سوري">سوري</option>
+                               <option value="موريتاني">موريتاني</option>
+                               <option value="صومالي">صومالي</option>
+                               <option value="جيبوتي">جيبوتي</option>
+                               <option value="ماليزي">ماليزي</option>
+                               <option value="أخرى">أخرى</option>
+                           </select>
+                       </div>
+                   </div>
+
+                   <!-- STEP 2: Study Details -->
+                   <div x-show="regStep === 2" class="space-y-4">
+                       <div class="reg-form-group">
+                           <label for="reg_level">المرحلة الدراسية <span style="color: red;">*</span></label>
+                           <select id="reg_level" class="reg-select" required>
+                               <option value="" disabled selected>اختر المرحلة الدراسية...</option>
+                               <option value="بكالوريوس">بكالوريوس (Bachelor's)</option>
+                               <option value="ماجستير">ماجستير (Master's)</option>
+                               <option value="دكتوراه">دكتوراه (PhD)</option>
+                               <option value="معهد لغة" selected>معهد لغة</option>
+                           </select>
+                       </div>
+
+                       <div class="reg-form-group">
+                           <label for="reg_residence">دولة الإقامة <span style="color: red;">*</span></label>
+                           <select id="reg_residence" class="reg-select" required>
+                               <option value="" disabled selected>اختر دولة الإقامة...</option>
+                               {% for iso, name, code, placeholder in phone_countries %}
+                               <option value="{{ name }}">{{ name }}</option>
+                               {% endfor %}
+                           </select>
+                       </div>
+
+                       <div class="reg-form-group">
+                           <label for="reg_address">عنوان الإقامة <span style="color: red;">*</span></label>
+                           <input type="text" id="reg_address" class="reg-input" placeholder="المدينة، المنطقة، الشارع"
+                               required>
+                       </div>
+
+                       <div class="reg-form-group">
+                           <label for="reg_notes">ملاحظات</label>
+                           <textarea id="reg_notes" class="reg-textarea"
+                               placeholder="أدخل أي تفاصيل أو متطلبات خاصة..."></textarea>
+                       </div>
+                   </div>
+               </div>
+
+               <!-- Modal Footer Buttons -->
+               <div class="reg-modal-footer">
+                   <div>
+                       <button type="button" x-show="regStep === 2" @click="regStep = 1"
+                           class="reg-btn reg-btn--secondary">السابق</button>
+                   </div>
+                   <div class="flex gap-2">
+                       <button type="button" @click="openRegModal = false"
+                           class="reg-btn reg-btn--secondary">إلغاء</button>
+                       <button type="button" x-show="regStep === 1" @click="if(validateStep1()) { regStep = 2; }"
+                           class="reg-btn reg-btn--primary">التالي</button>
+                       <button type="submit" x-show="regStep === 2" id="regSubmitBtn"
+                           class="reg-btn reg-btn--primary">تسجيل الآن</button>
+                   </div>
+               </div>
+           </form>
+       </div>
+   </div>
+
 </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/registration-wizard.js' %}"></script>
 {% endblock %}

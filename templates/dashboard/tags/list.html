@@ -19,10 +19,10 @@
 
 {% block content %}
 <div class="space-y-6">
-    {% if items %}
-        <!-- Filter Bar -->
-        {% include "dashboard/components/filter_bar.html" with search_placeholder=search_placeholder filters=filters search_value=search_query base_url=base_url %}
+    <!-- Filter Bar -->
+    {% include "dashboard/components/filter_bar.html" with search_placeholder=search_placeholder filters=filters search_value=search_query base_url=base_url %}
 
+    {% if items %}
         <!-- Data Table -->
         {% include "dashboard/components/data_table.html" with columns=columns rows=items edit_url_name=edit_url_name delete_url_name=delete_url_name %}
         
@@ -44,30 +44,22 @@
 <!-- Modal Container -->
 <div id="tag-modal" style="display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.5); padding: 16px;">
     <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); width: 100%; max-width: 500px; overflow: hidden; display: flex; flex-direction: column;">
-        <!-- Header -->
         <div class="flex items-center justify-between p-4" style="border-bottom: 1px solid var(--border);">
             <h3 id="modal-title" class="text-lg font-semibold" style="color: var(--text-primary);">إضافة وسم جديد</h3>
             <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer" style="background: transparent; border: none; font-size: 24px; padding: 0; line-height: 1;">&times;</button>
         </div>
-        
-        <!-- Form -->
         <form id="modal-form" method="post" action="">
             {% csrf_token %}
             <div class="p-6 space-y-4">
-                <!-- Name -->
                 <div>
                     <label for="id_name" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">اسم الوسم <span style="color: var(--danger);">*</span></label>
                     <input type="text" name="name" id="id_name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border); background-color: var(--surface);" dir="rtl">
                 </div>
-                
-                <!-- Slug -->
                 <div>
                     <label for="id_slug" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">الرابط <span style="color: var(--danger);">*</span></label>
                     <input type="text" name="slug" id="id_slug" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" style="border-color: var(--border); background-color: var(--surface);" dir="ltr">
                 </div>
             </div>
-            
-            <!-- Footer -->
             <div class="flex justify-end gap-2 p-4" style="border-top: 1px solid var(--border); background-color: var(--surface-2); display: flex;">
                 <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200" style="border: none;">إلغاء</button>
                 <button type="submit" class="px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer text-white" style="background-color: var(--primary); border: none;" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'">حفظ</button>
@@ -87,21 +79,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const slugInput = document.getElementById('id_slug');
 
     document.addEventListener('click', function(e) {
-        // Intercept Create button
         const createBtn = e.target.closest('a[href*="/tags/create/"]');
         if (createBtn) {
             e.preventDefault();
             openCreateModal();
             return;
         }
-
-        // Intercept Edit button
         const editBtn = e.target.closest('a[href*="/tags/"][href*="/edit/"]');
         if (editBtn) {
             e.preventDefault();
-            const url = editBtn.getAttribute('href');
-            openEditModal(url);
-            return;
+            openEditModal(editBtn.getAttribute('href'));
         }
     });
 
@@ -114,40 +101,28 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.openEditModal = function(url) {
-        fetch(url + '?json=1', {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            modalTitle.textContent = 'تعديل الوسم';
-            modalForm.action = url;
-            nameInput.value = data.name;
-            slugInput.value = data.slug;
-            modal.style.display = 'flex';
-        })
-        .catch(error => {
-            console.error('Error fetching tag:', error);
-        });
+        fetch(url + '?json=1', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.json())
+            .then(data => {
+                modalTitle.textContent = 'تعديل الوسم';
+                modalForm.action = url;
+                nameInput.value = data.name;
+                slugInput.value = data.slug;
+                modal.style.display = 'flex';
+            });
     };
 
     window.closeModal = function() {
         modal.style.display = 'none';
     };
 
-    // Close modal on escape key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeModal();
-        }
+        if (e.key === 'Escape') closeModal();
     });
 
-    // Auto-generate slug from name in Create mode
     nameInput.addEventListener('input', function() {
         if (modalTitle.textContent.includes('إضافة')) {
-            const nameVal = this.value.trim();
-            slugInput.value = nameVal
+            slugInput.value = this.value.trim()
                 .toLowerCase()
                 .replace(/[^\w\s\u0621-\u064A\u0660-\u0669-]/g, '')
                 .replace(/[\s_]+/g, '-')

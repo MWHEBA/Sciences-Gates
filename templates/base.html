@@ -36,7 +36,7 @@
     {% block twitter_image %}<meta name="twitter:image" content="{% static 'images/og-default.jpg' %}">{% endblock %}
     
     <!-- Canonical URL -->
-    {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+    {% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">{% endblock %}
     
     <!-- Alternate Links for Multilingual Support (Future) -->
     <link rel="alternate" hreflang="ar" href="{{ request.build_absolute_uri }}">
@@ -135,6 +135,20 @@
     {% endif %}
     {% block extra_js %}{% endblock %}
     
+    <!-- Admin Dashboard Floating Button -->
+    {% if request.user.is_authenticated and request.user.profile.is_content_admin or request.user.is_authenticated and request.user.profile.is_seo_admin or request.user.is_authenticated and request.user.profile.is_super_admin %}
+    <a href="{% url 'dashboard:home' %}" class="admin-dashboard-float" aria-label="لوحة التحكم">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="9"></rect>
+            <rect x="14" y="3" width="7" height="5"></rect>
+            <rect x="14" y="12" width="7" height="9"></rect>
+            <rect x="3" y="16" width="7" height="5"></rect>
+        </svg>
+        <span class="admin-dashboard-float__tooltip">لوحة التحكم</span>
+    </a>
+    {% endif %}
+
     <!-- WhatsApp Floating Widget -->
     {% if site_settings.whatsapp %}
     <div class="whatsapp-widget" x-data="{ open: false, message: '' }">

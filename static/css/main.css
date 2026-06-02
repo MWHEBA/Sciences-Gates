@@ -43,7 +43,7 @@
        ═══════════════════════════════════ */
     --surface: #FFFFFF;
     --surface-2: #F7FAFC;
-    --bg-page: #F0F4F8;
+    --bg-page: #e5ebf0;
     /* خلفية الصفحة الكاملة - أفتح قليلاً لإحساس نظيف */
     --bg-light: #F7FAFC;
     /* للـ hover states الخفيفة */
@@ -813,6 +813,29 @@ html[dir="rtl"] body * {
 /* ═══════════════════════════════════
    Services Cards
    ═══════════════════════════════════ */
+/* Floating buttons slide out after scroll inactivity */
+.whatsapp-widget,
+.admin-dashboard-float,
+.admin-edit-float {
+    transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, transform 0.3s !important;
+}
+
+.whatsapp-widget.floating-hide,
+.admin-dashboard-float.floating-hide,
+.admin-edit-float.floating-hide {
+    translate: -80px 0;
+    transform: translateX(-80px) !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.reg-float-btn.floating-hide {
+    translate: 80px 0;
+    transform: translateX(80px) !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
 .service-card {
     background-color: var(--surface);
     border: 1px solid var(--border);

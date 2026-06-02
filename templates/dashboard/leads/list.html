@@ -280,6 +280,13 @@
                 لم تصل أي رسائل حتى الآن
             {% endif %}
         </p>
+        {% if search_query or from_date or to_date or lead_type_filter %}
+        <div style="margin-top: 14px;">
+            <a href="{% url 'dashboard:lead_list' %}" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; border-radius: var(--radius); background-color: var(--primary); color: #fff; text-decoration: none; font-size: 12px; font-weight: 600;">
+                مسح الفلاتر
+            </a>
+        </div>
+        {% endif %}
     </div>
     {% endif %}
 

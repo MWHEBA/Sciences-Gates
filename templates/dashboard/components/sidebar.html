@@ -66,7 +66,7 @@
                     :style="activeSection === 'universities' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
                     <button @click="activeSection = activeSection === 'universities' ? null : 'universities'"
                         data-toggle="true"
-                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="{% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
                         :style="activeSection === 'universities' ? 'background-color: var(--primary); color: var(--white);' : ''"
                         @mouseenter="{% if '/dashboard/universities' not in request.path and '/dashboard/faculties' not in request.path %}if (activeSection !== 'universities') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
@@ -142,7 +142,7 @@
                     :style="activeSection === 'institutes' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
                     <button @click="activeSection = activeSection === 'institutes' ? null : 'institutes'"
                         data-toggle="true"
-                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="{% if '/dashboard/institutes' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
                         :style="activeSection === 'institutes' ? 'background-color: var(--primary); color: var(--white);' : ''"
                         @mouseenter="{% if '/dashboard/institutes' not in request.path %}if (activeSection !== 'institutes') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
@@ -221,7 +221,7 @@
                 <div
                     :style="activeSection === 'majors' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
                     <button @click="activeSection = activeSection === 'majors' ? null : 'majors'" data-toggle="true"
-                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="{% if '/dashboard/majors' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
                         :style="activeSection === 'majors' ? 'background-color: var(--primary); color: var(--white);' : ''"
                         @mouseenter="{% if '/dashboard/majors' not in request.path %}if (activeSection !== 'majors') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
@@ -282,7 +282,7 @@
                 <div
                     :style="activeSection === 'articles' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
                     <button @click="activeSection = activeSection === 'articles' ? null : 'articles'" data-toggle="true"
-                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="{% if '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
                         :style="activeSection === 'articles' ? 'background-color: var(--primary); color: var(--white);' : ''"
                         @mouseenter="{% if '/dashboard/articles' not in request.path and '/dashboard/categories' not in request.path and '/dashboard/tags' not in request.path %}if (activeSection !== 'articles') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
@@ -378,7 +378,7 @@
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/leads') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="{% url 'dashboard:lead_list' %}"
-                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="{% if '/dashboard/leads' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
                         @mouseenter="{% if '/dashboard/leads' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
                         @mouseleave="{% if '/dashboard/leads' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
@@ -412,7 +412,7 @@
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/redirects') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="{% url 'dashboard:redirect_list' %}"
-                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="{% if '/dashboard/redirects' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
                         @mouseenter="{% if '/dashboard/redirects' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
                         @mouseleave="{% if '/dashboard/redirects' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
@@ -430,7 +430,7 @@
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/seo') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="{% url 'dashboard:seo_overview' %}"
-                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="{% if '/dashboard/seo' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
                         @mouseenter="{% if '/dashboard/seo' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
                         @mouseleave="{% if '/dashboard/seo' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
@@ -459,7 +459,7 @@
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/lead-export') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="{% url 'dashboard:lead_export' %}"
-                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="color: var(--text-secondary);"
                         @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
                         @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';">
@@ -477,7 +477,7 @@
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/statistics') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="{% url 'dashboard:home' %}"
-                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="color: var(--text-secondary);"
                         @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
                         @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';">
@@ -503,7 +503,7 @@
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/users') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="{% url 'dashboard:user_list' %}"
-                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="{% if '/dashboard/users' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
                         @mouseenter="{% if '/dashboard/users' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
                         @mouseleave="{% if '/dashboard/users' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
@@ -521,7 +521,7 @@
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/settings') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="{% url 'dashboard:settings' %}"
-                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="{% if '/dashboard/settings' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
                         @mouseenter="{% if '/dashboard/settings' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
                         @mouseleave="{% if '/dashboard/settings' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
@@ -549,7 +549,7 @@
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/activity-log') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="#"
-                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="color: var(--text-secondary);"
                         @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
                         @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';"
@@ -568,7 +568,7 @@
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/system-info') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="#"
-                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="color: var(--text-secondary);"
                         @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
                         @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';"
@@ -586,7 +586,7 @@
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/backups') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a href="#"
-                        class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="color: var(--text-secondary);"
                         @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
                         @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';"
@@ -614,7 +614,7 @@
             <!-- Avatar -->
             <div style="width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
                         background-color: var(--primary); color: var(--white);
-                        display: grid; place-items: center; font-weight: 600; font-size: 14px;">
+                        display: grid; place-items: center; font-weight: 600;">
                 {{ user.get_full_name|default:user.username|first|upper }}
             </div>
             <div style="flex: 1; min-width: 0;">
