@@ -1,7 +1,7 @@
 """
 URL configuration for the dashboard app.
 """
-from django.urls import path
+from django.urls import path, include
 from . import views
 from apps.seo import views as seo_views
 
@@ -91,4 +91,14 @@ urlpatterns = [
     
     # Editor uploads
     path('editor/upload-image/', views.EditorImageUploadView.as_view(), name='editor_upload_image'),
+    
+    # Media library management
+    path('media/', views.MediaLibraryView.as_view(), name='media_library'),
+    path('media/find-by-url/', views.MediaFileFindByUrlView.as_view(), name='media_find_by_url'),
+    path('media/bulk-delete/', views.MediaFileBulkDeleteView.as_view(), name='media_bulk_delete'),
+    path('media/<int:pk>/update/', views.MediaFileUpdateView.as_view(), name='media_update'),
+    path('media/<int:pk>/delete/', views.MediaFileDeleteView.as_view(), name='media_delete'),
+    
+    # WordPress Importer
+    path('import/', include('apps.importer.urls')),
 ]

@@ -714,7 +714,7 @@ html[dir="rtl"] body * {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 20px var(--primary-20);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.18);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 998;
     text-decoration: none;
@@ -723,7 +723,7 @@ html[dir="rtl"] body * {
 
 .admin-edit-float:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 28px var(--primary-30);
+    box-shadow: 0 10px 28px rgba(255, 255, 255, 0.24);
 }
 
 .admin-edit-float svg {
@@ -770,7 +770,7 @@ html[dir="rtl"] body * {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 20px var(--primary-20);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.18);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 997;
     text-decoration: none;
@@ -779,7 +779,7 @@ html[dir="rtl"] body * {
 
 .admin-dashboard-float:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 28px var(--primary-30);
+    box-shadow: 0 10px 28px rgba(255, 255, 255, 0.24);
 }
 
 .admin-dashboard-float svg {
@@ -817,7 +817,7 @@ html[dir="rtl"] body * {
 .whatsapp-widget,
 .admin-dashboard-float,
 .admin-edit-float {
-    transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, transform 0.3s !important;
+    transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, transform 0.3s, box-shadow 0.3s !important;
 }
 
 .whatsapp-widget.floating-hide,

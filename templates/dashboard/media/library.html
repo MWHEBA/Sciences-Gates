@@ -1,0 +1,586 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}مكتبة الوسائط - Science Gates{% endblock %}
+
+{% block page_title %}مكتبة الوسائط{% endblock %}
+
+{% block page_description %}إدارة وتعديل النصوص البديلة (SEO Alt Text) لجميع صور الملفات في النظام.{% endblock %}
+
+{% block content %}
+<div x-data="mediaLibrary()" class="flex flex-col gap-6" style="position: relative;">
+    <!-- الفلاتر والإحصائيات -->
+    <div class="border border-border rounded-xl p-5 shadow-sm flex flex-col lg:flex-row justify-between items-stretch gap-6" style="background-color: var(--surface-2);">
+        <!-- نموذج الفلترة والبحث -->
+        <form method="GET" class="flex-1 flex flex-wrap items-end gap-4">
+            <!-- البحث -->
+            <div class="flex-1 min-w-[240px] flex flex-col gap-1.5">
+                <label class="text-xs font-semibold" style="color: var(--text-secondary);" for="search_q">البحث في الملفات</label>
+                <div class="relative">
+                    <input type="text" id="search_q" name="q" value="{{ q }}" placeholder="اسم الملف الحالي..." 
+                           class="w-full text-xs rounded-lg border border-border bg-white" style="padding: 0.6rem 1rem 0.6rem 2.5rem;">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-muted">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- المصدر -->
+            <div class="w-48 flex flex-col gap-1.5">
+                <label class="text-xs font-semibold" style="color: var(--text-secondary);" for="source_select">المصدر</label>
+                <select id="source_select" name="source" class="w-full text-xs rounded-lg border border-border bg-white cursor-pointer" style="padding: 0.6rem 1rem 0.6rem 2rem; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2343576B%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: left 12px center;">
+                    <option value="all" {% if source == 'all' %}selected{% endif %}>جميع المصادر</option>
+                    {% for val, label in source_choices %}
+                        <option value="{{ val }}" {% if source == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- فلتر Alt المفقود -->
+            <div class="flex items-center h-10 px-1">
+                <label class="flex items-center gap-2.5 text-xs font-semibold cursor-pointer" style="color: var(--text-secondary);">
+                    <input type="checkbox" name="missing_alt" value="true" {% if missing_alt %}checked{% endif %} 
+                           class="rounded border-border text-primary focus:ring-primary" style="width: 16px; height: 16px; accent-color: var(--primary);">
+                    <span>صور بدون نص بديل (Alt)</span>
+                </label>
+            </div>
+            
+            <!-- أزرار الإجراءات والبحث -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="submit" class="btn bg-primary text-white hover:bg-primary-hover px-5 py-2.5 rounded-lg font-semibold text-xs cursor-pointer transition-colors duration-200">
+                    تصفية
+                </button>
+                <a href="{% url 'dashboard:media_library' %}" class="btn bg-white border border-border text-text-secondary hover:bg-bg-light px-4 py-2.5 rounded-lg font-semibold text-xs no-underline text-center cursor-pointer transition-colors duration-200" style="border-style: solid; border-width: 1px;">
+                    إعادة تعيين
+                </a>
+
+                <!-- خط فاصل عمودي ناعم -->
+                <span class="mx-1" style="display: inline-block; width: 1px; height: 24px; background-color: var(--border);"></span>
+
+                <!-- زر التحديد الجماعي -->
+                <button type="button" @click="toggleSelectionMode()" 
+                        :class="isSelectionMode ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-white border border-border text-text-secondary hover:bg-bg-light'"
+                        class="btn px-4 py-2.5 rounded-lg font-semibold text-xs transition cursor-pointer flex items-center gap-2"
+                        style="border-style: solid; border-width: 1px;">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                    <span x-text="isSelectionMode ? 'إلغاء التحديد' : 'تحديد جماعي'"></span>
+                </button>
+
+                <!-- أزرار التحكم بالوضع الجماعي (تظهر فقط عند التفعيل) -->
+                <template x-if="isSelectionMode">
+                    <div class="flex items-center gap-2 animate-fadeIn" style="display: inline-flex;">
+                        <button type="button" @click="selectAll()" class="btn bg-white border border-border text-text-primary hover:bg-gray-50 px-3 py-2.5 rounded-lg text-xs cursor-pointer" style="border-style: solid; border-width: 1px;">
+                            تحديد الكل
+                        </button>
+                        <button type="button" @click="deselectAll()" class="btn bg-white border border-border text-text-primary hover:bg-gray-50 px-3 py-2.5 rounded-lg text-xs cursor-pointer" style="border-style: solid; border-width: 1px;">
+                            إلغاء الكل
+                        </button>
+                        
+                        <template x-if="selectedIds.length > 0">
+                            <div class="flex items-center gap-2" style="display: inline-flex;">
+                                <span style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">
+                                    (تم تحديد <span style="color: var(--primary); font-weight: 700;" x-text="selectedIds.length"></span>)
+                                </span>
+                                <button type="button" @click="deleteBulk()" class="btn px-4 py-2.5 rounded-lg font-semibold text-xs transition cursor-pointer" 
+                                        style="background-color: var(--danger-light); color: var(--danger); border: 1px solid var(--danger);">
+                                    حذف المحدد
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </form>
+
+        <!-- كارد الإحصائيات -->
+        <div class="flex items-center gap-3 border-t lg:border-t-0 lg:border-r border-border pt-4 lg:pt-0 lg:pr-6 min-w-[240px]">
+            <!-- بطاقة نتائج البحث (تظهر فقط عند وجود بحث أو تصفية نشطة) -->
+            {% if q or source != 'all' or missing_alt %}
+            <div class="flex-1 flex flex-col items-center justify-center p-2.5 rounded-lg border animate-fadeIn" style="background-color: var(--primary-light); border-color: var(--primary); min-width: 100px; border-width: 1px; border-style: solid;">
+                <span style="color: var(--primary); font-size: 10px; font-weight: 600; text-align: center;">نتائج البحث</span>
+                <span style="color: var(--primary); font-size: 16px; font-weight: 700; margin-top: 4px;">{{ results_count }}</span>
+            </div>
+            {% endif %}
+
+            <!-- بطاقة إجمالي الصور -->
+            <div class="flex-1 flex flex-col items-center justify-center p-2.5 rounded-lg border border-border" style="background-color: var(--surface); min-width: 100px;">
+                <span style="color: var(--text-muted); font-size: 10px; font-weight: 600; text-align: center;">إجمالي الصور</span>
+                <span style="color: var(--text-primary); font-size: 16px; font-weight: 700; margin-top: 4px;">{{ total_count }}</span>
+            </div>
+            
+            <!-- بطاقة بدون Alt -->
+            <div class="flex-1 flex flex-col items-center justify-center p-2.5 rounded-lg border" 
+                 style="background-color: {% if missing_alt_count > 0 %}var(--danger-light){% else %}var(--success-light){% endif %}; 
+                        border-color: {% if missing_alt_count > 0 %}var(--danger){% else %}var(--success){% endif %}; 
+                        min-width: 100px; border-width: 1px; border-style: solid;">
+                <span style="color: {% if missing_alt_count > 0 %}var(--danger){% else %}var(--success){% endif %}; font-size: 10px; font-weight: 600; text-align: center;">بدون Alt</span>
+                <span style="color: {% if missing_alt_count > 0 %}var(--danger){% else %}var(--success){% endif %}; font-size: 16px; font-weight: 700; margin-top: 4px;">{{ missing_alt_count }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- شبكة الصور وحاوية العرض -->
+    <div class="border border-border rounded-xl overflow-hidden" style="background-color: var(--surface-2); min-height: 500px;">
+        <!-- شبكة عرض الصور (دقة أعلى وتقسيم أكثر لجعل الصور أصغر حجماً وأكثر تنظيماً) -->
+        <div class="p-5 overflow-y-auto max-h-[600px]" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; align-content: start; scrollbar-width: thin;">
+            {% for media in page_obj %}
+                <div @click="isSelectionMode ? toggleSelectMedia('{{ media.pk }}') : selectMedia({
+                         id: '{{ media.pk }}',
+                         url: '{{ media.file.url }}',
+                         filename: '{{ media.original_filename|escapejs }}',
+                         alt: '{{ media.alt_text|escapejs }}',
+                         caption: '{{ media.caption|escapejs }}',
+                         title: '{{ media.title|escapejs }}',
+                         description: '{{ media.description|escapejs }}',
+                         source: '{{ media.get_source_type_display }}',
+                         size: '{{ media.file_size|filesizeformat }}',
+                         width: '{{ media.width|default:"" }}',
+                         height: '{{ media.height|default:"" }}',
+                         uploaded_at: '{{ media.created_at|date:"Y-m-d H:i" }}',
+                         uploaded_by: '{{ media.uploaded_by|default:"نظام آلي" }}'
+                     })"
+                     :class="(selectedMedia && selectedMedia.id == '{{ media.pk }}') || (isSelectionMode && selectedIds.includes('{{ media.pk }}')) ? 'border-primary ring-2 ring-primary-light' : 'border-border hover:border-primary-light'"
+                     class="border rounded-lg overflow-hidden bg-white cursor-pointer transition flex flex-col relative group"
+                     style="border-width: 1px;">
+                     
+                     <!-- حاوية الصورة -->
+                     <div class="w-full relative overflow-hidden flex items-center justify-center" style="aspect-ratio: 1 / 1; background-color: var(--surface-2);">
+                         {% if media.file %}
+                             <img src="{{ media.file.url }}" alt="{{ media.alt_text|default:media.original_filename }}" style="object-fit: contain; width: 100%; height: 100%; display: block;">
+                         {% else %}
+                             <span style="font-size: 10px; color: var(--text-muted);">ملف مفقود</span>
+                         {% endif %}
+                         
+                         <!-- خانة الاختيار للوضع الجماعي -->
+                         <div x-show="isSelectionMode" class="absolute top-1.5 left-1.5 z-10 animate-fadeIn" @click.stop>
+                             <input type="checkbox" 
+                                    :value="'{{ media.pk }}'" 
+                                    :checked="selectedIds.includes('{{ media.pk }}')"
+                                    @change="toggleSelectMedia('{{ media.pk }}')"
+                                    class="rounded border-border text-primary focus:ring-primary cursor-pointer"
+                                    style="width: 18px; height: 18px; accent-color: var(--primary);">
+                         </div>
+                         
+                         <!-- لمبة الحالة للـ Alt -->
+                         <div class="absolute top-1.5 right-1.5" x-show="!isSelectionMode">
+                             {% if media.alt_text %}
+                                 <span class="w-2.5 h-2.5 bg-success rounded-full border border-white block" title="Alt موجود"></span>
+                             {% else %}
+                                 <span class="w-2.5 h-2.5 bg-danger rounded-full border border-white block animate-pulse" title="Alt مفقود"></span>
+                             {% endif %}
+                         </div>
+                     </div>
+                     
+                     <!-- الاسم والمعلومات أسفل الصورة -->
+                     <div class="p-2 flex-1 flex flex-col justify-between" style="gap: 4px;">
+                         <div class="font-semibold truncate" style="color: var(--text-primary); font-size: 10px; line-height: 1.2;" title="{{ media.original_filename }}">
+                             {{ media.original_filename }}
+                         </div>
+                         <div class="flex justify-between items-center" style="color: var(--text-muted); font-size: 9px; line-height: 1.2;">
+                             <span>{{ media.get_source_type_display }}</span>
+                             <span>{{ media.file_size|filesizeformat }}</span>
+                         </div>
+                     </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-20 w-full" style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px;">
+                    <svg class="w-12 h-12 mb-3" style="color: var(--text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="font-medium" style="color: var(--text-secondary); font-size: 13px; margin: 0;">لا توجد صور تطابق خيارات البحث الحالية</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- مودال تفاصيل ملف الوسائط (Centered Modal) -->
+    <div x-show="selectedMedia" 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4"
+         style="display: none;">
+         
+         <!-- الخلفية المعتمة للمودال -->
+         <div x-show="selectedMedia"
+              x-transition:enter="transition-opacity ease-out duration-200"
+              x-transition:enter-start="opacity-0"
+              x-transition:enter-end="opacity-100"
+              x-transition:leave="transition-opacity ease-in duration-150"
+              x-transition:leave-start="opacity-100"
+              x-transition:leave-end="opacity-0"
+              class="fixed inset-0 cursor-pointer"
+              style="background-color: rgba(6, 20, 36, 0.45); backdrop-filter: blur(4px);"
+              @click="closePanel()"></div>
+              
+         <!-- صندوق المودال -->
+         <div x-show="selectedMedia"
+              x-transition:enter="transition-all ease-out duration-300"
+              x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+              x-transition:leave="transition-all ease-in duration-200"
+              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+              x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+              class="bg-white border border-border rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col z-10 max-h-[90vh]">
+              
+              <template x-if="selectedMedia">
+                  <div class="flex flex-col h-full overflow-hidden">
+                      <!-- رأس المودال -->
+                      <div class="p-4 border-b border-border flex justify-between items-center" style="background-color: var(--surface-2);">
+                          <h3 class="font-semibold text-sm" style="color: var(--text-primary);">تفاصيل ملف الوسائط وتعديل الـ SEO</h3>
+                          <button @click="closePanel()" class="hover:text-text-primary p-1 cursor-pointer transition-colors" style="background: none; border: none; color: var(--text-muted);">
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                              </svg>
+                          </button>
+                      </div>
+                      
+                      <!-- محتوى المودال (مقسم لعمودين على الشاشات الكبيرة) -->
+                      <div class="flex-1 overflow-y-auto p-5 flex flex-col md:flex-row gap-5">
+                          <!-- العمود الأيمن (معاينة الصورة والبيانات) -->
+                          <div class="flex-1 flex flex-col gap-4">
+                              <div class="border border-border rounded-lg p-3 flex items-center justify-center bg-gray-50 overflow-hidden" style="min-height: 220px; max-height: 320px;">
+                                  <img :src="selectedMedia.url" class="max-h-[300px] max-w-full object-contain rounded">
+                              </div>
+                              
+                              <!-- جدول البيانات الوصفية للملف -->
+                              <div class="text-[11px] flex flex-col gap-2 p-3 rounded-lg border border-border bg-gray-50" style="color: var(--text-secondary);">
+                                  <div class="flex justify-between"><span style="color: var(--text-muted);">المصدر:</span> <span class="font-semibold" x-text="selectedMedia.source"></span></div>
+                                  <div class="flex justify-between"><span style="color: var(--text-muted);">اسم الملف:</span> <span class="font-semibold truncate max-w-[150px]" :title="selectedMedia.filename" x-text="selectedMedia.filename"></span></div>
+                                  <div class="flex justify-between"><span style="color: var(--text-muted);">الحجم:</span> <span class="font-semibold" x-text="selectedMedia.size"></span></div>
+                                  <div class="flex justify-between" x-show="selectedMedia.width"><span style="color: var(--text-muted);">الأبعاد:</span> <span class="font-semibold" x-text="selectedMedia.width + ' × ' + selectedMedia.height + ' بكسل'"></span></div>
+                                  <div class="flex justify-between"><span style="color: var(--text-muted);">تاريخ الرفع:</span> <span class="font-semibold" x-text="selectedMedia.uploaded_at"></span></div>
+                                  <div class="flex justify-between"><span style="color: var(--text-muted);">بواسطة:</span> <span class="font-semibold" x-text="selectedMedia.uploaded_by"></span></div>
+                              </div>
+                          </div>
+                          
+                          <!-- العمود الأيسر (حقول الإدخال والتحرير) -->
+                          <div class="flex-1 flex flex-col gap-4">
+                              <!-- حقل النص البديل (الأهم) -->
+                              <div class="flex flex-col gap-1.5">
+                                  <label class="text-xs font-semibold flex items-center justify-between" style="color: var(--text-secondary);">
+                                      <span>النص البديل (Alt Text) <span class="text-danger">*</span></span>
+                                      <span class="text-[10px] font-normal" :style="selectedMedia.alt.length >= 80 && selectedMedia.alt.length <= 140 ? 'color: var(--success)' : 'color: var(--text-muted)'" x-text="selectedMedia.alt.length + ' حرف'"></span>
+                                  </label>
+                                  <textarea id="media_alt" 
+                                            x-model="selectedMedia.alt" 
+                                            @input="autoExpandTextarea($event.target)"
+                                            placeholder="وصف دقيق للصورة (مثال: أخصائية تجميل تقوم بعلاج الوجه في سبا بالقاهرة)..." 
+                                            class="w-full text-xs rounded-lg border border-border resize-none overflow-hidden" 
+                                            style="padding: 0.6rem 0.8rem; min-height: 38px; max-height: 200px; line-height: 1.5;"
+                                            rows="1"></textarea>
+                                  <span class="text-[10px]" style="color: var(--text-muted); line-height: 1.4;">
+                                      <strong>الأهم للـ SEO</strong> - الطول المثالي: 80-140 حرف. وصف السياق مش بس الصورة.
+                                  </span>
+                              </div>
+                              
+                              <!-- حقل Caption (التسمية التوضيحية) -->
+                              <div class="flex flex-col gap-1.5">
+                                  <label class="text-xs font-semibold flex items-center justify-between" style="color: var(--text-secondary);">
+                                      <span>التسمية التوضيحية (Caption)</span>
+                                      <span class="text-[10px] font-normal" style="color: var(--text-muted);" x-text="selectedMedia.caption.length + '/300'"></span>
+                                  </label>
+                                  <textarea id="media_caption" x-model="selectedMedia.caption" placeholder="نص يظهر للزوار أسفل الصورة (مثال: جلسة علاج الوجه المتقدم - احجزي الآن)..." 
+                                            class="w-full text-xs rounded-lg border border-border" style="padding: 0.6rem 0.8rem; min-height: 60px;" maxlength="300"></textarea>
+                                  <span class="text-[10px]" style="color: var(--text-muted); line-height: 1.4;">
+                                      نص مرئي للزوار - مفيد للسياق والـ SEO (اختياري)
+                                  </span>
+                              </div>
+                              
+                              <!-- حقل العنوان -->
+                              <div class="flex flex-col gap-1.5">
+                                  <label class="text-xs font-semibold" style="color: var(--text-secondary);" for="media_title">عنوان الصورة (Title)</label>
+                                  <input type="text" id="media_title" x-model="selectedMedia.title" placeholder="يظهر عند التمرير على الصورة..." 
+                                         class="w-full text-xs rounded-lg border border-border" style="padding: 0.6rem 0.8rem;">
+                                  <span class="text-[10px]" style="color: var(--text-muted);">يظهر كـ tooltip عند التمرير (اختياري)</span>
+                              </div>
+                              
+                              <!-- حقل الوصف الداخلي -->
+                              <div class="flex flex-col gap-1.5">
+                                  <label class="text-xs font-semibold" style="color: var(--text-secondary);" for="media_description">وصف داخلي</label>
+                                  <textarea id="media_description" x-model="selectedMedia.description" placeholder="وصف تفصيلي للاستخدام الداخلي وإدارة المكتبة..." 
+                                            class="w-full text-xs rounded-lg border border-border" style="padding: 0.6rem 0.8rem; min-height: 60px;"></textarea>
+                                  <span class="text-[10px]" style="color: var(--text-muted);">للاستخدام الداخلي فقط - لا يظهر للزوار</span>
+                              </div>
+                          </div>
+                      </div>
+                      
+                      <!-- أزرار التحكم بالأسفل -->
+                      <div class="p-4 border-t border-border flex justify-end gap-2" style="background-color: var(--surface-2);">
+                          <button @click="closePanel()" class="btn bg-white border border-border text-text-secondary hover:bg-bg-light px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer">
+                              إلغاء
+                          </button>
+                          <button @click="deleteMedia()" class="btn bg-danger text-white hover:bg-danger-hover px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer">
+                              حذف نهائياً
+                          </button>
+                          <button @click="saveMedia()" class="btn bg-primary text-white hover:bg-primary-hover px-5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer">
+                              حفظ التعديلات
+                          </button>
+                      </div>
+                  </div>
+              </template>
+         </div>
+    </div>
+    
+    <!-- الترقيم (Pagination) -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex justify-between items-center text-xs pt-2">
+        <div class="flex gap-1">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if q %}&q={{ q }}{% endif %}{% if source %}&source={{ source }}{% endif %}{% if missing_alt %}&missing_alt=true{% endif %}" class="btn bg-white border border-border text-text-primary hover:bg-gray-50 px-3 py-1.5 rounded-lg no-underline cursor-pointer">الأولى</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if source %}&source={{ source }}{% endif %}{% if missing_alt %}&missing_alt=true{% endif %}" class="btn bg-white border border-border text-text-primary hover:bg-gray-50 px-3 py-1.5 rounded-lg no-underline cursor-pointer">السابق</a>
+            {% endif %}
+        </div>
+        
+        <span style="color: var(--text-secondary);">صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span>
+        
+        <div class="flex gap-1">
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if source %}&source={{ source }}{% endif %}{% if missing_alt %}&missing_alt=true{% endif %}" class="btn bg-white border border-border text-text-primary hover:bg-gray-50 px-3 py-1.5 rounded-lg no-underline cursor-pointer">التالي</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if source %}&source={{ source }}{% endif %}{% if missing_alt %}&missing_alt=true{% endif %}" class="btn bg-white border border-border text-text-primary hover:bg-gray-50 px-3 py-1.5 rounded-lg no-underline cursor-pointer">الأخيرة</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function mediaLibrary() {
+    return {
+        selectedMedia: null,
+        isSelectionMode: false,
+        selectedIds: [],
+        allPageIds: [{% for media in page_obj %}'{{ media.pk }}',{% endfor %}],
+        
+        toggleSelectionMode() {
+            this.isSelectionMode = !this.isSelectionMode;
+            if (!this.isSelectionMode) {
+                this.selectedIds = [];
+            }
+        },
+        
+        toggleSelectMedia(id) {
+            const index = this.selectedIds.indexOf(id);
+            if (index > -1) {
+                this.selectedIds.splice(index, 1);
+            } else {
+                this.selectedIds.push(id);
+            }
+        },
+        
+        selectAll() {
+            this.selectedIds = [...this.allPageIds];
+        },
+        
+        deselectAll() {
+            this.selectedIds = [];
+        },
+        
+        selectMedia(media) {
+            this.selectedMedia = media;
+            // Auto-expand textarea after data loads
+            this.$nextTick(() => {
+                const textarea = document.getElementById('media_alt');
+                if (textarea) {
+                    this.autoExpandTextarea(textarea);
+                }
+            });
+        },
+        
+        autoExpandTextarea(element) {
+            // Reset height to auto to get the correct scrollHeight
+            element.style.height = 'auto';
+            // Set height based on content, with min and max
+            const newHeight = Math.min(Math.max(element.scrollHeight, 38), 200);
+            element.style.height = newHeight + 'px';
+        },
+        
+        closePanel() {
+            this.selectedMedia = null;
+        },
+        
+        saveMedia() {
+            if (!this.selectedMedia) return;
+            
+            const url = `/dashboard/media/${this.selectedMedia.id}/update/`;
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    alt_text: this.selectedMedia.alt,
+                    caption: this.selectedMedia.caption,
+                    title: this.selectedMedia.title,
+                    description: this.selectedMedia.description
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'تم الحفظ!',
+                        text: 'تم حفظ التعديلات بنجاح',
+                        icon: 'success',
+                        confirmButtonColor: 'var(--primary)',
+                        confirmButtonText: 'حسناً',
+                        customClass: { popup: 'rounded-xl' }
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'خطأ!',
+                        text: 'خطأ أثناء الحفظ: ' + data.error,
+                        icon: 'error',
+                        confirmButtonColor: 'var(--primary)',
+                        confirmButtonText: 'حسناً',
+                        customClass: { popup: 'rounded-xl' }
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    title: 'خطأ!',
+                    text: 'فشل الاتصال بالخادم',
+                    icon: 'error',
+                    confirmButtonColor: 'var(--primary)',
+                    confirmButtonText: 'حسناً',
+                    customClass: { popup: 'rounded-xl' }
+                });
+            });
+        },
+        
+        deleteMedia() {
+            if (!this.selectedMedia) return;
+            
+            Swal.fire({
+                title: 'هل أنت متأكد؟',
+                text: 'هل أنت متأكد من حذف هذا الملف نهائياً؟ سيتم حذفه من النظام ومن على القرص تماماً ولا يمكن استعادته.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: 'var(--danger)',
+                cancelButtonColor: 'var(--text-muted)',
+                confirmButtonText: 'نعم، احذف',
+                cancelButtonText: 'إلغاء',
+                customClass: { popup: 'rounded-xl' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const url = `/dashboard/media/${this.selectedMedia.id}/delete/`;
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'تم الحذف!',
+                                text: 'تم حذف الملف بنجاح.',
+                                icon: 'success',
+                                confirmButtonColor: 'var(--primary)',
+                                confirmButtonText: 'حسناً',
+                                customClass: { popup: 'rounded-xl' }
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'خطأ!',
+                                text: 'خطأ أثناء الحذف: ' + data.error,
+                                icon: 'error',
+                                confirmButtonColor: 'var(--primary)',
+                                confirmButtonText: 'حسناً',
+                                customClass: { popup: 'rounded-xl' }
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            title: 'خطأ!',
+                            text: 'فشل الاتصال بالخادم',
+                            icon: 'error',
+                            confirmButtonColor: 'var(--primary)',
+                            confirmButtonText: 'حسناً',
+                            customClass: { popup: 'rounded-xl' }
+                        });
+                    });
+                }
+            });
+        },
+        
+        deleteBulk() {
+            if (this.selectedIds.length === 0) return;
+            
+            Swal.fire({
+                title: 'هل أنت متأكد؟',
+                text: `هل أنت متأكد من حذف ${this.selectedIds.length} من الملفات المحددة نهائياً؟ سيتم حذفها من النظام والقرص تماماً ولا يمكن استعادتها.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: 'var(--danger)',
+                cancelButtonColor: 'var(--text-muted)',
+                confirmButtonText: 'نعم، احذف نهائياً',
+                cancelButtonText: 'إلغاء',
+                customClass: { popup: 'rounded-xl' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const url = `/dashboard/media/bulk-delete/`;
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            ids: this.selectedIds
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'تم الحذف!',
+                                text: `تم حذف ${data.deleted_count} ملف بنجاح.`,
+                                icon: 'success',
+                                confirmButtonColor: 'var(--primary)',
+                                confirmButtonText: 'حسناً',
+                                customClass: { popup: 'rounded-xl' }
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'خطأ!',
+                                text: 'خطأ أثناء الحذف الجماعي: ' + data.error,
+                                icon: 'error',
+                                confirmButtonColor: 'var(--primary)',
+                                confirmButtonText: 'حسناً',
+                                customClass: { popup: 'rounded-xl' }
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            title: 'خطأ!',
+                            text: 'فشل الاتصال بالخادم',
+                            icon: 'error',
+                            confirmButtonColor: 'var(--primary)',
+                            confirmButtonText: 'حسناً',
+                            customClass: { popup: 'rounded-xl' }
+                        });
+                    });
+                }
+            });
+        }
+    };
+}
+</script>
+{% endblock %}

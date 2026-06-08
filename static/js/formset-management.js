@@ -146,9 +146,10 @@ class FormsetManager {
 document.addEventListener('DOMContentLoaded', function() {
     // Find all formset containers and initialize them
     const formsetContainers = document.querySelectorAll('[data-formset]');
+    window.formsetManagers = window.formsetManagers || {};
     formsetContainers.forEach(container => {
         const formsetPrefix = container.getAttribute('data-formset');
         const itemName = container.getAttribute('data-item-name') || 'Item';
-        new FormsetManager(formsetPrefix, itemName);
+        window.formsetManagers[formsetPrefix] = new FormsetManager(formsetPrefix, itemName);
     });
 });

@@ -1795,6 +1795,41 @@ img#intlPhoneFlag {
   font-size: 1rem;
   line-height: 1.8;
   color: var(--text-body);
+  text-align: justify;
+}
+
+.detail-section-content p,
+.detail-section-content li,
+.admission-tab-panel p,
+.admission-tab-panel li {
+  text-align: justify;
+}
+
+/* تنسيق القوائم للتغلب على تصفير TailwindCSS */
+.detail-section-content ul,
+.admission-tab-panel ul {
+  list-style-type: disc !important;
+  margin-right: 2rem !important;
+  margin-left: 0 !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+  padding: 0 !important;
+}
+
+.detail-section-content ol,
+.admission-tab-panel ol {
+  list-style-type: decimal !important;
+  margin-right: 2rem !important;
+  margin-left: 0 !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+  padding: 0 !important;
+}
+
+.detail-section-content li,
+.admission-tab-panel li {
+  display: list-item !important;
+  margin-bottom: 0.5rem !important;
 }
 
 .detail-section-highlight {
@@ -3475,6 +3510,7 @@ img#intlPhoneFlag {
 
 /* FAQ Answer */
 .detail-faq-answer {
+  text-align: justify;
   padding: 20px;
   font-size: 15px;
   line-height: 1.7;

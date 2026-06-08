@@ -146,9 +146,11 @@
                 </thead>
                 <tbody>
                     {% for lead in leads %}
-                    <tr style="border-bottom: 1px solid var(--border); transition: background-color 0.2s;"
+                    <tr class="cursor-pointer"
+                        style="border-bottom: 1px solid var(--border); transition: background-color 0.2s; cursor: pointer;"
                         onmouseover="this.style.backgroundColor='var(--bg-light)'"
-                        onmouseout="this.style.backgroundColor='transparent'">
+                        onmouseout="this.style.backgroundColor='transparent'"
+                        data-row-url="{% url 'dashboard:lead_detail' lead.pk %}">
                         <td style="padding: 12px 16px; font-size: 13px; color: var(--text-primary); font-weight: 600;">
                             {{ lead.name }}
                         </td>

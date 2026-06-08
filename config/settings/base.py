@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'apps.leads',
     'apps.search',
     'apps.redirects',
+    'apps.importer',
 ]
 
 MIDDLEWARE = [
@@ -176,3 +177,8 @@ SECURE_HSTS_SECONDS = 0  # Set to 31536000 in production
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# WordPress Importer Settings
+WP_IMPORTER_BASE_URL = config('WP_IMPORTER_BASE_URL', default='')
+WP_IMPORTER_SECRET_KEY = config('WP_IMPORTER_SECRET_KEY', default='sg_import_secure_token_2026')
+WP_IMPORTER_TIMEOUT = config('WP_IMPORTER_TIMEOUT', default=30, cast=int)

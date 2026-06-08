@@ -179,7 +179,7 @@ input[type="file"],
 textarea,
 select {
     width: 100%;
-    padding: 0.75rem 2.35rem;
+    padding: 0.75rem 1rem;
     font-size: 0.9rem;
     border: 2px solid var(--border);
     border-radius: 0.5rem;
@@ -414,4 +414,58 @@ html[dir="rtl"] main {
 .focus-ring:focus {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
+}
+
+/* ============================================================================
+   WordPress Content Importer Styling
+   ============================================================================ */
+.import-confidence-high {
+    border-color: var(--success) !important;
+}
+
+.import-confidence-medium {
+    border-color: var(--warning) !important;
+}
+
+.import-confidence-none {
+    border-color: var(--danger) !important;
+}
+
+.import-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background-color: var(--warning-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+}
+
+.confidence-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 11px;
+}
+
+.confidence-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.confidence-legend .legend-high {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.confidence-legend .legend-medium {
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.confidence-legend .legend-none {
+    color: var(--danger);
+    font-weight: 600;
 }

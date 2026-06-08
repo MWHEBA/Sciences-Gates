@@ -26,10 +26,9 @@
                     class="flex-1 bg-surface border border-border rounded-lg py-2.5 px-4 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all appearance-none cursor-pointer"
                     style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: left 12px center; padding-left: 36px;">
                     <option value="">جميع المدن</option>
-                    <option value="kl" {% if request.GET.city == 'kl' %}selected{% endif %}>كوالالمبور</option>
-                    <option value="selangor" {% if request.GET.city == 'selangor' %}selected{% endif %}>سيلانجور</option>
-                    <option value="penang" {% if request.GET.city == 'penang' %}selected{% endif %}>بينانج</option>
-                    <option value="johor" {% if request.GET.city == 'johor' %}selected{% endif %}>جوهر</option>
+                    {% for city_code, city_name in city_choices %}
+                    <option value="{{ city_code }}" {% if request.GET.city == city_code %}selected{% endif %}>{{ city_name }}</option>
+                    {% endfor %}
                 </select>
 
                 <button type="submit"

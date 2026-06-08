@@ -25,6 +25,44 @@ class FacultyProgramsManager {
         this.attachAddHandler();
         this.attachItemHandlers();
         this.updateState();
+        this.initTextareaAutoResize();
+    }
+
+    initTextareaAutoResize() {
+        // Auto-resize on input
+        this.container.addEventListener('input', (e) => {
+            if (e.target.classList.contains('fpm-program-input--textarea')) {
+                this.autoResizeTextarea(e.target);
+            }
+        });
+
+        // Watch for dynamically added textareas (bulk paste, Elementor import, manual add)
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const textareas = node.querySelectorAll('.fpm-program-input--textarea');
+                        textareas.forEach(textarea => this.autoResizeTextarea(textarea));
+                        if (node.classList.contains('fpm-program-input--textarea')) {
+                            this.autoResizeTextarea(node);
+                        }
+                    }
+                });
+            });
+        });
+        observer.observe(this.container, { childList: true, subtree: true });
+
+        // Initial resize for all existing textareas
+        setTimeout(() => {
+            this.container.querySelectorAll('.fpm-program-input--textarea').forEach(textarea => {
+                this.autoResizeTextarea(textarea);
+            });
+        }, 100);
+    }
+
+    autoResizeTextarea(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight + 2) + 'px';
     }
 
     // ─── إضافة كلية جديدة ───
@@ -141,7 +179,7 @@ class FacultyProgramsManager {
                             <th>التخصصات</th>
                             <th>المدة الدراسية</th>
                             <th>الرسوم السنوية</th>
-                            <th width="50"></th>
+                            <th width="40"></th>
                         </tr>
                     </thead>
                     <tbody class="fpm-programs-tbody" 
@@ -209,6 +247,11 @@ class FacultyProgramsManager {
         } else {
             wrapper.style.display = 'block';
             icon.classList.add('rotated');
+            
+            // Resize textareas inside this wrapper now that they are visible
+            wrapper.querySelectorAll('.fpm-program-input--textarea').forEach(textarea => {
+                this.autoResizeTextarea(textarea);
+            });
         }
     }
 
@@ -229,12 +272,12 @@ class FacultyProgramsManager {
         row.setAttribute('data-program-index', programIndex);
         row.innerHTML = `
             <td>
-                <input type="text" 
-                       name="faculty-${facultyIndex}-programs-${programIndex}-name"
-                       class="fpm-program-input"
-                       placeholder="اسم البرنامج"
-                       dir="rtl"
-                       required>
+                <textarea name="faculty-${facultyIndex}-programs-${programIndex}-name"
+                          class="fpm-program-input fpm-program-input--textarea"
+                          placeholder="اسم البرنامج"
+                          dir="rtl"
+                          rows="1"
+                          required></textarea>
             </td>
             <td>
                 <input type="text" 
@@ -285,6 +328,9 @@ class FacultyProgramsManager {
         if (idInput && idInput.value) {
             // برنامج موجود
             deleteInput.value = 'on';
+            if (deleteInput.type === 'checkbox') {
+                deleteInput.checked = true;
+            }
             programRow.classList.add('fpm-program-row--deleted');
             programRow.style.opacity = '0.3';
             programRow.style.pointerEvents = 'none';
@@ -395,13 +441,27 @@ class FacultyProgramsManager {
             this.attachProgramDeleteHandler(btn.closest('.fpm-program-row'));
         });
 
-        // السحب والإفلات للكليات
+        // السحب والإفلات للكليات والنقر على السطر بالكامل ما عدا الاسم والاجراءات
         this.container.querySelectorAll('.faculty-item').forEach(item => {
             item.setAttribute('draggable', 'true');
             item.ondragstart = (e) => this.onDragStart(e, item);
             item.ondragend = (e) => this.onDragEnd(e, item);
             item.ondragover = (e) => this.onDragOver(e, item);
             item.ondrop = (e) => this.onDrop(e, item);
+
+            item.onclick = (e) => {
+                if (
+                    e.target.closest('.faculty-item__input') ||
+                    e.target.closest('.faculty-item__delete') ||
+                    e.target.closest('.faculty-item__toggle') ||
+                    e.target.closest('.faculty-item__drag-handle') ||
+                    e.target.closest('.faculty-item__programs-wrapper')
+                ) {
+                    return;
+                }
+                e.preventDefault();
+                this.togglePrograms(item);
+            };
         });
     }
 
@@ -640,15 +700,12 @@ class FacultyProgramsManager {
                         const tbody = table.querySelector('tbody');
                         if (tbody) {
                             const rows = tbody.querySelectorAll('tr');
-                            let isFirstRow = true;
 
                             rows.forEach((row, rowIndex) => {
-                                // تخطي صف الـ header (الصف الأول إذا كان يحتوي على <th>)
-                                if (isFirstRow && row.querySelector('th')) {
-                                    isFirstRow = false;
+                                // تخطي أي صف يحتوي على <th> (صفوف الـ header)
+                                if (row.querySelector('th')) {
                                     return;
                                 }
-                                isFirstRow = false;
 
                                 const cells = row.querySelectorAll('td');
                                 if (cells.length < 3) {
@@ -656,13 +713,13 @@ class FacultyProgramsManager {
                                     return;
                                 }
 
-                                // استخراج البيانات من كل خلية
-                                const name = cells[0].textContent.trim();
-                                const duration = cells[1].textContent.trim();
-                                const tuitionFees = cells[2].textContent.trim();
+                                // استخراج البيانات من كل خلية - تنظيف من HTML entities
+                                const name = cells[0].textContent.trim().replace(/\s+/g, ' ');
+                                const duration = cells[1].textContent.trim().replace(/\s+/g, ' ');
+                                const tuitionFees = cells[2].textContent.trim().replace(/\s+/g, ' ');
 
-                                // تخطي الصفوف الفارغة
-                                if (!name || !duration || !tuitionFees) {
+                                // تخطي الصفوف الفارغة أو التي تحتوي على &nbsp; فقط
+                                if (!name || !duration || !tuitionFees || name === '\u00A0' || duration === '\u00A0' || tuitionFees === '\u00A0') {
                                     return;
                                 }
 
@@ -793,12 +850,18 @@ class FacultyProgramsManager {
             const allRows = programsContainer.querySelectorAll('.fpm-program-row');
             const newRow = allRows[allRows.length - 1];
 
-            // ملء بيانات البرنامج
-            const nameInput = newRow.querySelector('input[name$="-name"]');
+            // ملء بيانات البرنامج - استخدام textarea للـ name بدلاً من input
+            const nameField = newRow.querySelector('textarea[name$="-name"], input[name$="-name"]');
             const durationInput = newRow.querySelector('input[name$="-duration"]');
             const tuitionInput = newRow.querySelector('input[name$="-tuition_fees"]');
 
-            if (nameInput) nameInput.value = program.name;
+            if (nameField) {
+                nameField.value = program.name;
+                // إذا كان textarea، نحتاج نعمل auto-resize
+                if (nameField.tagName === 'TEXTAREA') {
+                    this.autoResizeTextarea(nameField);
+                }
+            }
             if (durationInput) durationInput.value = program.duration;
             if (tuitionInput) tuitionInput.value = program.tuition_fees;
         });
@@ -848,5 +911,5 @@ class FacultyProgramsManager {
 
 // ─── تهيئة عند تحميل الصفحة ───
 document.addEventListener('DOMContentLoaded', () => {
-    new FacultyProgramsManager();
+    window.facultyProgramsManager = new FacultyProgramsManager();
 });

@@ -197,7 +197,8 @@
                         </thead>
                         <tbody>
                             {% for lead in recent_leads %}
-                            <tr class="border-b border-border hover:bg-bg-light transition-colors">
+                            <tr class="border-b border-border hover:bg-bg-light transition-colors cursor-pointer"
+                                data-row-url="{% url 'dashboard:lead_detail' lead.pk %}">
                                 <td class="p-3 px-4 text-[13px] text-text-primary font-medium">
                                     {{ lead.name|truncatewords:2 }}
                                 </td>

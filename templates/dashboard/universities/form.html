@@ -80,8 +80,20 @@
                                     {% endif %}
                                 </div>
 
-                                <!-- رابط الفيديو -->
+                                <!-- المدينة -->
                                 <div>
+                                    <label for="{{ form.city.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                        {{ form.city.label }}
+                                        <span style="color: var(--danger);">*</span>
+                                    </label>
+                                    {{ form.city }}
+                                    {% if form.city.errors %}
+                                        <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.city.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- رابط الفيديو -->
+                                <div class="md:col-span-2">
                                     <label for="{{ form.video_url.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
                                         {{ form.video_url.label }}
                                     </label>
@@ -99,6 +111,11 @@
                                     {% else %}
                                         {% include "dashboard/components/image_upload.html" with field=form.logo required=True %}
                                     {% endif %}
+                                    
+                                    <!-- Hidden field for logo_alt (updated via modal) -->
+                                    <div style="display: none;">
+                                        {{ form.logo_alt }}
+                                    </div>
                                 </div>
 
                                 <!-- الصورة الرئيسية -->
@@ -108,6 +125,11 @@
                                     {% else %}
                                         {% include "dashboard/components/image_upload.html" with field=form.main_image required=True %}
                                     {% endif %}
+                                    
+                                    <!-- Hidden field for main_image_alt (updated via modal) -->
+                                    <div style="display: none;">
+                                        {{ form.main_image_alt }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -261,7 +283,7 @@
                         <!-- حاوية العناصر -->
                         <div id="faculty-items-container">
                             {% for faculty_form in faculty_formset %}
-                            <div class="faculty-item faculty-item--existing faculty-item--visible" data-faculty-index="{{ forloop.counter0 }}" style="display: grid; grid-template-columns: auto 1fr auto auto auto; gap: 12px; align-items: center; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background-color: var(--surface); margin-bottom: 8px;">
+                            <div class="faculty-item faculty-item--existing faculty-item--visible" data-faculty-index="{{ forloop.counter0 }}" style="display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background-color: var(--surface); margin-bottom: 8px;">
                                 <div class="faculty-item__drag-handle" title="اسحب لإعادة الترتيب">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <circle cx="9" cy="6" r="1.5"/>
@@ -303,7 +325,7 @@
                                                     <th>التخصصات</th>
                                                     <th>المدة الدراسية</th>
                                                     <th>الرسوم السنوية</th>
-                                                    <th width="50"></th>
+                                                    <th width="40"></th>
                                                 </tr>
                                             </thead>
                                             <tbody 
@@ -708,10 +730,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<!-- سكريبت التمدد التلقائي لحقول الـ Textarea العامة -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const autoGrowTextareas = document.querySelectorAll('.auto-grow-textarea');
+    autoGrowTextareas.forEach(textarea => {
+        const autoResize = () => {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight + 2) + 'px';
+        };
+        textarea.addEventListener('input', autoResize);
+        // Initial resize (with delay to ensure element is rendered)
+        setTimeout(autoResize, 150);
+    });
+});
+</script>
+
+<!-- Media Edit Modal -->
+{% include "dashboard/components/media_edit_modal.html" %}
+
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/html_editor.js' %}"></script>
 <script src="{% static 'js/faculty-programs-manager.js' %}"></script>
 <script src="{% static 'js/faq-manager.js' %}"></script>
+<script src="{% static 'js/importer.js' %}"></script>
 {% endblock %}

@@ -102,3 +102,114 @@ def create_webp_signal_handler(model_class, field_name):
         generate_webp_for_image_field(sender, instance, created, field_name, **kwargs)
     
     return handler
+
+
+def sync_media_file(instance, field_name, alt_field_name, source_type):
+    """Sync model image field to MediaFile model."""
+    from apps.core.models import MediaFile
+    from django.contrib.contenttypes.models import ContentType
+    
+    image_file = getattr(instance, field_name, None)
+    if not image_file or not image_file.name:
+        # If the image was cleared/deleted, delete the corresponding MediaFile
+        MediaFile.objects.filter(
+            content_type=ContentType.objects.get_for_model(instance),
+            object_id=instance.pk,
+            source_type=source_type
+        ).delete()
+        return
+
+    alt_text = getattr(instance, alt_field_name, '')
+    
+    # Check if a MediaFile already exists
+    media_file = MediaFile.objects.filter(
+        content_type=ContentType.objects.get_for_model(instance),
+        object_id=instance.pk,
+        source_type=source_type
+    ).first()
+
+    try:
+        width = image_file.width
+        height = image_file.height
+        file_size = image_file.size
+    except Exception:
+        width, height, file_size = None, None, 0
+
+    if media_file:
+        media_file.alt_text = alt_text
+        media_file.width = width
+        media_file.height = height
+        media_file.file_size = file_size
+        if media_file.file.name != image_file.name:
+            media_file.file = image_file
+            media_file.original_filename = os.path.basename(image_file.name)
+        media_file.save()
+    else:
+        MediaFile.objects.create(
+            file=image_file,
+            original_filename=os.path.basename(image_file.name),
+            file_size=file_size,
+            width=width,
+            height=height,
+            alt_text=alt_text,
+            source_type=source_type,
+            content_type=ContentType.objects.get_for_model(instance),
+            object_id=instance.pk
+        )
+
+
+def delete_entity_media_files(sender, instance, **kwargs):
+    """Delete corresponding MediaFile entries when model instance is deleted."""
+    from apps.core.models import MediaFile
+    from django.contrib.contenttypes.models import ContentType
+    
+    MediaFile.objects.filter(
+        content_type=ContentType.objects.get_for_model(instance),
+        object_id=instance.pk
+    ).delete()
+
+
+def sync_university_media(sender, instance, **kwargs):
+    from apps.core.models import MediaFile
+    sync_media_file(instance, 'logo', 'logo_alt', MediaFile.SourceType.UNIVERSITY_LOGO)
+    sync_media_file(instance, 'main_image', 'main_image_alt', MediaFile.SourceType.UNIVERSITY_IMAGE)
+
+
+def sync_institute_media(sender, instance, **kwargs):
+    from apps.core.models import MediaFile
+    sync_media_file(instance, 'main_image', 'main_image_alt', MediaFile.SourceType.INSTITUTE_IMAGE)
+
+
+def sync_major_media(sender, instance, **kwargs):
+    from apps.core.models import MediaFile
+    sync_media_file(instance, 'main_image', 'main_image_alt', MediaFile.SourceType.MAJOR_IMAGE)
+
+
+def sync_article_media(sender, instance, **kwargs):
+    from apps.core.models import MediaFile
+    sync_media_file(instance, 'featured_image', 'featured_image_alt', MediaFile.SourceType.ARTICLE_IMAGE)
+
+
+def connect_media_signals():
+    """Connect all media synchronization signals."""
+    from django.db.models.signals import post_save, post_delete
+    from apps.universities.models import University
+    from apps.institutes.models import Institute
+    from apps.majors.models import Major
+    from apps.articles.models import Article
+
+    post_save.connect(sync_university_media, sender=University)
+    post_delete.connect(delete_entity_media_files, sender=University)
+
+    post_save.connect(sync_institute_media, sender=Institute)
+    post_delete.connect(delete_entity_media_files, sender=Institute)
+
+    post_save.connect(sync_major_media, sender=Major)
+    post_delete.connect(delete_entity_media_files, sender=Major)
+
+    post_save.connect(sync_article_media, sender=Article)
+    post_delete.connect(delete_entity_media_files, sender=Article)
+
+
+# Connect signals automatically on import
+connect_media_signals()

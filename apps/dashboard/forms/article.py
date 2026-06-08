@@ -26,7 +26,7 @@ class ArticleForm(forms.ModelForm):
         model = Article
         fields = [
             # Basic Information
-            'title', 'slug', 'featured_image',
+            'title', 'slug', 'featured_image', 'featured_image_alt',
             # Content
             'category', 'tags', 'content',
             # Relationships
@@ -56,6 +56,11 @@ class ArticleForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'accept': 'image/*',
                 'required': True,
+            }),
+            'featured_image_alt': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'الوصف البديل للصورة المميزة (SEO)',
+                'dir': 'rtl',
             }),
             
             # Content Section
@@ -145,6 +150,7 @@ class ArticleForm(forms.ModelForm):
             'title': 'عنوان المقالة',
             'slug': 'الرابط',
             'featured_image': 'الصورة المميزة',
+            'featured_image_alt': 'النص البديل للصورة المميزة',
             
             # Content
             'category': 'الفئة',
@@ -175,6 +181,7 @@ class ArticleForm(forms.ModelForm):
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
             'featured_image': 'صورة مميزة للمقالة',
+            'featured_image_alt': 'نص يصف محتوى الصورة المميزة للمقالة لمحركات البحث ومستعرضات الصور',
             
             # Content
             'category': 'اختر فئة المقالة',

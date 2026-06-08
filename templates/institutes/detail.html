@@ -25,7 +25,7 @@
         <!-- Header Banner Image -->
         <div class="detail-header-banner">
             {% if institute.main_image %}
-                <img src="{{ institute.main_image.url }}" alt="{{ institute.name }}" class="detail-header-image">
+                <img src="{{ institute.main_image.url }}" alt="{{ institute.main_image_alt|default:institute.name }}" class="detail-header-image">
             {% else %}
                 <div class="detail-header-placeholder">
                     <span>{{ institute.name }}</span>

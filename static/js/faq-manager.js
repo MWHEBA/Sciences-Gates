@@ -283,6 +283,22 @@ class FAQManager {
             };
         });
 
+        // النقر على الهيدر بالكامل ما عدا الاجراءات
+        this.container.querySelectorAll('.faq-item__header').forEach(header => {
+            header.onclick = (e) => {
+                if (
+                    e.target.closest('.faq-item__delete') ||
+                    e.target.closest('.faq-item__toggle') ||
+                    e.target.closest('.faq-item__drag-handle')
+                ) {
+                    return;
+                }
+                e.preventDefault();
+                const item = header.closest('.faq-item');
+                this.toggleAnswer(item);
+            };
+        });
+
         // تحديث معاينة السؤال عند الكتابة
         this.container.querySelectorAll('input[name$="-question"]').forEach(input => {
             input.addEventListener('input', (e) => {
@@ -632,5 +648,5 @@ class FAQManager {
 
 // ─── تهيئة عند تحميل الصفحة ───
 document.addEventListener('DOMContentLoaded', () => {
-    new FAQManager();
+    window.faqManager = new FAQManager();
 });

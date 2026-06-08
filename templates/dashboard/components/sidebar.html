@@ -365,6 +365,41 @@
                     </div>
                 </div>
 
+                <!-- مكتبة الوسائط -->
+                <div
+                    :style="'{{ request.path }}'.includes('/dashboard/media') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    <a href="{% url 'dashboard:media_library' %}"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
+                        style="{% if '/dashboard/media' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
+                        @mouseenter="{% if '/dashboard/media' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
+                        @mouseleave="{% if '/dashboard/media' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        <span>مكتبة الوسائط</span>
+                    </a>
+                </div>
+
+                <!-- استيراد من WP -->
+                <div :style="'{{ request.path }}'.includes('/dashboard/import') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    <a href="{% url 'dashboard:import_page' %}"
+                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
+                        style="{% if '/dashboard/import' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
+                        @mouseenter="{% if '/dashboard/import' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
+                        @mouseleave="{% if '/dashboard/import' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
+                            </path>
+                        </svg>
+                        <span>استيراد من WP</span>
+                    </a>
+                </div>
+
             </div>
         </div>
         {% endif %}

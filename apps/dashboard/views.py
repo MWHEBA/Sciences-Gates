@@ -585,12 +585,13 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
             'related_articles'
         ).order_by('-created_at')
         
-        # Search by name or slug
+        # Search by name, slug, or city
         search_query = self.request.GET.get('search', '').strip()
         if search_query:
             queryset = queryset.filter(
                 Q(name__icontains=search_query) |
-                Q(slug__icontains=search_query)
+                Q(slug__icontains=search_query) |
+                Q(city__icontains=search_query)
             )
         
         # Filter by publish_status
@@ -605,6 +606,11 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         if type_filter in ['public', 'private']:
             queryset = queryset.filter(university_type=type_filter)
         
+        # Filter by city
+        city_filter = self.request.GET.get('city', '').strip().lower()
+        if city_filter:
+            queryset = queryset.filter(city=city_filter)
+        
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -617,6 +623,7 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['type_filter'] = self.request.GET.get('type', '')
+        context['city_filter'] = self.request.GET.get('city', '')
         
         # Add items for list_page.html template
         # context_object_name is 'universities', but list_page.html expects 'items'
@@ -647,11 +654,18 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
                 ],
                 'selected': context['type_filter'],
             },
+            {
+                'name': 'city',
+                'label': 'المدينة',
+                'options': [{'value': code, 'label': label} for code, label in University.CITY_CHOICES],
+                'selected': context['city_filter'],
+            },
         ]
         
         # Columns for data table
         context['columns'] = [
             {'label': 'اسم الجامعة', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:university_edit', 'link_param': 'pk'},
+            {'label': 'المدينة', 'key': 'city_display', 'type': 'text'},
             {'label': 'النوع', 'key': 'university_type_display', 'type': 'text'},
             {'label': 'الكليات', 'key': 'faculties_count', 'type': 'text'},
             {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
@@ -674,6 +688,7 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
             university.faculties_count = university.faculties.count()
             university.university_type_display = university.get_university_type_display()
             university.publish_status_display = university.get_publish_status_display()
+            university.city_display = university.get_city_display()
         
         return context
 
@@ -3218,18 +3233,43 @@ def editor_image_upload(request):
         img.save(output, format='JPEG', quality=85, optimize=True)
         output.seek(0)
 
-        # Generate filename
+        # Generate filename with better SEO-friendly naming
+        from apps.core.models import MediaFile
+        from django.utils.text import slugify
+        import uuid
+        
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'editor/{request.user.id}/{timestamp}_{image_file.name.split(".")[0]}.jpg'
+        unique_id = str(uuid.uuid4())[:8]
+        
+        # Try to create SEO-friendly filename from original name
+        base_name = os.path.splitext(image_file.name)[0]
+        # Slugify for SEO (handles Arabic and special characters)
+        seo_slug = slugify(base_name, allow_unicode=False)[:50]
+        
+        # If slugify produces empty string (e.g., all Arabic), use generic name
+        if not seo_slug:
+            seo_slug = 'image'
+        
+        filename = f"{seo_slug}_{timestamp}_{unique_id}.jpg"
 
-        # Save to storage
-        path = default_storage.save(filename, ContentFile(output.getvalue()))
-        url = default_storage.url(path)
+        # Create MediaFile instance
+        media_file = MediaFile(
+            original_filename=image_file.name,
+            file_size=len(output.getvalue()),
+            width=img.width,
+            height=img.height,
+            source_type=MediaFile.SourceType.EDITOR,
+            uploaded_by=request.user
+        )
+        
+        # Save file to media library
+        media_file.file.save(filename, ContentFile(output.getvalue()), save=True)
+        url = media_file.file.url
 
         return JsonResponse({
             'success': True,
             'url': url,
-            'filename': os.path.basename(path),
+            'filename': os.path.basename(media_file.file.name),
             'size': {
                 'width': img.width,
                 'height': img.height,
@@ -3440,4 +3480,197 @@ class PreviewMajorDetailView(ContentAdminRequiredMixin, PreviewMetaAndBannerMixi
             'cheap_universities',
             'related_articles'
         )
+
+
+# ============================================================================
+# Centralized Media Library Views
+# ============================================================================
+import json
+from django.core.paginator import Paginator
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from apps.core.models import MediaFile
+
+class MediaLibraryView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, View):
+    """
+    Centralized media management page.
+    صفحة إدارة الوسائط المركزية
+    """
+    def get(self, request):
+        source = request.GET.get('source', 'all')
+        missing_alt = request.GET.get('missing_alt', '') == 'true'
+        search = request.GET.get('q', '')
+        
+        qs = MediaFile.objects.all()
+        
+        if source != 'all':
+            qs = qs.filter(source_type=source)
+        if missing_alt:
+            qs = qs.filter(alt_text='')
+        if search:
+            qs = qs.filter(original_filename__icontains=search)
+            
+        paginator = Paginator(qs, 48)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        # Calculate stats
+        total_count = MediaFile.objects.count()
+        missing_alt_count = MediaFile.objects.filter(alt_text='').count()
+        results_count = qs.count()
+        
+        context = {
+            'page_obj': page_obj,
+            'source': source,
+            'missing_alt': missing_alt,
+            'q': search,
+            'total_count': total_count,
+            'missing_alt_count': missing_alt_count,
+            'results_count': results_count,
+            'source_choices': MediaFile.SourceType.choices,
+            'page_title': 'مكتبة الوسائط',
+        }
+        return render(request, 'dashboard/media/library.html', context)
+
+    def get_breadcrumbs(self):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('مكتبة الوسائط')
+            .build())
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MediaFileFindByUrlView(ContentAdminRequiredMixin, View):
+    """
+    AJAX view to find MediaFile by image URL.
+    البحث عن ملف وسائط باستخدام رابط الصورة
+    """
+    def get(self, request):
+        try:
+            from urllib.parse import urlparse
+            import os
+            
+            url = request.GET.get('url', '').strip()
+            if not url:
+                return JsonResponse({'success': False, 'error': 'URL مطلوب'}, status=400)
+            
+            # Parse URL to extract path
+            parsed = urlparse(url)
+            path = parsed.path
+            
+            # Remove /media/ prefix if exists
+            if path.startswith('/media/'):
+                path = path[7:]  # Remove '/media/'
+            
+            # Find MediaFile by file path
+            media = MediaFile.objects.filter(file=path).first()
+            
+            if not media:
+                return JsonResponse({'success': False, 'error': 'لم يتم العثور على الملف'}, status=404)
+            
+            return JsonResponse({
+                'success': True,
+                'media_file': {
+                    'id': media.pk,
+                    'file_url': media.file.url,
+                    'original_filename': media.original_filename,
+                    'file_size': media.file_size,
+                    'width': media.width or 0,
+                    'height': media.height or 0,
+                    'alt_text': media.alt_text or '',
+                    'caption': media.caption or '',
+                    'title': media.title or '',
+                    'description': media.description or '',
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MediaFileUpdateView(ContentAdminRequiredMixin, View):
+    """
+    AJAX view to update alt text, caption, title, and description of a MediaFile.
+    تحديث النص البديل والتسمية التوضيحية وعنوان ووصف ملف الوسائط
+    """
+    def post(self, request, pk):
+        try:
+            media = get_object_or_404(MediaFile, pk=pk)
+            data = json.loads(request.body)
+            
+            media.alt_text = data.get('alt_text', '').strip()
+            media.caption = data.get('caption', '').strip()
+            media.title = data.get('title', '').strip()
+            media.description = data.get('description', '').strip()
+            media.save()
+            
+            # Sync back to the related entity (for alt_text only)
+            obj = media.content_object
+            if obj:
+                mapping = {
+                    MediaFile.SourceType.UNIVERSITY_LOGO: 'logo_alt',
+                    MediaFile.SourceType.UNIVERSITY_IMAGE: 'main_image_alt',
+                    MediaFile.SourceType.INSTITUTE_IMAGE: 'main_image_alt',
+                    MediaFile.SourceType.MAJOR_IMAGE: 'main_image_alt',
+                    MediaFile.SourceType.ARTICLE_IMAGE: 'featured_image_alt',
+                }
+                field_name = mapping.get(media.source_type)
+                if field_name and hasattr(obj, field_name):
+                    setattr(obj, field_name, media.alt_text)
+                    obj.save(update_fields=[field_name])
+                    
+            return JsonResponse({
+                'success': True, 
+                'alt_text': media.alt_text,
+                'caption': media.caption,
+                'title': media.title,
+                'description': media.description
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MediaFileDeleteView(ContentAdminRequiredMixin, View):
+    """
+    AJAX view to delete a MediaFile and its file from disk.
+    حذف ملف وسائط من النظام والقرص
+    """
+    def post(self, request, pk):
+        try:
+            media = get_object_or_404(MediaFile, pk=pk)
+            # Delete physical file
+            if media.file:
+                media.file.delete(save=False)
+            media.delete()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MediaFileBulkDeleteView(ContentAdminRequiredMixin, View):
+    """
+    AJAX view to bulk delete MediaFiles.
+    حذف جماعي لملفات وسائط من النظام والقرص
+    """
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            ids = data.get('ids', [])
+            if not ids:
+                return JsonResponse({'success': False, 'error': 'لم يتم تحديد أي ملفات لحذفها.'}, status=400)
+            
+            medias = MediaFile.objects.filter(pk__in=ids)
+            count = 0
+            for media in medias:
+                if media.file:
+                    media.file.delete(save=False)
+                media.delete()
+                count += 1
+            return JsonResponse({'success': True, 'deleted_count': count})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
 

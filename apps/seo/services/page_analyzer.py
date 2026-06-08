@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -65,7 +65,27 @@ class PageSEOAnalyzer:
 
         parser = SEOHTMLParser(html, profile.content_selector)
         full_page = parser.extract_full_page_data()
+        full_page["focus_keyword"] = getattr(obj, "focus_keyword", "")
         main_content = parser.extract_main_content_data()
+
+        # Count occurrences of focus keyword in purified main content text
+        import re
+        focus_kw = getattr(obj, "focus_keyword", "").strip().lower()
+        keyword_count = 0
+        if focus_kw:
+            from bs4 import BeautifulSoup
+            import html as html_lib
+            content_soup = BeautifulSoup(html, "html.parser")
+            content_node = content_soup.select_one(profile.content_selector) or content_soup.find("body")
+            if content_node:
+                node_copy = BeautifulSoup(str(content_node), "html.parser")
+                for tag in node_copy.find_all(["script", "style", "noscript", "svg", "template"]):
+                    tag.decompose()
+                for tag in node_copy.find_all(attrs={"data-seo-ignore": True}):
+                    tag.decompose()
+                clean_text = html_lib.unescape(node_copy.get_text()).lower()
+                keyword_count = len(re.findall(re.escape(focus_kw), clean_text))
+        main_content["focus_keyword_count"] = keyword_count
 
         model_checks = ModelAwareChecker().run(obj, profile)
         schema_results = SchemaValidator().validate(full_page.get("schemas", []), profile.expected_schemas)
@@ -103,8 +123,17 @@ class PageSEOAnalyzer:
     def _render_object_html(self, *, content_type: str, obj, user, host: str, secure: bool):
         config = CONTENT_MAP[content_type]
         kwargs = config.kwargs_builder(obj)
-        key_for_reverse = content_type if not content_type.endswith("s") else content_type[:-1]
-        url = reverse(f"{key_for_reverse}s:detail", kwargs=kwargs)
+        
+        # Unified singular lookup
+        mapping = {
+            "articles": "article",
+            "universities": "university",
+            "institutes": "institute",
+            "majors": "major",
+        }
+        singular = mapping.get(content_type.lower().strip(), content_type.lower().strip())
+        namespace = "universities" if singular == "university" else f"{singular}s"
+        url = reverse(f"{namespace}:detail", kwargs=kwargs)
 
         request = self.factory.get(
             f"{url}?preview=1",
@@ -129,6 +158,7 @@ class PageSEOAnalyzer:
             response.render()
 
         content = response.content.decode("utf-8", errors="replace")
-        if "testserver" in content:
+        # Only raise error if testserver is generated but host was NOT testserver
+        if host != "testserver" and "testserver" in content:
             raise AnalyzerError("rendered_html_uses_testserver")
         return content

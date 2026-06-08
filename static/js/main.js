@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize floating buttons behavior (fade on idle, show on scroll)
     initializeFloatingButtons();
+
+    // Initialize clickable table rows
+    initializeTableRedirects();
 });
 
 /**
@@ -314,7 +317,7 @@ function initializeFloatingButtons() {
 
     function resetScrollTimeout() {
         if (scrollTimeout) clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(hideFloats, 2500); // hide after 2.5 seconds of scroll pause
+        scrollTimeout = setTimeout(hideFloats, 4000); // hide after 4 seconds of scroll pause
     }
 
     window.addEventListener('scroll', function () {
@@ -326,4 +329,26 @@ function initializeFloatingButtons() {
     resetScrollTimeout();
 }
 
+/**
+ * Make table rows with data-row-url clickable, avoiding conflict with action buttons
+ */
+function initializeTableRedirects() {
+    document.addEventListener('click', function(e) {
+        // Find if the click or any of its parent elements is a TR with data-row-url
+        const row = e.target.closest('tr[data-row-url]');
+        if (!row) return;
 
+        // Check if the click target or any of its parents is an interactive element (button, link, input, select, etc.)
+        const isInteractive = e.target.closest('a, button, input, select, textarea, [role="button"], .no-redirect');
+        
+        // If the click is inside an interactive element, let the default behavior happen
+        if (isInteractive && isInteractive !== row) {
+            return;
+        }
+
+        const url = row.getAttribute('data-row-url');
+        if (url && url !== '#') {
+            window.location.href = url;
+        }
+    });
+}

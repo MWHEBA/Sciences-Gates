@@ -169,3 +169,99 @@ def eager_image(image_url, alt_text='', css_class=''):
         str: HTML picture element with eager loading
     """
     return responsive_image(image_url, alt_text, css_class, 'eager', False)
+
+
+@register.simple_tag
+def seo_image(image_url, alt_text='', caption='', width=None, height=None, css_class='', loading='lazy'):
+    """
+    Generate an SEO-optimized image with Schema.org ImageObject markup.
+    Follows 2026 best practices including structured data and proper attributes.
+    
+    Usage in template:
+        {% seo_image media.file.url media.alt_text media.caption media.width media.height "w-full" %}
+        {% load image_tags %}
+        {% seo_image university.main_image.url university.main_image_alt "" 800 600 %}
+    
+    Args:
+        image_url: URL of the image
+        alt_text: Alt text for accessibility and SEO (required for best SEO)
+        caption: Caption text visible to users (optional but recommended)
+        width: Image width in pixels (improves CLS)
+        height: Image height in pixels (improves CLS)
+        css_class: CSS classes to apply
+        loading: Loading strategy ('lazy' or 'eager')
+        
+    Returns:
+        str: HTML figure element with Schema.org markup
+    """
+    if not image_url:
+        return ''
+    
+    webp_url_value = os.path.splitext(str(image_url))[0] + '.webp'
+    
+    # Dimension attributes for better CLS (Core Web Vitals)
+    dimensions = ''
+    if width and height:
+        dimensions = f'width="{width}" height="{height}"'
+    
+    # Build the HTML with Schema.org markup
+    if caption:
+        # With caption - full figure element with Schema markup
+        html = f'''<figure itemscope itemtype="https://schema.org/ImageObject" class="seo-image-figure">
+    <picture>
+        <source srcset="{webp_url_value}" type="image/webp">
+        <img src="{image_url}" 
+             alt="{alt_text}" 
+             class="{css_class}" 
+             loading="{loading}"
+             {dimensions}
+             itemprop="contentUrl">
+    </picture>
+    <figcaption itemprop="caption" class="seo-image-caption">{caption}</figcaption>
+</figure>'''
+    else:
+        # Without caption - just picture with Schema markup on img
+        html = f'''<picture itemscope itemtype="https://schema.org/ImageObject">
+    <source srcset="{webp_url_value}" type="image/webp">
+    <img src="{image_url}" 
+         alt="{alt_text}" 
+         class="{css_class}" 
+         loading="{loading}"
+         {dimensions}
+         itemprop="contentUrl">
+</picture>'''
+    
+    return mark_safe(html)
+
+
+@register.simple_tag
+def media_file_image(media_file, css_class='', loading='lazy'):
+    """
+    Generate SEO-optimized image HTML from MediaFile instance.
+    Automatically uses all SEO fields (alt_text, caption, dimensions).
+    
+    Usage in template:
+        {% media_file_image media_obj "w-full rounded-lg" %}
+        {% load image_tags %}
+        {% media_file_image article.featured_image_mediafile %}
+    
+    Args:
+        media_file: MediaFile model instance
+        css_class: CSS classes to apply
+        loading: Loading strategy ('lazy' or 'eager')
+        
+    Returns:
+        str: HTML with full SEO optimization
+    """
+    if not media_file or not media_file.file:
+        return ''
+    
+    return seo_image(
+        image_url=media_file.file.url,
+        alt_text=media_file.alt_text or media_file.original_filename,
+        caption=media_file.caption or '',
+        width=media_file.width,
+        height=media_file.height,
+        css_class=css_class,
+        loading=loading
+    )

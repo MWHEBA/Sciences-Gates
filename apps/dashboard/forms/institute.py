@@ -18,7 +18,7 @@ class InstituteForm(forms.ModelForm):
         model = Institute
         fields = [
             # Basic Information
-            'name', 'slug', 'institute_type', 'main_image',
+            'name', 'slug', 'institute_type', 'main_image', 'main_image_alt',
             # Rich Text Sections
             'description', 'registration_requirements', 'registration_section',
             # Relationships
@@ -52,6 +52,11 @@ class InstituteForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'accept': 'image/*',
                 'required': True,
+            }),
+            'main_image_alt': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'الوصف البديل للصورة الرئيسية (SEO)',
+                'dir': 'rtl',
             }),
             
             # Rich Text Sections
@@ -141,6 +146,7 @@ class InstituteForm(forms.ModelForm):
             'slug': 'الرابط',
             'institute_type': 'نوع المعهد',
             'main_image': 'الصورة الرئيسية',
+            'main_image_alt': 'النص البديل للصورة الرئيسية',
             
             # Rich Text Sections
             'description': 'وصف المعهد',
@@ -170,6 +176,7 @@ class InstituteForm(forms.ModelForm):
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
             'institute_type': 'تصنيف المعهد (لغة أو أكاديمي)',
             'main_image': 'صورة رئيسية للمعهد',
+            'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للمعهد لمحركات البحث ومستعرضات الصور',
             
             # Rich Text Sections
             'description': 'وصف شامل عن المعهد',
@@ -194,6 +201,27 @@ class InstituteForm(forms.ModelForm):
             'og_description': 'الوصف عند المشاركة على وسائل التواصل',
             'og_image': 'الصورة عند المشاركة على وسائل التواصل (1200x630 بكسل)',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.data:
+            if self.data.get('imported_main_image_path'):
+                self.fields['main_image'].required = False
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        imported_main_image_path = self.data.get('imported_main_image_path') if self.data else None
+        if imported_main_image_path and not self.cleaned_data.get('main_image'):
+            relative_path = imported_main_image_path.replace('/media/', '', 1)
+            instance.main_image = relative_path
+        imported_og_image_path = self.data.get('imported_og_image_path') if self.data else None
+        if imported_og_image_path and not self.cleaned_data.get('og_image'):
+            relative_path = imported_og_image_path.replace('/media/', '', 1)
+            instance.og_image = relative_path
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
 
 # Create inline formset for Course entries

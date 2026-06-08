@@ -59,8 +59,9 @@
             <!-- صفوف البيانات -->
             <tbody>
                 {% for row in rows %}
-                <tr class="border-b hover:bg-gray-50 transition-colors duration-200"
-                    style="border-color: var(--border);">
+                <tr class="border-b hover:bg-gray-50 transition-colors duration-200{% if edit_url_name %} cursor-pointer{% endif %}"
+                    style="border-color: var(--border);"
+                    {% if edit_url_name %}{% if edit_url_name == 'edit' %}data-row-url="#"{% else %}data-row-url="{% url edit_url_name row.id %}"{% endif %}{% endif %}>
                     
                     {% for column in columns %}
                     <td class="px-6 py-4" style="color: var(--text-primary);">

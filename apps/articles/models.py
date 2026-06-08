@@ -96,6 +96,12 @@ class Article(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='الصورة المميزة',
         help_text='الصورة الرئيسية للمقالة'
     )
+    featured_image_alt = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='النص البديل للصورة المميزة',
+        help_text='النص البديل للصورة المميزة للمقالة (SEO)'
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,

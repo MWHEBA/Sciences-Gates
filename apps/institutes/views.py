@@ -24,22 +24,40 @@ class InstituteListView(BreadcrumbMixin, ListView):
     
     def get_queryset(self):
         """
-        Return only published institutes, ordered by name.
-        
-        Query Optimization:
-        - Uses prefetch_related for reverse foreign key relationships
+        Return only published institutes, ordered by name, filtered by search query and city if provided.
         """
-        return Institute.objects.filter(
+        queryset = Institute.objects.filter(
             publish_status='published'
         ).prefetch_related(
             'related_articles'
         ).order_by('name')
+        
+        # Apply search filter (q)
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(name__icontains=q) |
+                Q(description__icontains=q)
+            )
+            
+        # Apply city filter (matching description as fallback)
+        city = self.request.GET.get('city', '').strip().lower()
+        if city:
+            from apps.universities.models import University
+            city_label = next((label for code, label in University.CITY_CHOICES if code == city), None)
+            if city_label:
+                queryset = queryset.filter(description__icontains=city_label)
+                
+        return queryset
     
     def get_context_data(self, **kwargs):
-        """Add clear_url to context for resetting filters."""
+        """Add clear_url and city choices to context for resetting filters."""
         context = super().get_context_data(**kwargs)
         from django.urls import reverse
+        from apps.universities.models import University
         context['clear_url'] = reverse('institutes:list')
+        context['city_choices'] = University.CITY_CHOICES
         return context
 
     def get_breadcrumbs(self):

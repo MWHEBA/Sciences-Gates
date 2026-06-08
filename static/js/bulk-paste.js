@@ -398,17 +398,32 @@ class BulkPaste {
             const inputName = `${this.formsetPrefix}-${newIndex}-${field}`;
             const value = rowData[field] || '';
 
-            fieldsHtml += `
-                <td>
-                    <input 
-                        type="text" 
-                        name="${inputName}" 
-                        value="${this.escapeHtml(value)}"
-                        class="fpm-program-input"
-                        dir="rtl"
-                    >
-                </td>
-            `;
+            if (field === 'name') {
+                fieldsHtml += `
+                    <td>
+                        <textarea 
+                            name="${inputName}" 
+                            class="fpm-program-input fpm-program-input--textarea"
+                            dir="rtl"
+                            rows="1"
+                            required
+                        >${this.escapeHtml(value)}</textarea>
+                    </td>
+                `;
+            } else {
+                fieldsHtml += `
+                    <td>
+                        <input 
+                            type="text" 
+                            name="${inputName}" 
+                            value="${this.escapeHtml(value)}"
+                            class="fpm-program-input fpm-program-input--short"
+                            dir="rtl"
+                            required
+                        >
+                    </td>
+                `;
+            }
         });
 
         // إضافة حقول النموذج المخفية

@@ -37,6 +37,12 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
         upload_to='institutes/images/',
         verbose_name='الصورة الرئيسية'
     )
+    main_image_alt = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='النص البديل للصورة الرئيسية',
+        help_text='النص البديل للصورة الرئيسية للمعهد (SEO)'
+    )
     description = models.TextField(
         verbose_name='الوصف',
         help_text='وصف شامل عن المعهد'

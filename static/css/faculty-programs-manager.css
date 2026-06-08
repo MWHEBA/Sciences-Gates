@@ -14,7 +14,7 @@
 /* ─── Faculty Item ─── */
 .faculty-item {
     display: grid;
-    grid-template-columns: auto 1fr auto auto auto;
+    grid-template-columns: auto 1fr auto auto;
     gap: 12px;
     align-items: center;
     padding: 12px 16px;
@@ -24,6 +24,15 @@
     transition: all 0.2s ease;
     opacity: 0;
     transform: translateY(-8px);
+    cursor: pointer;
+}
+
+.faculty-item__input {
+    cursor: text;
+}
+
+.faculty-item__programs-wrapper {
+    cursor: default;
 }
 
 .faculty-item--visible {
@@ -91,6 +100,7 @@
 .faculty-item__input {
     flex: 1;
     min-width: 0;
+    max-width: 500px;
     padding: 8px 12px;
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -277,6 +287,9 @@
 .fpm-programs-table th:last-child {
     border-left: none;
     text-align: center;
+    width: 40px;
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 .fpm-programs-table tbody tr {
@@ -291,6 +304,20 @@
 .fpm-programs-table td {
     padding: 12px 16px;
     vertical-align: middle;
+}
+
+/* Column sizes: first column (Takhassos) grows, others shrink to fit content */
+.fpm-programs-table th:first-child,
+.fpm-programs-table td:first-child {
+    width: auto;
+}
+
+.fpm-programs-table th:nth-child(2),
+.fpm-programs-table td:nth-child(2),
+.fpm-programs-table th:nth-child(3),
+.fpm-programs-table td:nth-child(3) {
+    width: 1%;
+    white-space: nowrap;
 }
 
 /* ─── Program Input Fields ─── */
@@ -317,8 +344,31 @@
     color: var(--text-muted);
 }
 
+.fpm-program-input--textarea {
+    resize: none;
+    overflow-y: hidden;
+    min-height: 38px;
+    height: 38px;
+    line-height: 1.5;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    display: block;
+}
+
+.auto-grow-textarea {
+    resize: none;
+    overflow-y: hidden;
+    min-height: 38px;
+    height: 38px;
+    line-height: 1.5;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    display: block;
+    box-sizing: border-box;
+}
+
 .fpm-program-input--short {
-    max-width: 140px;
+    width: 140px;
 }
 
 /* ─── Empty Row ─── */
@@ -398,6 +448,17 @@
 .fpm-program-actions {
     text-align: center;
     white-space: nowrap;
+}
+
+.fpm-programs-table td.fpm-program-actions {
+    width: 40px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.fpm-program-actions input[type="checkbox"][name$="-DELETE"],
+.fpm-program-actions input[type="checkbox"][name*="-DELETE"] {
+    display: none !important;
 }
 
 /* ─── Faculty Item Programs Wrapper ─── */
@@ -483,13 +544,19 @@
         padding: 10px 12px;
     }
 
+    .fpm-programs-table th:last-child,
+    .fpm-programs-table td.fpm-program-actions {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+
     .fpm-program-input {
         font-size: 13px;
         padding: 6px 10px;
     }
 
     .fpm-program-input--short {
-        max-width: 100px;
+        width: 100px;
     }
 
     .fpm-add-program-wrapper {

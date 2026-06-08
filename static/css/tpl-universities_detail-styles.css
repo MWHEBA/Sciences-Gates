@@ -48,6 +48,14 @@
         background-color: var(--surface);
     }
 
+    .admission-tab-panel {
+        display: block;
+    }
+
+    .admission-tab-panel[style*="display: none"] {
+        display: none !important;
+    }
+
     @media (max-width: 640px) {
         .admission-tabs-headers {
             flex-direction: column;
@@ -93,6 +101,17 @@
         text-decoration: none;
         border: 1px solid rgba(255, 255, 255, 0.1);
         white-space: nowrap;
+        animation: regFloatAttention 2.8s ease-in-out infinite;
+    }
+
+    .reg-float-btn::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.28) 42%, transparent 58%);
+        transform: translateX(130%);
+        animation: regFloatShine 3.4s ease-in-out infinite;
+        pointer-events: none;
     }
 
     .reg-float-btn svg {
@@ -100,6 +119,9 @@
         height: 24px;
         flex-shrink: 0;
         stroke: #ffffff;
+        position: relative;
+        z-index: 1;
+        animation: regFloatIconNudge 2.8s ease-in-out infinite;
     }
 
     .reg-float-btn:hover {
@@ -108,6 +130,7 @@
         background-color: var(--primary-hover);
         transform: translateY(-4px);
         box-shadow: 0 12px 32px rgba(11, 45, 77, 0.4);
+        animation-play-state: paused;
     }
 
     .reg-float-text {
@@ -121,6 +144,55 @@
         line-height: 1.25;
         transition: opacity 0.3s ease, transform 0.3s ease;
         transform: translateX(10px);
+        position: relative;
+        z-index: 1;
+    }
+
+    .reg-float-btn:hover::after,
+    .reg-float-btn:hover svg {
+        animation-play-state: paused;
+    }
+
+    @keyframes regFloatAttention {
+        0%, 100% {
+            box-shadow: 0 6px 20px rgba(11, 45, 77, 0.2), 0 0 0 0 rgba(200, 160, 65, 0);
+        }
+
+        45% {
+            box-shadow: 0 10px 28px rgba(11, 45, 77, 0.3), 0 0 0 10px rgba(200, 160, 65, 0.16);
+        }
+
+        70% {
+            box-shadow: 0 6px 20px rgba(11, 45, 77, 0.2), 0 0 0 16px rgba(200, 160, 65, 0);
+        }
+    }
+
+    @keyframes regFloatShine {
+        0%, 38%, 100% {
+            transform: translateX(130%);
+        }
+
+        58% {
+            transform: translateX(-130%);
+        }
+    }
+
+    @keyframes regFloatIconNudge {
+        0%, 72%, 100% {
+            transform: rotate(0deg) scale(1);
+        }
+
+        78% {
+            transform: rotate(-8deg) scale(1.08);
+        }
+
+        84% {
+            transform: rotate(7deg) scale(1.08);
+        }
+
+        90% {
+            transform: rotate(0deg) scale(1);
+        }
     }
 
     .reg-float-btn:hover .reg-float-text {
@@ -160,6 +232,14 @@
 
         .reg-float-text {
             display: none !important;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .reg-float-btn,
+        .reg-float-btn::after,
+        .reg-float-btn svg {
+            animation: none;
         }
     }
 

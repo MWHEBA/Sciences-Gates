@@ -1,0 +1,80 @@
+/**
+ * SEO-Optimized Image Styles
+ * Styling for images with Schema.org markup and captions
+ * Following 2026 best practices for image SEO
+ */
+
+/* Figure container with Schema markup */
+.seo-image-figure {
+    margin: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Caption styling - visible and styled for users */
+.seo-image-caption {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-muted, #64748b);
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--surface-2, #f8fafc);
+    border-radius: var(--radius-sm, 0.375rem);
+    font-style: normal;
+}
+
+/* Dark mode support for caption */
+@media (prefers-color-scheme: dark) {
+    .seo-image-caption {
+        color: var(--text-muted, #94a3b8);
+        background-color: var(--surface-2, #1e293b);
+    }
+}
+
+/* Ensure images in figures are responsive */
+.seo-image-figure img,
+.seo-image-figure picture {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Optional: Add subtle border to figures */
+.seo-image-figure.bordered {
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: var(--radius, 0.5rem);
+    padding: 1rem;
+}
+
+/* Optional: Centered figure variant */
+.seo-image-figure.centered {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Optional: Compact caption for smaller images */
+.seo-image-figure.compact .seo-image-caption {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.5rem;
+}
+
+/* Ensure proper aspect ratio and prevent CLS */
+.seo-image-figure img[width][height] {
+    aspect-ratio: attr(width) / attr(height);
+}
+
+/* Print styles - ensure captions are visible when printed */
+@media print {
+    .seo-image-caption {
+        color: #000;
+        background-color: transparent;
+        border-top: 1px solid #000;
+        page-break-inside: avoid;
+    }
+    
+    .seo-image-figure {
+        page-break-inside: avoid;
+    }
+}

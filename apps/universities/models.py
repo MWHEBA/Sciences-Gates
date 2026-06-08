@@ -13,6 +13,35 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         ('private', 'جامعة خاصة'),
     ]
     
+    CITY_CHOICES = [
+        ('kl', 'كوالالمبور'),
+        ('selangor', 'سيلانجور'),
+        ('penang', 'بينانج'),
+        ('johor', 'جوهر'),
+        ('kedah', 'قدح'),
+        ('kelantan', 'كلنتان'),
+        ('melaka', 'ملقا'),
+        ('negeri-sembilan', 'نيجري سمبيلان'),
+        ('pahang', 'باهانغ'),
+        ('perak', 'بيرق'),
+        ('perlis', 'برليس'),
+        ('sabah', 'صباح'),
+        ('sarawak', 'سراوق'),
+        ('terengganu', 'ترينجانو'),
+        ('putrajaya', 'بوتراجايا'),
+        ('labuan', 'لابوان'),
+        ('cyberjaya', 'سايبرجايا'),
+    ]
+    
+    city = models.CharField(
+        max_length=20,
+        choices=CITY_CHOICES,
+        default='kl',
+        verbose_name='المدينة',
+        help_text='المدينة التي تقع بها الجامعة لتسهيل التصفية والبحث',
+        db_index=True
+    )
+    
     name = models.CharField(
         max_length=200,
         verbose_name='اسم الجامعة',
@@ -38,10 +67,22 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='شعار الجامعة',
         help_text='شعار الجامعة (PNG مع خلفية شفافة مفضل)'
     )
+    logo_alt = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='النص البديل للشعار',
+        help_text='النص البديل لشعار الجامعة (SEO)'
+    )
     main_image = models.ImageField(
         upload_to='universities/images/',
         verbose_name='الصورة الرئيسية',
         help_text='صورة رئيسية للجامعة'
+    )
+    main_image_alt = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='النص البديل للصورة الرئيسية',
+        help_text='النص البديل للصورة الرئيسية للجامعة (SEO)'
     )
     description = models.TextField(
         verbose_name='الوصف',

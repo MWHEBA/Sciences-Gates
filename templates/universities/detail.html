@@ -5,13 +5,22 @@
 {% load breadcrumbs %}
 {% load university_tags %}
 
-{% block title %}{{ university.name }} - بوابات العلوم{% endblock %}
-{% block meta_description %}{{ university.meta_description|default:university.description|clean_desc|truncatewords:30 }}{% endblock %}
+{% block title %}{{ university.meta_title|default:university.name }} - بوابات العلوم{% endblock %}
+{% block meta_description %}{{ university.meta_description|default:university.description|clean_desc }}{% endblock %}
 
-{% block og_title %}{{ university.og_title|default:university.name }}{% endblock %}
-{% block og_description %}{{ university.og_description|default:university.description|clean_desc|truncatewords:30 }}{% endblock %}
+{% block og_title %}{{ university.og_title|default:university.meta_title|default:university.name }}{% endblock %}
+{% block og_description %}{{ university.og_description|default:university.meta_description|default:university.description|clean_desc }}{% endblock %}
 
-{% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">{% endblock %}
+{% block og_image %}
+{% with og_img=university.get_og_image_url %}
+<meta property="og:image" content="{% if og_img %}{% if og_img|slice:":4" == "http" %}{{ og_img }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img }}{% endif %}{% else %}{% static 'images/og-default.jpg' %}{% endif %}">
+{% endwith %}
+{% endblock %}
+
+{% block robots %}{{ university.get_robots_content }}{% endblock %}
+{% block googlebot %}{{ university.get_robots_content }}{% endblock %}
+
+{% block canonical %}<link rel="canonical" href="{% if university.canonical_url %}{{ university.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endif %}">{% endblock %}
 
 {% block extra_css %}
 {% render_breadcrumb_schema breadcrumbs request %}
@@ -27,7 +36,8 @@
         <!-- Header Banner Image -->
         <div class="detail-header-banner">
             {% if university.main_image %}
-            <img src="{{ university.main_image.url }}" alt="{{ university.name }}" class="detail-header-image">
+            {% load image_tags %}
+            {% seo_image university.main_image.url university.main_image_alt "" "" "" "detail-header-image" "eager" %}
             {% else %}
             <div class="detail-header-placeholder">
                 <span>{{ university.name }}</span>
@@ -54,7 +64,8 @@
                 </div>
                 {% if university.logo %}
                 <div class="detail-header-logo-container">
-                    <img src="{{ university.logo.url }}" alt="شعار {{ university.name }}" class="detail-header-logo">
+                    {% load image_tags %}
+                    {% seo_image university.logo.url university.logo_alt "" "" "" "detail-header-logo" "eager" %}
                 </div>
                 {% endif %}
             </div>
@@ -128,10 +139,11 @@
     </div>
 
     <!-- Main Content Layout -->
+    <div data-seo-content>
     <div class="detail-layout">
 
         <!-- Right Column: Detail Content (2/3 width) -->
-        <div class="detail-main" data-seo-content>
+        <div class="detail-main">
 
             <!-- About Section -->
             <section class="detail-section">
@@ -234,12 +246,12 @@
                         </div>
                         {% endif %}
                         {% if university.admission_requirements_master %}
-                        <div x-show="activeTab === 'master'" class="detail-section-content" x-transition>
+                        <div x-show="activeTab === 'master'" class="detail-section-content" x-transition data-seo-ignore="true">
                             {{ university.admission_requirements_master|safe }}
                         </div>
                         {% endif %}
                         {% if university.admission_requirements_phd %}
-                        <div x-show="activeTab === 'phd'" class="detail-section-content" x-transition>
+                        <div x-show="activeTab === 'phd'" class="detail-section-content" x-transition data-seo-ignore="true">
                             {{ university.admission_requirements_phd|safe }}
                         </div>
                         {% endif %}
@@ -362,7 +374,7 @@
         </div>
 
         <!-- Left Column: Sidebar / Meta Info & Inquiry Form (1/3 width) -->
-        <div class="detail-sidebar">
+        <div class="detail-sidebar" data-seo-ignore>
 
             <!-- Quick Facts Sidebar Card -->
             <div class="detail-sidebar-card">
@@ -512,6 +524,7 @@
             </div>
         </div>
     </section>
+    </div>
     <div class="detail-related" data-seo-ignore>
         {% include "components/related_articles.html" with articles=university.related_articles.all %}
     </div>

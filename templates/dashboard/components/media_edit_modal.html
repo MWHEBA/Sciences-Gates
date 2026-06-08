@@ -1,0 +1,333 @@
+{% comment %}
+Media File Edit Modal — Quick edit for alt text and SEO
+مودال تعديل سريع للنص البديل و SEO للوسائط
+
+Usage: Include once in page, opens via JavaScript
+{% endcomment %}
+
+<!-- مودال تفاصيل ملف الوسائط (نسخة من Media Library) -->
+<div id="mediaEditModal" 
+     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="display: none;">
+     
+     <!-- الخلفية المعتمة للمودال -->
+     <div id="mediaModalBackdrop"
+          class="fixed inset-0 cursor-pointer"
+          style="background-color: rgba(6, 20, 36, 0.45); backdrop-filter: blur(4px);"
+          onclick="closeMediaModal()"></div>
+          
+     <!-- صندوق المودال -->
+     <div id="mediaModalBox"
+          class="bg-white border border-border rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col z-10 max-h-[90vh]"
+          style="border: 1px solid var(--border);">
+          
+          <div class="flex flex-col h-full overflow-hidden">
+              <!-- رأس المودال -->
+              <div class="p-4 border-b border-border flex justify-between items-center" style="background-color: var(--surface-2); border-bottom: 1px solid var(--border);">
+                  <h3 class="font-semibold text-sm" style="color: var(--text-primary); margin: 0;">تفاصيل ملف الوسائط وتعديل الـ SEO</h3>
+                  <button onclick="closeMediaModal()" class="hover:text-text-primary p-1 cursor-pointer transition-colors" style="background: none; border: none; color: var(--text-muted);">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                  </button>
+              </div>
+              
+              <!-- محتوى المودال (مقسم لعمودين على الشاشات الكبيرة) -->
+              <div class="flex-1 overflow-y-auto p-5 flex flex-col md:flex-row gap-5" style="padding: 20px; gap: 20px;">
+                  <!-- العمود الأيمن (معاينة الصورة والبيانات) -->
+                  <div class="flex-1 flex flex-col gap-4" style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                      <div class="border border-border rounded-lg p-3 flex items-center justify-center bg-gray-50 overflow-hidden" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; align-items: center; justify-content: center; background-color: #f9fafb; min-height: 220px; max-height: 320px; overflow: hidden;">
+                          <img id="mediaPreviewImage" src="" alt="" style="max-height: 300px; max-width: 100%; object-fit: contain; border-radius: 4px;">
+                      </div>
+                      
+                      <!-- جدول البيانات الوصفية للملف -->
+                      <div class="text-[11px] flex flex-col gap-2 p-3 rounded-lg border border-border bg-gray-50" style="font-size: 11px; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background-color: #f9fafb; color: var(--text-secondary);">
+                          <div class="flex justify-between" style="display: flex; justify-content: space-between;">
+                              <span style="color: var(--text-muted);">اسم الملف:</span> 
+                              <span id="mediaFileName" class="font-semibold truncate max-w-[150px]" style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;"></span>
+                          </div>
+                          <div class="flex justify-between" style="display: flex; justify-content: space-between;">
+                              <span style="color: var(--text-muted);">الحجم:</span> 
+                              <span id="mediaFileSize" class="font-semibold" style="font-weight: 600;"></span>
+                          </div>
+                          <div id="mediaDimensionsRow" class="flex justify-between" style="display: flex; justify-content: space-between;">
+                              <span style="color: var(--text-muted);">الأبعاد:</span> 
+                              <span id="mediaDimensions" class="font-semibold" style="font-weight: 600;"></span>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <!-- العمود الأيسر (حقول الإدخال والتحرير) -->
+                  <div class="flex-1 flex flex-col gap-4" style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                      <form id="mediaEditForm" onsubmit="saveMediaDetails(event)">
+                          <input type="hidden" id="mediaFileId" name="media_file_id" value="">
+                          
+                          <!-- حقل النص البديل (الأهم) -->
+                          <div class="flex flex-col gap-1.5" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+                              <label class="text-xs font-semibold flex items-center justify-between" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">
+                                  <span>النص البديل (Alt Text) <span style="color: var(--danger);">*</span></span>
+                                  <span id="altCharCount" style="font-size: 10px; font-weight: 400; color: var(--text-muted);">0 حرف</span>
+                              </label>
+                              <textarea id="mediaAltText" 
+                                        name="alt_text" 
+                                        oninput="updateAltCharCount(this); autoExpandTextarea(this)"
+                                        placeholder="وصف دقيق للصورة (مثال: أخصائية تجميل تقوم بعلاج الوجه في سبا بالقاهرة)..." 
+                                        class="w-full text-xs rounded-lg border border-border resize-none overflow-hidden" 
+                                        style="width: 100%; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; font-family: inherit; min-height: 38px; max-height: 200px; line-height: 1.5; resize: none; overflow: hidden;"
+                                        rows="1"></textarea>
+                              <span style="font-size: 10px; color: var(--text-muted); line-height: 1.4;">
+                                  <strong>الأهم للـ SEO</strong> - الطول المثالي: 80-140 حرف. وصف السياق مش بس الصورة.
+                              </span>
+                          </div>
+                          
+                          <!-- حقل Caption (التسمية التوضيحية) -->
+                          <div class="flex flex-col gap-1.5" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+                              <label class="text-xs font-semibold flex items-center justify-between" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">
+                                  <span>التسمية التوضيحية (Caption)</span>
+                                  <span id="captionCharCount" style="font-size: 10px; font-weight: 400; color: var(--text-muted);">0/300</span>
+                              </label>
+                              <textarea id="mediaCaption" 
+                                        name="caption" 
+                                        oninput="updateCaptionCharCount(this)"
+                                        placeholder="نص يظهر للزوار أسفل الصورة (مثال: جلسة علاج الوجه المتقدم - احجزي الآن)..." 
+                                        class="w-full text-xs rounded-lg border border-border" 
+                                        style="width: 100%; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; font-family: inherit; min-height: 60px;"
+                                        maxlength="300"></textarea>
+                              <span style="font-size: 10px; color: var(--text-muted); line-height: 1.4;">
+                                  نص مرئي للزوار - مفيد للسياق والـ SEO (اختياري)
+                              </span>
+                          </div>
+                          
+                          <!-- حقل العنوان -->
+                          <div class="flex flex-col gap-1.5" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+                              <label class="text-xs font-semibold" style="font-size: 12px; font-weight: 600; color: var(--text-secondary);" for="mediaTitle">
+                                  عنوان الصورة (Title)
+                              </label>
+                              <input type="text" id="mediaTitle" name="title" placeholder="يظهر عند التمرير على الصورة..." 
+                                     class="w-full text-xs rounded-lg border border-border" 
+                                     style="width: 100%; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; font-family: inherit;">
+                              <span style="font-size: 10px; color: var(--text-muted);">يظهر كـ tooltip عند التمرير (اختياري)</span>
+                          </div>
+                          
+                          <!-- حقل الوصف الداخلي -->
+                          <div class="flex flex-col gap-1.5" style="display: flex; flex-direction: column; gap: 6px;">
+                              <label class="text-xs font-semibold" style="font-size: 12px; font-weight: 600; color: var(--text-secondary);" for="mediaDescription">
+                                  وصف داخلي
+                              </label>
+                              <textarea id="mediaDescription" 
+                                        name="description" 
+                                        placeholder="وصف تفصيلي للاستخدام الداخلي وإدارة المكتبة..." 
+                                        class="w-full text-xs rounded-lg border border-border" 
+                                        style="width: 100%; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; font-family: inherit; min-height: 60px;"></textarea>
+                              <span style="font-size: 10px; color: var(--text-muted);">للاستخدام الداخلي فقط - لا يظهر للزوار</span>
+                          </div>
+
+                          <!-- رسائل النجاح والخطأ -->
+                          <div id="mediaModalError" style="display: none; padding: 12px; background: var(--danger-light); border: 1px solid var(--danger); border-radius: 8px; color: var(--danger); font-size: 13px; margin-top: 16px;"></div>
+                          <div id="mediaModalSuccess" style="display: none; padding: 12px; background: var(--success-light); border: 1px solid var(--success); border-radius: 8px; color: var(--success); font-size: 13px; margin-top: 16px;">
+                              تم حفظ التعديلات بنجاح ✓
+                          </div>
+                      </form>
+                  </div>
+              </div>
+              
+              <!-- أزرار التحكم بالأسفل -->
+              <div class="p-4 border-t border-border flex justify-end gap-2" style="padding: 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background-color: var(--surface-2);">
+                  <button onclick="closeMediaModal()" class="btn bg-white border border-border text-text-secondary hover:bg-bg-light px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer" 
+                          style="background-color: white; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s;">
+                      إلغاء
+                  </button>
+                  <button type="submit" form="mediaEditForm" id="mediaSaveBtn" class="btn bg-primary text-white hover:bg-primary-hover px-5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer" 
+                          style="background-color: var(--primary); color: white; padding: 8px 20px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; border: none; transition: all 0.2s;">
+                      حفظ التعديلات
+                  </button>
+              </div>
+          </div>
+     </div>
+</div>
+
+<script>
+// Global functions for media modal
+function openMediaModal(imageUrl, fieldName) {
+    // Extract media file ID from URL or find by image URL
+    fetch(`/dashboard/media/find-by-url/?url=${encodeURIComponent(imageUrl)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                populateMediaModal(data.media_file, fieldName);
+                document.getElementById('mediaEditModal').style.display = 'flex';
+            } else {
+                alert('لم يتم العثور على ملف الوسائط');
+            }
+        })
+        .catch(error => {
+            console.error('Error finding media file:', error);
+            alert('حدث خطأ أثناء تحميل بيانات الملف');
+        });
+}
+
+function populateMediaModal(mediaFile, fieldName) {
+    document.getElementById('mediaFileId').value = mediaFile.id;
+    document.getElementById('mediaPreviewImage').src = mediaFile.file_url;
+    document.getElementById('mediaPreviewImage').alt = mediaFile.alt_text || '';
+    document.getElementById('mediaFileName').textContent = mediaFile.original_filename;
+    document.getElementById('mediaFileName').title = mediaFile.original_filename;
+    document.getElementById('mediaFileSize').textContent = formatFileSize(mediaFile.file_size);
+    
+    if (mediaFile.width && mediaFile.height) {
+        document.getElementById('mediaDimensions').textContent = `${mediaFile.width} × ${mediaFile.height} بكسل`;
+        document.getElementById('mediaDimensionsRow').style.display = 'flex';
+    } else {
+        document.getElementById('mediaDimensionsRow').style.display = 'none';
+    }
+    
+    const altTextarea = document.getElementById('mediaAltText');
+    altTextarea.value = mediaFile.alt_text || '';
+    autoExpandTextarea(altTextarea);
+    updateAltCharCount(altTextarea);
+    
+    const captionTextarea = document.getElementById('mediaCaption');
+    captionTextarea.value = mediaFile.caption || '';
+    updateCaptionCharCount(captionTextarea);
+    
+    document.getElementById('mediaTitle').value = mediaFile.title || '';
+    document.getElementById('mediaDescription').value = mediaFile.description || '';
+    
+    // Store field name for later sync
+    document.getElementById('mediaEditForm').dataset.fieldName = fieldName;
+}
+
+function closeMediaModal() {
+    document.getElementById('mediaEditModal').style.display = 'none';
+    document.getElementById('mediaModalError').style.display = 'none';
+    document.getElementById('mediaModalSuccess').style.display = 'none';
+}
+
+function saveMediaDetails(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const mediaFileId = document.getElementById('mediaFileId').value;
+    const altText = document.getElementById('mediaAltText').value;
+    const caption = document.getElementById('mediaCaption').value;
+    const title = document.getElementById('mediaTitle').value;
+    const description = document.getElementById('mediaDescription').value;
+    const fieldName = form.dataset.fieldName;
+    
+    const saveBtn = document.getElementById('mediaSaveBtn');
+    const originalText = saveBtn.textContent;
+    saveBtn.textContent = 'جاري الحفظ...';
+    saveBtn.disabled = true;
+    
+    // Hide previous messages
+    document.getElementById('mediaModalError').style.display = 'none';
+    document.getElementById('mediaModalSuccess').style.display = 'none';
+    
+    fetch(`/dashboard/media/${mediaFileId}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            alt_text: altText,
+            caption: caption,
+            title: title,
+            description: description
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            document.getElementById('mediaModalSuccess').style.display = 'block';
+            
+            // Update the corresponding form field if it's an alt field
+            if (fieldName && fieldName.endsWith('_alt')) {
+                const altField = document.getElementById(`id_${fieldName}`);
+                if (altField) {
+                    altField.value = altText;
+                }
+            }
+            
+            // Close modal after 1.5 seconds
+            setTimeout(() => {
+                closeMediaModal();
+            }, 1500);
+        } else {
+            showModalError(data.error || 'حدث خطأ أثناء الحفظ');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving media details:', error);
+        showModalError('حدث خطأ أثناء الاتصال بالسيرفر');
+    })
+    .finally(() => {
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+function showModalError(message) {
+    const errorDiv = document.getElementById('mediaModalError');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function autoExpandTextarea(element) {
+    // Reset height to auto to get the correct scrollHeight
+    element.style.height = 'auto';
+    // Set height based on content, with min and max
+    const newHeight = Math.min(Math.max(element.scrollHeight, 38), 200);
+    element.style.height = newHeight + 'px';
+}
+
+function updateAltCharCount(element) {
+    const count = element.value.length;
+    const countSpan = document.getElementById('altCharCount');
+    countSpan.textContent = count + ' حرف';
+    
+    // Color coding based on optimal length (80-140)
+    if (count >= 80 && count <= 140) {
+        countSpan.style.color = 'var(--success)';
+    } else {
+        countSpan.style.color = 'var(--text-muted)';
+    }
+}
+
+function updateCaptionCharCount(element) {
+    const count = element.value.length;
+    document.getElementById('captionCharCount').textContent = count + '/300';
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const modal = document.getElementById('mediaEditModal');
+        if (modal.style.display === 'flex') {
+            closeMediaModal();
+        }
+    }
+});
+</script>

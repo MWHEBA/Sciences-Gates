@@ -62,9 +62,19 @@ Context variables:
 
     <!-- Current image (for edit pages) -->
     {% if current_image %}
-    <div class="flex items-center gap-2 mt-2 p-2 rounded-lg" style="background-color: var(--surface-2); border: 1px solid var(--border);">
+    <div class="flex items-center gap-2 mt-2 p-2 rounded-lg current-image-preview" 
+         onclick="openMediaModal('{{ current_image }}', '{{ field.html_name }}_alt')"
+         style="background-color: var(--surface-2); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease;"
+         onmouseover="this.style.borderColor='var(--primary)'; this.style.backgroundColor='var(--primary-bg)'"
+         onmouseout="this.style.borderColor='var(--border)'; this.style.backgroundColor='var(--surface-2)'">
         <img src="{{ current_image }}" alt="الصورة الحالية" style="width: 32px; height: 32px; border-radius: var(--radius-sm); object-fit: cover;">
-        <span class="text-xs" style="color: var(--text-muted);">الصورة الحالية</span>
+        <div style="flex: 1;">
+            <span class="text-xs" style="color: var(--text-muted); display: block;">الصورة الحالية</span>
+            <span class="text-xs" style="color: var(--primary); display: block; font-weight: 500;">انقر للتعديل السريع</span>
+        </div>
+        <svg style="width: 16px; height: 16px; color: var(--text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        </svg>
     </div>
     {% endif %}
 

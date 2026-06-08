@@ -135,7 +135,7 @@ class PasteButton {
         let cleaned = text.trim();
         
         // إزالة البروتوكول (http:// أو https://)
-        cleaned = cleaned.replace(/^https?:\/\//, '');
+        cleaned = cleaned.replace(/^https?:\/{2}/, '');
         
         // إزالة الدومين (كل شيء قبل أول /)
         const slashIndex = cleaned.indexOf('/');

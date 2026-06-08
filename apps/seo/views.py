@@ -20,8 +20,6 @@ Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /api/
-Disallow: /static/
-Disallow: /media/
 Disallow: /*.json$
 Disallow: /?*
 Disallow: /*?*
@@ -60,10 +58,15 @@ class PreviewPageSEOAnalyzer(PageSEOAnalyzer):
                 content_type=content_type, obj=obj, user=user, host=host, secure=secure
             )
 
-        key = content_type.lower().strip()
-        if key == "universities":
-            key = "university"
-        elif key.endswith("s"):
+        # Unified singular mapping
+        mapping = {
+            "articles": "article",
+            "universities": "university",
+            "institutes": "institute",
+            "majors": "major",
+        }
+        key = mapping.get(content_type.lower().strip(), content_type.lower().strip())
+        if key.endswith("s") and key != "universities":
             key = key[:-1]
 
         url = reverse(f"dashboard:preview_{key}", kwargs={"pk": obj.pk})
@@ -92,7 +95,8 @@ class PreviewPageSEOAnalyzer(PageSEOAnalyzer):
             response.render()
 
         content = response.content.decode("utf-8", errors="replace")
-        if "testserver" in content:
+        # Only raise error if testserver is generated but host was NOT testserver
+        if host != "testserver" and "testserver" in content:
             raise AnalyzerError("rendered_html_uses_testserver")
         return content
 

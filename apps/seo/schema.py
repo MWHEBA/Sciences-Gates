@@ -132,14 +132,16 @@ class SchemaGenerator:
         """
         items = []
         for index, (name, url) in enumerate(breadcrumbs, 1):
-            # Handle None URL
+            # For the current page (last item), url is None — use the request's full path
             if url is None:
-                url = '/'
+                url = request.build_absolute_uri()
+            elif url.startswith('/'):
+                url = request.build_absolute_uri(url)
             items.append({
                 "@type": "ListItem",
                 "position": index,
                 "name": name,
-                "item": request.build_absolute_uri(url) if url.startswith('/') else url,
+                "item": url,
             })
         
         schema = {

@@ -1,0 +1,178 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Science Gates{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-6" style="font-family: 'Alexandria', sans-serif;">
+    
+    <!-- Main Import Card -->
+    <div style="background-color: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-xl);
+                box-shadow: var(--shadow-sm);
+                padding: 32px;
+                margin-top: 16px;">
+        
+        <!-- Header / Instructions -->
+        <div style="text-align: center; margin-bottom: 28px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: var(--radius); background-color: var(--primary-light); color: var(--primary); margin-bottom: 16px;">
+                <svg style="width: 28px; height: 28px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+            </div>
+            <h2 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">استيراد محتوى ووردبريس</h2>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; max-width: 420px; margin: 0 auto;">
+                قم بإدخال رابط المقال من الموقع القديم ليقوم النظام تلقائياً بجلبه وتوزيع محتوياته وتجهيز حقول الـ SEO والصور.
+            </p>
+        </div>
+
+        <!-- Import Form -->
+        <form id="import-fetch-form" method="POST" style="margin-bottom: 0;">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
+                
+                <!-- URL Field -->
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label for="import-url" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">
+                        رابط مقال الموقع القديم
+                    </label>
+                    <input type="url" 
+                           id="import-url" 
+                           name="url" 
+                           required 
+                           placeholder="https://old-site.com/university/slug-here/" 
+                           dir="ltr"
+                           style="width: 100%;
+                                  padding: 10px 16px;
+                                  font-size: 14px;
+                                  border: 2px solid var(--border);
+                                  border-radius: var(--radius-sm);
+                                  background-color: var(--surface);
+                                  color: var(--text-primary);
+                                  outline: none;
+                                  transition: all 0.2s ease;"
+                           onfocus="this.style.borderColor='var(--primary)';"
+                           onblur="this.style.borderColor='var(--border)';">
+                </div>
+
+                <!-- Type Override Field -->
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label for="content-type-override" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">
+                        تحديد نوع المحتوى المستورد
+                    </label>
+                    <select id="content-type-override" 
+                            name="content_type_override"
+                            style="width: 100%;
+                                   padding: 10px 16px;
+                                   font-size: 14px;
+                                   border: 2px solid var(--border);
+                                   border-radius: var(--radius-sm);
+                                   background-color: var(--surface);
+                                   color: var(--text-primary);
+                                   outline: none;
+                                   cursor: pointer;
+                                   transition: all 0.2s ease;"
+                            onfocus="this.style.borderColor='var(--primary)';"
+                            onblur="this.style.borderColor='var(--border)';">
+                        <option value="auto">🔎 كشف تلقائي ذكي (مستحسن)</option>
+                        <option value="university">🏫 جامعة</option>
+                        <option value="institute">🎓 معهد</option>
+                        <option value="major">📚 تخصص</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div style="margin-top: 8px;">
+                    <button type="submit" 
+                            id="import-submit-btn"
+                            style="width: 100%;
+                                   padding: 12px 24px;
+                                   background-color: var(--primary);
+                                   color: var(--white);
+                                   font-size: 14px;
+                                   font-weight: 600;
+                                   border: none;
+                                   border-radius: var(--radius-sm);
+                                   cursor: pointer;
+                                   transition: all 0.2s ease;
+                                   display: flex;
+                                   align-items: center;
+                                   justify-content: center;
+                                   gap: 8px;"
+                            onmouseover="this.style.backgroundColor='var(--primary-hover)'"
+                            onmouseout="this.style.backgroundColor='var(--primary)'">
+                        <span>ابدأ الاستيراد</span>
+                    </button>
+                </div>
+
+            </div>
+        </form>
+
+        <!-- Loading State (hidden by default) -->
+        <div id="import-loading-state" style="display: none; padding: 24px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--bg-light); text-align: center; margin-top: 20px;">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;">
+                <svg class="animate-spin" style="height: 32px; width: 32px; color: var(--primary);" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <div id="import-loading-text" style="font-size: 14px; font-weight: 600; color: var(--text-primary);">
+                    جاري الاتصال بالموقع القديم وجلب البيانات...
+                </div>
+                <div id="import-loading-subtext" style="font-size: 12px; color: var(--text-muted);">
+                    يرجى عدم إغلاق الصفحة، قد يستغرق هذا بضع ثوانٍ.
+                </div>
+            </div>
+        </div>
+
+        <!-- Success State (hidden by default) -->
+        <div id="import-success-state" style="display: none; padding: 20px; border: 1px solid var(--success); border-radius: var(--radius); background-color: var(--success-light); margin-top: 20px;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="padding: 6px; background-color: var(--white); border-radius: 50%; color: var(--success); display: flex; align-items: center; justify-content: center; border: 1px solid var(--success);">
+                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="font-size: 14px; font-weight: 600; color: var(--success); margin: 0 0 4px 0;">تم جلب البيانات بنجاح!</h3>
+                    <p id="import-success-message" style="font-size: 12px; color: var(--text-secondary); margin: 0;">
+                        جاري الانتقال لصفحة الإنشاء تلقائياً...
+                    </p>
+                    <div id="import-success-warnings" style="margin-top: 10px; font-size: 11px; display: flex; flex-direction: column; gap: 4px;">
+                        <!-- warnings about image downloads -->
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <button id="import-proceed-btn" style="display: none; padding: 6px 12px; background-color: var(--success); color: var(--white); font-size: 12px; font-weight: 600; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease;">
+                            متابعة الانتقال
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error State (hidden by default) -->
+        <div id="import-error-state" style="display: none; padding: 20px; border: 1px solid var(--danger); border-radius: var(--radius); background-color: var(--danger-light); margin-top: 20px;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="padding: 6px; background-color: var(--white); border-radius: 50%; color: var(--danger); display: flex; align-items: center; justify-content: center; border: 1px solid var(--danger);">
+                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h3 style="font-size: 14px; font-weight: 600; color: var(--danger); margin: 0 0 4px 0;">حدث خطأ أثناء الاستيراد</h3>
+                    <p id="import-error-message" style="font-size: 12px; color: var(--text-secondary); margin: 0;">
+                        تفاصيل الخطأ تظهر هنا.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/importer.js' %}"></script>
+{% endblock %}

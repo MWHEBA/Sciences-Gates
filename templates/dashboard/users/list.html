@@ -90,7 +90,8 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
                 {% for user in users %}
-                <tr class="hover:bg-gray-50 transition duration-150">
+                <tr class="hover:bg-gray-50 transition duration-150 cursor-pointer"
+                    data-row-url="{% url 'dashboard:user_edit' user.pk %}">
                     <td class="px-6 py-4 text-sm text-gray-900">{{ user.username }}</td>
                     <td class="px-6 py-4 text-sm text-gray-600">{{ user.email }}</td>
                     <td class="px-6 py-4 text-sm text-gray-900">

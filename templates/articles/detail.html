@@ -23,7 +23,7 @@
         <!-- Header Banner Image -->
         <div class="detail-header-banner">
             {% if article.featured_image %}
-                <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="detail-header-image">
+                <img src="{{ article.featured_image.url }}" alt="{{ article.featured_image_alt|default:article.title }}" class="detail-header-image">
             {% else %}
                 <div class="detail-header-placeholder">
                     <span>{{ article.title }}</span>
@@ -111,7 +111,7 @@
                         <div class="border border-border rounded-xl p-4 text-center bg-surface hover:shadow-md transition-shadow flex flex-col justify-between items-center">
                             {% if university.logo %}
                                 <div class="mb-3 h-16 w-full flex items-center justify-center">
-                                    <img src="{{ university.logo.url }}" alt="{{ university.name }}" class="max-h-full max-w-full object-contain">
+                                    <img src="{{ university.logo.url }}" alt="{{ university.logo_alt|default:university.name }}" class="max-h-full max-w-full object-contain">
                                 </div>
                             {% endif %}
                             <h3 class="text-base font-bold mb-3 text-text-primary text-center">{{ university.name }}</h3>
@@ -139,7 +139,7 @@
                         <div class="border border-border rounded-xl p-4 text-center bg-surface hover:shadow-md transition-shadow flex flex-col justify-between items-center">
                             {% if institute.logo %}
                                 <div class="mb-3 h-16 w-full flex items-center justify-center">
-                                    <img src="{{ institute.logo.url }}" alt="{{ institute.name }}" class="max-h-full max-w-full object-contain">
+                                    <img src="{{ institute.logo.url }}" alt="{{ institute.logo_alt|default:institute.name }}" class="max-h-full max-w-full object-contain">
                                 </div>
                             {% endif %}
                             <h3 class="text-base font-bold mb-3 text-text-primary text-center">{{ institute.name }}</h3>

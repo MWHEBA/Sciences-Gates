@@ -5,6 +5,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 
 class TimestampedModel(models.Model):
@@ -62,10 +64,10 @@ class SEOMixin(models.Model):
     """Abstract mixin providing SEO fields for all content types."""
     # Basic SEO
     meta_title = models.CharField(
-        max_length=60,
+        max_length=150,
         blank=True,
         verbose_name='عنوان SEO',
-        help_text='يظهر في نتائج البحث (60 حرف كحد أقصى)'
+        help_text='يظهر في نتائج البحث (150 حرف كحد أقصى)'
     )
     meta_description = models.TextField(
         max_length=160,
@@ -104,7 +106,7 @@ class SEOMixin(models.Model):
 
     # Open Graph
     og_title = models.CharField(
-        max_length=60,
+        max_length=150,
         blank=True,
         verbose_name='عنوان Open Graph',
         help_text='العنوان عند المشاركة على وسائل التواصل'
@@ -336,4 +338,76 @@ class SiteSettings(models.Model):
     def instagram(self):
         """Placeholder for instagram link since the field doesn't exist in the database."""
         return None
+
+
+def media_upload_path(instance, filename):
+    """Generate dynamic upload path for MediaFile based on source type."""
+    import os
+    folder = instance.source_type or 'editor'
+    return os.path.join(f'media_library/{folder}', filename)
+
+
+class MediaFile(TimestampedModel):
+    """Tracks all uploaded images in the system for centralized management."""
+    
+    class SourceType(models.TextChoices):
+        EDITOR = 'editor', 'محرر المحتوى'
+        UNIVERSITY_LOGO = 'university_logo', 'شعار جامعة'
+        UNIVERSITY_IMAGE = 'university_image', 'صورة جامعة'
+        INSTITUTE_IMAGE = 'institute_image', 'صورة معهد'
+        MAJOR_IMAGE = 'major_image', 'صورة تخصص'
+        ARTICLE_IMAGE = 'article_image', 'صورة مقالة'
+    
+    file = models.ImageField(upload_to=media_upload_path)
+    original_filename = models.CharField(max_length=500)
+    file_size = models.PositiveIntegerField(default=0)  # bytes
+    width = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
+    
+    # SEO Fields (ordered by importance for 2026)
+    alt_text = models.CharField(
+        max_length=500, 
+        blank=True, 
+        verbose_name='النص البديل (Alt Text)',
+        help_text='الأهم للـ SEO - وصف دقيق للصورة (80-140 حرف مثالي)'
+    )
+    caption = models.TextField(
+        max_length=300, 
+        blank=True, 
+        verbose_name='التسمية التوضيحية (Caption)',
+        help_text='نص مرئي يظهر للزوار أسفل الصورة - مفيد للسياق والـ SEO'
+    )
+    title = models.CharField(
+        max_length=500, 
+        blank=True, 
+        verbose_name='عنوان الصورة (Title)',
+        help_text='يظهر عند التمرير على الصورة'
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name='وصف داخلي',
+        help_text='وصف تفصيلي للاستخدام الداخلي وإدارة المكتبة'
+    )
+    
+    source_type = models.CharField(max_length=30, choices=SourceType.choices)
+    
+    # Generic FK for content object relation
+    content_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.SET_NULL)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    content_object = GenericForeignKey('content_type', 'object_id')
+    
+    uploaded_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    
+    class Meta:
+        verbose_name = 'ملف وسائط'
+        verbose_name_plural = 'ملفات الوسائط'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['source_type']),
+            models.Index(fields=['content_type', 'object_id']),
+            models.Index(fields=['alt_text']),
+        ]
+
+    def __str__(self):
+        return self.original_filename
 

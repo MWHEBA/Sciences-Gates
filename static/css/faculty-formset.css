@@ -149,6 +149,7 @@
 .faculty-item__input {
     flex: 1;
     min-width: 0;
+    max-width: 500px;
     padding: 8px 12px;
     border: 1px solid var(--border);
     border-radius: 6px;

@@ -18,7 +18,7 @@ class UniversityForm(forms.ModelForm):
         model = University
         fields = [
             # Basic Information
-            'name', 'slug', 'university_type', 'logo', 'main_image', 'location', 'video_url',
+            'name', 'slug', 'university_type', 'city', 'logo', 'logo_alt', 'main_image', 'main_image_alt', 'location', 'video_url',
             # Rich Text Sections
             'description',
             'admission_requirements_bachelor', 'admission_requirements_master', 'admission_requirements_phd',
@@ -50,15 +50,29 @@ class UniversityForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'required': True,
             }),
+            'city': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'required': True,
+            }),
             'logo': forms.FileInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'accept': 'image/*',
                 'required': True,
             }),
+            'logo_alt': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'الوصف البديل لشعار الجامعة (SEO)',
+                'dir': 'rtl',
+            }),
             'main_image': forms.FileInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'accept': 'image/*',
                 'required': True,
+            }),
+            'main_image_alt': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'الوصف البديل للصورة الرئيسية (SEO)',
+                'dir': 'rtl',
             }),
             'location': CustomHTMLEditorWidget(attrs={
                 'data-placeholder': 'موقع الجامعة (المدينة، الولاية)...',
@@ -97,11 +111,12 @@ class UniversityForm(forms.ModelForm):
             }),
             
             # SEO Fields
-            'meta_title': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'meta_title': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 auto-grow-textarea',
                 'placeholder': '60 حرف كحد أقصى',
                 'maxlength': '60',
                 'dir': 'rtl',
+                'rows': 1,
             }),
             'meta_description': forms.Textarea(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -150,10 +165,13 @@ class UniversityForm(forms.ModelForm):
         labels = {
             # Basic Information
             'name': 'اسم الجامعة',
-            'slug': 'الرابط',
+            'slug': 'الرابط (Slug)',
             'university_type': 'نوع الجامعة',
+            'city': 'المدينة',
             'logo': 'شعار الجامعة',
+            'logo_alt': 'النص البديل للشعار',
             'main_image': 'الصورة الرئيسية',
+            'main_image_alt': 'النص البديل للصورة الرئيسية',
             'location': 'الموقع',
             'video_url': 'رابط الفيديو',
             
@@ -186,8 +204,11 @@ class UniversityForm(forms.ModelForm):
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
             'university_type': 'تصنيف الجامعة (حكومية أو خاصة)',
+            'city': 'المدينة التي تقع بها الجامعة لتسهيل التصفية والبحث',
             'logo': 'شعار الجامعة (PNG مع خلفية شفافة مفضل)',
+            'logo_alt': 'نص يصف محتوى شعار الجامعة لمحركات البحث ومستعرضات الصور',
             'main_image': 'صورة رئيسية للجامعة',
+            'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للجامعة لمحركات البحث ومستعرضات الصور',
             'location': 'موقع الجامعة (المدينة، الولاية)',
             
             # Rich Text Sections
@@ -215,6 +236,33 @@ class UniversityForm(forms.ModelForm):
             'og_description': 'الوصف عند المشاركة على وسائل التواصل',
             'og_image': 'الصورة عند المشاركة على وسائل التواصل (1200x630 بكسل)',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.data:
+            if self.data.get('imported_logo_path'):
+                self.fields['logo'].required = False
+            if self.data.get('imported_main_image_path'):
+                self.fields['main_image'].required = False
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        imported_logo_path = self.data.get('imported_logo_path') if self.data else None
+        if imported_logo_path and not self.cleaned_data.get('logo'):
+            relative_path = imported_logo_path.replace('/media/', '', 1)
+            instance.logo = relative_path
+        imported_main_image_path = self.data.get('imported_main_image_path') if self.data else None
+        if imported_main_image_path and not self.cleaned_data.get('main_image'):
+            relative_path = imported_main_image_path.replace('/media/', '', 1)
+            instance.main_image = relative_path
+        imported_og_image_path = self.data.get('imported_og_image_path') if self.data else None
+        if imported_og_image_path and not self.cleaned_data.get('og_image'):
+            relative_path = imported_og_image_path.replace('/media/', '', 1)
+            instance.og_image = relative_path
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
 
 # Create inline formset for FAQ entries
@@ -295,11 +343,12 @@ class ProgramFormSetForm(forms.ModelForm):
         model = Program
         fields = ['name', 'duration', 'tuition_fees', 'sort_order']
         widgets = {
-            'name': forms.TextInput(attrs={
-                'class': 'fpm-program-input',
+            'name': forms.Textarea(attrs={
+                'class': 'fpm-program-input fpm-program-input--textarea',
                 'placeholder': 'اسم البرنامج',
                 'dir': 'rtl',
                 'required': True,
+                'rows': 1,
             }),
             'duration': forms.TextInput(attrs={
                 'class': 'fpm-program-input fpm-program-input--short',

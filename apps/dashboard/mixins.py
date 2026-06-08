@@ -16,6 +16,10 @@ class DashboardMixin(LoginRequiredMixin):
     login_url = 'dashboard:login'
     redirect_field_name = 'next'
 
+    def _is_ajax(self):
+        """Return whether the current request came from an XMLHttpRequest."""
+        return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     def dispatch(self, request, *args, **kwargs):
         """Check if user is authenticated and has a profile."""
         if not request.user.is_authenticated:

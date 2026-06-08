@@ -24,7 +24,7 @@
         <!-- Header Banner Image -->
         <div class="detail-header-banner">
             {% if major.main_image %}
-                <img src="{{ major.main_image.url }}" alt="{{ major.name }}" class="detail-header-image">
+                <img src="{{ major.main_image.url }}" alt="{{ major.main_image_alt|default:major.name }}" class="detail-header-image">
             {% else %}
                 <div class="detail-header-placeholder">
                     <span>{{ major.name }}</span>
@@ -253,7 +253,7 @@
                                     <div class="detail-university-logo">
                                         <img 
                                             src="{{ university.logo.url }}" 
-                                            alt="{{ university.name }}"
+                                            alt="{{ university.logo_alt|default:university.name }}"
                                             loading="lazy"
                                         >
                                     </div>
@@ -288,7 +288,7 @@
                                     <div class="detail-university-logo">
                                         <img 
                                             src="{{ university.logo.url }}" 
-                                            alt="{{ university.name }}"
+                                            alt="{{ university.logo_alt|default:university.name }}"
                                             loading="lazy"
                                         >
                                     </div>

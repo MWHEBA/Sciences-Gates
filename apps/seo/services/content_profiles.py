@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass, field
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -9,22 +9,26 @@ class BaseSEOProfile:
     min_internal_links: int = 1
     expected_schemas: tuple[str, ...] = ()
     section_checks: list[dict[str, Any]] = field(default_factory=list)
+    eeat_requires_author_date: bool = False
 
 
+@dataclass
 class ArticleSEOProfile(BaseSEOProfile):
-    min_word_count = 500
-    min_internal_links = 2
-    expected_schemas = ("NewsArticle",)
-    section_checks = [
+    min_word_count: int = 500
+    min_internal_links: int = 2
+    expected_schemas: tuple[str, ...] = ("NewsArticle",)
+    section_checks: list[dict[str, Any]] = field(default_factory=lambda: [
         {"key": "content", "label": "محتوى المقالة", "field_names": ["content"], "min_chars": 300},
-    ]
+    ])
+    eeat_requires_author_date: bool = True
 
 
+@dataclass
 class UniversitySEOProfile(BaseSEOProfile):
-    min_word_count = 600
-    min_internal_links = 3
-    expected_schemas = ("EducationalOrganization", "FAQPage")
-    section_checks = [
+    min_word_count: int = 600
+    min_internal_links: int = 3
+    expected_schemas: tuple[str, ...] = ("EducationalOrganization", "FAQPage")
+    section_checks: list[dict[str, Any]] = field(default_factory=lambda: [
         {"key": "description", "label": "وصف الجامعة", "field_names": ["description"], "min_chars": 150},
         {
             "key": "admission",
@@ -39,25 +43,27 @@ class UniversitySEOProfile(BaseSEOProfile):
         },
         {"key": "faculties", "label": "الكليات والبرامج", "field_names": ["faculties"], "min_chars": 0, "is_relation": True},
         {"key": "faqs", "label": "الأسئلة الشائعة", "field_names": ["faqs"], "min_chars": 0, "is_relation": True},
-    ]
+    ])
 
 
+@dataclass
 class InstituteSEOProfile(BaseSEOProfile):
-    min_word_count = 400
-    min_internal_links = 2
-    expected_schemas = ("EducationalOrganization",)
-    section_checks = [
+    min_word_count: int = 400
+    min_internal_links: int = 2
+    expected_schemas: tuple[str, ...] = ("EducationalOrganization",)
+    section_checks: list[dict[str, Any]] = field(default_factory=lambda: [
         {"key": "description", "label": "وصف المعهد", "field_names": ["description"], "min_chars": 100},
         {"key": "registration", "label": "شروط التسجيل", "field_names": ["registration_requirements"], "min_chars": 80},
         {"key": "courses", "label": "الدورات", "field_names": ["courses"], "min_chars": 0, "is_relation": True},
-    ]
+    ])
 
 
+@dataclass
 class MajorSEOProfile(BaseSEOProfile):
-    min_word_count = 300
-    min_internal_links = 2
-    expected_schemas = ("FAQPage",)
-    section_checks = [
+    min_word_count: int = 300
+    min_internal_links: int = 2
+    expected_schemas: tuple[str, ...] = ("FAQPage",)
+    section_checks: list[dict[str, Any]] = field(default_factory=lambda: [
         {"key": "description", "label": "وصف التخصص", "field_names": ["description"], "min_chars": 100},
         {
             "key": "career",
@@ -66,7 +72,7 @@ class MajorSEOProfile(BaseSEOProfile):
             "min_chars": 80,
             "require_any": True,
         },
-    ]
+    ])
 
 
 def profile_for(content_type: str) -> BaseSEOProfile:

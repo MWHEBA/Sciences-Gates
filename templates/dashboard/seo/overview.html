@@ -130,9 +130,20 @@
                 <tbody>
                     {% for item_data in items %}
                     {% with obj=item_data.obj score=item_data.score %}
-                    <tr style="border-bottom: 1px solid var(--border); transition: background-color 0.2s;"
+                    {% if content_type == 'universities' %}
+                        {% url 'dashboard:university_edit' obj.pk as edit_url %}
+                    {% elif content_type == 'institutes' %}
+                        {% url 'dashboard:institute_edit' obj.pk as edit_url %}
+                    {% elif content_type == 'majors' %}
+                        {% url 'dashboard:major_edit' obj.pk as edit_url %}
+                    {% elif content_type == 'articles' %}
+                        {% url 'dashboard:article_edit' obj.pk as edit_url %}
+                    {% endif %}
+                    <tr class="cursor-pointer"
+                        style="border-bottom: 1px solid var(--border); transition: background-color 0.2s; cursor: pointer;"
                         onmouseover="this.style.backgroundColor='var(--bg-light)'"
-                        onmouseout="this.style.backgroundColor='transparent'">
+                        onmouseout="this.style.backgroundColor='transparent'"
+                        {% if edit_url %}data-row-url="{{ edit_url }}"{% endif %}>
                         <td style="padding: 12px 16px; font-size: 13px; color: var(--text-primary); font-weight: 600;">
                             {{ obj.name|default:obj.title|truncatewords:3 }}
                         </td>

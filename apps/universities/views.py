@@ -52,29 +52,19 @@ class UniversityListView(BreadcrumbMixin, ListView):
         if university_type:
             queryset = queryset.filter(university_type=university_type)
             
-        # Apply city/location filter (kl/selangor/penang/johor)
+        # Apply city/location filter (e.g. kl, selangor, etc.)
         city = self.request.GET.get('city', '').strip().lower()
         if city:
-            city_map = {
-                'kl': ['كوالالمبور', 'kuala lumpur', 'kl'],
-                'selangor': ['سيلانجور', 'سيلانغور', 'selangor'],
-                'penang': ['بينانج', 'بينانغ', 'penang'],
-                'johor': ['جوهر', 'johor'],
-            }
-            if city in city_map:
-                from django.db.models import Q
-                city_queries = Q()
-                for term in city_map[city]:
-                    city_queries |= Q(location__icontains=term)
-                queryset = queryset.filter(city_queries)
+            queryset = queryset.filter(city=city)
                 
         return queryset
 
     def get_context_data(self, **kwargs):
-        """Add clear_url to context for resetting filters."""
+        """Add clear_url and city choices to context for resetting filters."""
         context = super().get_context_data(**kwargs)
         from django.urls import reverse
         context['clear_url'] = reverse('universities:list')
+        context['city_choices'] = University.CITY_CHOICES
         return context
     
     def get_breadcrumbs(self):
