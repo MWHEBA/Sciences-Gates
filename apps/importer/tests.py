@@ -2,7 +2,6 @@
 Tests for WordPress importer services.
 اختبارات خدمات استيراد المحتوى من WordPress
 """
-import hashlib
 from unittest.mock import patch, MagicMock
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -400,6 +399,7 @@ class ImageDownloaderDuplicateTests(TestCase):
                 url=self.test_url,
                 alt_text='Test Logo',
                 description='Test description',
+                title='Test Title',
                 source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
                 user=self.user
             )
@@ -408,10 +408,9 @@ class ImageDownloaderDuplicateTests(TestCase):
             self.assertIsNotNone(media_file)
             self.assertIsNone(warning)
             
-            # Assert URL hash marker is in description
-            url_hash = hashlib.md5(self.test_url.encode('utf-8')).hexdigest()
-            url_marker = f"[WP_URL_HASH:{url_hash}]"
-            self.assertIn(url_marker, media_file.description)
+            # Assert source_url is saved
+            self.assertEqual(media_file.source_url, self.test_url)
+            self.assertEqual(media_file.title, 'Test Title')
 
     @patch('apps.importer.services.image_downloader.requests.get')
     def test_image_not_downloaded_second_time(self, mock_get):
@@ -419,10 +418,7 @@ class ImageDownloaderDuplicateTests(TestCase):
         Test that same URL returns existing MediaFile without downloading again.
         اختبار أن نفس الرابط يرجع الصورة الموجودة بدون تحميل جديد
         """
-        # Create existing media file with URL hash
-        url_hash = hashlib.md5(self.test_url.encode('utf-8')).hexdigest()
-        url_marker = f"[WP_URL_HASH:{url_hash}]"
-        
+        # Create existing media file with source_url
         existing_media = MediaFile.objects.create(
             original_filename='test-logo.png',
             file='test-logo.png',
@@ -430,7 +426,9 @@ class ImageDownloaderDuplicateTests(TestCase):
             width=200,
             height=200,
             alt_text='Existing Alt Text',
-            description=f"Original description\n{url_marker}",
+            caption='Existing Caption',
+            description='Original description',
+            source_url=self.test_url,  # Same URL
             source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
             uploaded_by=self.user
         )
@@ -466,9 +464,6 @@ class ImageDownloaderDuplicateTests(TestCase):
         url2 = 'https://example.com/logo2.png'
         
         # Create first media file
-        url_hash1 = hashlib.md5(url1.encode('utf-8')).hexdigest()
-        url_marker1 = f"[WP_URL_HASH:{url_hash1}]"
-        
         MediaFile.objects.create(
             original_filename='logo1.png',
             file='logo1.png',
@@ -476,7 +471,8 @@ class ImageDownloaderDuplicateTests(TestCase):
             width=200,
             height=200,
             alt_text='Logo 1',
-            description=url_marker1,
+            description='First logo',
+            source_url=url1,
             source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
             uploaded_by=self.user
         )
@@ -513,17 +509,29 @@ class ImageDownloaderDuplicateTests(TestCase):
 
     def test_url_hash_marker_format(self):
         """
-        Test that URL hash marker is properly formatted.
-        اختبار أن علامة hash الخاصة بالرابط بالصيغة الصحيحة
+        Test that source_url field is properly saved.
+        اختبار أن حقل source_url بيتحفظ صح
         """
         test_url = 'https://example.com/image.png'
-        url_hash = hashlib.md5(test_url.encode('utf-8')).hexdigest()
-        url_marker = f"[WP_URL_HASH:{url_hash}]"
         
-        # Assert marker format
-        self.assertTrue(url_marker.startswith('[WP_URL_HASH:'))
-        self.assertTrue(url_marker.endswith(']'))
-        self.assertEqual(len(url_hash), 32)  # MD5 hash is always 32 chars
+        media = MediaFile.objects.create(
+            original_filename='test.png',
+            file='test.png',
+            file_size=1024,
+            width=200,
+            height=200,
+            source_url=test_url,
+            source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
+            uploaded_by=self.user
+        )
+        
+        # Assert source_url is saved correctly
+        self.assertEqual(media.source_url, test_url)
+        
+        # Assert can query by source_url
+        found = MediaFile.objects.filter(source_url=test_url).first()
+        self.assertIsNotNone(found)
+        self.assertEqual(found.id, media.id)
 
     @patch('apps.importer.services.image_downloader.requests.get')
     def test_metadata_updates_on_reimport(self, mock_get):
@@ -532,9 +540,6 @@ class ImageDownloaderDuplicateTests(TestCase):
         اختبار أن Caption و Description يتحدثوا عند إعادة استيراد نفس الرابط ببيانات جديدة
         """
         # Create existing media file
-        url_hash = hashlib.md5(self.test_url.encode('utf-8')).hexdigest()
-        url_marker = f"[WP_URL_HASH:{url_hash}]"
-        
         existing_media = MediaFile.objects.create(
             original_filename='test-logo.png',
             file='test-logo.png',
@@ -544,7 +549,8 @@ class ImageDownloaderDuplicateTests(TestCase):
             alt_text='Old Alt Text',
             caption='Old Caption',
             title='Old Title',
-            description=f"Old description\n{url_marker}",
+            description='Old description',
+            source_url=self.test_url,
             source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
             uploaded_by=self.user
         )
@@ -554,6 +560,7 @@ class ImageDownloaderDuplicateTests(TestCase):
             url=self.test_url,
             alt_text='New Alt Text',
             caption='New Caption from WordPress',
+            title='New Title from WordPress',
             description='New description from WordPress',
             source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
             user=self.user
@@ -569,12 +576,10 @@ class ImageDownloaderDuplicateTests(TestCase):
         # Assert metadata was updated
         self.assertEqual(existing_media.alt_text, 'New Alt Text')
         self.assertEqual(existing_media.caption, 'New Caption from WordPress')
-        self.assertEqual(existing_media.title, 'Old Title')  # Title not updated
+        self.assertEqual(existing_media.title, 'New Title from WordPress')
         
-        # Assert description updated but URL marker preserved
-        self.assertIn('New description from WordPress', existing_media.description)
-        self.assertIn(url_marker, existing_media.description)
-        self.assertNotIn('Old description', existing_media.description)
+        # Assert description updated cleanly (no markers)
+        self.assertEqual(existing_media.description, 'New description from WordPress')
 
     @patch('apps.importer.services.image_downloader.requests.get')
     def test_metadata_not_overwritten_with_empty_values(self, mock_get):
@@ -583,9 +588,6 @@ class ImageDownloaderDuplicateTests(TestCase):
         اختبار أن البيانات الموجودة لا تُستبدل بقيم فارغة عند إعادة الاستيراد
         """
         # Create existing media file with good metadata
-        url_hash = hashlib.md5(self.test_url.encode('utf-8')).hexdigest()
-        url_marker = f"[WP_URL_HASH:{url_hash}]"
-        
         existing_media = MediaFile.objects.create(
             original_filename='test-logo.png',
             file='test-logo.png',
@@ -594,7 +596,8 @@ class ImageDownloaderDuplicateTests(TestCase):
             height=200,
             alt_text='Good Alt Text',
             caption='Good Caption',
-            description=f"Good description\n{url_marker}",
+            description='Good description',
+            source_url=self.test_url,
             source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
             uploaded_by=self.user
         )
@@ -619,18 +622,14 @@ class ImageDownloaderDuplicateTests(TestCase):
         # Assert original metadata preserved
         self.assertEqual(existing_media.alt_text, 'Good Alt Text')
         self.assertEqual(existing_media.caption, 'Good Caption')
-        self.assertIn('Good description', existing_media.description)
-        self.assertIn(url_marker, existing_media.description)
+        self.assertEqual(existing_media.description, 'Good description')
 
     @patch('apps.importer.services.image_downloader.requests.get')
     def test_url_marker_preserved_across_updates(self, mock_get):
         """
-        Test that URL hash marker is always preserved even after multiple updates.
-        اختبار أن علامة الـ URL hash محفوظة دائماً حتى بعد تحديثات متعددة
+        Test that source_url is preserved even after multiple updates.
+        اختبار أن source_url محفوظ دائماً حتى بعد تحديثات متعددة
         """
-        url_hash = hashlib.md5(self.test_url.encode('utf-8')).hexdigest()
-        url_marker = f"[WP_URL_HASH:{url_hash}]"
-        
         # Create initial media
         existing_media = MediaFile.objects.create(
             original_filename='test-logo.png',
@@ -639,7 +638,8 @@ class ImageDownloaderDuplicateTests(TestCase):
             width=200,
             height=200,
             alt_text='Alt 1',
-            description=f"Description 1\n{url_marker}",
+            description='Description 1',
+            source_url=self.test_url,
             source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
             uploaded_by=self.user
         )
@@ -654,8 +654,8 @@ class ImageDownloaderDuplicateTests(TestCase):
         )
         
         existing_media.refresh_from_db()
-        self.assertIn(url_marker, existing_media.description)
-        self.assertIn('Description 2', existing_media.description)
+        self.assertEqual(existing_media.source_url, self.test_url)
+        self.assertEqual(existing_media.description, 'Description 2')
 
         # Second update
         media_file, _ = download_and_optimize_image(
@@ -667,10 +667,6 @@ class ImageDownloaderDuplicateTests(TestCase):
         )
         
         existing_media.refresh_from_db()
-        self.assertIn(url_marker, existing_media.description)
-        self.assertIn('Description 3', existing_media.description)
-        self.assertNotIn('Description 2', existing_media.description)
-        
-        # Assert URL marker appears only once
-        self.assertEqual(existing_media.description.count(url_marker), 1)
+        self.assertEqual(existing_media.source_url, self.test_url)
+        self.assertEqual(existing_media.description, 'Description 3')
 

@@ -464,7 +464,7 @@
                 <!-- إعدادات SEO -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/seo') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="{% url 'dashboard:seo_overview' %}"
+                    <a href="{% url 'dashboard:seo_management' %}"
                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
                         style="{% if '/dashboard/seo' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
                         @mouseenter="{% if '/dashboard/seo' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"

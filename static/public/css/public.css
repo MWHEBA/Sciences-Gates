@@ -3851,3 +3851,109 @@ body:has(.page-header-premium) .it-header-2-top-area li,
 body:has(.page-header-premium) .it-header-2-top-area i {
   color: var(--text-body) !important;
 }
+
+/* ============================================
+   Hub Cross-Linking Section
+   Used on list pages to link across content types
+   for topical clustering and internal link distribution.
+   ============================================ */
+
+.hub-section {
+  background-color: var(--bg-white);
+  border-top: 1px solid var(--border-color);
+  padding: 3.5rem 0;
+}
+
+.hub-section__container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+
+.hub-block {
+  padding: 2rem;
+  background-color: var(--bg-gray);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.hub-block__title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hub-block__title svg {
+  color: var(--secondary);
+  flex-shrink: 0;
+}
+
+.hub-block__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.hub-block__item {
+  list-style: none;
+}
+
+.hub-block__link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.9rem;
+  color: var(--text-body);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.hub-block__link svg {
+  color: var(--text-light);
+  flex-shrink: 0;
+  transform: scaleX(-1); /* flip arrow for RTL */
+  transition: color 0.2s ease;
+}
+
+.hub-block__link:hover {
+  background-color: var(--primary-muted);
+  color: var(--primary);
+}
+
+.hub-block__link:hover svg {
+  color: var(--secondary);
+}
+
+.hub-block__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--secondary);
+  transition: color 0.2s ease;
+}
+
+.hub-block__more:hover {
+  color: var(--secondary-hover);
+}
+
+@media (max-width: 768px) {
+  .hub-section__container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .hub-section {
+    padding: 2.5rem 0;
+  }
+}
+

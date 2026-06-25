@@ -1,6 +1,5 @@
 import io
 import os
-import hashlib
 import requests
 from PIL import Image
 from datetime import datetime
@@ -10,12 +9,12 @@ from apps.core.models import MediaFile
 
 MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024  # 5MB
 
-def download_and_optimize_image(url, alt_text, caption='', description='', source_type=None, user=None):
+def download_and_optimize_image(url, alt_text, caption='', description='', title='', source_type=None, user=None):
     """
     Downloads an image from a URL, validates it, optimizes/converts it to WebP
     (if PNG or JPEG), creates a MediaFile instance, and saves it.
     
-    يفحص أولاً إذا كانت الصورة موجودة مسبقاً باستخدام hash من الـ URL
+    يفحص أولاً إذا كانت الصورة موجودة مسبقاً باستخدام source_url
     عشان نمنع تكرار الصور في إدارة الوسائط.
     
     Args:
@@ -23,6 +22,7 @@ def download_and_optimize_image(url, alt_text, caption='', description='', sourc
         alt_text: Alt text for SEO (required)
         caption: Caption text visible to users (optional)
         description: Internal description for media library (optional)
+        title: Image title attribute (optional)
         source_type: MediaFile.SourceType value
         user: Django User instance
     
@@ -35,16 +35,10 @@ def download_and_optimize_image(url, alt_text, caption='', description='', sourc
 
     try:
         # ============================================================
-        # Step 1: Check if image already exists using URL hash
+        # Step 1: Check if image already exists using source_url
         # ============================================================
-        # نحسب hash من الـ URL عشان نفحص إذا كانت الصورة موجودة مسبقاً
-        url_hash = hashlib.md5(url.encode('utf-8')).hexdigest()
-        url_marker = f"[WP_URL_HASH:{url_hash}]"
-        
-        # نبحث في description field عن أي صورة محفوظة بنفس الـ URL
-        existing_media = MediaFile.objects.filter(
-            description__contains=url_marker
-        ).first()
+        # نبحث في source_url عن أي صورة محفوظة بنفس الـ URL
+        existing_media = MediaFile.objects.filter(source_url=url).first()
         
         if existing_media:
             # ============================================================
@@ -62,25 +56,15 @@ def download_and_optimize_image(url, alt_text, caption='', description='', sourc
                 existing_media.caption = caption.strip()
                 updated = True
             
-            # Update title if not already set or if we want to update it
-            # (title is auto-generated from filename, so we only update if explicitly provided)
+            # Update title if provided and different
+            if title and title.strip() and title.strip() != existing_media.title:
+                existing_media.title = title.strip()
+                updated = True
             
-            # Update description - but preserve the URL hash marker
-            if description and description.strip():
-                # Check if new description is different (excluding the hash marker)
-                url_hash = hashlib.md5(url.encode('utf-8')).hexdigest()
-                url_marker = f"[WP_URL_HASH:{url_hash}]"
-                
-                existing_desc_without_marker = existing_media.description.replace(url_marker, '').strip()
-                new_desc = description.strip()
-                
-                if new_desc != existing_desc_without_marker:
-                    # Preserve the hash marker in the updated description
-                    if url_marker not in new_desc:
-                        existing_media.description = f"{new_desc}\n{url_marker}".strip()
-                    else:
-                        existing_media.description = new_desc
-                    updated = True
+            # Update description if provided and different
+            if description and description.strip() and description.strip() != existing_media.description:
+                existing_media.description = description.strip()
+                updated = True
             
             # Save only if something changed
             if updated:
@@ -91,8 +75,12 @@ def download_and_optimize_image(url, alt_text, caption='', description='', sourc
         # ============================================================
         # Step 2: Download image (only if not exists)
         # ============================================================
-        # 1. Download image with a timeout
-        resp = requests.get(url, timeout=15, stream=True)
+        # 1. Download image with a timeout and browser headers to prevent 403 Forbidden
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://sciencesgates.com/',
+        }
+        resp = requests.get(url, headers=headers, timeout=15, stream=True)
         if not resp.ok:
             return None, f"فشل تحميل الصورة ({resp.status_code}): {url}"
 
@@ -184,11 +172,10 @@ def download_and_optimize_image(url, alt_text, caption='', description='', sourc
 
         # 7. Create and save MediaFile
         # ============================================================
-        # نضيف URL hash marker في الـ description عشان نقدر نفحص بيه في المستقبل
+        # نحفظ الـ source_url عشان نفحص بيه في المرات القادمة
         # ============================================================
-        final_description = description or ''
-        if url_marker not in final_description:
-            final_description = f"{final_description}\n{url_marker}".strip()
+        # Use title from WordPress if provided, otherwise use clean_basename
+        final_title = title.strip() if title and title.strip() else clean_basename
         
         media_file = MediaFile(
             original_filename=base_name,
@@ -197,8 +184,9 @@ def download_and_optimize_image(url, alt_text, caption='', description='', sourc
             height=img.height,
             alt_text=alt_text or '',
             caption=caption or '',
-            title=clean_basename,
-            description=final_description,
+            title=final_title,
+            description=description or '',
+            source_url=url,  # حفظ الرابط الأصلي
             source_type=mapped_source_type,
             uploaded_by=user if user and user.is_authenticated else None
         )

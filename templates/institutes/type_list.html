@@ -46,7 +46,7 @@
                 </div>
                 
                 <!-- View Details Button -->
-                <a href="{% url 'institutes:detail' institute.slug %}" class="inline-block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
+                <a href="{{ institute.get_absolute_url }}" class="inline-block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
                     عرض التفاصيل
                 </a>
             </div>

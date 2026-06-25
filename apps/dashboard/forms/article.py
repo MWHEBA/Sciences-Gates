@@ -26,7 +26,7 @@ class ArticleForm(forms.ModelForm):
         model = Article
         fields = [
             # Basic Information
-            'title', 'slug', 'featured_image', 'featured_image_alt',
+            'title', 'slug', 'is_legacy', 'featured_image', 'featured_image_alt',
             # Content
             'category', 'tags', 'content',
             # Relationships
@@ -51,6 +51,9 @@ class ArticleForm(forms.ModelForm):
                 'placeholder': 'الرابط (يدعم الأحرف العربية)',
                 'required': True,
                 'dir': 'ltr',
+            }),
+            'is_legacy': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
             }),
             'featured_image': forms.FileInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -149,6 +152,7 @@ class ArticleForm(forms.ModelForm):
             # Basic Information
             'title': 'عنوان المقالة',
             'slug': 'الرابط',
+            'is_legacy': 'رابط قديم',
             'featured_image': 'الصورة المميزة',
             'featured_image_alt': 'النص البديل للصورة المميزة',
             
@@ -180,6 +184,7 @@ class ArticleForm(forms.ModelForm):
         help_texts = {
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
+            'is_legacy': 'تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /articles/slug/)',
             'featured_image': 'صورة مميزة للمقالة',
             'featured_image_alt': 'نص يصف محتوى الصورة المميزة للمقالة لمحركات البحث ومستعرضات الصور',
             

@@ -9,7 +9,7 @@ from .university import UniversityForm, UniversityFAQFormSet, UniversityFacultyF
 from .institute import InstituteForm, CourseFormSet
 from .major import MajorForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet
 from .article import ArticleForm, CategoryForm, TagForm
-from .settings import SiteSettingsForm
+from .settings import SiteSettingsForm, SiteSEOSettingsForm, SEOSettingsForm
 
 
 class DashboardLoginForm(forms.Form):
@@ -294,4 +294,6 @@ __all__ = [
     'CategoryForm',
     'TagForm',
     'SiteSettingsForm',
+    'SiteSEOSettingsForm',
+    'SEOSettingsForm',
 ]

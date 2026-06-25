@@ -5,6 +5,9 @@ from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from django.contrib.contenttypes.models import ContentType
+from django.views.static import serve
+from django.conf import settings
+import os
 
 from apps.seo.models import SEOAnalysisDetail
 from apps.seo.services import AnalyzerError, PageSEOAnalyzer
@@ -12,6 +15,22 @@ from apps.seo.services import AnalyzerError, PageSEOAnalyzer
 
 @require_http_methods(["GET"])
 def robots_txt(request):
+    """
+    Serve robots.txt file.
+    First tries to serve static robots.txt, falls back to dynamic generation.
+    """
+    # Try to serve static robots.txt first
+    static_robots_path = os.path.join(settings.STATIC_ROOT, 'robots.txt')
+    
+    if os.path.exists(static_robots_path):
+        try:
+            with open(static_robots_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return HttpResponse(content, content_type='text/plain')
+        except Exception:
+            pass  # Fall back to dynamic if file read fails
+    
+    # Fallback to dynamic robots.txt
     robots_content = """# Science Gates Platform - robots.txt
 # Generated for search engine optimization
 
@@ -21,18 +40,19 @@ Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /api/
 Disallow: /*.json$
-Disallow: /?*
-Disallow: /*?*
+Disallow: /*?*page=
+Disallow: /*&
 
-# Specific rules for search engines
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
-
-# Crawl delay (in seconds)
 Crawl-delay: 1
+
+User-agent: GPTBot
+Disallow: /
 
 # Sitemap location
 Sitemap: {sitemap_url}

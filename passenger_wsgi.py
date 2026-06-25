@@ -42,7 +42,35 @@ from django.core.wsgi import get_wsgi_application
 
 # Initialize the WSGI application
 # This is the entry point that Passenger will call to handle requests
-application = get_wsgi_application()
+raw_application = get_wsgi_application()
+
+import urllib.parse
+
+class PassengerPathInfoFix:
+    """
+    WSGI middleware to fix percent-encoded PATH_INFO passed by Passenger.
+    Ensures Django receives PATH_INFO correctly formatted as a Latin-1 string
+    representing the original raw UTF-8 bytes of the URL.
+    """
+    def __init__(self, app):
+        self.app = app
+        
+    def __call__(self, environ, start_response):
+        path_info = environ.get('PATH_INFO', '')
+        if '%' in path_info:
+            try:
+                # Encode string to bytes using iso-8859-1
+                bytes_path = path_info.encode('iso-8859-1')
+                # Unquote percent-encoded bytes
+                unquoted_bytes = urllib.parse.unquote_to_bytes(bytes_path)
+                # Decode back to iso-8859-1 to get a valid WSGI Latin-1 string
+                environ['PATH_INFO'] = unquoted_bytes.decode('iso-8859-1')
+            except Exception:
+                pass
+        return self.app(environ, start_response)
+
+application = PassengerPathInfoFix(raw_application)
+
 
 # ============================================================================
 # DIRECTORY INITIALIZATION

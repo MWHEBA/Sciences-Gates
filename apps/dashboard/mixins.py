@@ -48,13 +48,9 @@ class ContentAdminRequiredMixin(DashboardMixin):
 
     def dispatch(self, request, *args, **kwargs):
         """Check if user has content admin or super admin role."""
-        response = super().dispatch(request, *args, **kwargs)
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
 
-        # If parent dispatch returned a redirect or error response, return it
-        if not hasattr(response, 'status_code') or response.status_code != 200:
-            return response
-
-        # Check if user has profile (should be guaranteed by parent, but double-check)
         if not hasattr(request.user, 'profile'):
             messages.error(request, 'لم يتم العثور على ملف المستخدم. يرجى التواصل مع المسؤول.')
             return redirect('dashboard:login')
@@ -64,7 +60,7 @@ class ContentAdminRequiredMixin(DashboardMixin):
             messages.error(request, 'ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول.')
             return HttpResponseForbidden('غير مصرح بالوصول إلى هذا المورد')
 
-        return response
+        return super().dispatch(request, *args, **kwargs)
 
 
 class SEOAdminRequiredMixin(DashboardMixin):
@@ -75,13 +71,9 @@ class SEOAdminRequiredMixin(DashboardMixin):
 
     def dispatch(self, request, *args, **kwargs):
         """Check if user has SEO admin or super admin role."""
-        response = super().dispatch(request, *args, **kwargs)
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
 
-        # If parent dispatch returned a redirect or error response, return it
-        if not hasattr(response, 'status_code') or response.status_code != 200:
-            return response
-
-        # Check if user has profile (should be guaranteed by parent, but double-check)
         if not hasattr(request.user, 'profile'):
             messages.error(request, 'لم يتم العثور على ملف المستخدم. يرجى التواصل مع المسؤول.')
             return redirect('dashboard:login')
@@ -91,7 +83,7 @@ class SEOAdminRequiredMixin(DashboardMixin):
             messages.error(request, 'ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول.')
             return HttpResponseForbidden('غير مصرح بالوصول إلى هذا المورد')
 
-        return response
+        return super().dispatch(request, *args, **kwargs)
 
 
 class SuperAdminRequiredMixin(DashboardMixin):
@@ -102,13 +94,9 @@ class SuperAdminRequiredMixin(DashboardMixin):
 
     def dispatch(self, request, *args, **kwargs):
         """Check if user has super admin role."""
-        response = super().dispatch(request, *args, **kwargs)
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
 
-        # If parent dispatch returned a redirect or error response, return it
-        if not hasattr(response, 'status_code') or response.status_code != 200:
-            return response
-
-        # Check if user has profile (should be guaranteed by parent, but double-check)
         if not hasattr(request.user, 'profile'):
             messages.error(request, 'لم يتم العثور على ملف المستخدم. يرجى التواصل مع المسؤول.')
             return redirect('dashboard:login')
@@ -118,4 +106,4 @@ class SuperAdminRequiredMixin(DashboardMixin):
             messages.error(request, 'ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول.')
             return HttpResponseForbidden('غير مصرح بالوصول إلى هذا المورد')
 
-        return response
+        return super().dispatch(request, *args, **kwargs)

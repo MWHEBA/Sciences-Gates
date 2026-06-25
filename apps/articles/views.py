@@ -52,11 +52,24 @@ class ArticleListView(BreadcrumbMixin, ListView):
         return queryset
 
     def get_context_data(self, **kwargs):
-        """Add categories to context for search filter."""
+        """Add categories, clear_url, and hub cross-linking data to context."""
         context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.all().order_by('name')
         from django.urls import reverse
+        from apps.universities.models import University
+        from apps.majors.models import Major
+
+        context['categories'] = Category.objects.all().order_by('name')
         context['clear_url'] = reverse('articles:list')
+
+        # Hub Pages SEO: cross-link to universities and majors
+        context['popular_universities'] = University.objects.filter(
+            publish_status='published'
+        ).order_by('name')[:6]
+
+        context['popular_majors'] = Major.objects.filter(
+            publish_status='published'
+        ).order_by('name')[:6]
+
         return context
     
     def get_breadcrumbs(self):
@@ -83,6 +96,18 @@ class ArticleDetailView(BreadcrumbMixin, DetailView):
     context_object_name = 'article'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
+
+    def get_object(self, queryset=None):
+        if not hasattr(self, 'object') or self.object is None:
+            self.object = super().get_object(queryset)
+        return self.object
+
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if obj.is_legacy and request.resolver_match.view_name != 'legacy_detail':
+            from django.shortcuts import redirect
+            return redirect(obj.get_absolute_url(), permanent=True)
+        return super().dispatch(request, *args, **kwargs)
     
     def get_queryset(self):
         """

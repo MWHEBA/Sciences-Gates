@@ -40,6 +40,11 @@
             <!-- رؤوس الأعمدة -->
             <thead>
                 <tr class="bg-gray-50 border-b" style="border-color: var(--border);">
+                    {% if bulk_action_url %}
+                    <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase w-10">
+                        <input type="checkbox" id="select-all-checkbox" class="w-4 h-4 rounded border-gray-300 cursor-pointer focus:ring-0" style="accent-color: var(--primary);">
+                    </th>
+                    {% endif %}
                     {% for column in columns %}
                     <th scope="col" 
                         class="px-6 py-4 text-right text-xs font-semibold uppercase"
@@ -63,6 +68,11 @@
                     style="border-color: var(--border);"
                     {% if edit_url_name %}{% if edit_url_name == 'edit' %}data-row-url="#"{% else %}data-row-url="{% url edit_url_name row.id %}"{% endif %}{% endif %}>
                     
+                    {% if bulk_action_url %}
+                    <td class="px-6 py-4 w-10">
+                        <input type="checkbox" name="selected_ids" value="{{ row.id }}" class="row-checkbox w-4 h-4 rounded border-gray-300 cursor-pointer focus:ring-0" style="accent-color: var(--primary);">
+                    </td>
+                    {% endif %}
                     {% for column in columns %}
                     <td class="px-6 py-4" style="color: var(--text-primary);">
                         {% if column.type == 'text' %}
@@ -146,7 +156,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="{{ columns|length|add:1 }}" class="px-6 py-8 text-center">
+                    <td colspan="{% if bulk_action_url %}{{ columns|length|add:2 }}{% else %}{{ columns|length|add:1 }}{% endif %}" class="px-6 py-8 text-center">
                         <p style="color: var(--text-muted);">لا توجد بيانات للعرض</p>
                     </td>
                 </tr>

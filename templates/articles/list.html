@@ -27,6 +27,57 @@
     </div>
 </section>
 
+<!-- Hub Cross-Linking Section -->
+{% if popular_universities or popular_majors %}
+<section class="hub-section" aria-label="محتوى ذو صلة">
+    <div class="container hub-section__container">
+
+        {% if popular_universities %}
+        <!-- Popular Universities -->
+        <div class="hub-block">
+            <h2 class="hub-block__title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+                استكشف الجامعات
+            </h2>
+            <ul class="hub-block__list">
+                {% for university in popular_universities %}
+                <li class="hub-block__item">
+                    <a href="{{ university.get_absolute_url }}" class="hub-block__link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                        {{ university.name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'universities:list' %}" class="hub-block__more">عرض جميع الجامعات</a>
+        </div>
+        {% endif %}
+
+        {% if popular_majors %}
+        <!-- Popular Majors -->
+        <div class="hub-block">
+            <h2 class="hub-block__title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                التخصصات الدراسية
+            </h2>
+            <ul class="hub-block__list">
+                {% for major in popular_majors %}
+                <li class="hub-block__item">
+                    <a href="{{ major.get_absolute_url }}" class="hub-block__link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                        {{ major.name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'majors:list' %}" class="hub-block__more">عرض جميع التخصصات</a>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endif %}
+
 <!-- CTA Band -->
 {% include 'partials/cta-band.html' %}
 

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load breadcrumbs %}
+{% load schema_tags %}
 
 {% block title %}{{ article.title }} | بوابات العلوم{% endblock %}
 {% block meta_description %}{{ article.meta_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}
@@ -9,6 +10,18 @@
 {% block og_description %}{{ article.og_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}
 
 {% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">{% endblock %}
+
+{% block schema_markup %}
+{{ block.super }}
+<!-- Article Schema -->
+<script type="application/ld+json">
+{% article_schema article %}
+</script>
+<!-- Breadcrumb Schema -->
+<script type="application/ld+json">
+{% breadcrumb_schema %}
+</script>
+{% endblock %}
 
 {% block extra_css %}
     {% render_breadcrumb_schema breadcrumbs request %}

@@ -72,10 +72,18 @@
 
                             <!-- الرابط — Full Width -->
                             <div>
-                                <label for="{{ form.slug.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                    {{ form.slug.label }}
-                                    <span style="color: var(--danger);">*</span>
-                                </label>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label for="{{ form.slug.id_for_label }}" class="block text-sm font-normal" style="color: var(--text-secondary);">
+                                        {{ form.slug.label }}
+                                        <span style="color: var(--danger);">*</span>
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        {{ form.is_legacy }}
+                                        <label for="{{ form.is_legacy.id_for_label }}" class="text-sm font-normal cursor-pointer select-none" style="color: var(--text-secondary);">
+                                            {{ form.is_legacy.label }}
+                                        </label>
+                                    </div>
+                                </div>
                                 {{ form.slug }}
                                 {% if form.slug.errors %}
                                     <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.slug.errors.0 }}</p>

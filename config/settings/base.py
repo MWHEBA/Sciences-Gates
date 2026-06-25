@@ -182,3 +182,7 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 WP_IMPORTER_BASE_URL = config('WP_IMPORTER_BASE_URL', default='')
 WP_IMPORTER_SECRET_KEY = config('WP_IMPORTER_SECRET_KEY', default='sg_import_secure_token_2026')
 WP_IMPORTER_TIMEOUT = config('WP_IMPORTER_TIMEOUT', default=30, cast=int)
+
+# Google Analytics & Search Console Settings
+GA4_MEASUREMENT_ID = config('GA4_MEASUREMENT_ID', default='')
+GOOGLE_SITE_VERIFICATION = config('GOOGLE_SITE_VERIFICATION', default='')

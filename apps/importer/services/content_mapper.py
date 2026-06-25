@@ -2,44 +2,170 @@ import re
 from django.utils.text import slugify
 
 CITY_MAP = {
+    # kl (Kuala Lumpur)
     'كوالالمبور': 'kl',
+    'كوالالامبور': 'kl',
+    'كوالا لمبور': 'kl',
     'kuala lumpur': 'kl',
     'kl': 'kl',
+    
+    # selangor (Selangor)
     'سيلانجور': 'selangor',
+    'سيلانغور': 'selangor',
     'selangor': 'selangor',
+    'سردانج': 'selangor',
+    'سردانغ': 'selangor',
+    'سيردانغ': 'selangor',
+    'serdang': 'selangor',
+    'شاه علم': 'selangor',
+    'shah alam': 'selangor',
+    'سوبانج': 'selangor',
+    'سوبانغ': 'selangor',
+    'subang': 'selangor',
+    'سوبانج جايا': 'selangor',
+    'سوبانغ جايا': 'selangor',
+    'subang jaya': 'selangor',
+    'بانجي': 'selangor',
+    'بانغي': 'selangor',
+    'bangi': 'selangor',
+    'كاجانج': 'selangor',
+    'كاجانغ': 'selangor',
+    'kajang': 'selangor',
+    'سيمينيه': 'selangor',
+    'semenyih': 'selangor',
+    'كلانج': 'selangor',
+    'كلانغ': 'selangor',
+    'klang': 'selangor',
+    'بيتالينج جايا': 'selangor',
+    'بيتالينغ جايا': 'selangor',
+    'petaling jaya': 'selangor',
+    'pj': 'selangor',
+    'سري كيمبانجان': 'selangor',
+    'سري كيمبانغان': 'selangor',
+    'seri kembangan': 'selangor',
+    'سونغاي لونغ': 'selangor',
+    'sungai long': 'selangor',
+    'صنواي': 'selangor',
+    'sunway': 'selangor',
+    'بندر صنواي': 'selangor',
+    'bandar sunway': 'selangor',
+    'دامانسارا': 'selangor',
+    'دمنسارا': 'selangor',
+    'damansara': 'selangor',
+    'غومباك': 'selangor',
+    'جومباك': 'selangor',
+    'gombak': 'selangor',
+    'سوجانا بوترا': 'selangor',
+    'saujana putra': 'selangor',
+    'saujana': 'selangor',
+    'jenjarom': 'selangor',
+    'جينجاروم': 'selangor',
+    
+    # penang (Penang)
     'بينانج': 'penang',
+    'بينانغ': 'penang',
     'penang': 'penang',
+    'جورج تاون': 'penang',
+    'georgetown': 'penang',
+    'george town': 'penang',
+    
+    # putrajaya (Putrajaya)
+    'بوتراجايا': 'putrajaya',
+    'بتروجايا': 'putrajaya',
+    'putrajaya': 'putrajaya',
+    
+    # cyberjaya (Cyberjaya)
+    'سايبرجايا': 'cyberjaya',
+    'cyberjaya': 'cyberjaya',
+    
+    # johor (Johor)
     'جوهر': 'johor',
+    'جوهور': 'johor',
     'johor': 'johor',
+    'سكوداي': 'johor',
+    'اسكوداي': 'johor',
+    'skudai': 'johor',
+    'جوهر بهرو': 'johor',
+    'جوهور بارو': 'johor',
+    'johor bahru': 'johor',
+    'jb': 'johor',
+    'باتو باهات': 'johor',
+    'batu pahat': 'johor',
+    
+    # kedah (Kedah)
     'قدح': 'kedah',
     'kedah': 'kedah',
+    'ألو سيتار': 'kedah',
+    'alor setar': 'kedah',
+    'سينتوت': 'kedah',
+    'سينتوك': 'kedah',
+    'sintok': 'kedah',
+    
+    # kelantan (Kelantan)
     'كلنتان': 'kelantan',
     'kelantan': 'kelantan',
+    'كوت بهرو': 'kelantan',
+    'kota bharu': 'kelantan',
+    
+    # melaka (Melaka)
     'ملقا': 'melaka',
+    'ملكا': 'melaka',
+    'ملاكا': 'melaka',
     'melaka': 'melaka',
     'malacca': 'melaka',
+    
+    # negeri-sembilan (Negeri Sembilan)
     'نيجري سمبيلان': 'negeri-sembilan',
     'negeri sembilan': 'negeri-sembilan',
+    'نيلاي': 'negeri-sembilan',
+    'nilai': 'negeri-sembilan',
+    
+    # pahang (Pahang)
     'باهانغ': 'pahang',
     'باهانج': 'pahang',
     'pahang': 'pahang',
+    'كونتان': 'pahang',
+    'kuantan': 'pahang',
+    
+    # perak (Perak)
     'بيرق': 'perak',
     'perak': 'perak',
+    'إيبوه': 'perak',
+    'ipoh': 'perak',
+    'كامبار': 'perak',
+    'kampar': 'perak',
+    'سري اسكندر': 'perak',
+    'seri iskandar': 'perak',
+    
+    # perlis (Perlis)
     'برليس': 'perlis',
     'perlis': 'perlis',
+    'أراو': 'perlis',
+    'arau': 'perlis',
+    
+    # sabah (Sabah)
     'صباح': 'sabah',
     'sabah': 'sabah',
+    'كوتا كينابالو': 'sabah',
+    'kota kinabalu': 'sabah',
+    
+    # sarawak (Sarawak)
     'سراوق': 'sarawak',
+    'ساراواك': 'sarawak',
     'sarawak': 'sarawak',
+    'كوتشينغ': 'sarawak',
+    'kuching': 'sarawak',
+    'ساماراهان': 'sarawak',
+    'samarahan': 'sarawak',
+    
+    # terengganu (Terengganu)
     'ترينجانو': 'terengganu',
     'ترينغانو': 'terengganu',
     'terengganu': 'terengganu',
-    'بوتراجايا': 'putrajaya',
-    'putrajaya': 'putrajaya',
+    'كوالا ترينجانو': 'terengganu',
+    'kuala terengganu': 'terengganu',
     'لابوان': 'labuan',
     'labuan': 'labuan',
-    'سايبرجايا': 'cyberjaya',
-    'cyberjaya': 'cyberjaya',
 }
 
 class ContentMapper:
@@ -50,7 +176,7 @@ class ContentMapper:
         
         # 1. Map City
         city_raw = wp_data.get('city_raw', '')
-        city_slug, city_confidence = self._map_city(city_raw)
+        city_slug, city_confidence = self._detect_city_smart(wp_data)
 
         # 2. Extract values and confidence levels from WP fields structure
         wp_fields = wp_data.get('fields', {})
@@ -60,6 +186,7 @@ class ContentMapper:
             'name': self._clean_importer_name(wp_data.get('name', '')),
             'slug': urllib.parse.unquote(wp_data.get('slug', '')),
             'video_url': wp_data.get('video_url', ''),
+            'is_legacy': True,
         }
         
         confidence = {
@@ -220,6 +347,56 @@ class ContentMapper:
                 
         return '', 'none'
 
+    def _detect_city_smart(self, wp_data: dict) -> tuple:
+        """
+        Smart city detection matching keywords from the location paragraph.
+        """
+        location_html = wp_data.get('fields', {}).get('location', {}).get('value', '')
+        
+        def normalize_arabic(text):
+            text = re.sub(r'[أإآا]', 'ا', text)
+            text = re.sub(r'ة', 'ه', text)
+            text = re.sub(r'ى', 'ي', text)
+            text = re.sub(r'بينانغ', 'بينانج', text)
+            text = re.sub(r'بینانغ', 'بينانج', text)
+            text = re.sub(r'بینانج', 'بينانج', text)
+            return text
+
+        def find_word_in_text(word_norm, text_norm):
+            # Enforce word boundary check (Arabic letters and English words)
+            pattern = r'(?<![^\W_])' + re.escape(word_norm) + r'(?![^\W_])'
+            match = re.search(pattern, text_norm)
+            if match:
+                return match.start()
+            return -1
+
+        # Check location field text first, finding the keyword that appears EARLIEST
+        if location_html:
+            clean_loc = re.sub(r'<[^>]+>', ' ', location_html).lower()
+            clean_loc_norm = normalize_arabic(clean_loc)
+            
+            earliest_idx = float('inf')
+            best_slug = None
+            
+            for kw, slug in CITY_MAP.items():
+                kw_norm = normalize_arabic(kw.lower())
+                idx = find_word_in_text(kw_norm, clean_loc_norm)
+                if idx != -1 and idx < earliest_idx:
+                    earliest_idx = idx
+                    best_slug = slug
+            if best_slug:
+                return best_slug, 'high'
+                
+        # Fallback to city_raw from WP
+        city_raw = wp_data.get('city_raw', '')
+        if city_raw:
+            city_slug, city_confidence = self._map_city(city_raw)
+            if city_slug:
+                return city_slug, 'medium'
+                
+        return 'kl', 'none'
+
+
     def _split_admission_requirements(self, html_content: str) -> dict:
         """
         Splits combined admission requirements HTML into Bachelor's, Master's, and PhD stages.
@@ -335,14 +512,14 @@ class ContentMapper:
     def _clean_importer_name(self, name: str) -> str:
         """
         Cleans the institutional/major name by taking everything before the first separator
-        (|, -, –, —).
+        (|, -, –, —, :).
         Strips trailing and leading whitespaces.
         """
         if not name:
             return ""
         
-        # Replace common dash variants with a standard character to split easily
-        normalized = name.replace('–', '|').replace('—', '|').replace('-', '|')
+        # Replace common dash variants and colon with a standard character to split easily
+        normalized = name.replace('–', '|').replace('—', '|').replace('-', '|').replace(':', '|')
         if "|" in normalized:
             return normalized.split("|", 1)[0].strip()
         return name.strip()

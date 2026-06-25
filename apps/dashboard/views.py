@@ -8,7 +8,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages
 from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
-from django.views.generic import View, ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import View, ListView, CreateView, UpdateView, DeleteView, FormView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
@@ -30,7 +30,7 @@ from apps.dashboard.forms import (
     UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, 
     InstituteForm, CourseFormSet,
     MajorForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet,
-    ArticleForm, CategoryForm, TagForm, SiteSettingsForm
+    ArticleForm, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm
 )
 from apps.articles.models import Category, Tag
 from apps.seo.mixins import DashboardBreadcrumbMixin
@@ -633,7 +633,17 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         context['search_placeholder'] = 'ابحث عن اسم الجامعة...'
         context['search_value'] = context['search_query']
         context['base_url'] = reverse('dashboard:university_list')
+        context['bulk_action_url'] = reverse('dashboard:university_bulk_action')
         
+        # Get only the cities that are actually assigned to at least one university
+        used_cities = University.objects.values_list('city', flat=True).order_by().distinct()
+        city_choices_dict = dict(University.CITY_CHOICES)
+        used_city_options = []
+        for code in used_cities:
+            if code and code in city_choices_dict:
+                used_city_options.append({'value': code, 'label': city_choices_dict[code]})
+        used_city_options.sort(key=lambda x: x['label'])
+
         # Filters
         context['filters'] = [
             {
@@ -657,7 +667,7 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
             {
                 'name': 'city',
                 'label': 'المدينة',
-                'options': [{'value': code, 'label': label} for code, label in University.CITY_CHOICES],
+                'options': used_city_options,
                 'selected': context['city_filter'],
             },
         ]
@@ -676,7 +686,8 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         context['delete_url_name'] = 'dashboard:university_delete'
         
         # Pagination info
-        context['is_paginated'] = self.paginator.num_pages > 1 if hasattr(self, 'paginator') else False
+        paginator = context.get('paginator')
+        context['is_paginated'] = paginator.num_pages > 1 if paginator else False
         context['page_obj'] = context.get('page_obj')
         
         # Build query params for pagination
@@ -1435,6 +1446,7 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
         context['search_placeholder'] = 'ابحث عن اسم المعهد...'
         context['search_value'] = context['search_query']
         context['base_url'] = reverse('dashboard:institute_list')
+        context['bulk_action_url'] = reverse('dashboard:institute_bulk_action')
         
         # Filters
         context['filters'] = [
@@ -1471,7 +1483,8 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
         context['delete_url_name'] = 'dashboard:institute_delete'
         
         # Pagination info
-        context['is_paginated'] = self.paginator.num_pages > 1 if hasattr(self, 'paginator') else False
+        paginator = context.get('paginator')
+        context['is_paginated'] = paginator.num_pages > 1 if paginator else False
         context['page_obj'] = context.get('page_obj')
         
         # Build query params for pagination
@@ -1745,13 +1758,74 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
 
     def get_context_data(self, **kwargs):
         """Add page title and search/filter info to context."""
+        from django.urls import reverse
+        
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة التخصصات'
+        context['page_type'] = 'majors'
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['category_filter'] = self.request.GET.get('category', '')
+        
         # Add items for list_page.html template
         context['items'] = context.get('majors', context.get('object_list', []))
+        
+        # Add required context variables for list_page.html
+        context['search_placeholder'] = 'ابحث عن اسم التخصص...'
+        context['search_value'] = context['search_query']
+        context['base_url'] = reverse('dashboard:major_list')
+        context['bulk_action_url'] = reverse('dashboard:major_bulk_action')
+        
+        # Filters
+        context['filters'] = [
+            {
+                'name': 'status',
+                'label': 'حالة النشر',
+                'options': [
+                    {'value': 'published', 'label': 'منشور'},
+                    {'value': 'unpublished', 'label': 'غير منشور'},
+                ],
+                'selected': context['status_filter'],
+            },
+            {
+                'name': 'category',
+                'label': 'تصنيف التخصص',
+                'options': [
+                    {'value': 'medical', 'label': 'التخصصات الطبية'},
+                    {'value': 'engineering', 'label': 'التخصصات الهندسية'},
+                    {'value': 'cs', 'label': 'الحاسوب والتكنولوجيا'},
+                    {'value': 'business', 'label': 'إدارة الأعمال'},
+                    {'value': 'science', 'label': 'العلوم'},
+                    {'value': 'other', 'label': 'تخصصات أخرى'},
+                ],
+                'selected': context['category_filter'],
+            },
+        ]
+        
+        # Columns for data table
+        context['columns'] = [
+            {'label': 'اسم التخصص', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:major_edit', 'link_param': 'pk'},
+            {'label': 'التصنيف', 'key': 'major_category_display', 'type': 'text'},
+            {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
+            {'label': 'التاريخ', 'key': 'created_at', 'type': 'date'},
+        ]
+        
+        context['edit_url_name'] = 'dashboard:major_edit'
+        context['delete_url_name'] = 'dashboard:major_delete'
+        
+        # Pagination info
+        paginator = context.get('paginator')
+        context['is_paginated'] = paginator.num_pages > 1 if paginator else False
+        context['page_obj'] = context.get('page_obj')
+        
+        # Build query params for pagination
+        query_params = '&'.join([f'{k}={v}' for k, v in self.request.GET.items() if k != 'page'])
+        context['query_params'] = query_params
+        
+        # Add computed properties to each major
+        for major in context['items']:
+            major.major_category_display = major.get_major_category_display()
+            
         return context
 
 
@@ -2435,6 +2509,7 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
         context['search_value'] = context['search_query']
         context['base_url'] = reverse('dashboard:article_list')
         context['add_new_url'] = reverse('dashboard:article_create')
+        context['bulk_action_url'] = reverse('dashboard:article_bulk_action')
         
         # Filters
         category_options = [{'value': '', 'label': 'كل التصنيفات'}]
@@ -2472,7 +2547,8 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
         context['delete_url_name'] = 'dashboard:article_delete'
         
         # Pagination info
-        context['is_paginated'] = self.paginator.num_pages > 1 if hasattr(self, 'paginator') else False
+        paginator = context.get('paginator')
+        context['is_paginated'] = paginator.num_pages > 1 if paginator else False
         context['page_obj'] = context.get('page_obj')
         
         # Build query params for pagination
@@ -2973,74 +3049,7 @@ class LeadExportView(ContentAdminRequiredMixin, View):
 # SEO Management Views
 # ============================================================================
 
-class SEOOverviewView(SEOAdminRequiredMixin, View):
-    """
-    SEO overview — shows all published content with SEO field completion scores.
-    صفحة نظرة عامة على SEO لجميع أنواع المحتوى المنشور.
-    
-    Features:
-    - Display all published content (Universities, Institutes, Majors, Articles)
-    - Calculate SEO completion score for each item (0-100%)
-    - Show which SEO fields are filled: meta_title, meta_description, focus_keyword, og_title, og_description
-    - Filter by content type
-    - Sort by SEO score (lowest first - needs attention)
-    - Display visual progress bar for each item
-    - Color-coded scores: Red (<40%), Yellow (40-80%), Green (≥80%)
-    - Link to edit page for each item
-    
-    Requirements: 7
-    """
-    template_name = 'dashboard/seo/overview.html'
-    
-    SEO_FIELDS = ['meta_title', 'meta_description', 'focus_keyword', 'og_title', 'og_description']
-    
-    def get_seo_score(self, obj):
-        """Calculate SEO completion score (0-100%)."""
-        filled = sum(1 for f in self.SEO_FIELDS if getattr(obj, f, ''))
-        return int((filled / len(self.SEO_FIELDS)) * 100)
-    
-    def get(self, request):
-        """Display SEO overview."""
-        content_type = request.GET.get('type', 'universities')
-        
-        model_map = {
-            'universities': University,
-            'institutes': Institute,
-            'majors': Major,
-            'articles': Article,
-        }
-        
-        model = model_map.get(content_type, University)
-        items = model.objects.filter(publish_status='published')
-        
-        # Calculate SEO scores
-        items_with_score = []
-        for item in items:
-            score = self.get_seo_score(item)
-            items_with_score.append({
-                'obj': item,
-                'score': score,
-                'score_color': 'var(--danger)' if score < 40 else 'var(--warning)' if score < 80 else 'var(--success)',
-            })
-        
-        # Sort by score (lowest first)
-        items_with_score = sorted(items_with_score, key=lambda x: x['score'])
-        
-        context = {
-            'page_title': 'نظرة عامة على SEO',
-            'content_type': content_type,
-            'items': items_with_score,
-            'total': len(items_with_score),
-            'needs_attention': sum(1 for i in items_with_score if i['score'] < 60),
-            'content_types': [
-                {'value': 'universities', 'label': 'الجامعات'},
-                {'value': 'institutes', 'label': 'المعاهد'},
-                {'value': 'majors', 'label': 'التخصصات'},
-                {'value': 'articles', 'label': 'المقالات'},
-            ],
-        }
-        
-        return render(request, self.template_name, context)
+
 
 
 # ============================================================================
@@ -3321,6 +3330,252 @@ class SiteSettingsUpdateView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, 
         context['page_title'] = 'الإعدادات العامة للموقع'
         context['cancel_url'] = reverse_lazy('dashboard:home')
         return context
+
+
+class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
+    """
+    View for SEO management, settings, and health overview.
+    عرض إدارة وأدوات وإعدادات وصحة SEO الموحدة.
+    """
+    template_name = 'dashboard/seo_management.html'
+    SEO_FIELDS = ['meta_title', 'meta_description', 'focus_keyword', 'og_title', 'og_description']
+
+    def get_seo_score(self, obj):
+        """Calculate SEO completion score (0-100%)."""
+        filled = sum(1 for f in self.SEO_FIELDS if getattr(obj, f, ''))
+        return int((filled / len(self.SEO_FIELDS)) * 100)
+
+    def get_breadcrumbs(self):
+        """Build breadcrumbs for SEO management page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('إدارة SEO')
+            .build())
+
+    def get_health_items(self, content_type):
+        """Retrieve and score items for the health checklist table."""
+        from django.urls import reverse
+        
+        model_map = {
+            'universities': (University, 'جامعة', 'universities'),
+            'institutes': (Institute, 'معهد', 'institutes'),
+            'majors': (Major, 'تخصص', 'majors'),
+            'articles': (Article, 'مقالة', 'articles'),
+        }
+
+        health_items = []
+
+        if content_type == 'all':
+            types_to_fetch = model_map.keys()
+        elif content_type in model_map:
+            types_to_fetch = [content_type]
+        else:
+            types_to_fetch = []
+
+        for ct_key in types_to_fetch:
+            model_cls, label, ct_str = model_map[ct_key]
+            # Fetch published items
+            items = model_cls.objects.filter(publish_status='published')
+            for item in items:
+                score = self.get_seo_score(item)
+                
+                # Resolve edit url
+                edit_url = ''
+                if ct_str == 'universities':
+                    edit_url = reverse('dashboard:university_edit', kwargs={'pk': item.pk})
+                elif ct_str == 'institutes':
+                    edit_url = reverse('dashboard:institute_edit', kwargs={'pk': item.pk})
+                elif ct_str == 'majors':
+                    edit_url = reverse('dashboard:major_edit', kwargs={'pk': item.pk})
+                elif ct_str == 'articles':
+                    edit_url = reverse('dashboard:article_edit', kwargs={'pk': item.pk})
+
+                health_items.append({
+                    'obj': item,
+                    'content_type': ct_str,
+                    'type_label': label,
+                    'score': score,
+                    'score_color': 'var(--danger)' if score < 40 else 'var(--warning)' if score < 80 else 'var(--success)',
+                    'edit_url': edit_url
+                })
+
+        # Sort by score (lowest first)
+        health_items = sorted(health_items, key=lambda x: x['score'])
+        return health_items
+
+    def get(self, request):
+        """Render the unified SEO dashboard."""
+        from apps.dashboard.forms.settings import SEOSettingsForm
+        
+        # Get active tab from request, defaulting to 'overview'
+        active_tab = request.GET.get('tab', 'overview')
+        
+        # Handle content type filtering for the health tab
+        health_content_type = request.GET.get('content_type', 'all')
+        
+        # Fetch scored items for the health tab
+        health_items = self.get_health_items(health_content_type)
+        health_total = len(health_items)
+        health_needs_attention = sum(1 for i in health_items if i['score'] < 60)
+
+        # Get settings
+        settings = SiteSettings.get_settings()
+
+        # Instantiate forms
+        form = SEOSettingsForm()
+        settings_form = SiteSEOSettingsForm(instance=settings)
+
+        # Build context
+        context = {
+            'page_title': 'إدارة SEO',
+            'cancel_url': reverse_lazy('dashboard:home'),
+            'active_tab': active_tab,
+            
+            # Forms
+            'form': form,
+            'settings_form': settings_form,
+            
+            # Settings stats
+            'ga4_configured': bool(settings.ga4_measurement_id),
+            'gsc_configured': bool(settings.google_site_verification),
+            'ga4_enabled': settings.enable_ga4,
+            'sitemap_last_generated': settings.sitemap_last_generated,
+            
+            # Content stats
+            'total_universities': University.objects.filter(publish_status='published').count(),
+            'total_institutes': Institute.objects.filter(publish_status='published').count(),
+            'total_majors': Major.objects.filter(publish_status='published').count(),
+            'total_articles': Article.objects.filter(publish_status='published').count(),
+            'total_pages': (
+                University.objects.filter(publish_status='published').count() +
+                Institute.objects.filter(publish_status='published').count() +
+                Major.objects.filter(publish_status='published').count() +
+                Article.objects.filter(publish_status='published').count() +
+                3  # Home, Universities List, Majors List, Articles List
+            ),
+            
+            # SEO health overview
+            'universities_with_meta': University.objects.filter(publish_status='published').exclude(meta_title='').count(),
+            'majors_with_meta': Major.objects.filter(publish_status='published').exclude(meta_title='').count(),
+            'articles_with_meta': Article.objects.filter(publish_status='published').exclude(meta_title='').count(),
+            
+            # Detailed SEO health
+            'health_items': health_items,
+            'health_total': health_total,
+            'health_needs_attention': health_needs_attention,
+            'health_content_type': health_content_type,
+        }
+
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        """Handle POST actions for both SEO settings and tools."""
+        form_type = request.POST.get('form_type', 'tools')
+        settings = SiteSettings.get_settings()
+
+        if form_type == 'settings':
+            settings_form = SiteSEOSettingsForm(request.POST, instance=settings)
+            if settings_form.is_valid():
+                settings_form.save()
+                messages.success(request, 'تم حفظ إعدادات محركات البحث (SEO) بنجاح')
+                return redirect(f"{reverse_lazy('dashboard:seo_management')}?tab=settings")
+            else:
+                for field, errors in settings_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f'{settings_form.fields[field].label}: {error}')
+                return redirect(f"{reverse_lazy('dashboard:seo_management')}?tab=settings")
+
+        elif form_type == 'tools':
+            from apps.dashboard.forms.settings import SEOSettingsForm
+            form = SEOSettingsForm(request.POST)
+            if form.is_valid():
+                action = form.cleaned_data['action']
+                if action == 'regenerate_sitemap':
+                    result = self._regenerate_sitemap()
+                elif action == 'clear_seo_cache':
+                    result = self._clear_seo_cache()
+                elif action == 'test_ga4':
+                    result = self._test_ga4_connection()
+                else:
+                    result = {'success': False, 'message': 'إجراء غير معروف'}
+
+                if result['success']:
+                    messages.success(request, result['message'])
+                else:
+                    messages.error(request, result['message'])
+            else:
+                messages.error(request, 'حدث خطأ في معالجة طلب الأداة')
+            
+            return redirect(f"{reverse_lazy('dashboard:seo_management')}?tab=overview")
+
+        return redirect('dashboard:seo_management')
+
+    def _regenerate_sitemap(self):
+        """Regenerate sitemap.xml and update last generated timestamp."""
+        try:
+            settings = SiteSettings.get_settings()
+            settings.sitemap_last_generated = timezone.now()
+            settings.save(update_fields=['sitemap_last_generated'])
+            return {
+                'success': True,
+                'message': 'تم تحديث خريطة الموقع بنجاح. يمكن الوصول إليها من: /sitemap.xml'
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'فشل تحديث خريطة الموقع: {str(e)}'
+            }
+
+    def _clear_seo_cache(self):
+        """Clear SEO-related cache."""
+        try:
+            from django.core.cache import cache
+            cache_keys = [
+                'sitemap_universities',
+                'sitemap_majors',
+                'sitemap_articles',
+                'sitemap_static',
+            ]
+            for key in cache_keys:
+                cache.delete(key)
+            return {
+                'success': True,
+                'message': 'تم مسح ذاكرة التخزين المؤقت لـ SEO بنجاح'
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'فشل مسح ذاكرة التخزين المؤقت: {str(e)}'
+            }
+
+    def _test_ga4_connection(self):
+        """Test GA4 configuration."""
+        try:
+            settings = SiteSettings.get_settings()
+            if not settings.ga4_measurement_id:
+                return {
+                    'success': False,
+                    'message': 'لم يتم تعيين Google Analytics 4 Measurement ID في الإعدادات'
+                }
+            if not settings.enable_ga4:
+                return {
+                    'success': False,
+                    'message': 'Google Analytics معطّل حالياً في الإعدادات'
+                }
+            if not settings.ga4_measurement_id.startswith('G-'):
+                return {
+                    'success': False,
+                    'message': 'صيغة GA4 Measurement ID غير صحيحة. يجب أن يبدأ بـ G-'
+                }
+            return {
+                'success': True,
+                'message': f'GA4 مُعدّ بشكل صحيح: {settings.ga4_measurement_id}'
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'خطأ في فحص GA4: {str(e)}'
+            }
 
 
 # ============================================================================

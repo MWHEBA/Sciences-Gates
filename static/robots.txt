@@ -1,0 +1,39 @@
+# robots.txt for Science Gates - Study in Malaysia
+# المحدّث: يونيو 2026
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /*?*page=
+Disallow: /*&
+
+# Crawl delay للروبوتات الرئيسية
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# منع روبوتات الذكاء الاصطناعي من جمع البيانات
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+# Sitemap
+Sitemap: https://sciencesgates.com/sitemap.xml

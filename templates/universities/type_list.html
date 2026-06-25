@@ -32,7 +32,7 @@
             <!-- University Info -->
             <div class="p-6">
                 <h3 class="text-xl font-bold text-gray-900 mb-2">{{ university.name }}</h3>
-                <p class="text-gray-600 text-sm mb-4">{{ university.location|clean_desc }}</p>
+                <p class="text-gray-600 text-sm mb-4"><i class="fa-solid fa-location-dot ml-1 text-secondary"></i> {{ university.get_city_display }}</p>
                 
                 <!-- Description -->
                 <p class="text-gray-700 text-sm mb-4 line-clamp-3">{{ university.description|clean_desc }}</p>
@@ -47,7 +47,7 @@
                 </div>
                 
                 <!-- View Details Button -->
-                <a href="{% url 'universities:detail' university.slug %}" class="inline-block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
+                <a href="{{ university.get_absolute_url }}" class="inline-block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
                     عرض التفاصيل
                 </a>
             </div>

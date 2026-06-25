@@ -1,5 +1,5 @@
 {% load institute_tags %}
-<article class="card card--horizontal" onclick="window.location.href='{% url 'institutes:detail' institute.slug %}'">
+<article class="card card--horizontal" onclick="window.location.href='{{ institute.get_absolute_url }}'">
     <!-- صورة المعهد -->
     <div class="card__image">
         <span class="card__badge">معهد</span>
@@ -14,7 +14,7 @@
     <div class="card__content">
         <!-- اسم المعهد -->
         <h3 class="card__title">
-            <a href="{% url 'institutes:detail' institute.slug %}" onclick="event.stopPropagation();">{{ institute.name }}</a>
+            <a href="{{ institute.get_absolute_url }}" onclick="event.stopPropagation();">{{ institute.name }}</a>
         </h3>
         
         <!-- الوصف -->
@@ -26,7 +26,7 @@
                 <i class="fa-solid fa-location-dot"></i>
                 <span>{{ institute.location|clean_desc|truncatewords:3 }}</span>
             </span>
-            <a href="{% url 'institutes:detail' institute.slug %}" class="card__link">
+            <a href="{{ institute.get_absolute_url }}" class="card__link">
                 <span>استعرض البرامج</span>
                 <i class="fa-solid fa-arrow-left"></i>
             </a>

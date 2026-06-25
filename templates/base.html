@@ -20,6 +20,11 @@
     <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
     <meta name="googlebot" content="{% block googlebot %}index, follow{% endblock %}">
     
+    <!-- Google Search Console Verification -->
+    {% if GOOGLE_SITE_VERIFICATION %}
+    <meta name="google-site-verification" content="{{ GOOGLE_SITE_VERIFICATION }}">
+    {% endif %}
+    
     <!-- Open Graph Tags for Social Media Sharing -->
     <meta property="og:title" content="{% block og_title %}Science Gates - Study in Malaysia{% endblock %}">
     <meta property="og:description" content="{% block og_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
@@ -109,17 +114,21 @@
     <!-- Alpine.js Core -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     
-    <!-- Google Analytics Placeholder -->
-    <!-- Replace GA_MEASUREMENT_ID with your actual Google Analytics measurement ID -->
+    <!-- Google Analytics 4 -->
     {% block analytics %}
-    <!-- Google Analytics will be configured here -->
-    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    {% if not DEBUG and ENABLE_GA4 and GA4_MEASUREMENT_ID %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ GA4_MEASUREMENT_ID }}"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'GA_MEASUREMENT_ID');
-    </script> -->
+        gtag('config', '{{ GA4_MEASUREMENT_ID }}', {
+            'send_page_view': true,
+            'anonymize_ip': true,
+            'cookie_flags': 'SameSite=None;Secure'
+        });
+    </script>
+    {% endif %}
     {% endblock %}
     
     <!-- Global Scripts -->

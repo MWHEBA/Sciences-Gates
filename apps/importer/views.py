@@ -93,6 +93,7 @@ class ImportFetchView(ContentAdminRequiredMixin, View):
                 alt_text=logo_data.get('alt', ''),
                 caption=logo_data.get('caption', ''),
                 description=logo_data.get('description', ''),
+                title=logo_data.get('title', ''),
                 source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
                 user=request.user
             )
@@ -109,6 +110,7 @@ class ImportFetchView(ContentAdminRequiredMixin, View):
                 alt_text=main_img_data.get('alt', ''),
                 caption=main_img_data.get('caption', ''),
                 description=main_img_data.get('description', ''),
+                title=main_img_data.get('title', ''),
                 source_type=main_image_source,
                 user=request.user
             )
@@ -125,6 +127,7 @@ class ImportFetchView(ContentAdminRequiredMixin, View):
                 alt_text=og_img_data.get('alt', ''),
                 caption=og_img_data.get('caption', ''),
                 description=og_img_data.get('description', ''),
+                title=og_img_data.get('title', ''),
                 source_type=MediaFile.SourceType.EDITOR,
                 user=request.user
             )

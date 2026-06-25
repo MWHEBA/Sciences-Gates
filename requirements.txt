@@ -4,8 +4,8 @@
 # Django Framework (LTS version)
 Django==4.2.11
 
-# Database Driver for MySQL/MariaDB
-mysqlclient==2.2.0
+# Database Driver for MySQL/MariaDB (Not needed since we are using SQLite)
+# mysqlclient==2.2.0
 
 # Environment Configuration Management
 python-decouple==3.8
@@ -27,7 +27,7 @@ bleach==6.1.0
 # ============================================================================
 # Django form styling with Tailwind CSS
 django-crispy-forms==2.1
-crispy-tailwind==0.5.1
+crispy-tailwind==0.5.0
 
 # ============================================================================
 # CACHING AND PERFORMANCE
@@ -35,11 +35,11 @@ crispy-tailwind==0.5.1
 # Query result caching for performance optimization
 django-cachalot==2.6.1
 
-# ============================================================================
 # SEO AND SITEMAP GENERATION
 # ============================================================================
-# Sitemap generation for SEO
-django-sitemap==2.2.0
+# Sitemap generation for SEO (Uses Django's built-in django.contrib.sitemaps, no external package needed)
+# django-sitemap==2.2.0
+beautifulsoup4==4.12.3
 
 # ============================================================================
 # EMAIL AND NOTIFICATIONS

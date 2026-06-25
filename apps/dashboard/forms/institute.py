@@ -18,7 +18,7 @@ class InstituteForm(forms.ModelForm):
         model = Institute
         fields = [
             # Basic Information
-            'name', 'slug', 'institute_type', 'main_image', 'main_image_alt',
+            'name', 'slug', 'is_legacy', 'institute_type', 'main_image', 'main_image_alt',
             # Rich Text Sections
             'description', 'registration_requirements', 'registration_section',
             # Relationships
@@ -43,6 +43,9 @@ class InstituteForm(forms.ModelForm):
                 'placeholder': 'الرابط (يدعم الأحرف العربية)',
                 'required': True,
                 'dir': 'ltr',
+            }),
+            'is_legacy': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
             }),
             'institute_type': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -144,6 +147,7 @@ class InstituteForm(forms.ModelForm):
             # Basic Information
             'name': 'اسم المعهد',
             'slug': 'الرابط',
+            'is_legacy': 'رابط قديم',
             'institute_type': 'نوع المعهد',
             'main_image': 'الصورة الرئيسية',
             'main_image_alt': 'النص البديل للصورة الرئيسية',
@@ -174,6 +178,7 @@ class InstituteForm(forms.ModelForm):
         help_texts = {
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
+            'is_legacy': 'تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /institutes/slug/)',
             'institute_type': 'تصنيف المعهد (لغة أو أكاديمي)',
             'main_image': 'صورة رئيسية للمعهد',
             'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للمعهد لمحركات البحث ومستعرضات الصور',

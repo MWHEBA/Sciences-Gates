@@ -14,29 +14,38 @@ from decouple import config, Csv
 from pathlib import Path
 
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='science.mwheba.co.uk,localhost,127.0.0.1', cast=Csv())
+if 'science.mwheba.co.uk' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('science.mwheba.co.uk')
 
-# ============================================================================
-# DATABASE CONFIGURATION FOR cPANEL
-# ============================================================================
-# Production database from environment variables
-# cPanel typically provides MySQL/MariaDB on localhost
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME', default='science_gates'),
-        'USER': config('DB_USER', default='root'),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            'autocommit': True,
-        },
-        'CONN_MAX_AGE': 600,  # Connection pooling for better performance
+# Production database configuration
+# Support both SQLite and MySQL dynamically based on DB_ENGINE (defaults to sqlite)
+db_engine = config('DB_ENGINE', default='django.db.backends.sqlite3')
+
+if 'sqlite' in db_engine:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / config('DB_NAME', default='db.sqlite3'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': db_engine,
+            'NAME': config('DB_NAME', default='science_gates'),
+            'USER': config('DB_USER', default='root'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'autocommit': True,
+            },
+            'CONN_MAX_AGE': 600,  # Connection pooling for better performance
+        }
+    }
 
 # ============================================================================
 # STATIC FILES CONFIGURATION FOR cPANEL
@@ -70,10 +79,9 @@ STATIC_ROOT.mkdir(parents=True, exist_ok=True)
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Static files storage backend for production
-# Uses ManifestStaticFilesStorage for cache-busting with file hashing
-# This adds content hashes to filenames (e.g., style.abc123.css)
-# allowing aggressive caching with long expiration times
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+# Uses a custom SafeManifestStaticFilesStorage which prevents crashes if a file is missing in the manifest,
+# falling back gracefully to the original file path.
+STATICFILES_STORAGE = 'apps.core.storage.SafeManifestStaticFilesStorage'
 
 # ============================================================================
 # STATIC FILE CACHING HEADERS

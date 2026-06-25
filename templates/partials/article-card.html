@@ -2,7 +2,7 @@
 <article class="it-course-item cursor-pointer">
     <!-- صورة المقال -->
     <div class="it-course-thumb mb-4 p-relative">
-        <a href="{% url 'articles:detail' article.slug %}">
+        <a href="{{ article.get_absolute_url }}">
             <img src="{% if article.featured_image %}{{ article.featured_image.url }}{% else %}https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800{% endif %}" alt="{{ article.title }}" loading="lazy">
         </a>
         {% if article.category %}
@@ -16,7 +16,7 @@
     <div class="it-course-content">
         <!-- عنوان المقال -->
         <h4 class="it-course-title">
-            <a href="{% url 'articles:detail' article.slug %}">{{ article.title }}</a>
+            <a href="{{ article.get_absolute_url }}">{{ article.title }}</a>
         </h4>
         
         <!-- وصف مختصر -->
@@ -41,7 +41,7 @@
             <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-body);">
                 بوابات العلوم للأخبار
             </span>
-            <a href="{% url 'articles:detail' article.slug %}">
+            <a href="{{ article.get_absolute_url }}">
                 <span>اقرأ المقال</span>
                 <i class="fa-solid fa-arrow-left mr-2"></i>
             </a>

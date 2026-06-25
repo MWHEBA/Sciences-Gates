@@ -52,3 +52,15 @@ yarn-error.log
 # OS
 Thumbs.db
 .DS_Store
+
+# Deploy and hashes
+.deploy_hashes.json
+deploy_logs/
+
+# Secrets
+id_rsa
+
+# Scratch and temporary scripts
+scratch/
+check_all_cities.py
+imported_links_summary.md

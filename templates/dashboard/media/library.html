@@ -282,7 +282,7 @@
                                       <span class="text-[10px] font-normal" style="color: var(--text-muted);" x-text="selectedMedia.caption.length + '/300'"></span>
                                   </label>
                                   <textarea id="media_caption" x-model="selectedMedia.caption" placeholder="نص يظهر للزوار أسفل الصورة (مثال: جلسة علاج الوجه المتقدم - احجزي الآن)..." 
-                                            class="w-full text-xs rounded-lg border border-border" style="padding: 0.6rem 0.8rem; min-height: 60px;" maxlength="300"></textarea>
+                                            class="w-full text-xs rounded-lg border border-border" style="padding: 0.6rem 0.8rem; min-height: 61px;" maxlength="300"></textarea>
                                   <span class="text-[10px]" style="color: var(--text-muted); line-height: 1.4;">
                                       نص مرئي للزوار - مفيد للسياق والـ SEO (اختياري)
                                   </span>
@@ -290,9 +290,18 @@
                               
                               <!-- حقل العنوان -->
                               <div class="flex flex-col gap-1.5">
-                                  <label class="text-xs font-semibold" style="color: var(--text-secondary);" for="media_title">عنوان الصورة (Title)</label>
-                                  <input type="text" id="media_title" x-model="selectedMedia.title" placeholder="يظهر عند التمرير على الصورة..." 
-                                         class="w-full text-xs rounded-lg border border-border" style="padding: 0.6rem 0.8rem;">
+                                  <label class="text-xs font-semibold flex items-center justify-between" style="color: var(--text-secondary);">
+                                      <span>عنوان الصورة (Title)</span>
+                                      <span class="text-[10px] font-normal" style="color: var(--text-muted);" x-text="(selectedMedia.title || '').length + '/500'"></span>
+                                  </label>
+                                  <textarea id="media_title" 
+                                            x-model="selectedMedia.title" 
+                                            @input="autoExpandTextarea($event.target)"
+                                            placeholder="يظهر عند التمرير على الصورة..." 
+                                            class="w-full text-xs rounded-lg border border-border resize-none overflow-hidden" 
+                                            style="padding: 0.6rem 0.8rem; min-height: 38px; max-height: 200px; line-height: 1.5;"
+                                            maxlength="500"
+                                            rows="1"></textarea>
                                   <span class="text-[10px]" style="color: var(--text-muted);">يظهر كـ tooltip عند التمرير (اختياري)</span>
                               </div>
                               
@@ -300,7 +309,7 @@
                               <div class="flex flex-col gap-1.5">
                                   <label class="text-xs font-semibold" style="color: var(--text-secondary);" for="media_description">وصف داخلي</label>
                                   <textarea id="media_description" x-model="selectedMedia.description" placeholder="وصف تفصيلي للاستخدام الداخلي وإدارة المكتبة..." 
-                                            class="w-full text-xs rounded-lg border border-border" style="padding: 0.6rem 0.8rem; min-height: 60px;"></textarea>
+                                            class="w-full text-xs rounded-lg border border-border" style="padding: 0.6rem 0.8rem; min-height: 61px;"></textarea>
                                   <span class="text-[10px]" style="color: var(--text-muted);">للاستخدام الداخلي فقط - لا يظهر للزوار</span>
                               </div>
                           </div>
@@ -382,11 +391,15 @@ function mediaLibrary() {
         
         selectMedia(media) {
             this.selectedMedia = media;
-            // Auto-expand textarea after data loads
+            // Auto-expand textareas after data loads
             this.$nextTick(() => {
-                const textarea = document.getElementById('media_alt');
-                if (textarea) {
-                    this.autoExpandTextarea(textarea);
+                const altTextarea = document.getElementById('media_alt');
+                if (altTextarea) {
+                    this.autoExpandTextarea(altTextarea);
+                }
+                const titleTextarea = document.getElementById('media_title');
+                if (titleTextarea) {
+                    this.autoExpandTextarea(titleTextarea);
                 }
             });
         },

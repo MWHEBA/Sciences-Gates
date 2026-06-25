@@ -9,5 +9,5 @@ app_name = 'institutes'
 urlpatterns = [
     path('', views.InstituteListView.as_view(), name='list'),
     path('type/<str:type>/', views.InstituteTypeListView.as_view(), name='type_list'),
-    path('<slug:slug>/', views.InstituteDetailView.as_view(), name='detail'),
+    path('<str:slug>/', views.InstituteDetailView.as_view(), name='detail'),
 ]

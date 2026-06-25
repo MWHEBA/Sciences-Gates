@@ -6,21 +6,23 @@
 
 {% if filters %}
 <div class="bg-surface-2 border border-border rounded-xl p-6 shadow-lg animate-fadeIn">
-    <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+    <form method="get" class="flex flex-col md:flex-row gap-4 items-end w-full">
         <!-- حقل البحث (Search Box) -->
-        <div class="md:col-span-2">
+        <div class="flex-1 min-w-0 w-full">
             <label class="block text-xs font-semibold text-text-secondary mb-2">
                 {% if page_type == 'articles' %}
                     البحث عن مقالة
                 {% elif page_type == 'institutes' %}
                     البحث عن معهد
+                {% elif page_type == 'majors' %}
+                    البحث عن تخصص
                 {% else %}
                     البحث
                 {% endif %}
             </label>
             <div class="relative">
-                <input type="text" name="search" placeholder="{% if page_type == 'articles' %}ابحث عن مقالة...{% elif page_type == 'institutes' %}ابحث عن اسم المعهد...{% else %}ابحث عن اسم الجامعة...{% endif %}" value="{{ search_value|default:'' }}" class="w-full bg-surface border border-border rounded-lg py-2.5 px-4 pr-10 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all">
-                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-muted">
+                <input type="text" name="search" placeholder="{{ search_placeholder|default:'ابحث...' }}" value="{{ search_value|default:'' }}" class="w-full h-[42px] bg-surface border border-border rounded-lg py-2.5 pr-4 pl-10 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-muted">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
@@ -30,62 +32,39 @@
 
         <!-- قوائم التصفية المنسدلة -->
         {% for filter in filters %}
-            {% if forloop.last %}
-                <!-- الفلتر الأخير مع الأزرار مدمجة -->
-                <div>
-                    <label class="block text-xs font-semibold text-text-secondary mb-2">{{ filter.label }}</label>
-                    <div class="flex gap-2">
-                        <select name="{{ filter.name }}" class="flex-1 bg-surface border border-border rounded-lg py-2.5 px-4 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: left 12px center; padding-left: 36px;">
-                            <option value="">
-                                {% if filter.name == 'category' and page_type == 'articles' %}
-                                    جميع التصنيفات
-                                {% elif filter.name == 'type' %}
-                                    كل الأنواع
-                                {% elif filter.name == 'status' %}
-                                    كل الحالات
-                                {% else %}
-                                    {{ filter.label }}
-                                {% endif %}
-                            </option>
-                            {% for option in filter.options %}
-                                <option value="{{ option.value }}" {% if option.value == filter.selected %}selected{% endif %}>{{ option.label }}</option>
-                            {% endfor %}
-                        </select>
-
-                        <button type="submit" class="bg-primary hover:bg-primary-hover text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2 flex-shrink-0">
-                            <span>بحث</span>
-                        </button>
-                        
-                        <a href="{{ base_url }}" class="bg-surface-2 hover:bg-border text-text-secondary border border-border font-semibold text-sm px-3 py-2.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center flex-shrink-0" style="text-decoration: none;" title="إعادة تعيين">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M4.5 12a7.5 7.5 0 0 1 12.3-5.77.75.75 0 0 1-1 1.12A6 6 0 1 0 18 12h-1.5a.75.75 0 0 1-.53-1.28l2.5-2.5a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1-.53 1.28H19.5A7.5 7.5 0 0 1 4.5 12Z" clip-rule="evenodd" />
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-            {% else %}
-                <!-- الفلتر العادي بدون أزرار -->
-                <div>
-                    <label class="block text-xs font-semibold text-text-secondary mb-2">{{ filter.label }}</label>
-                    <select name="{{ filter.name }}" class="w-full bg-surface border border-border rounded-lg py-2.5 px-4 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: left 12px center; padding-left: 36px;">
-                        <option value="">
-                            {% if filter.name == 'category' and page_type == 'articles' %}
-                                جميع التصنيفات
-                            {% elif filter.name == 'type' %}
-                                كل الأنواع
-                            {% elif filter.name == 'status' %}
-                                كل الحالات
-                            {% else %}
-                                {{ filter.label }}
-                            {% endif %}
-                        </option>
-                        {% for option in filter.options %}
-                            <option value="{{ option.value }}" {% if option.value == filter.selected %}selected{% endif %}>{{ option.label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            {% endif %}
+            <div class="w-full md:w-48 flex-shrink-0">
+                <label class="block text-xs font-semibold text-text-secondary mb-2">{{ filter.label }}</label>
+                <select name="{{ filter.name }}" class="w-full h-[42px] bg-surface border border-border rounded-lg py-2.5 px-4 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: left 12px center; padding-left: 36px;">
+                    <option value="">
+                        {% if filter.name == 'category' and page_type == 'articles' %}
+                            جميع التصنيفات
+                        {% elif filter.name == 'type' %}
+                            كل الأنواع
+                        {% elif filter.name == 'status' %}
+                            كل الحالات
+                        {% else %}
+                            {{ filter.label }}
+                        {% endif %}
+                    </option>
+                    {% for option in filter.options %}
+                        <option value="{{ option.value }}" {% if option.value == filter.selected %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         {% endfor %}
+
+        <!-- أزرار الإجراءات (بحث وإعادة تعيين) -->
+        <div class="flex gap-2 flex-shrink-0 w-full md:w-auto">
+            <button type="submit" class="flex-1 md:flex-initial h-[42px] bg-primary hover:bg-primary-hover text-white font-semibold text-sm px-6 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2">
+                <span>بحث</span>
+            </button>
+            
+            <a href="{{ base_url }}" class="bg-surface-2 hover:bg-border text-text-secondary border border-border font-semibold text-sm px-3 h-[42px] rounded-lg transition-colors cursor-pointer flex items-center justify-center flex-shrink-0" style="text-decoration: none;" title="إعادة تعيين">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M4.5 12a7.5 7.5 0 0 1 12.3-5.77.75.75 0 0 1-1 1.12A6 6 0 1 0 18 12h-1.5a.75.75 0 0 1-.53-1.28l2.5-2.5a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1-.53 1.28H19.5A7.5 7.5 0 0 1 4.5 12Z" clip-rule="evenodd" />
+                </svg>
+            </a>
+        </div>
     </form>
 </div>
 {% else %}
@@ -95,8 +74,8 @@
         <div class="flex-1">
             <label class="block text-xs font-semibold text-text-secondary mb-2">البحث</label>
             <div class="relative">
-                <input type="text" name="search" placeholder="{{ search_placeholder }}" value="{{ search_value|default:'' }}" class="w-full bg-surface border border-border rounded-lg py-2.5 px-4 pr-10 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all">
-                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-muted">
+                <input type="text" name="search" placeholder="{{ search_placeholder }}" value="{{ search_value|default:'' }}" class="w-full h-[42px] bg-surface border border-border rounded-lg py-2.5 pr-4 pl-10 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-muted">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
@@ -104,11 +83,11 @@
             </div>
         </div>
 
-        <button type="submit" class="bg-primary hover:bg-primary-hover text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2 flex-shrink-0">
+        <button type="submit" class="bg-primary hover:bg-primary-hover text-white font-semibold text-sm px-6 h-[42px] rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2 flex-shrink-0">
             <span>بحث</span>
         </button>
         
-        <a href="{{ base_url }}" class="bg-surface-2 hover:bg-border text-text-secondary border border-border font-semibold text-sm px-3 py-2.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center flex-shrink-0" style="text-decoration: none;" title="إعادة تعيين">
+        <a href="{{ base_url }}" class="bg-surface-2 hover:bg-border text-text-secondary border border-border font-semibold text-sm px-3 h-[42px] rounded-lg transition-colors cursor-pointer flex items-center justify-center flex-shrink-0" style="text-decoration: none;" title="إعادة تعيين">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4" aria-hidden="true">
                 <path fill-rule="evenodd" d="M4.5 12a7.5 7.5 0 0 1 12.3-5.77.75.75 0 0 1-1 1.12A6 6 0 1 0 18 12h-1.5a.75.75 0 0 1-.53-1.28l2.5-2.5a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1-.53 1.28H19.5A7.5 7.5 0 0 1 4.5 12Z" clip-rule="evenodd" />
             </svg>
@@ -116,5 +95,3 @@
     </form>
 </div>
 {% endif %}
-
-

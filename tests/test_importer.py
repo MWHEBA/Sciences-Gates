@@ -67,11 +67,12 @@ class TestContentMapper(SimpleTestCase):
 
     def test_clean_importer_name(self):
         mapper = ContentMapper()
-        # Test clean_name (everything before the first pipe/dash separator)
+        # Test clean_name (everything before the first pipe/dash/colon separator)
         assert mapper._clean_importer_name('جامعة مالايا الماليزية UM | البرامج والتكاليف والشروط | يو إم 2026') == 'جامعة مالايا الماليزية UM'
         assert mapper._clean_importer_name('جامعة مالايا الماليزية UM - البرامج والتكاليف') == 'جامعة مالايا الماليزية UM'
         assert mapper._clean_importer_name('جامعة مالايا الماليزية UM – البرامج والتكاليف') == 'جامعة مالايا الماليزية UM'
         assert mapper._clean_importer_name('جامعة مالايا الماليزية UM — البرامج والتكاليف') == 'جامعة مالايا الماليزية UM'
+        assert mapper._clean_importer_name('الجامعة الوطنية الماليزية UKM يو كي إم: القبول والدراسة 2026') == 'الجامعة الوطنية الماليزية UKM يو كي إم'
         assert mapper._clean_importer_name('جامعة مالايا') == 'جامعة مالايا'
         assert mapper._clean_importer_name('جامعة مالايا | ') == 'جامعة مالايا'
 

@@ -10,7 +10,35 @@
     {% include "dashboard/components/filter_bar.html" with search_placeholder=search_placeholder filters=filters search_value=search_value base_url=base_url %}
 
     {% if items %}
+    {% if bulk_action_url %}
+    <form id="bulk-action-form" method="post" action="{{ bulk_action_url }}">
+        {% csrf_token %}
+        
+        <!-- شريط الإجراءات الجماعية -->
+        <div id="bulk-actions-bar" class="hidden flex items-center justify-between p-4 mb-4 bg-white rounded-lg shadow-sm border transition-all duration-200" style="border-color: var(--border);">
+            <div class="flex items-center gap-4">
+                <span class="text-sm font-normal" style="color: var(--text-primary);">
+                    تم تحديد <span id="selected-count" class="font-semibold" style="color: var(--primary);">0</span> عنصر
+                </span>
+            </div>
+            <div class="flex items-center gap-3">
+                <select name="action" id="bulk-action-select" class="text-sm rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 p-2 cursor-pointer bg-white" style="border: 1px solid var(--border); color: var(--text-primary);" required>
+                    <option value="" disabled selected>اختر إجراءً...</option>
+                    <option value="delete">حذف المحدد</option>
+                    <option value="publish">نشر المحدد</option>
+                    <option value="unpublish">إلغاء نشر المحدد</option>
+                </select>
+                <button type="submit" id="bulk-action-submit" class="px-4 py-2 text-sm font-medium rounded-lg text-white transition-colors duration-200 cursor-pointer" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'">
+                    تطبيق
+                </button>
+            </div>
+        </div>
+        
+        {% include "dashboard/components/data_table.html" with columns=columns rows=items edit_url_name=edit_url_name delete_url_name=delete_url_name bulk_action_url=bulk_action_url %}
+    </form>
+    {% else %}
     {% include "dashboard/components/data_table.html" with columns=columns rows=items edit_url_name=edit_url_name delete_url_name=delete_url_name %}
+    {% endif %}
 
     {% if is_paginated %}
     {% include "dashboard/components/pagination.html" with page_obj=page_obj query_params=query_params %}
@@ -51,4 +79,73 @@
     {% endif %}
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if bulk_action_url %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+    const bulkActionsBar = document.getElementById('bulk-actions-bar');
+    const selectedCountSpan = document.getElementById('selected-count');
+    const bulkForm = document.getElementById('bulk-action-form');
+    const bulkActionSelect = document.getElementById('bulk-action-select');
+
+    if (!selectAllCheckbox || !bulkActionsBar) return;
+
+    function updateBulkActionsBar() {
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        selectedCountSpan.textContent = checkedCount;
+
+        if (checkedCount > 0) {
+            bulkActionsBar.classList.remove('hidden');
+            bulkActionsBar.style.display = 'flex';
+        } else {
+            bulkActionsBar.classList.add('hidden');
+            bulkActionsBar.style.display = 'none';
+        }
+
+        // Keep Select All checkbox in sync
+        selectAllCheckbox.checked = (checkedCount === rowCheckboxes.length && rowCheckboxes.length > 0);
+    }
+
+    selectAllCheckbox.addEventListener('change', function() {
+        rowCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        updateBulkActionsBar();
+    });
+
+    rowCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateBulkActionsBar();
+        });
+    });
+
+    bulkForm.addEventListener('submit', function(e) {
+        const action = bulkActionSelect.value;
+        if (!action) {
+            e.preventDefault();
+            alert('يرجى اختيار إجراء أولاً');
+            return;
+        }
+
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        if (checkedCount === 0) {
+            e.preventDefault();
+            alert('يرجى تحديد عنصر واحد على الأقل');
+            return;
+        }
+
+        if (action === 'delete') {
+            const confirmed = confirm('هل أنت متأكد من رغبتك في حذف العناصر المحددة نهائياً؟');
+            if (!confirmed) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+</script>
+{% endif %}
 {% endblock %}

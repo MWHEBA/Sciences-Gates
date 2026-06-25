@@ -1,7 +1,9 @@
 """
 Core views for the Science Gates platform.
 """
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View
+from django.shortcuts import redirect
+from django.http import Http404
 from django.db.models import Q
 from apps.universities.models import University
 from apps.institutes.models import Institute
@@ -134,5 +136,52 @@ class AboutView(TemplateView):
         ).exclude(logo='').only('name', 'logo')
         context['universities_with_logos'] = universities_with_logos
         return context
+
+
+class LegacyUrlDetailView(View):
+    """
+    Fallback view for handling legacy (old style) URLs: /<slug>/.
+    Dynamically routes to University, Institute, Major, or Article detail views.
+    """
+    def dispatch(self, request, *args, **kwargs):
+        slug = kwargs.get('slug')
+        
+        # Check University
+        university = University.objects.filter(slug=slug).first()
+        if university:
+            if university.is_legacy:
+                from apps.universities.views import UniversityDetailView
+                return UniversityDetailView.as_view()(request, *args, **kwargs)
+            else:
+                return redirect(university.get_absolute_url(), permanent=True)
+                
+        # Check Institute
+        institute = Institute.objects.filter(slug=slug).first()
+        if institute:
+            if institute.is_legacy:
+                from apps.institutes.views import InstituteDetailView
+                return InstituteDetailView.as_view()(request, *args, **kwargs)
+            else:
+                return redirect(institute.get_absolute_url(), permanent=True)
+                
+        # Check Major
+        major = Major.objects.filter(slug=slug).first()
+        if major:
+            if major.is_legacy:
+                from apps.majors.views import MajorDetailView
+                return MajorDetailView.as_view()(request, *args, **kwargs)
+            else:
+                return redirect(major.get_absolute_url(), permanent=True)
+                
+        # Check Article
+        article = Article.objects.filter(slug=slug).first()
+        if article:
+            if article.is_legacy:
+                from apps.articles.views import ArticleDetailView
+                return ArticleDetailView.as_view()(request, *args, **kwargs)
+            else:
+                return redirect(article.get_absolute_url(), permanent=True)
+                
+        raise Http404("الصفحة غير موجودة")
 
 

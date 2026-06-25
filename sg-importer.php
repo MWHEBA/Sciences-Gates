@@ -858,37 +858,26 @@ function sg_extract_faqs($accordion_blocks) {
 }
 
 /**
- * استخراج بيانات الصور (الشعار والصورة الرئيسية وصورة SEO)
+ * استخراج بيانات الصور (الشعار والصورة الرئيسية وصورة SEO) مع بيانات SEO كاملة
  */
 function sg_extract_images($post_id, $elementor_images, $yoast_og_image_url) {
     $images = array(
-        'logo'       => array('url' => '', 'alt' => '', 'wp_id' => 0),
-        'main_image' => array('url' => '', 'alt' => '', 'wp_id' => 0),
-        'og_image'   => array('url' => '', 'alt' => '', 'wp_id' => 0),
+        'logo'       => array('url' => '', 'alt' => '', 'caption' => '', 'description' => '', 'title' => '', 'wp_id' => 0),
+        'main_image' => array('url' => '', 'alt' => '', 'caption' => '', 'description' => '', 'title' => '', 'wp_id' => 0),
+        'og_image'   => array('url' => '', 'alt' => '', 'caption' => '', 'description' => '', 'title' => '', 'wp_id' => 0),
     );
 
     // 1. Featured Image للمقال
     $featured_id = get_post_thumbnail_id($post_id);
     if ($featured_id) {
-        $img_url = wp_get_attachment_url($featured_id);
-        $img_alt = get_post_meta($featured_id, '_wp_attachment_image_alt', true) ?: '';
-        // نعتبرها الصورة الرئيسية كـ default
-        $images['main_image'] = array(
-            'url'   => $img_url,
-            'alt'   => $img_alt,
-            'wp_id' => $featured_id,
-        );
+        $images['main_image'] = sg_get_full_image_data($featured_id);
     }
 
     // 2. البحث عن شعار في صور Elementor
     foreach ($elementor_images as $img) {
         $url = $img['url'];
         if (sg_str_contains($url, 'logo') || sg_str_contains($url, 'شعار')) {
-            $images['logo'] = array(
-                'url'   => $url,
-                'alt'   => $img['alt'],
-                'wp_id' => $img['id'],
-            );
+            $images['logo'] = sg_get_full_image_data($img['id']);
             break;
         }
     }
@@ -897,11 +886,7 @@ function sg_extract_images($post_id, $elementor_images, $yoast_og_image_url) {
     if (empty($images['logo']['url']) && !empty($elementor_images)) {
         foreach ($elementor_images as $img) {
             if ($img['id'] != $featured_id) {
-                $images['logo'] = array(
-                    'url'   => $img['url'],
-                    'alt'   => $img['alt'],
-                    'wp_id' => $img['id'],
-                );
+                $images['logo'] = sg_get_full_image_data($img['id']);
                 break;
             }
         }
@@ -909,17 +894,76 @@ function sg_extract_images($post_id, $elementor_images, $yoast_og_image_url) {
 
     // 3. صورة الـ OG من Yoast
     if (!empty($yoast_og_image_url)) {
-        $images['og_image'] = array(
-            'url'   => $yoast_og_image_url,
-            'alt'   => '',
-            'wp_id' => 0,
-        );
+        // محاولة استخراج الـ ID من الرابط
+        $og_id = attachment_url_to_postid($yoast_og_image_url);
+        if ($og_id) {
+            $images['og_image'] = sg_get_full_image_data($og_id);
+        } else {
+            $images['og_image'] = array(
+                'url'         => $yoast_og_image_url,
+                'alt'         => '',
+                'caption'     => '',
+                'description' => '',
+                'title'       => '',
+                'wp_id'       => 0,
+            );
+        }
     } elseif (!empty($images['main_image']['url'])) {
         // Fallback لـ og_image لتكون الصورة الرئيسية
         $images['og_image'] = $images['main_image'];
     }
 
     return $images;
+}
+
+/**
+ * استخراج كل بيانات الصورة من الووردبريس (Alt, Caption, Description, Title)
+ */
+function sg_get_full_image_data($attachment_id) {
+    if (empty($attachment_id)) {
+        return array(
+            'url'         => '',
+            'alt'         => '',
+            'caption'     => '',
+            'description' => '',
+            'title'       => '',
+            'wp_id'       => 0,
+        );
+    }
+
+    $url = wp_get_attachment_url($attachment_id);
+    if (!$url) {
+        return array(
+            'url'         => '',
+            'alt'         => '',
+            'caption'     => '',
+            'description' => '',
+            'title'       => '',
+            'wp_id'       => 0,
+        );
+    }
+
+    // Alt text من الـ meta
+    $alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true) ?: '';
+    
+    // Caption من الـ post excerpt
+    $attachment = get_post($attachment_id);
+    $caption = $attachment ? $attachment->post_excerpt : '';
+    
+    // Description من الـ post content
+    $description = $attachment ? $attachment->post_content : '';
+    
+    // Title من الـ post title
+    $title = $attachment ? $attachment->post_title : '';
+
+    return array(
+        'url'         => $url,
+        'alt'         => $alt,
+        'caption'     => $caption,
+        'description' => $description,
+        'title'       => $title,
+        'wp_id'       => $attachment_id,
+    );
 }
 
 /**

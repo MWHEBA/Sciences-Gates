@@ -2,11 +2,11 @@
 URL configuration for science_gates project.
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
-from apps.core.views import HomeView, AboutView
+from apps.core.views import HomeView, AboutView, LegacyUrlDetailView
 from apps.seo.views import robots_txt
 from apps.seo.sitemaps import sitemaps
 
@@ -23,6 +23,7 @@ urlpatterns = [
     path('search/', include('apps.search.urls')),
     path('robots.txt', robots_txt, name='robots_txt'),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    re_path(r'^(?P<slug>[^/]+)/$', LegacyUrlDetailView.as_view(), name='legacy_detail'),
 ]
 
 # Serve media files in development

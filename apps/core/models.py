@@ -297,6 +297,30 @@ class SiteSettings(models.Model):
         verbose_name='رقم WhatsApp'
     )
     
+    # SEO Settings
+    ga4_measurement_id = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='Google Analytics 4 Measurement ID',
+        help_text='معرف GA4 (مثال: G-XXXXXXXXXX) - يُستخدم لتتبع الزوار'
+    )
+    google_site_verification = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Google Site Verification Code',
+        help_text='كود التحقق من Google Search Console'
+    )
+    enable_ga4 = models.BooleanField(
+        default=True,
+        verbose_name='تفعيل Google Analytics',
+        help_text='تفعيل/إيقاف تتبع Google Analytics'
+    )
+    sitemap_last_generated = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='آخر توليد لخريطة الموقع'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -389,6 +413,15 @@ class MediaFile(TimestampedModel):
         help_text='وصف تفصيلي للاستخدام الداخلي وإدارة المكتبة'
     )
     
+    # Source tracking for WordPress imports
+    source_url = models.URLField(
+        max_length=1000,
+        blank=True,
+        verbose_name='رابط المصدر الأصلي',
+        help_text='رابط الصورة في الموقع القديم (لمنع التكرار)',
+        db_index=True
+    )
+    
     source_type = models.CharField(max_length=30, choices=SourceType.choices)
     
     # Generic FK for content object relation
@@ -406,6 +439,7 @@ class MediaFile(TimestampedModel):
             models.Index(fields=['source_type']),
             models.Index(fields=['content_type', 'object_id']),
             models.Index(fields=['alt_text']),
+            models.Index(fields=['source_url']),
         ]
 
     def __str__(self):

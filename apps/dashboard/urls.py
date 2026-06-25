@@ -2,6 +2,7 @@
 URL configuration for the dashboard app.
 """
 from django.urls import path, include
+from django.views.generic import RedirectView
 from . import views
 from apps.seo import views as seo_views
 
@@ -76,7 +77,7 @@ urlpatterns = [
     path('leads/<int:pk>/', views.LeadDetailView.as_view(), name='lead_detail'),
     
     # SEO management (SEO Admin)
-    path('seo/overview/', views.SEOOverviewView.as_view(), name='seo_overview'),
+    path('seo/overview/', RedirectView.as_view(pattern_name='dashboard:seo_management', permanent=True), name='seo_overview'),
     path('seo/analyze/<str:content_type>/<int:pk>/', seo_views.dashboard_analyze_seo, name='seo_analyze'),
     path('seo/detail/<str:content_type>/<int:pk>/', seo_views.dashboard_seo_detail, name='seo_detail'),
     
@@ -88,6 +89,7 @@ urlpatterns = [
     
     # General Settings (Super Admin)
     path('settings/', views.SiteSettingsUpdateView.as_view(), name='settings'),
+    path('seo/', views.SEOManagementView.as_view(), name='seo_management'),
     
     # Editor uploads
     path('editor/upload-image/', views.EditorImageUploadView.as_view(), name='editor_upload_image'),

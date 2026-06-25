@@ -29,6 +29,11 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
         help_text='رابط الصفحة (يدعم الأحرف العربية)',
         allow_unicode=True
     )
+    is_legacy = models.BooleanField(
+        default=False,
+        verbose_name='رابط قديم',
+        help_text='تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /majors/slug/)'
+    )
     major_category = models.CharField(
         max_length=20,
         choices=MAJOR_CATEGORY_CHOICES,
@@ -150,6 +155,8 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
 
     def get_absolute_url(self):
         """Return the absolute URL for this major."""
+        if self.is_legacy:
+            return f'/{self.slug}/'
         return reverse('majors:detail', kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):

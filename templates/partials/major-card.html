@@ -1,5 +1,5 @@
 {% load major_tags %}
-<article class="card card--horizontal" onclick="window.location.href='{% url 'majors:detail' major.slug %}'">
+<article class="card card--horizontal" onclick="window.location.href='{{ major.get_absolute_url }}'">
     <!-- صورة التخصص -->
     <div class="card__image">
         <img 
@@ -13,7 +13,7 @@
     <div class="card__content">
         <!-- اسم التخصص -->
         <h3 class="card__title">
-            <a href="{% url 'majors:detail' major.slug %}" onclick="event.stopPropagation();">{{ major.name }}</a>
+            <a href="{{ major.get_absolute_url }}" onclick="event.stopPropagation();">{{ major.name }}</a>
         </h3>
         
         <!-- الوصف -->
@@ -22,7 +22,7 @@
         <!-- زر التفاصيل -->
         <div class="card__actions">
             <a 
-                href="{% url 'majors:detail' major.slug %}" 
+                href="{{ major.get_absolute_url }}" 
                 class="btn btn--outline btn--sm"
                 onclick="event.stopPropagation();"
             >

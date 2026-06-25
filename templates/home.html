@@ -1,9 +1,24 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load schema_tags %}
 
 {% block title %}بوابات العلوم - الدراسة في ماليزيا{% endblock %}
 {% block meta_description %}اكتشف أفضل الجامعات الماليزية، احصل على استشارات مجانية، وقبولات جامعية سريعة مع بوابات
 العلوم.{% endblock %}
+
+{% block schema_markup %}
+{{ block.super }}
+<!-- WebPage Schema for Homepage -->
+<script type="application/ld+json">
+{% webpage_schema "الصفحة الرئيسية - بوابات العلوم" %}
+</script>
+<!-- FAQ Schema for Homepage FAQs -->
+{% if faqs %}
+<script type="application/ld+json">
+{% faq_schema faqs %}
+</script>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 

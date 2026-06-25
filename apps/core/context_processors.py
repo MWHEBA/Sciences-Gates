@@ -29,18 +29,37 @@ def dashboard_context(request):
 
 def site_settings_context(request):
     """
-    Add site settings to all templates.
-    إضافة إعدادات الموقع إلى جميع القوالب
+    Add site settings and SEO configs to all templates.
+    إضافة إعدادات الموقع وإعدادات SEO إلى جميع القوالب
     
     Provides:
     - site_settings: SiteSettings singleton instance
+    - GA4_MEASUREMENT_ID: From database (fallback to .env)
+    - GOOGLE_SITE_VERIFICATION: From database (fallback to .env)
+    - ENABLE_GA4: From database
     """
+    from django.conf import settings
+    
     try:
         site_settings = SiteSettings.get_settings()
+        
+        # Priority: Database > Environment Variable
+        ga4_id = site_settings.ga4_measurement_id or getattr(settings, 'GA4_MEASUREMENT_ID', '')
+        gsc_code = site_settings.google_site_verification or getattr(settings, 'GOOGLE_SITE_VERIFICATION', '')
+        enable_ga4 = site_settings.enable_ga4 if site_settings else True
+        
     except Exception:
         site_settings = None
+        ga4_id = getattr(settings, 'GA4_MEASUREMENT_ID', '')
+        gsc_code = getattr(settings, 'GOOGLE_SITE_VERIFICATION', '')
+        enable_ga4 = True
     
-    return {'site_settings': site_settings}
+    return {
+        'site_settings': site_settings,
+        'GA4_MEASUREMENT_ID': ga4_id,
+        'GOOGLE_SITE_VERIFICATION': gsc_code,
+        'ENABLE_GA4': enable_ga4,
+    }
 
 
 def phone_countries_context(request):

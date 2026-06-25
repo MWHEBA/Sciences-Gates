@@ -27,6 +27,57 @@
     </div>
 </section>
 
+<!-- Hub Cross-Linking Section -->
+{% if popular_universities or latest_articles %}
+<section class="hub-section" aria-label="محتوى ذو صلة">
+    <div class="container hub-section__container">
+
+        {% if popular_universities %}
+        <!-- Popular Universities -->
+        <div class="hub-block">
+            <h2 class="hub-block__title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+                الجامعات الشريكة
+            </h2>
+            <ul class="hub-block__list">
+                {% for university in popular_universities %}
+                <li class="hub-block__item">
+                    <a href="{{ university.get_absolute_url }}" class="hub-block__link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                        {{ university.name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'universities:list' %}" class="hub-block__more">عرض جميع الجامعات</a>
+        </div>
+        {% endif %}
+
+        {% if latest_articles %}
+        <!-- Latest Articles -->
+        <div class="hub-block">
+            <h2 class="hub-block__title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                أدلة وموارد الدراسة
+            </h2>
+            <ul class="hub-block__list">
+                {% for article in latest_articles %}
+                <li class="hub-block__item">
+                    <a href="{{ article.get_absolute_url }}" class="hub-block__link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                        {{ article.title }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'articles:list' %}" class="hub-block__more">تصفح المدونة كاملةً</a>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endif %}
+
 <!-- CTA Band -->
 {% include 'partials/cta-band.html' %}
 

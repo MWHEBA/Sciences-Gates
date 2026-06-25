@@ -91,7 +91,7 @@ Usage: Include once in page, opens via JavaScript
                                         oninput="updateCaptionCharCount(this)"
                                         placeholder="نص يظهر للزوار أسفل الصورة (مثال: جلسة علاج الوجه المتقدم - احجزي الآن)..." 
                                         class="w-full text-xs rounded-lg border border-border" 
-                                        style="width: 100%; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; font-family: inherit; min-height: 60px;"
+                                        style="width: 100%; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; font-family: inherit; min-height: 61px;"
                                         maxlength="300"></textarea>
                               <span style="font-size: 10px; color: var(--text-muted); line-height: 1.4;">
                                   نص مرئي للزوار - مفيد للسياق والـ SEO (اختياري)
@@ -100,12 +100,18 @@ Usage: Include once in page, opens via JavaScript
                           
                           <!-- حقل العنوان -->
                           <div class="flex flex-col gap-1.5" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
-                              <label class="text-xs font-semibold" style="font-size: 12px; font-weight: 600; color: var(--text-secondary);" for="mediaTitle">
-                                  عنوان الصورة (Title)
+                              <label class="text-xs font-semibold flex items-center justify-between" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">
+                                  <span>عنوان الصورة (Title)</span>
+                                  <span id="titleCharCount" style="font-size: 10px; font-weight: 400; color: var(--text-muted);">0/500</span>
                               </label>
-                              <input type="text" id="mediaTitle" name="title" placeholder="يظهر عند التمرير على الصورة..." 
-                                     class="w-full text-xs rounded-lg border border-border" 
-                                     style="width: 100%; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; font-family: inherit;">
+                              <textarea id="mediaTitle" 
+                                        name="title" 
+                                        oninput="updateTitleCharCount(this); autoExpandTextarea(this)"
+                                        placeholder="يظهر عند التمرير على الصورة..." 
+                                        class="w-full text-xs rounded-lg border border-border resize-none overflow-hidden" 
+                                        style="width: 100%; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; font-family: inherit; min-height: 38px; max-height: 200px; line-height: 1.5; resize: none; overflow: hidden;"
+                                        maxlength="500"
+                                        rows="1"></textarea>
                               <span style="font-size: 10px; color: var(--text-muted);">يظهر كـ tooltip عند التمرير (اختياري)</span>
                           </div>
                           
@@ -118,7 +124,7 @@ Usage: Include once in page, opens via JavaScript
                                         name="description" 
                                         placeholder="وصف تفصيلي للاستخدام الداخلي وإدارة المكتبة..." 
                                         class="w-full text-xs rounded-lg border border-border" 
-                                        style="width: 100%; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; font-family: inherit; min-height: 60px;"></textarea>
+                                        style="width: 100%; font-size: 12px; border-radius: 8px; border: 1px solid var(--border); padding: 10px 12px; font-family: inherit; min-height: 61px;"></textarea>
                               <span style="font-size: 10px; color: var(--text-muted);">للاستخدام الداخلي فقط - لا يظهر للزوار</span>
                           </div>
 
@@ -190,7 +196,11 @@ function populateMediaModal(mediaFile, fieldName) {
     captionTextarea.value = mediaFile.caption || '';
     updateCaptionCharCount(captionTextarea);
     
-    document.getElementById('mediaTitle').value = mediaFile.title || '';
+    const titleTextarea = document.getElementById('mediaTitle');
+    titleTextarea.value = mediaFile.title || '';
+    autoExpandTextarea(titleTextarea);
+    updateTitleCharCount(titleTextarea);
+    
     document.getElementById('mediaDescription').value = mediaFile.description || '';
     
     // Store field name for later sync
@@ -319,6 +329,11 @@ function updateAltCharCount(element) {
 function updateCaptionCharCount(element) {
     const count = element.value.length;
     document.getElementById('captionCharCount').textContent = count + '/300';
+}
+
+function updateTitleCharCount(element) {
+    const count = element.value.length;
+    document.getElementById('titleCharCount').textContent = count + '/500';
 }
 
 // Close modal on Escape key

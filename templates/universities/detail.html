@@ -1,9 +1,9 @@
-
 {% extends 'base.html' %}
 {% load static %}
 {% load image_tags %}
 {% load breadcrumbs %}
 {% load university_tags %}
+{% load schema_tags %}
 
 {% block title %}{{ university.meta_title|default:university.name }} - بوابات العلوم{% endblock %}
 {% block meta_description %}{{ university.meta_description|default:university.description|clean_desc }}{% endblock %}
@@ -21,6 +21,24 @@
 {% block googlebot %}{{ university.get_robots_content }}{% endblock %}
 
 {% block canonical %}<link rel="canonical" href="{% if university.canonical_url %}{{ university.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endif %}">{% endblock %}
+
+{% block schema_markup %}
+{{ block.super }}
+<!-- University Schema -->
+<script type="application/ld+json">
+{% university_schema university %}
+</script>
+<!-- Breadcrumb Schema -->
+<script type="application/ld+json">
+{% breadcrumb_schema %}
+</script>
+<!-- FAQ Schema -->
+{% if faqs %}
+<script type="application/ld+json">
+{% faq_schema faqs %}
+</script>
+{% endif %}
+{% endblock %}
 
 {% block extra_css %}
 {% render_breadcrumb_schema breadcrumbs request %}
@@ -84,7 +102,7 @@
             </div>
             <div class="quick-info-text">
                 <span class="quick-info-label">الموقع</span>
-                <span class="quick-info-value">{{ university.location }}</span>
+                <span class="quick-info-value">{{ university.get_city_display }}</span>
             </div>
         </div>
 

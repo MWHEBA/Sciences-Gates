@@ -18,7 +18,7 @@ class MajorForm(forms.ModelForm):
         model = Major
         fields = [
             # Basic Information
-            'name', 'slug', 'major_category', 'main_image', 'main_image_alt',
+            'name', 'slug', 'is_legacy', 'major_category', 'main_image', 'main_image_alt',
             # Quick Information Fields
             'study_duration', 'bachelor_duration', 'master_duration', 'phd_duration',
             'tuition_fees', 'study_language', 'practical_training', 'career_opportunities',
@@ -46,6 +46,9 @@ class MajorForm(forms.ModelForm):
                 'placeholder': 'الرابط (يدعم الأحرف العربية)',
                 'required': True,
                 'dir': 'ltr',
+            }),
+            'is_legacy': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
             }),
             'major_category': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -197,6 +200,7 @@ class MajorForm(forms.ModelForm):
             # Basic Information
             'name': 'اسم التخصص',
             'slug': 'الرابط',
+            'is_legacy': 'رابط قديم',
             'major_category': 'تصنيف التخصص',
             'main_image': 'الصورة الرئيسية',
             'main_image_alt': 'النص البديل للصورة الرئيسية',
@@ -239,6 +243,7 @@ class MajorForm(forms.ModelForm):
         help_texts = {
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
+            'is_legacy': 'تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /majors/slug/)',
             'major_category': 'تصنيف التخصص حسب المجال',
             'main_image': 'صورة رئيسية للتخصص',
             'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للتخصص لمحركات البحث ومستعرضات الصور',

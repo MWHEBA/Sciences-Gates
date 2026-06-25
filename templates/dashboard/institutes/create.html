@@ -22,10 +22,18 @@
 
         <!-- Slug -->
         <div>
-            <label for="{{ form.slug.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.slug.label }}
-                <span class="text-red-500">*</span>
-            </label>
+            <div class="flex justify-between items-center mb-2">
+                <label for="{{ form.slug.id_for_label }}" class="block text-sm font-normal text-gray-700">
+                    {{ form.slug.label }}
+                    <span class="text-red-500">*</span>
+                </label>
+                <div class="flex items-center gap-2">
+                    {{ form.is_legacy }}
+                    <label for="{{ form.is_legacy.id_for_label }}" class="text-sm font-normal cursor-pointer select-none text-gray-700">
+                        {{ form.is_legacy.label }}
+                    </label>
+                </div>
+            </div>
             {{ form.slug }}
             {% if form.slug.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ form.slug.errors.0 }}</p>
