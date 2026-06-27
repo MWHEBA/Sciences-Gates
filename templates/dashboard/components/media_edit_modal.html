@@ -139,6 +139,13 @@ Usage: Include once in page, opens via JavaScript
               
               <!-- أزرار التحكم بالأسفل -->
               <div class="p-4 border-t border-border flex justify-end gap-2" style="padding: 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background-color: var(--surface-2);">
+                  <a id="mediaDownloadLink" href="" download="" target="_blank" class="btn bg-white border border-border text-text-primary hover:bg-bg-light px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer flex items-center gap-1.5" 
+                     style="background-color: white; border: 1px solid var(--border); color: var(--text-primary); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s;">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                      </svg>
+                      تحميل الملف
+                  </a>
                   <button onclick="closeMediaModal()" class="btn bg-white border border-border text-text-secondary hover:bg-bg-light px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer" 
                           style="background-color: white; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s;">
                       إلغاء
@@ -179,6 +186,13 @@ function populateMediaModal(mediaFile, fieldName) {
     document.getElementById('mediaFileName').textContent = mediaFile.original_filename;
     document.getElementById('mediaFileName').title = mediaFile.original_filename;
     document.getElementById('mediaFileSize').textContent = formatFileSize(mediaFile.file_size);
+    
+    // تعيين رابط وتنزيل الملف
+    const downloadLink = document.getElementById('mediaDownloadLink');
+    if (downloadLink) {
+        downloadLink.href = mediaFile.file_url;
+        downloadLink.setAttribute('download', mediaFile.original_filename || '');
+    }
     
     if (mediaFile.width && mediaFile.height) {
         document.getElementById('mediaDimensions').textContent = `${mediaFile.width} × ${mediaFile.height} بكسل`;

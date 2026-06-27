@@ -109,7 +109,7 @@
 <!-- Relationships Section -->
 <div class="bg-white rounded-lg shadow p-6">
     <h2 class="text-xl font-semibold text-gray-900 mb-4">الارتباطات</h2>
-    <div>
+    <div class="space-y-6">
         <!-- Related Articles -->
         <div>
             <label for="{{ form.related_articles.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
@@ -122,6 +122,20 @@
                 <p class="mt-1 text-sm text-red-600">{{ form.related_articles.errors.0 }}</p>
             {% endif %}
             <p class="mt-1 text-xs text-gray-500">{{ form.related_articles.help_text }}</p>
+        </div>
+
+        <!-- Tags -->
+        <div>
+            <label for="{{ form.tags.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                {{ form.tags.label }}
+            </label>
+            <div class="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
+                {{ form.tags }}
+            </div>
+            {% if form.tags.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.tags.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-1 text-xs text-gray-500">{{ form.tags.help_text }}</p>
         </div>
     </div>
 </div>
@@ -204,6 +218,57 @@
     </div>
 </div>
 
+<!-- Attachments Section -->
+<div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">ملفات المعهد (الكتيبات، شروط القبول، إلخ)</h2>
+    <div id="attachment-formset-container" class="space-y-4">
+        {{ attachment_formset.management_form }}
+        {% for form in attachment_formset %}
+        <div class="p-4 border border-gray-200 rounded-lg bg-gray-50 mb-4" style="border: 1px solid var(--border); background-color: var(--bg-light); margin-bottom: 16px;">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <!-- Title -->
+                <div>
+                    <label for="{{ form.title.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                        {{ form.title.label }}
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.title.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- File -->
+                <div>
+                    <label for="{{ form.file.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                        {{ form.file.label }}
+                    </label>
+                    {{ form.file }}
+                    {% if form.file.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.file.errors.0 }}</p>
+                    {% endif %}
+                    {% if form.instance.pk and form.instance.file %}
+                        <p class="mt-2 text-xs text-gray-500">
+                            الملف الحالي: <a href="{{ form.instance.file.url }}" target="_blank" style="color: var(--primary);" class="underline">{{ form.instance.title }}</a> ({{ form.instance.file_size|filesizeformat }})
+                        </p>
+                    {% endif %}
+                </div>
+
+                <!-- Delete Checkbox -->
+                {% if form.instance.pk %}
+                <div class="md:col-span-2">
+                    <label class="flex items-center gap-2 cursor-pointer select-none text-sm font-normal text-gray-700">
+                        {{ form.DELETE }}
+                        <span>حذف هذا الملف</span>
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+            {{ form.id }}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
 <!-- Publishing Section -->
 <div class="bg-white rounded-lg shadow p-6">
     <h2 class="text-xl font-semibold text-gray-900 mb-4">النشر</h2>
@@ -220,15 +285,49 @@
 </div>
 
 <!-- SEO Section -->
-<div class="bg-white rounded-lg shadow p-6">
+<div class="bg-white rounded-lg shadow p-6" x-data="{
+    metaTitle: '',
+    metaDesc: '',
+    init() {
+        const titleEl = $el.querySelector('textarea[name=meta_title], input[name=meta_title]');
+        const descEl = $el.querySelector('textarea[name=meta_description], input[name=meta_description]');
+        if (titleEl) {
+            this.metaTitle = titleEl.value;
+            const updateTitle = () => { this.metaTitle = titleEl.value; };
+            titleEl.addEventListener('input', updateTitle);
+            titleEl.addEventListener('change', updateTitle);
+        }
+        if (descEl) {
+            this.metaDesc = descEl.value;
+            const updateDesc = () => { this.metaDesc = descEl.value; };
+            descEl.addEventListener('input', updateDesc);
+            descEl.addEventListener('change', updateDesc);
+        }
+    }
+}">
     <h2 class="text-xl font-semibold text-gray-900 mb-4">تحسين محركات البحث (SEO)</h2>
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
         <!-- Meta Title -->
         <div>
-            <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.meta_title.label }}
-            </label>
+            <div class="flex justify-between items-center mb-2">
+                <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-0">
+                    {{ form.meta_title.label }}
+                </label>
+                <span class="text-xs" :style="metaTitle.length > 46 ? 'color: var(--danger); font-weight: bold;' : (metaTitle.length >= 26 ? 'color: var(--success);' : 'color: var(--warning);')">
+                    <span x-text="metaTitle.length"></span> / 46 (60 شاملة اسم الموقع)
+                </span>
+            </div>
             {{ form.meta_title }}
+            <div class="w-full mt-1.5" style="height: 4px; background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;">
+                <div style="height: 100%; transition: width 0.2s ease;"
+                     :style="{ 
+                         width: Math.min(100, (metaTitle.length / 46) * 100) + '%',
+                         backgroundColor: metaTitle.length > 46 ? 'var(--danger)' : (metaTitle.length >= 26 ? 'var(--success)' : 'var(--warning)')
+                     }"></div>
+            </div>
+            <p class="mt-1 text-xs text-gray-500" style="font-size: 11px;">
+                * يضاف اسم الموقع تلقائياً في النهاية (" - بوابات العلوم" / 14 حرفاً)، لذا يوصى بطول بين 26 و 46 حرفاً للمدخل.
+            </p>
             {% if form.meta_title.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ form.meta_title.errors.0 }}</p>
             {% endif %}
@@ -247,12 +346,124 @@
             <p class="mt-1 text-xs text-gray-500">{{ form.focus_keyword.help_text }}</p>
         </div>
 
+        <!-- Keyphrase Synonyms -->
+        <div>
+            <label class="block text-sm font-normal text-gray-700 mb-2">
+                {{ form.keyphrase_synonyms.label }}
+            </label>
+            <div x-data="{
+                synonyms: [],
+                newSynonym: '',
+                isFocused: false,
+                init() {
+                    const inputEl = $el.querySelector('input[name=keyphrase_synonyms]');
+                    if (inputEl) {
+                        inputEl.addEventListener('change', () => {
+                            if (inputEl.value) {
+                                try {
+                                    const parsed = JSON.parse(inputEl.value);
+                                    this.synonyms = Array.isArray(parsed) ? parsed : [parsed];
+                                } catch (e) {
+                                    this.synonyms = inputEl.value.split(',').map(s => s.trim()).filter(s => s);
+                                }
+                            } else {
+                                this.synonyms = [];
+                            }
+                        });
+                        if (inputEl.value) {
+                            try {
+                                const parsed = JSON.parse(inputEl.value);
+                                this.synonyms = Array.isArray(parsed) ? parsed : [parsed];
+                            } catch (e) {
+                                this.synonyms = inputEl.value.split(',').map(s => s.trim()).filter(s => s);
+                            }
+                        } else {
+                            this.synonyms = [];
+                        }
+                    }
+                },
+                addSynonym() {
+                    const val = this.newSynonym.replace(/[،,]/g, '').trim();
+                    if (val && !this.synonyms.includes(val)) {
+                        this.synonyms.push(val);
+                        this.syncToInput();
+                    }
+                    this.newSynonym = '';
+                },
+                removeSynonym(index) {
+                    this.synonyms.splice(index, 1);
+                    this.syncToInput();
+                },
+                syncToInput() {
+                    const inputEl = $el.querySelector('input[name=keyphrase_synonyms]');
+                    if (inputEl) {
+                        inputEl.value = JSON.stringify(this.synonyms);
+                        inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            }" class="space-y-2">
+                <!-- Hidden Input -->
+                <div class="hidden">
+                    {{ form.keyphrase_synonyms }}
+                </div>
+
+                <!-- Visual Tags Input Wrapper -->
+                <div class="flex flex-wrap gap-2 items-center w-full px-4 py-2 border rounded-lg transition-all duration-200 min-h-[42px] bg-white cursor-text"
+                     :class="isFocused ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-300'"
+                     @click="$refs.synInput.focus()">
+                    
+                    <template x-for="(syn, index) in synonyms" :key="index">
+                        <span class="bg-gray-100 text-gray-800 border border-gray-200 inline-flex items-center rounded-full px-3 py-1 text-sm gap-2 direction-rtl">
+                            <span x-text="syn"></span>
+                            <button type="button" 
+                                    @click.stop="removeSynonym(index)" 
+                                    class="text-gray-400 hover:text-gray-600 focus:outline-none text-base font-bold leading-none"
+                                    aria-label="حذف">
+                                &times;
+                            </button>
+                        </span>
+                    </template>
+
+                    <input type="text"
+                           x-ref="synInput"
+                           x-model="newSynonym"
+                           @keydown.enter.prevent="addSynonym()"
+                           @keydown.comma.prevent="addSynonym()"
+                           @keydown.space="if (newSynonym.endsWith('،') || newSynonym.endsWith(',')) { addSynonym() }"
+                           @input="if (newSynonym.includes(',') || newSynonym.includes('،')) { addSynonym() }"
+                           @blur="addSynonym()"
+                           @focus="isFocused = true"
+                           @blur="isFocused = false; addSynonym()"
+                           placeholder="اكتب مرادفاً واضغط Enter أو فاصلة..."
+                           class="border-none outline-none bg-transparent text-sm text-gray-800 flex-grow min-w-[150px] py-1 px-0 focus:ring-0 focus:border-none"
+                           dir="rtl">
+                </div>
+            </div>
+            {% if form.keyphrase_synonyms.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.keyphrase_synonyms.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-1 text-xs text-gray-500">{{ form.keyphrase_synonyms.help_text }}</p>
+        </div>
+
+
         <!-- Meta Description -->
         <div class="md:col-span-2">
-            <label for="{{ form.meta_description.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
-                {{ form.meta_description.label }}
-            </label>
+            <div class="flex justify-between items-center mb-2">
+                <label for="{{ form.meta_description.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-0">
+                    {{ form.meta_description.label }}
+                </label>
+                <span class="text-xs" :style="metaDesc.length > 160 ? 'color: var(--danger); font-weight: bold;' : (metaDesc.length >= 120 ? 'color: var(--success);' : 'color: var(--warning);')">
+                    <span x-text="metaDesc.length"></span> / 160
+                </span>
+            </div>
             {{ form.meta_description }}
+            <div class="w-full mt-1.5" style="height: 4px; background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;">
+                <div style="height: 100%; transition: width 0.2s ease;"
+                     :style="{ 
+                         width: Math.min(100, (metaDesc.length / 160) * 100) + '%',
+                         backgroundColor: metaDesc.length > 160 ? 'var(--danger)' : (metaDesc.length >= 120 ? 'var(--success)' : 'var(--warning)')
+                     }"></div>
+            </div>
             {% if form.meta_description.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ form.meta_description.errors.0 }}</p>
             {% endif %}
@@ -327,5 +538,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/importer.js' %}"></script>
+<script src="{% static 'js/importer.js' %}?v=3"></script>
 {% endblock %}

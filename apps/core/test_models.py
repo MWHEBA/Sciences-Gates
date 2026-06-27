@@ -397,3 +397,63 @@ class UserProfileTestCase(TestCase):
         self.assertEqual(choices[UserRole.SUPER_ADMIN], '\u0645\u0633\u0624\u0648\u0644 \u0627\u0644\u0646\u0638\u0627\u0645')
         self.assertEqual(choices[UserRole.CONTENT_ADMIN], '\u0645\u0633\u0624\u0648\u0644 \u0627\u0644\u0645\u062d\u062a\u0648\u0649')
         self.assertEqual(choices[UserRole.SEO_ADMIN], '\u0645\u0633\u0624\u0648\u0644 SEO')
+
+
+class MediaFileTestCase(TestCase):
+    """Test cases for MediaFile model properties and methods."""
+    
+    def test_file_extension_property(self):
+        """Test that file_extension property returns the correct uppercase extension."""
+        from apps.core.models import MediaFile
+        
+        # Case 1: Simple extension
+        media_1 = MediaFile(original_filename='test_image.png')
+        self.assertEqual(media_1.file_extension, 'PNG')
+        
+        # Case 2: Extension with multiple dots
+        media_2 = MediaFile(original_filename='my.cool.photo.webp')
+        self.assertEqual(media_2.file_extension, 'WEBP')
+        
+        # Case 3: Mixed case extension
+        media_3 = MediaFile(original_filename='ANOTHER_IMAGE.JpEg')
+        self.assertEqual(media_3.file_extension, 'JPEG')
+        
+        # Case 4: No extension
+        media_4 = MediaFile(original_filename='no_extension')
+        self.assertEqual(media_4.file_extension, '')
+        
+        # Case 5: Empty filename, fallback to file.name
+        media_5 = MediaFile(original_filename='')
+        media_5.file.name = 'fallback_path/image.svg'
+        self.assertEqual(media_5.file_extension, 'SVG')
+        
+        # Case 6: PDF extension
+        media_6 = MediaFile(original_filename='document.pdf')
+        self.assertEqual(media_6.file_extension, 'PDF')
+
+    def test_completion_score_property(self):
+        """Test that completion_score property returns correct score (0-4)."""
+        from apps.core.models import MediaFile
+        
+        # Case 1: 0 fields filled
+        media = MediaFile(alt_text='', caption='', title='', description='')
+        self.assertEqual(media.completion_score, 0)
+        
+        # Case 2: 1 field filled
+        media.alt_text = 'Alt Text'
+        self.assertEqual(media.completion_score, 1)
+        
+        # Case 3: 2 fields filled
+        media.caption = 'Caption text'
+        self.assertEqual(media.completion_score, 2)
+        
+        # Case 4: 3 fields filled
+        media.title = 'Title text'
+        self.assertEqual(media.completion_score, 3)
+        
+        # Case 5: 4 fields filled
+        media.description = 'Description text'
+        self.assertEqual(media.completion_score, 4)
+
+
+

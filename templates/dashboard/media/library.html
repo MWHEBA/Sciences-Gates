@@ -114,11 +114,13 @@
             
             <!-- بطاقة بدون Alt -->
             <div class="flex-1 flex flex-col items-center justify-center p-2.5 rounded-lg border" 
-                 style="background-color: {% if missing_alt_count > 0 %}var(--danger-light){% else %}var(--success-light){% endif %}; 
-                        border-color: {% if missing_alt_count > 0 %}var(--danger){% else %}var(--success){% endif %}; 
-                        min-width: 100px; border-width: 1px; border-style: solid;">
-                <span style="color: {% if missing_alt_count > 0 %}var(--danger){% else %}var(--success){% endif %}; font-size: 10px; font-weight: 600; text-align: center;">بدون Alt</span>
-                <span style="color: {% if missing_alt_count > 0 %}var(--danger){% else %}var(--success){% endif %}; font-size: 16px; font-weight: 700; margin-top: 4px;">{{ missing_alt_count }}</span>
+                 {% if missing_alt_count > 0 %}
+                     style="background-color: var(--danger-light); border-color: var(--danger); min-width: 100px; border-width: 1px; border-style: solid;"
+                 {% else %}
+                     style="background-color: var(--success-light); border-color: var(--success); min-width: 100px; border-width: 1px; border-style: solid;"
+                 {% endif %}>
+                <span {% if missing_alt_count > 0 %}style="color: var(--danger); font-size: 10px; font-weight: 600; text-align: center;"{% else %}style="color: var(--success); font-size: 10px; font-weight: 600; text-align: center;"{% endif %}>بدون Alt</span>
+                <span {% if missing_alt_count > 0 %}style="color: var(--danger); font-size: 16px; font-weight: 700; margin-top: 4px;"{% else %}style="color: var(--success); font-size: 16px; font-weight: 700; margin-top: 4px;"{% endif %}>{{ missing_alt_count }}</span>
             </div>
         </div>
     </div>
@@ -126,7 +128,7 @@
     <!-- شبكة الصور وحاوية العرض -->
     <div class="border border-border rounded-xl overflow-hidden" style="background-color: var(--surface-2); min-height: 500px;">
         <!-- شبكة عرض الصور (دقة أعلى وتقسيم أكثر لجعل الصور أصغر حجماً وأكثر تنظيماً) -->
-        <div class="p-5 overflow-y-auto max-h-[600px]" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; align-content: start; scrollbar-width: thin;">
+        <div class="p-5" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; align-content: start;">
             {% for media in page_obj %}
                 <div @click="isSelectionMode ? toggleSelectMedia('{{ media.pk }}') : selectMedia({
                          id: '{{ media.pk }}',
@@ -164,14 +166,40 @@
                                     class="rounded border-border text-primary focus:ring-primary cursor-pointer"
                                     style="width: 18px; height: 18px; accent-color: var(--primary);">
                          </div>
+
+                          <div class="absolute top-1.5 right-1.5 animate-fadeIn" x-show="!isSelectionMode" title="درجة اكتمال البيانات: {{ media.completion_score }}/4">
+                              <div class="rounded-full overflow-hidden flex" style="background-color: var(--border); width: 34px; height: 6px;">
+                                  {% with score=media.completion_score %}
+                                      {% if score == 1 %}
+                                          <div class="h-full" style="width: 25%; background-color: var(--danger);"></div>
+                                      {% elif score == 2 %}
+                                          <div class="h-full" style="width: 50%; background-color: var(--warning);"></div>
+                                      {% elif score == 3 %}
+                                          <div class="h-full" style="width: 75%; background-color: var(--secondary);"></div>
+                                      {% elif score == 4 %}
+                                          <div class="h-full" style="width: 100%; background-color: var(--success);"></div>
+                                      {% endif %}
+                                  {% endwith %}
+                              </div>
+                          </div>
                          
-                         <!-- لمبة الحالة للـ Alt -->
-                         <div class="absolute top-1.5 right-1.5" x-show="!isSelectionMode">
-                             {% if media.alt_text %}
-                                 <span class="w-2.5 h-2.5 bg-success rounded-full border border-white block" title="Alt موجود"></span>
-                             {% else %}
-                                 <span class="w-2.5 h-2.5 bg-danger rounded-full border border-white block animate-pulse" title="Alt مفقود"></span>
-                             {% endif %}
+                         <!-- بادج نوع الملف (الامتداد) -->
+                         <div class="absolute top-0 left-0 animate-fadeIn" x-show="!isSelectionMode">
+                             {% with ext=media.file_extension %}
+                                 {% if ext == 'PNG' %}
+                                     <span class="inline-flex items-center justify-center rounded-br font-bold tracking-tighter" style="font-size: 7.5px; line-height: 1; height: 12px; padding: 0 4px; background-color: var(--info-light); color: var(--info);">PNG</span>
+                                 {% elif ext == 'WEBP' %}
+                                     <span class="inline-flex items-center justify-center rounded-br font-bold tracking-tighter" style="font-size: 7.5px; line-height: 1; height: 12px; padding: 0 4px; background-color: var(--success-light); color: var(--success);">WEBP</span>
+                                 {% elif ext == 'JPG' or ext == 'JPEG' %}
+                                     <span class="inline-flex items-center justify-center rounded-br font-bold tracking-tighter" style="font-size: 7.5px; line-height: 1; height: 12px; padding: 0 4px; background-color: var(--secondary-light); color: var(--secondary);">{{ ext }}</span>
+                                 {% elif ext == 'SVG' %}
+                                     <span class="inline-flex items-center justify-center rounded-br font-bold tracking-tighter" style="font-size: 7.5px; line-height: 1; height: 12px; padding: 0 4px; background-color: var(--warning-light); color: var(--warning);">SVG</span>
+                                 {% elif ext == 'PDF' %}
+                                     <span class="inline-flex items-center justify-center rounded-br font-bold tracking-tighter" style="font-size: 7.5px; line-height: 1; height: 12px; padding: 0 4px; background-color: var(--danger-light); color: var(--danger);">PDF</span>
+                                 {% else %}
+                                     <span class="inline-flex items-center justify-center rounded-br font-bold tracking-tighter" style="font-size: 7.5px; line-height: 1; height: 12px; padding: 0 4px; background-color: var(--primary-light); color: var(--primary);">{{ ext }}</span>
+                                 {% endif %}
+                             {% endwith %}
                          </div>
                      </div>
                      
@@ -316,16 +344,26 @@
                       </div>
                       
                       <!-- أزرار التحكم بالأسفل -->
-                      <div class="p-4 border-t border-border flex justify-end gap-2" style="background-color: var(--surface-2);">
-                          <button @click="closePanel()" class="btn bg-white border border-border text-text-secondary hover:bg-bg-light px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer">
-                              إلغاء
-                          </button>
-                          <button @click="deleteMedia()" class="btn bg-danger text-white hover:bg-danger-hover px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer">
-                              حذف نهائياً
-                          </button>
-                          <button @click="saveMedia()" class="btn bg-primary text-white hover:bg-primary-hover px-5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer">
-                              حفظ التعديلات
-                          </button>
+                      <div class="p-4 border-t border-border flex justify-between items-center" style="background-color: var(--surface-2); border-top: 1px solid var(--border); padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                          <div>
+                              <button @click="deleteMedia()" class="btn bg-danger text-white hover:bg-danger-hover px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer" style="background-color: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s;">
+                                  حذف نهائياً
+                              </button>
+                          </div>
+                          <div class="flex gap-2" style="display: flex; gap: 8px;">
+                              <a :href="selectedMedia.url" :download="selectedMedia.filename" target="_blank" class="btn bg-white border border-border text-text-primary hover:bg-bg-light px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer flex items-center gap-1.5" style="background-color: white; border: 1px solid var(--border); color: var(--text-primary); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s;">
+                                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                  </svg>
+                                  تحميل الملف
+                              </a>
+                              <button @click="closePanel()" class="btn bg-white border border-border text-text-secondary hover:bg-bg-light px-4 py-2 rounded-lg font-semibold text-xs transition cursor-pointer" style="background-color: white; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s;">
+                                  إلغاء
+                              </button>
+                              <button @click="saveMedia()" class="btn bg-primary text-white hover:bg-primary-hover px-5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer" style="background-color: var(--primary); color: white; padding: 8px 20px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; border: none; transition: all 0.2s;">
+                                  حفظ التعديلات
+                              </button>
+                          </div>
                       </div>
                   </div>
               </template>
@@ -333,37 +371,26 @@
     </div>
     
     <!-- الترقيم (Pagination) -->
-    {% if page_obj.has_other_pages %}
-    <div class="flex justify-between items-center text-xs pt-2">
-        <div class="flex gap-1">
-            {% if page_obj.has_previous %}
-                <a href="?page=1{% if q %}&q={{ q }}{% endif %}{% if source %}&source={{ source }}{% endif %}{% if missing_alt %}&missing_alt=true{% endif %}" class="btn bg-white border border-border text-text-primary hover:bg-gray-50 px-3 py-1.5 rounded-lg no-underline cursor-pointer">الأولى</a>
-                <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if source %}&source={{ source }}{% endif %}{% if missing_alt %}&missing_alt=true{% endif %}" class="btn bg-white border border-border text-text-primary hover:bg-gray-50 px-3 py-1.5 rounded-lg no-underline cursor-pointer">السابق</a>
-            {% endif %}
-        </div>
-        
-        <span style="color: var(--text-secondary);">صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span>
-        
-        <div class="flex gap-1">
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if source %}&source={{ source }}{% endif %}{% if missing_alt %}&missing_alt=true{% endif %}" class="btn bg-white border border-border text-text-primary hover:bg-gray-50 px-3 py-1.5 rounded-lg no-underline cursor-pointer">التالي</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if source %}&source={{ source }}{% endif %}{% if missing_alt %}&missing_alt=true{% endif %}" class="btn bg-white border border-border text-text-primary hover:bg-gray-50 px-3 py-1.5 rounded-lg no-underline cursor-pointer">الأخيرة</a>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
+    {% include "dashboard/components/pagination.html" with page_obj=page_obj query_params=query_params %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script id="page-media-ids" type="application/json">
+    [
+        {% for media in page_obj %}
+            "{{ media.pk }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
+</script>
 <script>
 function mediaLibrary() {
     return {
         selectedMedia: null,
         isSelectionMode: false,
         selectedIds: [],
-        allPageIds: [{% for media in page_obj %}'{{ media.pk }}',{% endfor %}],
+        allPageIds: JSON.parse(document.getElementById('page-media-ids').textContent),
         
         toggleSelectionMode() {
             this.isSelectionMode = !this.isSelectionMode;

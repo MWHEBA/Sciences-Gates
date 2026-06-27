@@ -64,6 +64,10 @@ urlpatterns = [
     path('tags/<int:pk>/edit/', views.TagUpdateView.as_view(), name='tag_edit'),
     path('tags/<int:pk>/delete/', views.TagDeleteView.as_view(), name='tag_delete'),
     
+    # Tag APIs
+    path('api/tags/search/', views.TagSearchAPIView.as_view(), name='api_tags_search'),
+    path('api/tags/create/', views.TagCreateAPIView.as_view(), name='api_tags_create'),
+    
     # Article management (Content Admin)
     path('articles/', views.ArticleListView.as_view(), name='article_list'),
     path('articles/create/', views.ArticleCreateView.as_view(), name='article_create'),

@@ -66,7 +66,7 @@
                 {% for row in rows %}
                 <tr class="border-b hover:bg-gray-50 transition-colors duration-200{% if edit_url_name %} cursor-pointer{% endif %}"
                     style="border-color: var(--border);"
-                    {% if edit_url_name %}{% if edit_url_name == 'edit' %}data-row-url="#"{% else %}data-row-url="{% url edit_url_name row.id %}"{% endif %}{% endif %}>
+                    {% if edit_url_name %}{% if edit_url_name == 'edit' %}data-row-url="#"{% else %}data-row-url="{% url edit_url_name row.id %}{% if request.GET.type %}?type={{ request.GET.type }}{% endif %}"{% endif %}{% endif %}>
                     
                     {% if bulk_action_url %}
                     <td class="px-6 py-4 w-10">
@@ -82,7 +82,7 @@
                         {% elif column.type == 'link' %}
                             {# رابط قابل للنقر بلون أساسي #}
                             {% if column.link_url_name and column.link_param %}
-                                <a href="{% url column.link_url_name row|get_item:column.link_param %}"
+                                <a href="{% url column.link_url_name row|get_item:column.link_param %}{% if request.GET.type %}?type={{ request.GET.type }}{% endif %}"
                                    class="hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 rounded px-1"
                                    style="color: var(--primary); --tw-ring-color: var(--primary);">
                                     {{ row|get_item:column.key }}
@@ -103,7 +103,7 @@
                             {# دائرة ملونة للحالة #}
                             {% with status_value=row|get_item:column.key %}
                                 <div style="display: inline-flex; align-items: center; gap: 8px;">
-                                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: {% if status_value == 'published' %}#10b981{% else %}#ef4444{% endif %};"></div>
+                                    <div {% if status_value == 'published' %}style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--success);"{% else %}style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--danger);"{% endif %}></div>
                                     <span style="font-size: 13px;">{% if status_value == 'published' %}منشور{% else %}غير منشور{% endif %}</span>
                                 </div>
                             {% endwith %}
@@ -126,7 +126,7 @@
                         <div class="flex items-center gap-2">
                             <!-- زر التحرير - يتم تقديمه فقط إذا كان edit_url_name موجود -->
                             {% if edit_url_name %}
-                            <a href="{% if edit_url_name == 'edit' %}#{% else %}{% url edit_url_name row.id %}{% endif %}"
+                            <a href="{% if edit_url_name == 'edit' %}#{% else %}{% url edit_url_name row.id %}{% if request.GET.type %}?type={{ request.GET.type }}{% endif %}{% endif %}"
                                class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 cursor-pointer
                                       focus:outline-none focus:ring-2 focus:ring-offset-2"
                                style="--tw-ring-color: var(--primary);"
@@ -140,7 +140,7 @@
                             
                             <!-- زر الحذف - يتم تقديمه فقط إذا كان delete_url_name موجود -->
                             {% if delete_url_name %}
-                            <a href="{% if delete_url_name == 'delete' %}#{% else %}{% url delete_url_name row.id %}{% endif %}"
+                            <a href="{% if delete_url_name == 'delete' %}#{% else %}{% url delete_url_name row.id %}{% if request.GET.type %}?type={{ request.GET.type }}{% endif %}{% endif %}"
                                class="p-2 rounded-lg text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer
                                       focus:outline-none focus:ring-2 focus:ring-offset-2"
                                style="--tw-ring-color: var(--danger);"

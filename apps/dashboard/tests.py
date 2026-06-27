@@ -924,3 +924,83 @@ class TestDashboardHomeView:
         # Verify leads are ordered by creation date (newest first)
         for i in range(len(recent_leads) - 1):
             assert recent_leads[i].created_at >= recent_leads[i + 1].created_at
+
+
+@pytest.mark.django_db
+class TestUniversityViews:
+    """Tests for dashboard university views."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, client):
+        self.client = client
+        self.create_url = reverse('dashboard:university_create')
+        
+        # Create user
+        self.admin = User.objects.create_user(
+            username='uniadmin',
+            password='testpass123',
+            is_staff=True
+        )
+        
+    def test_create_view_loads_successfully_with_recent_context(self):
+        self.client.login(username='uniadmin', password='testpass123')
+        response = self.client.get(self.create_url)
+        assert response.status_code == 200
+        assert 'recently_used_majors' in response.context
+        assert 'recently_used_articles' in response.context
+        assert 'recently_used_tags' in response.context
+
+    def test_faculty_formset_duplicate_swap(self):
+        """Test that the custom faculty formset clean method correctly swaps duplicate forms."""
+        from apps.universities.models import University, Faculty
+        from apps.dashboard.forms.university import UniversityFacultyFormSet
+        
+        # Create a university
+        uni = University.objects.create(
+            name="Test University",
+            slug="test-university",
+            city="kl",
+            university_type="private",
+            description="Test Description",
+            location="Test Location"
+        )
+        
+        # Create an existing faculty
+        faculty = Faculty.objects.create(
+            university=uni,
+            name="كلية الهندسة",
+            sort_order=0
+        )
+        
+        # Simulate POST data where form 0 (existing) is marked for deletion,
+        # and form 1 (new) is a duplicate with spelling variations
+        data = {
+            'faculties-TOTAL_FORMS': '2',
+            'faculties-INITIAL_FORMS': '1',
+            'faculties-MIN_NUM_FORMS': '0',
+            'faculties-MAX_NUM_FORMS': '100',
+            
+            # Form 0 (existing) - marked for deletion
+            'faculties-0-id': str(faculty.id),
+            'faculties-0-name': "كلية الهندسة",
+            'faculties-0-sort_order': '0',
+            'faculties-0-DELETE': 'on',
+            
+            # Form 1 (new) - matches name normalized
+            'faculties-1-id': '',
+            'faculties-1-name': "  كليه الهندسه  ",  # spelling difference & spacing
+            'faculties-1-sort_order': '1',
+        }
+        
+        formset = UniversityFacultyFormSet(data, instance=uni)
+        is_valid = formset.is_valid()
+        
+        assert is_valid, f"Formset errors: {formset.errors}"
+        
+        # Instances should have swapped
+        assert formset.forms[0].instance.pk is None
+        assert formset.forms[1].instance.pk == faculty.id
+        assert formset.forms[1].instance.name == "كليه الهندسه"
+
+
+

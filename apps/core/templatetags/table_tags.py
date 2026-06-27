@@ -95,3 +95,28 @@ def get_status_variant(status_value):
     }
     
     return status_mapping.get(str(status_value).lower(), 'gray')
+
+
+@register.filter
+def elided_page_range(page_obj, on_each_side=2):
+    """
+    Generate elided page range for a given page object.
+    
+    Usage in template:
+        {% for page_num in page_obj|elided_page_range %}
+            ...
+        {% endfor %}
+    """
+    if not page_obj:
+        return []
+    try:
+        # Django's Paginator get_elided_page_range returns a generator of page numbers/ellipsis
+        # We use on_ends=1 to keep it very clean and fit well on all screen sizes
+        return page_obj.paginator.get_elided_page_range(
+            page_obj.number,
+            on_each_side=on_each_side,
+            on_ends=1
+        )
+    except Exception:
+        return page_obj.paginator.page_range
+

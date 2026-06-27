@@ -81,6 +81,12 @@ class SEOMixin(models.Model):
         verbose_name='الكلمة المفتاحية',
         help_text='الكلمة المفتاحية الرئيسية للصفحة'
     )
+    keyphrase_synonyms = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name='مرادفات الكلمة المفتاحية',
+        help_text='مرادفات للكلمة المفتاحية الرئيسية مفصولة بفواصل (، أو ,)'
+    )
     canonical_url = models.URLField(
         blank=True,
         verbose_name='الرابط الأساسي',
@@ -441,6 +447,30 @@ class MediaFile(TimestampedModel):
             models.Index(fields=['alt_text']),
             models.Index(fields=['source_url']),
         ]
+
+    @property
+    def file_extension(self):
+        """Returns the uppercase file extension of the original filename."""
+        import os
+        name = self.original_filename or self.file.name
+        if not name:
+            return ''
+        _, ext = os.path.splitext(name)
+        return ext.lstrip('.').upper()
+
+    @property
+    def completion_score(self):
+        """Returns the number of filled SEO fields (0 to 4)."""
+        score = 0
+        if self.alt_text:
+            score += 1
+        if self.caption:
+            score += 1
+        if self.title:
+            score += 1
+        if self.description:
+            score += 1
+        return score
 
     def __str__(self):
         return self.original_filename

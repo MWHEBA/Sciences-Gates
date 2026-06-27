@@ -17,6 +17,38 @@ class SEOScoringEngine:
         self.warnings = []
         self.passed = []
 
+    def _normalize(self, text):
+        if not text:
+            return ""
+        import re
+        text = text.lower().strip()
+        text = re.sub(r'\s+', ' ', text)
+        replacements = {
+            'أ': 'ا',
+            'إ': 'ا',
+            'آ': 'ا',
+            'ة': 'ه',
+            'ى': 'ي',
+        }
+        for src, dest in replacements.items():
+            text = text.replace(src, dest)
+        diacritics = re.compile(r'[\u064b-\u0652]')
+        text = diacritics.sub('', text)
+        return text
+
+    def _is_match(self, text, keyword, synonyms):
+        if not text:
+            return False
+        norm_text = self._normalize(text)
+        norm_kw = self._normalize(keyword)
+        if norm_kw and norm_kw in norm_text:
+            return True
+        for syn in synonyms:
+            norm_syn = self._normalize(syn)
+            if norm_syn and norm_syn in norm_text:
+                return True
+        return False
+
     def evaluate(self):
         self._check_meta_indexability()
         self._check_content()
@@ -56,15 +88,31 @@ class SEOScoringEngine:
 
         # Check title
         if title:
-            earned += 10 if 40 <= len(title) <= 60 else 5
-            self.passed.append("title")
+            if 40 <= len(title) <= 60:
+                earned += 10
+                self.passed.append("title")
+            else:
+                earned += 5
+                self.warnings.append({
+                    "code": "TITLE_LENGTH_OUT_OF_RANGE",
+                    "message": f"طول عنوان الصفحة ({len(title)} حرف) خارج النطاق المثالي الموصى به (40 - 60 حرفاً شاملة اسم الموقع)."
+                })
+                self.passed.append("title")
         else:
             self.critical_issues.append({"code": "MISSING_TITLE", "message": "عنوان الصفحة مفقود أو فارغ."})
 
         # Check description
         if desc:
-            earned += 10 if 120 <= len(desc) <= 160 else 5
-            self.passed.append("meta_description")
+            if 120 <= len(desc) <= 160:
+                earned += 10
+                self.passed.append("meta_description")
+            else:
+                earned += 5
+                self.warnings.append({
+                    "code": "META_DESCRIPTION_LENGTH_OUT_OF_RANGE",
+                    "message": f"طول الوصف التعريفي ({len(desc)} حرف) خارج النطاق المثالي الموصى به (120 - 160 حرفاً)."
+                })
+                self.passed.append("meta_description")
         else:
             self.warnings.append({"code": "MISSING_META_DESCRIPTION", "message": "الوصف التعريفي مفقود أو فارغ."})
 
@@ -287,9 +335,24 @@ class SEOScoringEngine:
         if not focus_kw:
             return
 
-        title = (self.full_page.get("title", "") or "").strip().lower()
-        desc = (self.full_page.get("meta_description", "") or "").strip().lower()
-        h1 = (self.full_page.get("h1", "") or "").strip().lower()
+        synonyms_str = (self.full_page.get("keyphrase_synonyms", "") or "").strip()
+        
+        synonyms_list = []
+        if synonyms_str:
+            import json
+            try:
+                parsed = json.loads(synonyms_str)
+                if isinstance(parsed, list):
+                    synonyms_list = [s.strip() for s in parsed if s.strip()]
+                elif isinstance(parsed, str):
+                    synonyms_list = [s.strip() for s in parsed.replace("،", ",").split(",") if s.strip()]
+            except json.JSONDecodeError:
+                synonyms_list = [s.strip() for s in synonyms_str.replace("،", ",").split(",") if s.strip()]
+
+
+        title = (self.full_page.get("title", "") or "").strip()
+        desc = (self.full_page.get("meta_description", "") or "").strip()
+        h1 = (self.full_page.get("h1", "") or "").strip()
 
         # Deduct score from specific categories if focus keyword is missing from critical zones
         title_deduction = 0
@@ -298,65 +361,110 @@ class SEOScoringEngine:
         density_deduction = 0
 
         # 1. Check in Title
-        if focus_kw in title:
+        if self._is_match(title, focus_kw, synonyms_list):
             self.passed.append("focus_keyword_in_title")
         else:
             title_deduction = 2
             self.warnings.append({
                 "code": "FOCUS_KEYWORD_MISSING_TITLE",
-                "message": f"الكلمة المفتاحية الرئيسية '{focus_kw}' غير موجودة في عنوان الصفحة (Title)."
+                "message": f"الكلمة المفتاحية الرئيسية '{focus_kw}' أو أحد مرادفاتها غير موجودة في عنوان الصفحة (Title)."
             })
 
         # 2. Check in Meta Description
-        if focus_kw in desc:
+        if self._is_match(desc, focus_kw, synonyms_list):
             self.passed.append("focus_keyword_in_description")
         else:
             desc_deduction = 2
             self.warnings.append({
                 "code": "FOCUS_KEYWORD_MISSING_DESCRIPTION",
-                "message": f"الكلمة المفتاحية الرئيسية '{focus_kw}' غير موجودة في الوصف التعريفي (Meta Description)."
+                "message": f"الكلمة المفتاحية الرئيسية '{focus_kw}' أو أحد مرادفاتها غير موجودة في الوصف التعريفي (Meta Description)."
             })
 
         # 3. Check in H1
-        if focus_kw in h1:
+        if self._is_match(h1, focus_kw, synonyms_list):
             self.passed.append("focus_keyword_in_h1")
         else:
             h1_deduction = 2
             self.warnings.append({
                 "code": "FOCUS_KEYWORD_MISSING_H1",
-                "message": f"الكلمة المفتاحية الرئيسية '{focus_kw}' غير موجودة في العنوان الرئيسي (H1)."
+                "message": f"الكلمة المفتاحية الرئيسية '{focus_kw}' أو أحد مرادفاتها غير موجودة في العنوان الرئيسي (H1)."
             })
 
-        # 4. Check Density in Content (purified text)
+        # 4. Check in Introduction (first paragraph or first 150 words)
+        intro_text = self.main_content.get("intro_text", "")
+        if self._is_match(intro_text, focus_kw, synonyms_list):
+            self.passed.append("focus_keyword_in_introduction")
+        else:
+            self.warnings.append({
+                "code": "FOCUS_KEYWORD_MISSING_INTRO",
+                "message": f"الكلمة المفتاحية الرئيسية أو أي من مرادفاتها غير موجودة في الفقرة الأولى (المقدمة) من المحتوى."
+            })
+
+        # 5. Check in Subheadings
+        subheadings = self.main_content.get("headings", [])
+        if subheadings:
+            found_sub = False
+            for sub in subheadings:
+                if self._is_match(sub.get("text", ""), focus_kw, synonyms_list):
+                    found_sub = True
+                    break
+            if found_sub:
+                self.passed.append("focus_keyword_in_subheadings")
+            else:
+                self.warnings.append({
+                    "code": "FOCUS_KEYWORD_MISSING_SUBHEADINGS",
+                    "message": f"لم يتم استخدام الكلمة المفتاحية الرئيسية أو أي من مرادفاتها في العناوين الفرعية (H2, H3)."
+                })
+
+        # 6. Check in Image Alt Text
+        image_alts = self.main_content.get("image_alts", [])
+        if image_alts:
+            found_alt = False
+            for alt in image_alts:
+                if self._is_match(alt, focus_kw, synonyms_list):
+                    found_alt = True
+                    break
+            if found_alt:
+                self.passed.append("focus_keyword_in_alt")
+            else:
+                self.warnings.append({
+                    "code": "FOCUS_KEYWORD_MISSING_ALT",
+                    "message": f"الكلمة المفتاحية الرئيسية أو أي من مرادفاتها غير موجودة في النص البديل (Alt text) للصور."
+                })
+
+        # 7. Check Density in Content (purified text)
         word_count = self.main_content.get("word_count", 0)
         kw_count = self.main_content.get("focus_keyword_count", 0)
-        density = (kw_count / word_count * 100) if word_count > 0 else 0
+        syn_counts_dict = self.main_content.get("synonyms_counts", {})
+        syn_count_total = sum(syn_counts_dict.values())
+        combined_count = kw_count + syn_count_total
+        combined_density = (combined_count / word_count * 100) if word_count > 0 else 0
 
         if word_count > 0:
-            if 0.5 <= density <= 2.5:
+            if 0.5 <= combined_density <= 2.5:
                 self.passed.append("focus_keyword_density_good")
-                # Also confirm keyword appears in content body
-                if kw_count > 0:
+                # Also confirm keyword or synonym appears in content body
+                if combined_count > 0:
                     self.passed.append("focus_keyword_in_content")
-            elif density < 0.5:
+            elif combined_density < 0.5:
                 density_deduction = 2
+                msg = f"كثافة الكلمة المفتاحية '{focus_kw}' ومن غيّبها من المرادفات منخفضة جداً ({combined_density:.2f}%). عدد الظهور: {combined_count} مرة ({kw_count} للرئيسية"
+                if synonyms_list:
+                    msg += f" و {syn_count_total} للمرادفات"
+                msg += f") في {word_count} كلمة. يوصى بنسبة 0.5% إلى 2.5%."
                 self.warnings.append({
                     "code": "FOCUS_KEYWORD_DENSITY_LOW",
-                    "message": (
-                        f"كثافة الكلمة المفتاحية '{focus_kw}' منخفضة جداً ({density:.2f}%). "
-                        f"عدد الظهور: {kw_count} مرة في {word_count} كلمة. "
-                        f"يوصى بنسبة 0.5% إلى 2.5%."
-                    )
+                    "message": msg
                 })
             else:
                 density_deduction = 1
+                msg = f"كثافة الكلمة المفتاحية '{focus_kw}' ومن غيّبها من المرادفات مرتفعة جداً ({combined_density:.2f}%). عدد الظهور: {combined_count} مرة ({kw_count} للرئيسية"
+                if synonyms_list:
+                    msg += f" و {syn_count_total} للمرادفات"
+                msg += f") في {word_count} كلمة. قد يُعدّ حشواً للكلمات المفتاحية (Keyword Stuffing)."
                 self.warnings.append({
                     "code": "FOCUS_KEYWORD_DENSITY_HIGH",
-                    "message": (
-                        f"كثافة الكلمة المفتاحية '{focus_kw}' مرتفعة جداً ({density:.2f}%). "
-                        f"عدد الظهور: {kw_count} مرة في {word_count} كلمة. "
-                        f"قد يُعدّ حشواً للكلمات المفتاحية (Keyword Stuffing)."
-                    )
+                    "message": msg
                 })
 
         # Apply deductions

@@ -4,7 +4,7 @@ Institute forms for the dashboard.
 """
 from django import forms
 from django.forms import inlineformset_factory
-from apps.institutes.models import Institute, Course
+from apps.institutes.models import Institute, Course, InstituteAttachment
 from apps.core.widgets import SimpleRichTextWidget
 
 
@@ -22,11 +22,11 @@ class InstituteForm(forms.ModelForm):
             # Rich Text Sections
             'description', 'registration_requirements', 'registration_section',
             # Relationships
-            'related_articles',
+            'related_articles', 'tags',
             # Publishing
             'publish_status',
             # SEO Fields
-            'meta_title', 'meta_description', 'focus_keyword', 'canonical_url',
+            'meta_title', 'meta_description', 'focus_keyword', 'keyphrase_synonyms', 'canonical_url',
             'robots_index', 'robots_follow', 'sitemap_include',
             'og_title', 'og_description', 'og_image'
         ]
@@ -86,6 +86,9 @@ class InstituteForm(forms.ModelForm):
             'related_articles': forms.CheckboxSelectMultiple(attrs={
                 'class': 'space-y-2',
             }),
+            'tags': forms.CheckboxSelectMultiple(attrs={
+                'class': 'space-y-2',
+            }),
             
             # Publishing
             'publish_status': forms.Select(attrs={
@@ -109,6 +112,11 @@ class InstituteForm(forms.ModelForm):
             'focus_keyword': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'الكلمة المفتاحية الرئيسية',
+                'dir': 'rtl',
+            }),
+            'keyphrase_synonyms': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'المرادفات مفصولة بفواصل (مثال: دراسة في ماليزيا، جامعات ماليزيا)',
                 'dir': 'rtl',
             }),
             'canonical_url': forms.URLInput(attrs={
@@ -159,6 +167,7 @@ class InstituteForm(forms.ModelForm):
             
             # Relationships
             'related_articles': 'المقالات المرتبطة',
+            'tags': 'الوسوم',
             
             # Publishing
             'publish_status': 'حالة النشر',
@@ -167,6 +176,7 @@ class InstituteForm(forms.ModelForm):
             'meta_title': 'عنوان SEO',
             'meta_description': 'وصف SEO',
             'focus_keyword': 'الكلمة المفتاحية',
+            'keyphrase_synonyms': 'مرادفات الكلمة المفتاحية',
             'canonical_url': 'الرابط الأساسي',
             'robots_index': 'السماح بالفهرسة',
             'robots_follow': 'السماح بتتبع الروابط',
@@ -190,6 +200,7 @@ class InstituteForm(forms.ModelForm):
             
             # Relationships
             'related_articles': 'اختر المقالات المرتبطة بهذا المعهد',
+            'tags': 'اختر الوسوم المرتبطة بهذا المعهد',
             
             # Publishing
             'publish_status': 'المحتوى المنشور فقط يظهر للزوار',
@@ -198,6 +209,7 @@ class InstituteForm(forms.ModelForm):
             'meta_title': 'يظهر في نتائج البحث (60 حرف كحد أقصى)',
             'meta_description': 'يظهر في نتائج البحث (160 حرف كحد أقصى)',
             'focus_keyword': 'الكلمة المفتاحية الرئيسية للصفحة',
+            'keyphrase_synonyms': 'مرادفات للكلمة المفتاحية الرئيسية مفصولة بفواصل (، أو ,)',
             'canonical_url': 'اتركه فارغاً لاستخدام الرابط الافتراضي',
             'robots_index': 'السماح لمحركات البحث بفهرسة هذه الصفحة',
             'robots_follow': 'السماح لمحركات البحث بتتبع الروابط في هذه الصفحة',
@@ -215,14 +227,22 @@ class InstituteForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
+        from apps.importer.services.image_downloader import delete_unused_media_file
+        
         imported_main_image_path = self.data.get('imported_main_image_path') if self.data else None
-        if imported_main_image_path and not self.cleaned_data.get('main_image'):
+        if imported_main_image_path and (not self.files or 'main_image' not in self.files):
             relative_path = imported_main_image_path.replace('/media/', '', 1)
+            if instance.main_image and instance.main_image.name != relative_path:
+                delete_unused_media_file(instance.main_image.name)
             instance.main_image = relative_path
+            
         imported_og_image_path = self.data.get('imported_og_image_path') if self.data else None
-        if imported_og_image_path and not self.cleaned_data.get('og_image'):
+        if imported_og_image_path and (not self.files or 'og_image' not in self.files):
             relative_path = imported_og_image_path.replace('/media/', '', 1)
+            if instance.og_image and instance.og_image.name != relative_path:
+                delete_unused_media_file(instance.og_image.name)
             instance.og_image = relative_path
+            
         if commit:
             instance.save()
             self.save_m2m()
@@ -284,3 +304,35 @@ CourseFormSet = inlineformset_factory(
         'notes': 'ملاحظات إضافية عن الدورة',
     }
 )
+
+
+class InstituteAttachmentForm(forms.ModelForm):
+    """Form for uploading files for an institute."""
+    class Meta:
+        model = InstituteAttachment
+        fields = ['title', 'file']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'عنوان الملف (مثال: الكتيب التعريفي، جدول الرسوم الدراسية)',
+                'dir': 'rtl',
+            }),
+            'file': forms.FileInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            }),
+        }
+        labels = {
+            'title': 'عنوان الملف',
+            'file': 'الملف',
+        }
+
+
+InstituteAttachmentFormSet = inlineformset_factory(
+    Institute,
+    InstituteAttachment,
+    form=InstituteAttachmentForm,
+    fields=['title', 'file'],
+    extra=1,
+    can_delete=True,
+)
+

@@ -128,6 +128,10 @@ def sync_media_file(instance, field_name, alt_field_name, source_type):
         source_type=source_type
     ).first()
 
+    if not media_file:
+        # التحقق مما إذا كان المستورد قد أنشأ كائناً بالفعل لنفس الملف على القرص
+        media_file = MediaFile.objects.filter(file=image_file.name).first()
+
     try:
         width = image_file.width
         height = image_file.height
@@ -140,6 +144,9 @@ def sync_media_file(instance, field_name, alt_field_name, source_type):
         media_file.width = width
         media_file.height = height
         media_file.file_size = file_size
+        media_file.content_type = ContentType.objects.get_for_model(instance)
+        media_file.object_id = instance.pk
+        media_file.source_type = source_type
         if media_file.file.name != image_file.name:
             media_file.file = image_file
             media_file.original_filename = os.path.basename(image_file.name)

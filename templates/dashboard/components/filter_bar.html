@@ -7,6 +7,9 @@
 {% if filters %}
 <div class="bg-surface-2 border border-border rounded-xl p-6 shadow-lg animate-fadeIn">
     <form method="get" class="flex flex-col md:flex-row gap-4 items-end w-full">
+        {% if tag_type %}
+        <input type="hidden" name="type" value="{{ tag_type }}">
+        {% endif %}
         <!-- حقل البحث (Search Box) -->
         <div class="flex-1 min-w-0 w-full">
             <label class="block text-xs font-semibold text-text-secondary mb-2">
@@ -70,6 +73,9 @@
 {% else %}
 <div class="bg-surface-2 border border-border rounded-xl p-6 shadow-lg animate-fadeIn">
     <form method="get" class="flex gap-4 items-end w-full">
+        {% if tag_type %}
+        <input type="hidden" name="type" value="{{ tag_type }}">
+        {% endif %}
         <!-- حقل البحث فقط (بدون فلاتر) -->
         <div class="flex-1">
             <label class="block text-xs font-semibold text-text-secondary mb-2">البحث</label>

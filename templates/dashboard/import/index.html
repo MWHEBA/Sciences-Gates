@@ -5,8 +5,111 @@
 {% block page_title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto py-6" style="font-family: 'Alexandria', sans-serif;">
+<div class="max-w-4xl mx-auto py-6" style="font-family: 'Alexandria', sans-serif;">
     
+    <style>
+        .import-tab-btn:hover {
+            color: var(--primary) !important;
+        }
+        .import-category-btn {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background-color: var(--surface);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .import-category-btn.active {
+            background-color: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .import-category-btn:hover:not(.active) {
+            background-color: var(--bg-light);
+            border-color: var(--border-strong);
+            color: var(--text-primary);
+        }
+        .import-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 50px;
+            white-space: nowrap;
+        }
+        .import-badge-success {
+            background-color: var(--success-light);
+            color: var(--success);
+            border: 1px solid rgba(12, 122, 67, 0.2);
+        }
+        .import-badge-ready {
+            background-color: var(--info-light);
+            color: var(--info);
+            border: 1px solid rgba(35, 104, 181, 0.2);
+        }
+        .import-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 16px;
+        }
+        .import-table th {
+            background-color: var(--surface-2);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+        .import-table td {
+            padding: 14px 16px;
+            font-size: 13px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        .import-table tr:last-child td {
+            border-bottom: none;
+        }
+        .import-action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: none;
+            white-space: nowrap;
+        }
+        .import-action-btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+        .import-action-btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .import-action-btn-secondary {
+            background-color: var(--surface-2);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .import-action-btn-secondary:hover {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+        }
+    </style>
+
     <!-- Main Import Card -->
     <div style="background-color: var(--surface);
                 border: 1px solid var(--border);
@@ -24,26 +127,119 @@
             </div>
             <h2 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">استيراد محتوى ووردبريس</h2>
             <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; max-width: 420px; margin: 0 auto;">
-                قم بإدخال رابط المقال من الموقع القديم ليقوم النظام تلقائياً بجلبه وتوزيع محتوياته وتجهيز حقول الـ SEO والصور.
+                قم باستيراد البيانات تلقائياً وتوزيع محتوياتها وتجهيز حقول الـ SEO والصور من الموقع القديم.
             </p>
         </div>
 
-        <!-- Import Form -->
-        <form id="import-fetch-form" method="POST" style="margin-bottom: 0;">
-            {% csrf_token %}
+        <!-- Tabs Navigation -->
+        <div style="display: flex; gap: 8px; border-bottom: 2px solid var(--border); margin-bottom: 24px; padding-bottom: 0;">
+            <button type="button" id="tab-single-btn" class="import-tab-btn" style="padding: 10px 20px; font-size: 14px; font-weight: 600; background: none; border: none; border-bottom: 3px solid var(--primary); color: var(--primary); cursor: pointer; transition: all 0.2s ease; outline: none;">
+                استيراد فردي (رابط مباشر)
+            </button>
+            <button type="button" id="tab-bulk-btn" class="import-tab-btn" style="padding: 10px 20px; font-size: 14px; font-weight: 600; background: none; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; outline: none;">
+                استيراد جماعي (قائمة إكسل)
+            </button>
+        </div>
+
+        <!-- Tab 1: Single Import Section -->
+        <div id="single-import-section">
+            <!-- Import Form -->
+            <form id="import-fetch-form" method="POST" style="margin-bottom: 0;">
+                {% csrf_token %}
+                <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
+                    
+                    <!-- URL Field -->
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label for="import-url" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">
+                            رابط مقال الموقع القديم
+                        </label>
+                        <input type="url" 
+                               id="import-url" 
+                               name="url" 
+                               required 
+                               placeholder="https://old-site.com/university/slug-here/" 
+                               dir="ltr"
+                               style="width: 100%;
+                                      padding: 10px 16px;
+                                      font-size: 14px;
+                                      border: 2px solid var(--border);
+                                      border-radius: var(--radius-sm);
+                                      background-color: var(--surface);
+                                      color: var(--text-primary);
+                                      outline: none;
+                                      transition: all 0.2s ease;"
+                               onfocus="this.style.borderColor='var(--primary)';"
+                               onblur="this.style.borderColor='var(--border)';">
+                    </div>
+
+                    <!-- Type Override Field -->
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label for="content-type-override" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">
+                            تحديد نوع المحتوى المستورد
+                        </label>
+                        <select id="content-type-override" 
+                                name="content_type_override"
+                                style="width: 100%;
+                                       padding: 10px 16px;
+                                       font-size: 14px;
+                                       border: 2px solid var(--border);
+                                       border-radius: var(--radius-sm);
+                                       background-color: var(--surface);
+                                       color: var(--text-primary);
+                                       outline: none;
+                                       cursor: pointer;
+                                       transition: all 0.2s ease;"
+                                onfocus="this.style.borderColor='var(--primary)';"
+                                onblur="this.style.borderColor='var(--border)';">
+                            <option value="auto">🔎 كشف تلقائي ذكي (مستحسن)</option>
+                            <option value="university">🏫 جامعة</option>
+                            <option value="institute">🎓 معهد</option>
+                            <option value="major">📚 تخصص</option>
+                            <option value="article">📰 مقالة</option>
+                        </select>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div style="margin-top: 8px;">
+                        <button type="submit" 
+                                id="import-submit-btn"
+                                style="width: 100%;
+                                       padding: 12px 24px;
+                                       background-color: var(--primary);
+                                       color: var(--white);
+                                       font-size: 14px;
+                                       font-weight: 600;
+                                       border: none;
+                                       border-radius: var(--radius-sm);
+                                       cursor: pointer;
+                                       transition: all 0.2s ease;
+                                       display: flex;
+                                       align-items: center;
+                                       justify-content: center;
+                                       gap: 8px;"
+                                onmouseover="this.style.backgroundColor='var(--primary-hover)'"
+                                onmouseout="this.style.backgroundColor='var(--primary)'">
+                            <span>ابدأ الاستيراد</span>
+                        </button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+        <!-- Tab 2: Bulk Import Section -->
+        <div id="bulk-import-section" style="display: none;">
+            <!-- Category Filter Buttons & Search -->
             <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
                 
-                <!-- URL Field -->
+                <!-- Search input -->
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <label for="import-url" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">
-                        رابط مقال الموقع القديم
+                    <label for="bulk-search-input" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">
+                        البحث في القائمة
                     </label>
-                    <input type="url" 
-                           id="import-url" 
-                           name="url" 
-                           required 
-                           placeholder="https://old-site.com/university/slug-here/" 
-                           dir="ltr"
+                    <input type="text" 
+                           id="bulk-search-input" 
+                           placeholder="ابحث عن عنوان المقال أو الرمز التعريفي (Slug)..." 
                            style="width: 100%;
                                   padding: 10px 16px;
                                   font-size: 14px;
@@ -57,58 +253,221 @@
                            onblur="this.style.borderColor='var(--border)';">
                 </div>
 
-                <!-- Type Override Field -->
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <label for="content-type-override" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">
-                        تحديد نوع المحتوى المستورد
-                    </label>
-                    <select id="content-type-override" 
-                            name="content_type_override"
-                            style="width: 100%;
-                                   padding: 10px 16px;
-                                   font-size: 14px;
-                                   border: 2px solid var(--border);
-                                   border-radius: var(--radius-sm);
-                                   background-color: var(--surface);
-                                   color: var(--text-primary);
-                                   outline: none;
-                                   cursor: pointer;
-                                   transition: all 0.2s ease;"
-                            onfocus="this.style.borderColor='var(--primary)';"
-                            onblur="this.style.borderColor='var(--border)';">
-                        <option value="auto">🔎 كشف تلقائي ذكي (مستحسن)</option>
-                        <option value="university">🏫 جامعة</option>
-                        <option value="institute">🎓 معهد</option>
-                        <option value="major">📚 تخصص</option>
-                    </select>
-                </div>
-
-                <!-- Submit Button -->
-                <div style="margin-top: 8px;">
-                    <button type="submit" 
-                            id="import-submit-btn"
-                            style="width: 100%;
-                                   padding: 12px 24px;
-                                   background-color: var(--primary);
-                                   color: var(--white);
-                                   font-size: 14px;
-                                   font-weight: 600;
-                                   border: none;
-                                   border-radius: var(--radius-sm);
-                                   cursor: pointer;
-                                   transition: all 0.2s ease;
-                                   display: flex;
-                                   align-items: center;
-                                   justify-content: center;
-                                   gap: 8px;"
-                            onmouseover="this.style.backgroundColor='var(--primary-hover)'"
-                            onmouseout="this.style.backgroundColor='var(--primary)'">
-                        <span>ابدأ الاستيراد</span>
+                <!-- Sub-tabs Buttons -->
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                    <button type="button" class="import-category-btn active" data-category="universities">
+                        🏫 الجامعات ({{ counts.universities }})
+                    </button>
+                    <button type="button" class="import-category-btn" data-category="institutes">
+                        🎓 المعاهد ({{ counts.institutes }})
+                    </button>
+                    <button type="button" class="import-category-btn" data-category="majors">
+                        📚 التخصصات ({{ counts.majors }})
+                    </button>
+                    <button type="button" class="import-category-btn" data-category="articles">
+                        📰 المقالات ({{ counts.articles }})
                     </button>
                 </div>
-
             </div>
-        </form>
+
+            <!-- Universities Table -->
+            <div id="bulk-universities-section" class="bulk-category-section" style="overflow-x: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 12px; padding: 0 4px;">
+                    <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0;">الجامعات المتاحة للاستيراد</h3>
+                    <button type="button" class="bulk-import-all-btn import-action-btn import-action-btn-primary" data-category="universities">
+                        📥 استيراد كل الجامعات
+                    </button>
+                </div>
+                <table class="import-table" style="margin-top: 0;">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>العنوان</th>
+                            <th>التصنيف</th>
+                            <th>الرمز التعريفي (Slug)</th>
+                            <th style="width: 120px;">الحالة</th>
+                            <th style="width: 130px;">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sections.universities %}
+                        <tr>
+                            <td>{{ item.number }}</td>
+                            <td class="item-title" style="font-weight: 600;">{{ item.title }}</td>
+                            <td>{{ item.category }}</td>
+                            <td class="item-slug" dir="ltr" style="text-align: right; font-family: monospace; font-size: 12px; color: var(--text-secondary);">{{ item.slug }}</td>
+                            <td>
+                                {% if item.imported %}
+                                <span class="import-badge import-badge-success">مستورد بالفعل</span>
+                                {% else %}
+                                <span class="import-badge import-badge-ready">جاهز للاستيراد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" 
+                                        class="trigger-import-btn import-action-btn {% if item.imported %}import-action-btn-secondary{% else %}import-action-btn-primary{% endif %}"
+                                        data-url="{{ item.url }}"
+                                        data-type="university">
+                                    {% if item.imported %}استيراد مجدداً{% else %}ابدأ الاستيراد{% endif %}
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">لا توجد عناصر في هذا القسم</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Institutes Table -->
+            <div id="bulk-institutes-section" class="bulk-category-section" style="overflow-x: auto; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 12px; padding: 0 4px;">
+                    <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0;">المعاهد المتاحة للاستيراد</h3>
+                    <button type="button" class="bulk-import-all-btn import-action-btn import-action-btn-primary" data-category="institutes">
+                        📥 استيراد كل المعاهد
+                    </button>
+                </div>
+                <table class="import-table" style="margin-top: 0;">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>العنوان</th>
+                            <th>الرمز التعريفي (Slug)</th>
+                            <th style="width: 120px;">الحالة</th>
+                            <th style="width: 130px;">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sections.institutes %}
+                        <tr>
+                            <td>{{ item.number }}</td>
+                            <td class="item-title" style="font-weight: 600;">{{ item.title }}</td>
+                            <td class="item-slug" dir="ltr" style="text-align: right; font-family: monospace; font-size: 12px; color: var(--text-secondary);">{{ item.slug }}</td>
+                            <td>
+                                {% if item.imported %}
+                                <span class="import-badge import-badge-success">مستورد بالفعل</span>
+                                {% else %}
+                                <span class="import-badge import-badge-ready">جاهز للاستيراد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" 
+                                        class="trigger-import-btn import-action-btn {% if item.imported %}import-action-btn-secondary{% else %}import-action-btn-primary{% endif %}"
+                                        data-url="{{ item.url }}"
+                                        data-type="institute">
+                                    {% if item.imported %}استيراد مجدداً{% else %}ابدأ الاستيراد{% endif %}
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">لا توجد عناصر في هذا القسم</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Majors Table -->
+            <div id="bulk-majors-section" class="bulk-category-section" style="overflow-x: auto; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 12px; padding: 0 4px;">
+                    <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0;">التخصصات المتاحة للاستيراد</h3>
+                    <button type="button" class="bulk-import-all-btn import-action-btn import-action-btn-primary" data-category="majors">
+                        📥 استيراد كل التخصصات
+                    </button>
+                </div>
+                <table class="import-table" style="margin-top: 0;">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>العنوان</th>
+                            <th>الرمز التعريفي (Slug)</th>
+                            <th style="width: 120px;">الحالة</th>
+                            <th style="width: 130px;">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sections.majors %}
+                        <tr>
+                            <td>{{ item.number }}</td>
+                            <td class="item-title" style="font-weight: 600;">{{ item.title }}</td>
+                            <td class="item-slug" dir="ltr" style="text-align: right; font-family: monospace; font-size: 12px; color: var(--text-secondary);">{{ item.slug }}</td>
+                            <td>
+                                {% if item.imported %}
+                                <span class="import-badge import-badge-success">مستورد بالفعل</span>
+                                {% else %}
+                                <span class="import-badge import-badge-ready">جاهز للاستيراد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" 
+                                        class="trigger-import-btn import-action-btn {% if item.imported %}import-action-btn-secondary{% else %}import-action-btn-primary{% endif %}"
+                                        data-url="{{ item.url }}"
+                                        data-type="major">
+                                    {% if item.imported %}استيراد مجدداً{% else %}ابدأ الاستيراد{% endif %}
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">لا توجد عناصر في هذا القسم</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Articles Table -->
+            <div id="bulk-articles-section" class="bulk-category-section" style="overflow-x: auto; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 12px; padding: 0 4px;">
+                    <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0;">المقالات المتاحة للاستيراد</h3>
+                    <button type="button" class="bulk-import-all-btn import-action-btn import-action-btn-primary" data-category="articles">
+                        📥 استيراد كل المقالات
+                    </button>
+                </div>
+                <table class="import-table" style="margin-top: 0;">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>العنوان</th>
+                            <th>الرمز التعريفي (Slug)</th>
+                            <th style="width: 120px;">الحالة</th>
+                            <th style="width: 130px;">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sections.articles %}
+                        <tr>
+                            <td>{{ item.number }}</td>
+                            <td class="item-title" style="font-weight: 600;">{{ item.title }}</td>
+                            <td class="item-slug" dir="ltr" style="text-align: right; font-family: monospace; font-size: 12px; color: var(--text-secondary);">{{ item.slug }}</td>
+                            <td>
+                                {% if item.imported %}
+                                <span class="import-badge import-badge-success">مستورد بالفعل</span>
+                                {% else %}
+                                <span class="import-badge import-badge-ready">جاهز للاستيراد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" 
+                                        class="trigger-import-btn import-action-btn {% if item.imported %}import-action-btn-secondary{% else %}import-action-btn-primary{% endif %}"
+                                        data-url="{{ item.url }}"
+                                        data-type="article">
+                                    {% if item.imported %}استيراد مجدداً{% else %}ابدأ الاستيراد{% endif %}
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">لا توجد عناصر في هذا القسم</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
         <!-- Loading State (hidden by default) -->
         <div id="import-loading-state" style="display: none; padding: 24px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--bg-light); text-align: center; margin-top: 20px;">
@@ -170,9 +529,158 @@
         </div>
 
     </div>
+
+    <!-- Progress Modal for Bulk Import -->
+    <div id="bulk-progress-modal" style="display: none; position: fixed; inset: 0; z-index: 1000; align-items: center; justify-content: center; background-color: rgba(17, 36, 58, 0.6); padding: 16px;">
+        <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); max-width: 500px; width: 100%; padding: 24px; direction: rtl; text-align: right;">
+            
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+                <h3 id="bulk-modal-title" style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                    🔄 استيراد جماعي جاري...
+                </h3>
+                <span id="bulk-modal-close" style="cursor: pointer; color: var(--text-muted); font-size: 20px; display: none;" onclick="document.getElementById('bulk-progress-modal').style.display='none'">✕</span>
+            </div>
+
+            <!-- Body Content -->
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                
+                <!-- Progress Info Text -->
+                <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary);">
+                    <span id="bulk-progress-status">جاري الاستيراد...</span>
+                    <strong id="bulk-progress-percent">0%</strong>
+                </div>
+
+                <!-- Progress Bar Outer -->
+                <div style="width: 100%; height: 8px; background-color: var(--primary-light); border-radius: var(--radius-sm); overflow: hidden;">
+                    <div id="bulk-progress-bar-inner" style="width: 0%; height: 100%; background-color: var(--primary); transition: width 0.3s ease;"></div>
+                </div>
+
+                <!-- Details / Log container -->
+                <div id="bulk-progress-log" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; background-color: var(--surface-2); font-family: monospace; font-size: 11px; line-height: 1.6; color: var(--text-secondary); display: flex; flex-direction: column; gap: 6px; scrollbar-width: thin;">
+                    <!-- Log entries will be added here -->
+                </div>
+
+                <!-- Warnings or Summary -->
+                <div id="bulk-progress-summary" style="display: none; padding: 12px; border-radius: var(--radius-sm); background-color: var(--success-light); border: 1px solid var(--success); font-size: 13px; color: var(--success);">
+                    <!-- final summary text -->
+                </div>
+            </div>
+
+            <!-- Actions / Footer -->
+            <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
+                <button type="button" id="bulk-modal-cancel-btn" class="import-action-btn import-action-btn-secondary" style="border: 1px solid var(--danger); color: var(--danger); background: none;">
+                    إلغاء العملية
+                </button>
+                <button type="button" id="bulk-modal-ok-btn" class="import-action-btn import-action-btn-primary" style="display: none;" onclick="document.getElementById('bulk-progress-modal').style.display='none'">
+                    موافق
+                </button>
+            </div>
+
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/importer.js' %}"></script>
+<script src="{% static 'js/importer.js' %}?v=3"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Tab switching
+        const tabSingleBtn = document.getElementById('tab-single-btn');
+        const tabBulkBtn = document.getElementById('tab-bulk-btn');
+        const singleImportSection = document.getElementById('single-import-section');
+        const bulkImportSection = document.getElementById('bulk-import-section');
+        
+        tabSingleBtn.addEventListener('click', () => {
+            tabSingleBtn.style.borderBottomColor = 'var(--primary)';
+            tabSingleBtn.style.color = 'var(--primary)';
+            tabBulkBtn.style.borderBottomColor = 'transparent';
+            tabBulkBtn.style.color = 'var(--text-muted)';
+            
+            singleImportSection.style.display = 'block';
+            bulkImportSection.style.display = 'none';
+        });
+        
+        tabBulkBtn.addEventListener('click', () => {
+            tabBulkBtn.style.borderBottomColor = 'var(--primary)';
+            tabBulkBtn.style.color = 'var(--primary)';
+            tabSingleBtn.style.borderBottomColor = 'transparent';
+            tabSingleBtn.style.color = 'var(--text-muted)';
+            
+            singleImportSection.style.display = 'none';
+            bulkImportSection.style.display = 'block';
+        });
+
+        // Bulk sub-category switching
+        const categoryButtons = document.querySelectorAll('.import-category-btn');
+        const categorySections = document.querySelectorAll('.bulk-category-section');
+        
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Reset active states
+                categoryButtons.forEach(b => b.classList.remove('active'));
+                categorySections.forEach(s => s.style.display = 'none');
+                
+                // Set active state
+                btn.classList.add('active');
+                const category = btn.getAttribute('data-category');
+                document.getElementById(`bulk-${category}-section`).style.display = 'block';
+                
+                // Clear and re-trigger search query on new active section
+                document.getElementById('bulk-search-input').value = '';
+                document.querySelectorAll('.bulk-category-section tbody tr').forEach(r => r.style.display = '');
+            });
+        });
+
+        // Client-side search filter
+        const searchInput = document.getElementById('bulk-search-input');
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            // Find currently active section
+            let activeSection = null;
+            categorySections.forEach(s => {
+                if (s.style.display !== 'none') {
+                    activeSection = s;
+                }
+            });
+            
+            if (!activeSection) return;
+            
+            const rows = activeSection.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const titleEl = row.querySelector('.item-title');
+                const slugEl = row.querySelector('.item-slug');
+                if (!titleEl || !slugEl) return;
+                
+                const title = titleEl.textContent.toLowerCase();
+                const slug = slugEl.textContent.toLowerCase();
+                
+                if (title.includes(query) || slug.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Trigger import from bulk list action
+        document.querySelectorAll('.trigger-import-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const url = this.getAttribute('data-url');
+                const type = this.getAttribute('data-type');
+                
+                // Set values
+                document.getElementById('import-url').value = url;
+                document.getElementById('content-type-override').value = type;
+                
+                // Switch back to Single Import tab to show progress
+                tabSingleBtn.click();
+                
+                // Submit form
+                document.getElementById('import-submit-btn').click();
+            });
+        });
+    });
+</script>
 {% endblock %}

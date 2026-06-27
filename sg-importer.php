@@ -308,6 +308,25 @@ function sg_importer_handle_request(WP_REST_Request $request) {
         $countries_tables = $tables_result['countries'];
     }
 
+    // استخراج الوسوم (Tags)
+    $tags = array();
+    $post_tags = wp_get_post_terms($post_id, 'post_tag', array('fields' => 'names'));
+    if (!is_wp_error($post_tags) && is_array($post_tags)) {
+        $tags = array_merge($tags, $post_tags);
+    }
+    $taxonomies = get_object_taxonomies($post->post_type);
+    if (is_array($taxonomies)) {
+        foreach ($taxonomies as $taxonomy) {
+            if ($taxonomy !== 'post_tag' && (strpos($taxonomy, 'tag') !== false)) {
+                $terms = wp_get_post_terms($post_id, $taxonomy, array('fields' => 'names'));
+                if (!is_wp_error($terms) && is_array($terms)) {
+                    $tags = array_merge($tags, $terms);
+                }
+            }
+        }
+    }
+    $tags = array_values(array_unique(array_filter($tags)));
+
     // تجهيز الـ JSON Response
     $response = array(
         'content_type'       => $type_info['type'],
@@ -324,6 +343,7 @@ function sg_importer_handle_request(WP_REST_Request $request) {
         'images'             => $images,
         'seo'                => $seo_data['seo'],
         'categories'         => wp_get_post_categories($post_id, array('fields' => 'names')),
+        'tags'               => $tags,
         'wp_post_id'         => $post_id,
     );
 
@@ -993,6 +1013,34 @@ function sg_extract_yoast_seo($post_id) {
         
         $seo[$key] = $val ? html_entity_decode($val, ENT_QUOTES, 'UTF-8') : '';
     }
+
+    // استخراج مرادفات الكلمة البحثية بشكل منفصل
+    $synonyms_raw = get_post_meta($post_id, '_yoast_wpseo_keywordsynonyms', true);
+    $synonyms_arr = array();
+    if (!empty($synonyms_raw)) {
+        if (is_array($synonyms_raw)) {
+            $synonyms_arr = $synonyms_raw;
+        } elseif (is_string($synonyms_raw)) {
+            // التحقق مما إذا كانت بصيغة JSON
+            $decoded = json_decode($synonyms_raw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $synonyms_arr = $decoded;
+            } else {
+                // التحقق مما إذا كانت بصيغة serialized PHP
+                $unserialized = @unserialize($synonyms_raw);
+                if ($unserialized !== false && is_array($unserialized)) {
+                    $synonyms_arr = $unserialized;
+                } else {
+                    // تجربة التقسيم بالفواصل
+                    $synonyms_arr = array_map('trim', explode(',', $synonyms_raw));
+                }
+            }
+        }
+    }
+    // تنظيف وترتيب المصفوفة
+    $synonyms_arr = array_values(array_filter(array_map('trim', $synonyms_arr)));
+    // تحويلها إلى JSON string متوافقة مع الحقل في Django
+    $seo['keyphrase_synonyms'] = !empty($synonyms_arr) ? json_encode($synonyms_arr, JSON_UNESCAPED_UNICODE) : '';
 
     // إذا كان العنوان فارغاً، نحاول بناءه باستخدام قالب Yoast الافتراضي
     if (empty($seo['meta_title'])) {

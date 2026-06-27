@@ -94,14 +94,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.openCreateModal = function() {
         modalTitle.textContent = 'إضافة وسم جديد';
-        modalForm.action = '{% url "dashboard:tag_create" %}';
+        modalForm.action = '{% url "dashboard:tag_create" %}{% if tag_type %}?type={{ tag_type }}{% endif %}';
         nameInput.value = '';
         slugInput.value = '';
         modal.style.display = 'flex';
     };
 
     window.openEditModal = function(url) {
-        fetch(url + '?json=1', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        const separator = url.includes('?') ? '&' : '?';
+        fetch(url + separator + 'json=1', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(response => response.json())
             .then(data => {
                 modalTitle.textContent = 'تعديل الوسم';

@@ -19,6 +19,25 @@ from .html_parser import SEOHTMLParser
 from .model_checks import ModelAwareChecker
 from .schema_validator import SchemaValidator
 from .scoring import SEOScoringEngine
+import re
+
+def normalize_text(text):
+    if not text:
+        return ""
+    text = text.lower().strip()
+    text = re.sub(r'\s+', ' ', text)
+    replacements = {
+        'أ': 'ا',
+        'إ': 'ا',
+        'آ': 'ا',
+        'ة': 'ه',
+        'ى': 'ي',
+    }
+    for src, dest in replacements.items():
+        text = text.replace(src, dest)
+    diacritics = re.compile(r'[\u064b-\u0652]')
+    text = diacritics.sub('', text)
+    return text
 
 
 @dataclass
@@ -66,26 +85,55 @@ class PageSEOAnalyzer:
         parser = SEOHTMLParser(html, profile.content_selector)
         full_page = parser.extract_full_page_data()
         full_page["focus_keyword"] = getattr(obj, "focus_keyword", "")
+        full_page["keyphrase_synonyms"] = getattr(obj, "keyphrase_synonyms", "")
         main_content = parser.extract_main_content_data()
 
-        # Count occurrences of focus keyword in purified main content text
-        import re
-        focus_kw = getattr(obj, "focus_keyword", "").strip().lower()
+        # Count occurrences of focus keyword and synonyms in purified main content text
+        focus_kw = getattr(obj, "focus_keyword", "").strip()
+        synonyms_str = getattr(obj, "keyphrase_synonyms", "").strip()
+        
+        synonyms_list = []
+        if synonyms_str:
+            import json
+            try:
+                parsed = json.loads(synonyms_str)
+                if isinstance(parsed, list):
+                    synonyms_list = [s.strip() for s in parsed if s.strip()]
+                elif isinstance(parsed, str):
+                    synonyms_list = [s.strip() for s in parsed.replace("،", ",").split(",") if s.strip()]
+            except json.JSONDecodeError:
+                synonyms_list = [s.strip() for s in synonyms_str.replace("،", ",").split(",") if s.strip()]
+
+
         keyword_count = 0
-        if focus_kw:
-            from bs4 import BeautifulSoup
-            import html as html_lib
-            content_soup = BeautifulSoup(html, "html.parser")
-            content_node = content_soup.select_one(profile.content_selector) or content_soup.find("body")
-            if content_node:
-                node_copy = BeautifulSoup(str(content_node), "html.parser")
-                for tag in node_copy.find_all(["script", "style", "noscript", "svg", "template"]):
-                    tag.decompose()
-                for tag in node_copy.find_all(attrs={"data-seo-ignore": True}):
-                    tag.decompose()
-                clean_text = html_lib.unescape(node_copy.get_text()).lower()
-                keyword_count = len(re.findall(re.escape(focus_kw), clean_text))
+        synonyms_counts = {}
+
+        from bs4 import BeautifulSoup
+        import html as html_lib
+        content_soup = BeautifulSoup(html, "html.parser")
+        content_node = content_soup.select_one(profile.content_selector) or content_soup.find("body")
+        if content_node:
+            node_copy = BeautifulSoup(str(content_node), "html.parser")
+            for tag in node_copy.find_all(["script", "style", "noscript", "svg", "template"]):
+                tag.decompose()
+            for tag in node_copy.find_all(attrs={"data-seo-ignore": True}):
+                tag.decompose()
+            clean_text = html_lib.unescape(node_copy.get_text())
+            norm_clean_text = normalize_text(clean_text)
+
+            if focus_kw:
+                norm_focus_kw = normalize_text(focus_kw)
+                if norm_focus_kw:
+                    keyword_count = len(re.findall(re.escape(norm_focus_kw), norm_clean_text))
+
+            for syn in synonyms_list:
+                norm_syn = normalize_text(syn)
+                if norm_syn:
+                    syn_count = len(re.findall(re.escape(norm_syn), norm_clean_text))
+                    synonyms_counts[syn] = syn_count
+
         main_content["focus_keyword_count"] = keyword_count
+        main_content["synonyms_counts"] = synonyms_counts
 
         model_checks = ModelAwareChecker().run(obj, profile)
         schema_results = SchemaValidator().validate(full_page.get("schemas", []), profile.expected_schemas)

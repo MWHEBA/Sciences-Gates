@@ -4,4 +4,5 @@ from . import views
 urlpatterns = [
     path('', views.ImportPageView.as_view(), name='import_page'),
     path('fetch/', views.ImportFetchView.as_view(), name='import_fetch'),
+    path('bulk-save/', views.ImportBulkSaveAPIView.as_view(), name='import_bulk_save'),
 ]

@@ -10,7 +10,7 @@
 
     <!-- قائمة التنقل — max-height ديناميكي = ارتفاع الـ aside - الشعار - الملف الشخصي -->
     <nav class="flex-1 px-4 py-2 overflow-y-auto" x-data="{ 
-            activeSection: {% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path %}'universities'{% elif '/dashboard/institutes' in request.path %}'institutes'{% elif '/dashboard/majors' in request.path %}'majors'{% elif '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}'articles'{% else %}null{% endif %}
+            activeSection: {% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path or request.GET.type == 'university' %}'universities'{% elif '/dashboard/institutes' in request.path or request.GET.type == 'institute' %}'institutes'{% elif '/dashboard/majors' in request.path %}'majors'{% elif '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}'articles'{% else %}null{% endif %}
         }" style="max-height: calc(100vh - 8px - var(--sidebar-logo-h) - var(--sidebar-profile-h));
                  margin: 5px 0;
                  scrollbar-width: thin;
@@ -134,6 +134,19 @@
                             </svg>
                             <span>الكليات والبرامج</span>
                         </a>
+                        <a href="{% url 'dashboard:tag_list' %}?type=university"
+                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                            style="{% if '/dashboard/tags' in request.path and request.GET.type == 'university' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
+                            @mouseenter="{% if '/dashboard/tags' not in request.path or request.GET.type != 'university' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
+                            @mouseleave="{% if '/dashboard/tags' not in request.path or request.GET.type != 'university' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                            <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                </path>
+                            </svg>
+                            <span>وسوم الجامعات</span>
+                        </a>
                     </div>
                 </div>
 
@@ -213,6 +226,19 @@
                                 </path>
                             </svg>
                             <span>أنواع المعاهد</span>
+                        </a>
+                        <a href="{% url 'dashboard:tag_list' %}?type=institute"
+                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                            style="{% if '/dashboard/tags' in request.path and request.GET.type == 'institute' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
+                            @mouseenter="{% if '/dashboard/tags' not in request.path or request.GET.type != 'institute' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
+                            @mouseleave="{% if '/dashboard/tags' not in request.path or request.GET.type != 'institute' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                            <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                </path>
+                            </svg>
+                            <span>وسوم المعاهد</span>
                         </a>
                     </div>
                 </div>
@@ -349,18 +375,18 @@
                             </svg>
                             <span>التصنيفات</span>
                         </a>
-                        <a href="{% url 'dashboard:tag_list' %}"
+                        <a href="{% url 'dashboard:tag_list' %}?type=article"
                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="{% if '/dashboard/tags' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                            @mouseenter="{% if '/dashboard/tags' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                            @mouseleave="{% if '/dashboard/tags' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                            style="{% if '/dashboard/tags' in request.path and request.GET.type|default:'article' == 'article' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
+                            @mouseenter="{% if '/dashboard/tags' not in request.path or request.GET.type|default:'article' != 'article' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
+                            @mouseleave="{% if '/dashboard/tags' not in request.path or request.GET.type|default:'article' != 'article' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
                                 </path>
                             </svg>
-                            <span>الوسوم</span>
+                            <span>وسوم المقالات</span>
                         </a>
                     </div>
                 </div>

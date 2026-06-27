@@ -1,47 +1,39 @@
 {% comment %}
     مكون الترقيم - Pagination Component
     ====================================
-    يعرض عناصر التحكم في الترقيم أسفل جدول البيانات.
+    يعرض عناصر التحكم في الترقيم أسفل جدول البيانات بشكل ممركز ومحسن.
     
     يعرض:
-    - رقم الصفحة الحالية والعدد الإجمالي للصفحات بصيغة "صفحة [current] من [total]"
-    - روابط التنقل: الأولى، السابقة، التالية، الأخيرة
-    - تعطيل الأولى والسابقة في الصفحة الأولى
-    - تعطيل التالية والأخيرة في الصفحة الأخيرة
+    - روابط التنقل: الأولى، السابقة، أرقام الصفحات، التالية، الأخيرة
+    - رقم الصفحة الحالية والعدد الإجمالي للصفحات بصيغة "صفحة [current] من [total]" ممركزة بالأسفل
     - الحفاظ على معاملات البحث والتصفية في روابط الترقيم
     - إخفاء كامل المكون إذا كان إجمالي الصفحات ≤ 1
-    
-    المتغيرات المطلوبة:
-        - page_obj: كائن الصفحة من Django paginator (مطلوب)
-    
-    المتغيرات الاختيارية:
-        - query_params: معاملات الاستعلام المحفوظة (مثل البحث والتصفية)
-    
-    المتطلبات: 15.1-15.9
 {% endcomment %}
 
+{% load table_tags %}
+
 {% if page_obj.paginator.num_pages > 1 %}
-<footer class="bg-gray-50 border-t flex-shrink-0" style="border-color: var(--border);">
-    <div class="px-6 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <!-- روابط التنقل على الجانب الأيسر (RTL) -->
-        <div class="flex items-center gap-2">
+<footer class="border-t flex-shrink-0" style="border-color: var(--border); background-color: var(--bg-light);">
+    <div class="px-6 py-4 flex flex-col items-center justify-center gap-3">
+        <!-- روابط التنقل ممركزة بالكامل -->
+        <div class="flex items-center justify-center gap-2 flex-wrap">
             <!-- رابط الصفحة الأولى -->
             {% if page_obj.has_previous %}
             <a href="?page=1{% if query_params %}&{{ query_params }}{% endif %}"
-               class="px-3 py-1 border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100"
-               style="border-color: #d1d5db; color: var(--text-primary);"
+               class="flex items-center justify-center border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100"
+               style="width: 30px; height: 30px; border-color: var(--border); color: var(--text-primary);"
                aria-label="الذهاب إلى الصفحة الأولى">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M7 5l7 7-7 7"></path>
                 </svg>
             </a>
             {% else %}
             <button disabled
-                    class="px-3 py-1 border rounded-lg opacity-50 pointer-events-none"
-                    style="border-color: #d1d5db; color: var(--text-primary);"
+                    class="flex items-center justify-center border rounded-lg opacity-50 pointer-events-none"
+                    style="width: 30px; height: 30px; border-color: var(--border); color: var(--text-muted);"
                     aria-label="الصفحة الأولى (معطلة)">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M7 5l7 7-7 7"></path>
                 </svg>
             </button>
             {% endif %}
@@ -49,41 +41,63 @@
             <!-- رابط الصفحة السابقة -->
             {% if page_obj.has_previous %}
             <a href="?page={{ page_obj.previous_page_number }}{% if query_params %}&{{ query_params }}{% endif %}"
-               class="px-3 py-1 border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100"
-               style="border-color: #d1d5db; color: var(--text-primary);"
+               class="flex items-center justify-center border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100"
+               style="width: 30px; height: 30px; border-color: var(--border); color: var(--text-primary);"
                aria-label="الذهاب إلى الصفحة السابقة">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
             </a>
             {% else %}
             <button disabled
-                    class="px-3 py-1 border rounded-lg opacity-50 pointer-events-none"
-                    style="border-color: #d1d5db; color: var(--text-primary);"
+                    class="flex items-center justify-center border rounded-lg opacity-50 pointer-events-none"
+                    style="width: 30px; height: 30px; border-color: var(--border); color: var(--text-muted);"
                     aria-label="الصفحة السابقة (معطلة)">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
             </button>
             {% endif %}
 
+            <!-- أرقام الصفحات المفلترة -->
+            {% for page_num in page_obj|elided_page_range %}
+                {% if page_num == page_obj.paginator.ELLIPSIS %}
+                <span class="flex items-center justify-center text-sm font-medium" 
+                      style="width: 30px; height: 30px; color: var(--text-muted);">
+                    ...
+                </span>
+                {% elif page_num == page_obj.number %}
+                <span class="flex items-center justify-center border rounded-lg text-sm font-semibold text-white bg-primary animate-fade-in"
+                      style="width: 30px; height: 30px; border-color: var(--primary); background-color: var(--primary);">
+                    {{ page_num }}
+                </span>
+                {% else %}
+                <a href="?page={{ page_num }}{% if query_params %}&{{ query_params }}{% endif %}"
+                   class="flex items-center justify-center border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100 text-sm font-medium"
+                   style="width: 30px; height: 30px; border-color: var(--border); color: var(--text-primary);"
+                   aria-label="الذهاب إلى الصفحة {{ page_num }}">
+                    {{ page_num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+
             <!-- رابط الصفحة التالية -->
             {% if page_obj.has_next %}
             <a href="?page={{ page_obj.next_page_number }}{% if query_params %}&{{ query_params }}{% endif %}"
-               class="px-3 py-1 border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100"
-               style="border-color: #d1d5db; color: var(--text-primary);"
+               class="flex items-center justify-center border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100"
+               style="width: 30px; height: 30px; border-color: var(--border); color: var(--text-primary);"
                aria-label="الذهاب إلى الصفحة التالية">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </a>
             {% else %}
             <button disabled
-                    class="px-3 py-1 border rounded-lg opacity-50 pointer-events-none"
-                    style="border-color: #d1d5db; color: var(--text-primary);"
+                    class="flex items-center justify-center border rounded-lg opacity-50 pointer-events-none"
+                    style="width: 30px; height: 30px; border-color: var(--border); color: var(--text-muted);"
                     aria-label="الصفحة التالية (معطلة)">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
             {% endif %}
@@ -91,28 +105,28 @@
             <!-- رابط الصفحة الأخيرة -->
             {% if page_obj.has_next %}
             <a href="?page={{ page_obj.paginator.num_pages }}{% if query_params %}&{{ query_params }}{% endif %}"
-               class="px-3 py-1 border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100"
-               style="border-color: #d1d5db; color: var(--text-primary);"
+               class="flex items-center justify-center border rounded-lg transition-colors duration-200 cursor-pointer hover:bg-gray-100"
+               style="width: 30px; height: 30px; border-color: var(--border); color: var(--text-primary);"
                aria-label="الذهاب إلى الصفحة الأخيرة">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M17 19l-7-7 7-7"></path>
                 </svg>
             </a>
             {% else %}
             <button disabled
-                    class="px-3 py-1 border rounded-lg opacity-50 pointer-events-none"
-                    style="border-color: #d1d5db; color: var(--text-primary);"
+                    class="flex items-center justify-center border rounded-lg opacity-50 pointer-events-none"
+                    style="width: 30px; height: 30px; border-color: var(--border); color: var(--text-muted);"
                     aria-label="الصفحة الأخيرة (معطلة)">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M17 19l-7-7 7-7"></path>
                 </svg>
             </button>
             {% endif %}
         </div>
 
-        <!-- معلومات الصفحة على الجانب الأيمن (RTL) -->
-        <div class="text-sm" style="color: var(--text-secondary);">
-            صفحة <span class="font-normal">{{ page_obj.number }}</span> من <span class="font-normal">{{ page_obj.paginator.num_pages }}</span>
+        <!-- معلومات الصفحة ممركزة بالأسفل -->
+        <div class="text-xs" style="color: var(--text-muted);">
+            صفحة <span class="font-normal text-text-primary" style="color: var(--text-primary);">{{ page_obj.number }}</span> من <span class="font-normal text-text-primary" style="color: var(--text-primary);">{{ page_obj.paginator.num_pages }}</span>
         </div>
     </div>
 </footer>

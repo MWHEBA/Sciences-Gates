@@ -101,6 +101,17 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         blank=True,
         verbose_name='رابط الفيديو',
     )
+    telephone = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='رقم الهاتف',
+        help_text='رقم هاتف التواصل للجامعة لتسهيل التواصل والبحث المحلي'
+    )
+    website = models.URLField(
+        blank=True,
+        verbose_name='الموقع الرسمي للجامعة',
+        help_text='رابط الموقع الإلكتروني الرسمي للجامعة (sameAs)'
+    )
     admission_requirements = models.TextField(
         blank=True,
         default="",
@@ -138,6 +149,12 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         blank=True,
         related_name='universities',
         verbose_name='المقالات المرتبطة'
+    )
+    tags = models.ManyToManyField(
+        'articles.Tag',
+        blank=True,
+        related_name='universities',
+        verbose_name='الوسوم'
     )
 
     class Meta:
@@ -263,3 +280,44 @@ class UniversityFAQ(models.Model):
 
     def __str__(self):
         return self.question
+
+
+class UniversityAttachment(TimestampedModel):
+    """File attachment for a university."""
+    university = models.ForeignKey(
+        University,
+        on_delete=models.CASCADE,
+        related_name='attachments',
+        verbose_name='الجامعة'
+    )
+    title = models.CharField(
+        max_length=200,
+        verbose_name='عنوان الملف'
+    )
+    file = models.FileField(
+        upload_to='universities/attachments/',
+        verbose_name='الملف'
+    )
+    file_size = models.PositiveIntegerField(
+        default=0,
+        verbose_name='حجم الملف (بايت)'
+    )
+
+    class Meta:
+        verbose_name = 'ملف الجامعة'
+        verbose_name_plural = 'ملفات الجامعة'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.title} - {self.university.name}'
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            self.file_size = self.file.size
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.file:
+            self.file.delete(save=False)
+        super().delete(*args, **kwargs)
+

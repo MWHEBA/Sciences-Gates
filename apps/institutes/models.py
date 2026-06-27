@@ -69,6 +69,12 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
         related_name='institutes',
         verbose_name='المقالات المرتبطة'
     )
+    tags = models.ManyToManyField(
+        'articles.Tag',
+        blank=True,
+        related_name='institutes',
+        verbose_name='الوسوم'
+    )
 
     class Meta:
         verbose_name = 'معهد'
@@ -138,3 +144,44 @@ class Course(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.institute.name}'
+
+
+class InstituteAttachment(TimestampedModel):
+    """File attachment for an institute."""
+    institute = models.ForeignKey(
+        Institute,
+        on_delete=models.CASCADE,
+        related_name='attachments',
+        verbose_name='المعهد'
+    )
+    title = models.CharField(
+        max_length=200,
+        verbose_name='عنوان الملف'
+    )
+    file = models.FileField(
+        upload_to='institutes/attachments/',
+        verbose_name='الملف'
+    )
+    file_size = models.PositiveIntegerField(
+        default=0,
+        verbose_name='حجم الملف (بايت)'
+    )
+
+    class Meta:
+        verbose_name = 'ملف المعهد'
+        verbose_name_plural = 'ملفات المعهد'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.title} - {self.institute.name}'
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            self.file_size = self.file.size
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.file:
+            self.file.delete(save=False)
+        super().delete(*args, **kwargs)
+

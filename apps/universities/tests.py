@@ -231,10 +231,74 @@ class TestUniversityDetailView:
     
     def test_detail_view_query_optimization(self, django_assert_num_queries):
         """Test that detail view uses optimized queries."""
-        with django_assert_num_queries(11):
+        with django_assert_num_queries(13):
             response = self.client.get(
                 reverse('universities:detail', kwargs={'slug': self.university.slug})
             )
             university = response.context['university']
             list(university.faculties.all())
             list(university.faqs.all())
+
+
+@pytest.mark.django_db
+class TestUniversityAttachment:
+    """Test UniversityAttachment model and detail view integration."""
+
+    def test_attachment_saves_file_size_automatically(self):
+        """Test that file_size is computed and saved automatically."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .models import University, UniversityAttachment
+
+        uni = University.objects.create(
+            name='Test University',
+            slug='test-uni',
+            logo='logo.png',
+            main_image='main.png',
+            description='Test description',
+            location='Test location'
+        )
+
+        test_file = SimpleUploadedFile("brochure.pdf", b"file content here", content_type="application/pdf")
+        attachment = UniversityAttachment.objects.create(
+            university=uni,
+            title='دليل الجامعة',
+            file=test_file
+        )
+
+        assert attachment.file_size == len(b"file content here")
+        assert attachment.title == 'دليل الجامعة'
+        assert attachment.file.name.endswith('brochure.pdf')
+
+        # Clean up file
+        attachment.delete()
+
+    def test_detail_view_renders_attachments(self, client):
+        """Test that the public detail view lists uploaded attachments."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .models import University, UniversityAttachment
+
+        uni = University.objects.create(
+            name='Published Uni',
+            slug='published-uni',
+            logo='logo.png',
+            main_image='main.png',
+            description='Test description',
+            location='Test location',
+            publish_status='published'
+        )
+
+        test_file = SimpleUploadedFile("brochure.pdf", b"content", content_type="application/pdf")
+        attachment = UniversityAttachment.objects.create(
+            university=uni,
+            title='دليل الجامعة المرفق',
+            file=test_file
+        )
+
+        response = client.get(reverse('universities:detail', kwargs={'slug': uni.slug}))
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert 'دليل الجامعة المرفق' in content
+
+        # Clean up file
+        attachment.delete()
+

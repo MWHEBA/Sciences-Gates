@@ -7,7 +7,7 @@
 {% block content %}
 <!-- Back Link -->
 <div class="mb-6">
-    <a href="{% url 'dashboard:tag_list' %}" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-normal">
+    <a href="{% url 'dashboard:tag_list' %}{% if tag_type %}?type={{ tag_type }}{% endif %}" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-normal">
         <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
@@ -41,8 +41,8 @@
             <div>
                 <h3 class="text-sm font-normal text-yellow-800">تنبيه مهم</h3>
                 <div class="text-sm text-yellow-700 mt-2">
-                    <p>هذا الوسم مرتبط بـ <strong>{{ article_count }}</strong> مقالة.</p>
-                    <p class="mt-1">عند حذف الوسم، ستبقى المقالات موجودة لكن بدون هذا الوسم.</p>
+                    <p>هذا الوسم مرتبط بـ <strong>{{ relation_count }}</strong> {{ entity_name }}.</p>
+                    <p class="mt-1">عند حذف الوسم، ستبقى هذه العناصر موجودة لكن بدون هذا الوسم.</p>
                 </div>
             </div>
         </div>
@@ -61,15 +61,15 @@
                 <dd class="font-mono text-xs bg-white px-2 py-1 rounded">{{ object.slug }}</dd>
             </div>
             <div class="flex justify-between">
-                <dt class="text-gray-600">عدد المقالات:</dt>
-                <dd class="font-normal text-gray-900">{{ article_count }}</dd>
+                <dt class="text-gray-600">عدد ال{{ entity_plural }}:</dt>
+                <dd class="font-normal text-gray-900">{{ relation_count }}</dd>
             </div>
         </dl>
     </div>
     
     <!-- Action Buttons -->
     <div class="flex gap-4 pt-6 border-t border-gray-200">
-        <form method="post" class="flex-1">
+        <form method="post" class="flex-1" action="{% url 'dashboard:tag_delete' object.id %}{% if tag_type %}?type={{ tag_type }}{% endif %}">
             {% csrf_token %}
             <button 
                 type="submit" 
@@ -83,7 +83,7 @@
         </form>
         
         <a 
-            href="{% url 'dashboard:tag_list' %}" 
+            href="{% url 'dashboard:tag_list' %}{% if tag_type %}?type={{ tag_type }}{% endif %}" 
             class="flex-1 inline-flex items-center justify-center px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 font-normal"
         >
             إلغاء

@@ -50,6 +50,7 @@ class TestContentMapper(SimpleTestCase):
                 'meta_title': 'جامعة مالايا الماليزية UM | البرامج والتكاليف والشروط | يو إم 2026',
                 'meta_description': 'SEO Description Here',
                 'focus_keyword': 'keyword',
+                'keyphrase_synonyms': '["synonym1", "synonym2"]',
             }
         }
         
@@ -61,8 +62,10 @@ class TestContentMapper(SimpleTestCase):
         assert mapped['form_initial']['city'] == 'kl'
         assert mapped['form_initial']['description'] == '<div style="text-align: justify;">Decription of Uni</div>'
         assert mapped['form_initial']['meta_title'] == 'جامعة مالايا الماليزية UM | البرامج والتكاليف والشروط | يو إم 2026'
+        assert mapped['form_initial']['keyphrase_synonyms'] == '["synonym1", "synonym2"]'
         assert mapped['confidence']['city'] == 'high'
         assert mapped['confidence']['description'] == 'high'
+        assert mapped['confidence']['keyphrase_synonyms'] == 'high'
         assert mapped['redirect_url'] == '/dashboard/universities/create/'
 
     def test_clean_importer_name(self):

@@ -3,12 +3,20 @@ Django Admin registration for University models.
 Note: Django Admin is for emergency use only. Primary interface is Custom Dashboard.
 """
 from django.contrib import admin
-from .models import University, Faculty, Program, UniversityFAQ
+from .models import University, Faculty, Program, UniversityFAQ, UniversityAttachment
+
+
+class UniversityAttachmentInline(admin.TabularInline):
+    model = UniversityAttachment
+    extra = 1
+    fields = ('title', 'file', 'file_size')
+    readonly_fields = ('file_size',)
 
 
 @admin.register(University)
 class UniversityAdmin(admin.ModelAdmin):
     """Admin interface for University model."""
+    inlines = [UniversityAttachmentInline]
     list_display = ('name', 'location', 'publish_status', 'created_at')
     list_filter = ('publish_status', 'created_at')
     search_fields = ('name', 'location', 'slug')
@@ -26,6 +34,9 @@ class UniversityAdmin(admin.ModelAdmin):
         }),
         ('الفيديو', {
             'fields': ('video_url',)
+        }),
+        ('العلاقات', {
+            'fields': ('tags',)
         }),
         ('SEO', {
             'fields': ('meta_title', 'meta_description', 'focus_keyword', 'canonical_url',

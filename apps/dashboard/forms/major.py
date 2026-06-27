@@ -29,7 +29,7 @@ class MajorForm(forms.ModelForm):
             # Publishing
             'publish_status',
             # SEO Fields
-            'meta_title', 'meta_description', 'focus_keyword', 'canonical_url',
+            'meta_title', 'meta_description', 'focus_keyword', 'keyphrase_synonyms', 'canonical_url',
             'robots_index', 'robots_follow', 'sitemap_include',
             'og_title', 'og_description', 'og_image'
         ]
@@ -164,6 +164,11 @@ class MajorForm(forms.ModelForm):
                 'placeholder': 'الكلمة المفتاحية الرئيسية',
                 'dir': 'rtl',
             }),
+            'keyphrase_synonyms': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'المرادفات مفصولة بفواصل (مثال: دراسة في ماليزيا، جامعات ماليزيا)',
+                'dir': 'rtl',
+            }),
             'canonical_url': forms.URLInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'اتركه فارغاً للاستخدام الافتراضي',
@@ -232,6 +237,7 @@ class MajorForm(forms.ModelForm):
             'meta_title': 'عنوان SEO',
             'meta_description': 'وصف SEO',
             'focus_keyword': 'الكلمة المفتاحية',
+            'keyphrase_synonyms': 'مرادفات الكلمة المفتاحية',
             'canonical_url': 'الرابط الأساسي',
             'robots_index': 'السماح بالفهرسة',
             'robots_follow': 'السماح بتتبع الروابط',
@@ -275,6 +281,7 @@ class MajorForm(forms.ModelForm):
             'meta_title': 'يظهر في نتائج البحث (60 حرف كحد أقصى)',
             'meta_description': 'يظهر في نتائج البحث (160 حرف كحد أقصى)',
             'focus_keyword': 'الكلمة المفتاحية الرئيسية للصفحة',
+            'keyphrase_synonyms': 'مرادفات للكلمة المفتاحية الرئيسية مفصولة بفواصل (، أو ,)',
             'canonical_url': 'اتركه فارغاً لاستخدام الرابط الافتراضي',
             'robots_index': 'السماح لمحركات البحث بفهرسة هذه الصفحة',
             'robots_follow': 'السماح لمحركات البحث بتتبع الروابط في هذه الصفحة',
@@ -292,14 +299,22 @@ class MajorForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
+        from apps.importer.services.image_downloader import delete_unused_media_file
+        
         imported_main_image_path = self.data.get('imported_main_image_path') if self.data else None
-        if imported_main_image_path and not self.cleaned_data.get('main_image'):
+        if imported_main_image_path and (not self.files or 'main_image' not in self.files):
             relative_path = imported_main_image_path.replace('/media/', '', 1)
+            if instance.main_image and instance.main_image.name != relative_path:
+                delete_unused_media_file(instance.main_image.name)
             instance.main_image = relative_path
+            
         imported_og_image_path = self.data.get('imported_og_image_path') if self.data else None
-        if imported_og_image_path and not self.cleaned_data.get('og_image'):
+        if imported_og_image_path and (not self.files or 'og_image' not in self.files):
             relative_path = imported_og_image_path.replace('/media/', '', 1)
+            if instance.og_image and instance.og_image.name != relative_path:
+                delete_unused_media_file(instance.og_image.name)
             instance.og_image = relative_path
+            
         if commit:
             instance.save()
             self.save_m2m()

@@ -27,8 +27,8 @@ from apps.core.models import SiteSettings
 from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin
 from apps.dashboard.forms import (
     UserCreateForm, UserUpdateForm, RedirectForm, 
-    UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, 
-    InstituteForm, CourseFormSet,
+    UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet,
+    InstituteForm, CourseFormSet, InstituteAttachmentFormSet,
     MajorForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet,
     ArticleForm, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm
 )
@@ -734,15 +734,23 @@ class UniversityCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
         if self.request.POST:
             context['faq_formset'] = UniversityFAQFormSet(self.request.POST, instance=self.object)
             context['faculty_formset'] = UniversityFacultyFormSet(self.request.POST, instance=self.object)
+            context['attachment_formset'] = UniversityAttachmentFormSet(self.request.POST, self.request.FILES, instance=self.object)
         else:
             context['faq_formset'] = UniversityFAQFormSet(instance=self.object)
             context['faculty_formset'] = UniversityFacultyFormSet(instance=self.object)
+            context['attachment_formset'] = UniversityAttachmentFormSet(instance=self.object)
         
         # Attach nested program formsets to each faculty form
         context['faculty_formset'] = self._attach_program_formsets(
             context['faculty_formset'],
             self.request.POST if self.request.POST else None
         )
+        
+        # Add recently used relations to context
+        recent_uni_ids = University.objects.order_by('-updated_at').values_list('id', flat=True)[:10]
+        context['recently_used_majors'] = list(Major.objects.filter(universities__in=recent_uni_ids).distinct()[:5])
+        context['recently_used_articles'] = list(Article.objects.filter(universities__in=recent_uni_ids).distinct()[:5])
+        context['recently_used_tags'] = list(Tag.objects.filter(universities__in=recent_uni_ids).distinct()[:5])
         
         context['page_title'] = 'إنشاء جامعة جديدة'
         return context
@@ -786,12 +794,13 @@ class UniversityCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
         context = self.get_context_data()
         faq_formset = context['faq_formset']
         faculty_formset = context['faculty_formset']
+        attachment_formset = context['attachment_formset']
         
         import logging
         logger = logging.getLogger(__name__)
         
         # التحقق من صحة كل الـ formsets قبل أي حفظ
-        all_valid = faq_formset.is_valid() and faculty_formset.is_valid()
+        all_valid = faq_formset.is_valid() and faculty_formset.is_valid() and attachment_formset.is_valid()
         
         # Check nested program formsets
         if all_valid:
@@ -820,6 +829,10 @@ class UniversityCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
                         if hasattr(faculty_form, 'program_formset'):
                             faculty_form.program_formset.instance = faculty_form.instance
                             faculty_form.program_formset.save()
+                    
+                    # حفظ المرفقات
+                    attachment_formset.instance = self.object
+                    attachment_formset.save()
                 
                 messages.success(
                     self.request,
@@ -834,20 +847,37 @@ class UniversityCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
             # عرض الأخطاء بدون حفظ أي شيء
             logger.debug(f"FAQ Formset errors: {faq_formset.errors}")
             logger.debug(f"Faculty Formset errors: {faculty_formset.errors}")
+            logger.debug(f"Attachment Formset errors: {attachment_formset.errors}")
             
-            for field, errors in faq_formset.errors.items():
-                for error in errors:
-                    messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
+            for error in faq_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
+            for error_dict in faq_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
             
-            for field, errors in faculty_formset.errors.items():
-                for error in errors:
-                    messages.error(self.request, f'خطأ في الكليات: {error}')
+            for error in faculty_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في الكليات: {error}')
+            for error_dict in faculty_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في الكليات: {error}')
             
             for faculty_form in faculty_formset:
                 if hasattr(faculty_form, 'program_formset'):
-                    for field, errors in faculty_form.program_formset.errors.items():
-                        for error in errors:
-                            messages.error(self.request, f'خطأ في البرامج: {error}')
+                    for error in faculty_form.program_formset.non_form_errors():
+                        messages.error(self.request, f'خطأ في البرامج: {error}')
+                    for error_dict in faculty_form.program_formset.errors:
+                        for field, errors in error_dict.items():
+                            for error in errors:
+                                messages.error(self.request, f'خطأ في البرامج: {error}')
+            
+            for error in attachment_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في مرفقات الجامعة: {error}')
+            for error_dict in attachment_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في مرفقات الجامعة: {error}')
             
             return self.form_invalid(form)
 
@@ -900,9 +930,11 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
         if self.request.POST:
             context['faq_formset'] = UniversityFAQFormSet(self.request.POST, instance=self.object)
             context['faculty_formset'] = UniversityFacultyFormSet(self.request.POST, instance=self.object)
+            context['attachment_formset'] = UniversityAttachmentFormSet(self.request.POST, self.request.FILES, instance=self.object)
         else:
             context['faq_formset'] = UniversityFAQFormSet(instance=self.object)
             context['faculty_formset'] = UniversityFacultyFormSet(instance=self.object)
+            context['attachment_formset'] = UniversityAttachmentFormSet(instance=self.object)
         
         # Attach nested program formsets to each faculty form
         context['faculty_formset'] = self._attach_program_formsets(
@@ -916,6 +948,12 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
         if hasattr(self.object, '_old_slug'):
             context['slug_changed'] = True
             context['old_slug'] = self.object._old_slug
+            
+        # Add recently used relations to context
+        recent_uni_ids = University.objects.order_by('-updated_at').values_list('id', flat=True)[:10]
+        context['recently_used_majors'] = list(Major.objects.filter(universities__in=recent_uni_ids).distinct()[:5])
+        context['recently_used_articles'] = list(Article.objects.filter(universities__in=recent_uni_ids).distinct()[:5])
+        context['recently_used_tags'] = list(Tag.objects.filter(universities__in=recent_uni_ids).distinct()[:5])
         
         return context
 
@@ -958,12 +996,13 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
         context = self.get_context_data()
         faq_formset = context['faq_formset']
         faculty_formset = context['faculty_formset']
+        attachment_formset = context['attachment_formset']
         
         import logging
         logger = logging.getLogger(__name__)
         
         # التحقق من صحة كل الـ formsets قبل أي حفظ
-        all_valid = faq_formset.is_valid() and faculty_formset.is_valid()
+        all_valid = faq_formset.is_valid() and faculty_formset.is_valid() and attachment_formset.is_valid()
         
         # Check nested program formsets
         if all_valid:
@@ -995,6 +1034,10 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
                         if hasattr(faculty_form, 'program_formset'):
                             faculty_form.program_formset.instance = faculty_form.instance
                             faculty_form.program_formset.save()
+                    
+                    # حفظ المرفقات
+                    attachment_formset.instance = self.object
+                    attachment_formset.save()
                     
                     # إنشاء redirect لو الـ slug اتغير
                     new_slug = form.cleaned_data.get('slug')
@@ -1040,20 +1083,37 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
             # عرض الأخطاء بدون حفظ أي شيء
             logger.debug(f"FAQ Formset errors: {faq_formset.errors}")
             logger.debug(f"Faculty Formset errors: {faculty_formset.errors}")
+            logger.debug(f"Attachment Formset errors: {attachment_formset.errors}")
             
-            for field, errors in faq_formset.errors.items():
-                for error in errors:
-                    messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
+            for error in faq_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
+            for error_dict in faq_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
             
-            for field, errors in faculty_formset.errors.items():
-                for error in errors:
-                    messages.error(self.request, f'خطأ في الكليات: {error}')
+            for error in faculty_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في الكليات: {error}')
+            for error_dict in faculty_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في الكليات: {error}')
             
             for faculty_form in faculty_formset:
                 if hasattr(faculty_form, 'program_formset'):
-                    for field, errors in faculty_form.program_formset.errors.items():
-                        for error in errors:
-                            messages.error(self.request, f'خطأ في البرامج: {error}')
+                    for error in faculty_form.program_formset.non_form_errors():
+                        messages.error(self.request, f'خطأ في البرامج: {error}')
+                    for error_dict in faculty_form.program_formset.errors:
+                        for field, errors in error_dict.items():
+                            for error in errors:
+                                messages.error(self.request, f'خطأ في البرامج: {error}')
+                                
+            for error in attachment_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في مرفقات الجامعة: {error}')
+            for error_dict in attachment_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في مرفقات الجامعة: {error}')
             
             return self.form_invalid(form)
 
@@ -1515,12 +1575,14 @@ class InstituteCreateView(ContentAdminRequiredMixin, CreateView):
     template_name = 'dashboard/institutes/create.html'
 
     def get_context_data(self, **kwargs):
-        """Add formset to context."""
+        """Add formsets to context."""
         context = super().get_context_data(**kwargs)
         if self.request.POST:
             context['course_formset'] = CourseFormSet(self.request.POST, instance=self.object)
+            context['attachment_formset'] = InstituteAttachmentFormSet(self.request.POST, self.request.FILES, instance=self.object)
         else:
             context['course_formset'] = CourseFormSet(instance=self.object)
+            context['attachment_formset'] = InstituteAttachmentFormSet(instance=self.object)
         context['page_title'] = 'إنشاء معهد جديد'
         return context
 
@@ -1530,13 +1592,16 @@ class InstituteCreateView(ContentAdminRequiredMixin, CreateView):
         """
         context = self.get_context_data()
         course_formset = context['course_formset']
+        attachment_formset = context['attachment_formset']
         
-        if course_formset.is_valid():
+        if course_formset.is_valid() and attachment_formset.is_valid():
             try:
                 with transaction.atomic():
                     self.object = form.save()
                     course_formset.instance = self.object
                     course_formset.save()
+                    attachment_formset.instance = self.object
+                    attachment_formset.save()
                 
                 messages.success(
                     self.request,
@@ -1549,6 +1614,20 @@ class InstituteCreateView(ContentAdminRequiredMixin, CreateView):
                 messages.error(self.request, 'حدث خطأ أثناء حفظ المعهد. لم يتم حفظ أي بيانات.')
                 return self.form_invalid(form)
         else:
+            # Add error messages for formsets
+            for error in course_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في الدورات: {error}')
+            for error_dict in course_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في الدورات: {error}')
+                        
+            for error in attachment_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في المرفقات: {error}')
+            for error_dict in attachment_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في المرفقات: {error}')
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -1584,8 +1663,10 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
             context['course_formset'] = CourseFormSet(self.request.POST, instance=self.object)
+            context['attachment_formset'] = InstituteAttachmentFormSet(self.request.POST, self.request.FILES, instance=self.object)
         else:
             context['course_formset'] = CourseFormSet(instance=self.object)
+            context['attachment_formset'] = InstituteAttachmentFormSet(instance=self.object)
         
         # Add courses list
         context['courses'] = self.object.courses.all().order_by('name')
@@ -1604,8 +1685,9 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
         """
         context = self.get_context_data()
         course_formset = context['course_formset']
+        attachment_formset = context['attachment_formset']
         
-        if course_formset.is_valid():
+        if course_formset.is_valid() and attachment_formset.is_valid():
             try:
                 with transaction.atomic():
                     # حفظ الـ slug القديم قبل الحفظ
@@ -1614,6 +1696,8 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
                     self.object = form.save()
                     course_formset.instance = self.object
                     course_formset.save()
+                    attachment_formset.instance = self.object
+                    attachment_formset.save()
                     
                     # إنشاء redirect لو الـ slug اتغير
                     new_slug = form.cleaned_data.get('slug')
@@ -1657,6 +1741,20 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
                 messages.error(self.request, 'حدث خطأ أثناء تحديث المعهد. لم يتم حفظ أي تغييرات.')
                 return self.form_invalid(form)
         else:
+            # Add error messages for formsets
+            for error in course_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في الدورات: {error}')
+            for error_dict in course_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في الدورات: {error}')
+                        
+            for error in attachment_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في المرفقات: {error}')
+            for error_dict in attachment_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في المرفقات: {error}')
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -2244,14 +2342,8 @@ class CategoryDeleteView(ContentAdminRequiredMixin, DeleteView):
 
 class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
-    List all article tags with search filter.
-    عرض قائمة بجميع وسوم المقالات مع البحث
-    
-    Features:
-    - Search by name and slug
-    - Display article count for each tag
-    - Pagination (20 per page)
-    - Edit and delete options for each tag
+    List all tags with search filter dynamically grouped by type.
+    عرض قائمة بالوسوم حسب النوع المختار مع البحث
     """
     model = Tag
     template_name = 'dashboard/tags/list.html'
@@ -2260,15 +2352,32 @@ class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView)
 
     def get_breadcrumbs(self):
         """Build breadcrumb trail for tag list page."""
+        tag_type = self.request.GET.get('type', 'article')
+        if tag_type == 'university':
+            current_label = 'وسوم الجامعات'
+        elif tag_type == 'institute':
+            current_label = 'وسوم المعاهد'
+        else:
+            current_label = 'وسوم المقالات'
+
         return (BreadcrumbTrail()
             .add_section('dashboard')
-            .current('وسوم المقالات')
+            .current(current_label)
             .build())
 
     def get_queryset(self):
         """Get tags with optional search."""
         from django.db.models import Count
-        queryset = Tag.objects.all().annotate(articles_count=Count('articles')).order_by('name')
+        tag_type = self.request.GET.get('type', 'article')
+        
+        if tag_type == 'university':
+            queryset = Tag.objects.all().annotate(item_count=Count('universities'))
+        elif tag_type == 'institute':
+            queryset = Tag.objects.all().annotate(item_count=Count('institutes'))
+        else:
+            queryset = Tag.objects.all().annotate(item_count=Count('articles'))
+            
+        queryset = queryset.order_by('name')
         
         # Search by name or slug
         search_query = self.request.GET.get('search', '').strip()
@@ -2283,8 +2392,22 @@ class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView)
     def get_context_data(self, **kwargs):
         """Add page title and search info to context."""
         context = super().get_context_data(**kwargs)
-        context['page_title'] = 'إدارة وسوم المقالات'
-        context['page_description'] = 'إدارة جميع وسوم المقالات'
+        tag_type = self.request.GET.get('type', 'article')
+        context['tag_type'] = tag_type
+        
+        if tag_type == 'university':
+            context['page_title'] = 'إدارة وسوم الجامعات'
+            context['page_description'] = 'إدارة جميع وسوم الجامعات'
+            count_label = 'عدد الجامعات'
+        elif tag_type == 'institute':
+            context['page_title'] = 'إدارة وسوم المعاهد'
+            context['page_description'] = 'إدارة جميع وسوم المعاهد'
+            count_label = 'عدد المعاهد'
+        else:
+            context['page_title'] = 'إدارة وسوم المقالات'
+            context['page_description'] = 'إدارة جميع وسوم المقالات'
+            count_label = 'عدد المقالات'
+
         context['search_query'] = self.request.GET.get('search', '')
         context['base_url'] = reverse_lazy('dashboard:tag_list')
         context['search_placeholder'] = 'ابحث عن اسم الوسم أو الرابط...'
@@ -2293,7 +2416,7 @@ class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView)
         # Action button for topbar
         context['action_buttons'] = [
             {
-                'url': reverse_lazy('dashboard:tag_create'),
+                'url': f"{reverse_lazy('dashboard:tag_create')}?type={tag_type}",
                 'label': 'إضافة وسم جديد',
                 'variant': 'primary',
             }
@@ -2303,7 +2426,7 @@ class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView)
         context['columns'] = [
             {'label': 'اسم الوسم', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:tag_edit', 'link_param': 'id'},
             {'label': 'الرابط', 'key': 'slug', 'type': 'text'},
-            {'label': 'عدد المقالات', 'key': 'articles_count', 'type': 'text'},
+            {'label': count_label, 'key': 'item_count', 'type': 'text'},
         ]
         
         context['edit_url_name'] = 'dashboard:tag_edit'
@@ -2317,15 +2440,18 @@ class TagListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView)
 
 class TagCreateView(ContentAdminRequiredMixin, CreateView):
     """
-    Create a new article tag via modal/redirect.
+    Create a new tag via modal/redirect.
     """
     model = Tag
     form_class = TagForm
-    success_url = reverse_lazy('dashboard:tag_list')
+
+    def get_success_url(self):
+        tag_type = self.request.GET.get('type', 'article')
+        return f"{reverse_lazy('dashboard:tag_list')}?type={tag_type}"
 
     def get(self, request, *args, **kwargs):
         """Redirect GET requests to list page since creation is done via modal."""
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
     def form_valid(self, form):
         """Handle successful form submission."""
@@ -2341,7 +2467,7 @@ class TagCreateView(ContentAdminRequiredMixin, CreateView):
             self.request,
             f'تم إنشاء الوسم "{self.object.name}" بنجاح'
         )
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
     def form_invalid(self, form):
         """Handle form errors and redirect or return JSON."""
@@ -2355,16 +2481,19 @@ class TagCreateView(ContentAdminRequiredMixin, CreateView):
             for error in errors:
                 label = form.fields[field].label if field in form.fields else field
                 messages.error(self.request, f'{label}: {error}')
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
 
 class TagUpdateView(ContentAdminRequiredMixin, UpdateView):
     """
-    Update an existing article tag.
+    Update an existing tag.
     """
     model = Tag
     form_class = TagForm
-    success_url = reverse_lazy('dashboard:tag_list')
+
+    def get_success_url(self):
+        tag_type = self.request.GET.get('type', 'article')
+        return f"{reverse_lazy('dashboard:tag_list')}?type={tag_type}"
 
     def get(self, request, *args, **kwargs):
         """Return JSON for AJAX modal populating, redirect to list page otherwise."""
@@ -2375,7 +2504,7 @@ class TagUpdateView(ContentAdminRequiredMixin, UpdateView):
                 'name': self.object.name,
                 'slug': self.object.slug,
             })
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
     def form_valid(self, form):
         """Handle successful form submission."""
@@ -2392,22 +2521,41 @@ class TagUpdateView(ContentAdminRequiredMixin, UpdateView):
             for error in errors:
                 label = form.fields[field].label if field in form.fields else field
                 messages.error(self.request, f'{label}: {error}')
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
 
 class TagDeleteView(ContentAdminRequiredMixin, DeleteView):
     """
-    Delete an article tag with confirmation.
-    حذف وسم مقالات مع تأكيد
-    
-    Features:
-    - Confirmation page showing tag name and article count
-    - Arabic success message
-    - Note about articles that will be affected
+    Delete a tag with confirmation.
+    حذف وسم مع تأكيد
     """
     model = Tag
     template_name = 'dashboard/tags/delete_confirm.html'
-    success_url = reverse_lazy('dashboard:tag_list')
+
+    def get_success_url(self):
+        tag_type = self.request.GET.get('type', 'article')
+        return f"{reverse_lazy('dashboard:tag_list')}?type={tag_type}"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tag_type = self.request.GET.get('type', 'article')
+        context['tag_type'] = tag_type
+        
+        # Calculate dynamic counts and labels
+        if tag_type == 'university':
+            context['entity_name'] = 'جامعة'
+            context['entity_plural'] = 'جامعات'
+            context['relation_count'] = self.object.universities.count()
+        elif tag_type == 'institute':
+            context['entity_name'] = 'معهد'
+            context['entity_plural'] = 'معاهد'
+            context['relation_count'] = self.object.institutes.count()
+        else:
+            context['entity_name'] = 'مقالة'
+            context['entity_plural'] = 'مقالات'
+            context['relation_count'] = self.object.articles.count()
+            
+        return context
 
     def delete(self, request, *args, **kwargs):
         """Handle deletion with success message."""
@@ -2872,6 +3020,7 @@ class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
         
         # Add items for list_page.html template
         context['items'] = context.get('leads', context.get('object_list', []))
+        context['query_params'] = '&'.join([f'{k}={v}' for k, v in self.request.GET.items() if k != 'page'])
         
         return context
 
@@ -3785,6 +3934,7 @@ class MediaLibraryView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, View
             'results_count': results_count,
             'source_choices': MediaFile.SourceType.choices,
             'page_title': 'مكتبة الوسائط',
+            'query_params': '&'.join([f'{k}={v}' for k, v in request.GET.items() if k != 'page']),
         }
         return render(request, 'dashboard/media/library.html', context)
 
@@ -3927,5 +4077,78 @@ class MediaFileBulkDeleteView(ContentAdminRequiredMixin, View):
             return JsonResponse({'success': True, 'deleted_count': count})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+class TagSearchAPIView(ContentAdminRequiredMixin, View):
+    """
+    API view to search tags by query string.
+    """
+    def get(self, request, *args, **kwargs):
+        q = request.GET.get('q', '').strip()
+        tags = Tag.objects.all()
+        if q:
+            tags = tags.filter(name__icontains=q)
+        
+        tags_list = [{'id': tag.id, 'name': tag.name, 'slug': tag.slug} for tag in tags[:20]]
+        return JsonResponse({'results': tags_list})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class TagCreateAPIView(ContentAdminRequiredMixin, View):
+    """
+    API view to create a tag inline and return its info.
+    """
+    def post(self, request, *args, **kwargs):
+        import re
+        import json
+        try:
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+                name = data.get('name', '').strip()
+            else:
+                name = request.POST.get('name', '').strip()
+        except Exception:
+            name = request.POST.get('name', '').strip()
+            
+        if not name:
+            return JsonResponse({'success': False, 'error': 'اسم الوسم مطلوب.'}, status=400)
+            
+        # Check if tag already exists (case-insensitive)
+        tag = Tag.objects.filter(name__iexact=name).first()
+        if tag:
+            return JsonResponse({
+                'success': True,
+                'id': tag.id,
+                'name': tag.name,
+                'slug': tag.slug,
+                'created': False
+            })
+            
+        # Generate a unique slug
+        slug_base = name.replace(' ', '-')
+        slug_base = re.sub(r'[^\w\s-]', '', slug_base)
+        slug_base = re.sub(r'[-\s]+', '-', slug_base)
+        slug_base = slug_base.lower()
+        if not slug_base:
+            slug_base = 'tag'
+            
+        slug = slug_base
+        counter = 1
+        while Tag.objects.filter(slug=slug).exists():
+            slug = f"{slug_base}-{counter}"
+            counter += 1
+            
+        try:
+            tag = Tag.objects.create(name=name, slug=slug)
+            return JsonResponse({
+                'success': True,
+                'id': tag.id,
+                'name': tag.name,
+                'slug': tag.slug,
+                'created': True
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
 
 

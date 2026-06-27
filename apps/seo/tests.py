@@ -450,3 +450,41 @@ class TestSEOAppConfig:
         config = apps.get_app_config('seo')
         assert config.name == 'apps.seo'
         assert config.verbose_name == 'SEO'
+
+
+@pytest.mark.django_db
+class TestUniversitySchemaTag:
+    """Test university_schema template tag."""
+    
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.factory = RequestFactory()
+        self.request = self.factory.get('/')
+        
+    def test_university_schema_with_telephone_and_website(self):
+        """Test that university_schema correctly includes telephone and sameAs fields."""
+        from apps.universities.models import University
+        from apps.seo.templatetags.schema_tags import university_schema
+        import json
+        
+        university = University.objects.create(
+            name="جامعة اختبار",
+            slug="test-uni",
+            description="وصف اختبار للجامعة",
+            location="كوالالمبور",
+            telephone="+60 3-1234 5678",
+            website="https://test-uni.edu.my"
+        )
+        
+        # Call the template tag
+        context = {'request': self.request}
+        result_json = university_schema(context, university)
+        
+        # Parse the JSON safe string result
+        schema = json.loads(str(result_json))
+        
+        assert schema['@context'] == 'https://schema.org'
+        assert schema['@type'] == 'EducationalOrganization'
+        assert schema['name'] == 'جامعة اختبار'
+        assert schema['telephone'] == '+60 3-1234 5678'
+        assert schema['sameAs'] == 'https://test-uni.edu.my'

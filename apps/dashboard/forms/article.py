@@ -34,7 +34,7 @@ class ArticleForm(forms.ModelForm):
             # Publishing
             'publish_status',
             # SEO Fields
-            'meta_title', 'meta_description', 'focus_keyword', 'canonical_url',
+            'meta_title', 'meta_description', 'focus_keyword', 'keyphrase_synonyms', 'canonical_url',
             'robots_index', 'robots_follow', 'sitemap_include',
             'og_title', 'og_description', 'og_image'
         ]
@@ -116,6 +116,11 @@ class ArticleForm(forms.ModelForm):
                 'placeholder': 'الكلمة المفتاحية الرئيسية',
                 'dir': 'rtl',
             }),
+            'keyphrase_synonyms': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'المرادفات مفصولة بفواصل (مثال: دراسة في ماليزيا، جامعات ماليزيا)',
+                'dir': 'rtl',
+            }),
             'canonical_url': forms.URLInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'اتركه فارغاً للاستخدام الافتراضي',
@@ -173,6 +178,7 @@ class ArticleForm(forms.ModelForm):
             'meta_title': 'عنوان SEO',
             'meta_description': 'وصف SEO',
             'focus_keyword': 'الكلمة المفتاحية',
+            'keyphrase_synonyms': 'مرادفات الكلمة المفتاحية',
             'canonical_url': 'الرابط الأساسي',
             'robots_index': 'السماح بالفهرسة',
             'robots_follow': 'السماح بتتبع الروابط',
@@ -205,7 +211,8 @@ class ArticleForm(forms.ModelForm):
             'meta_title': 'يظهر في نتائج البحث (60 حرف كحد أقصى)',
             'meta_description': 'يظهر في نتائج البحث (160 حرف كحد أقصى)',
             'focus_keyword': 'الكلمة المفتاحية الرئيسية للصفحة',
-            'canonical_url': 'اتركه فارغاً لاستخدام الرابط الافتراضي',
+            'keyphrase_synonyms': 'مرادفات للكلمة المفتاحية الرئيسية مفصولة بفواصل (، أو ,)',
+            'canonical_url': 'اتركه فارغاً للاستخدام الافتراضي',
             'robots_index': 'السماح لمحركات البحث بفهرسة هذه الصفحة',
             'robots_follow': 'السماح لمحركات البحث بتتبع الروابط في هذه الصفحة',
             'sitemap_include': 'تضمين هذه الصفحة في ملف sitemap.xml',
@@ -213,6 +220,35 @@ class ArticleForm(forms.ModelForm):
             'og_description': 'الوصف عند المشاركة على وسائل التواصل',
             'og_image': 'الصورة عند المشاركة على وسائل التواصل (1200x630 بكسل)',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.data:
+            if self.data.get('imported_featured_image_path'):
+                self.fields['featured_image'].required = False
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        from apps.importer.services.image_downloader import delete_unused_media_file
+        
+        imported_featured_image_path = self.data.get('imported_featured_image_path') if self.data else None
+        if imported_featured_image_path and (not self.files or 'featured_image' not in self.files):
+            relative_path = imported_featured_image_path.replace('/media/', '', 1)
+            if instance.featured_image and instance.featured_image.name != relative_path:
+                delete_unused_media_file(instance.featured_image.name)
+            instance.featured_image = relative_path
+            
+        imported_og_image_path = self.data.get('imported_og_image_path') if self.data else None
+        if imported_og_image_path and (not self.files or 'og_image' not in self.files):
+            relative_path = imported_og_image_path.replace('/media/', '', 1)
+            if instance.og_image and instance.og_image.name != relative_path:
+                delete_unused_media_file(instance.og_image.name)
+            instance.og_image = relative_path
+            
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
 
 class CategoryForm(forms.ModelForm):
@@ -285,3 +321,25 @@ class TagForm(forms.ModelForm):
         help_texts = {
             'slug': 'رابط الوسم (يدعم الأحرف العربية)',
         }
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name', '').strip()
+        if not name:
+            return name
+        queryset = Tag.objects.filter(name__iexact=name)
+        if self.instance and self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise forms.ValidationError('هذا الوسم موجود بالفعل بهذا الاسم.')
+        return name
+
+    def clean_slug(self):
+        slug = self.cleaned_data.get('slug', '').strip()
+        if not slug:
+            return slug
+        queryset = Tag.objects.filter(slug__iexact=slug)
+        if self.instance and self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise forms.ValidationError('هذا الرابط مستخدم بالفعل لوسم آخر.')
+        return slug

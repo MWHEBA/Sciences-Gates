@@ -114,7 +114,9 @@ class InstituteDetailView(BreadcrumbMixin, DetailView):
         
         return apply_preview_filter(self.request, Institute.objects).prefetch_related(
             courses_prefetch,
-            'related_articles'
+            'related_articles',
+            'tags',
+            'attachments'
         )
     
     def get_breadcrumbs(self):
@@ -228,3 +230,52 @@ class InstituteTypeListView(BreadcrumbMixin, TemplateView):
         context['page_title'] = type_labels.get(institute_type, 'المعاهد')
         
         return context
+
+
+class TagInstituteListView(BreadcrumbMixin, ListView):
+    """
+    Display a paginated list of published institutes associated with a specific tag.
+    """
+    model = Institute
+    template_name = 'institutes/tag.html'
+    context_object_name = 'institutes'
+    paginate_by = 20
+
+    def get_queryset(self):
+        tag_slug = self.kwargs.get('slug')
+        return Institute.objects.filter(
+            publish_status='published',
+            tags__slug=tag_slug
+        ).prefetch_related(
+            'related_articles'
+        ).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from django.urls import reverse
+        from apps.articles.models import Tag
+        context['clear_url'] = reverse('institutes:list')
+        
+        tag_slug = self.kwargs.get('slug')
+        try:
+            context['tag'] = Tag.objects.get(slug=tag_slug)
+        except Tag.DoesNotExist:
+            context['tag'] = None
+        
+        return context
+
+    def get_breadcrumbs(self):
+        tag_slug = self.kwargs.get('slug')
+        from apps.articles.models import Tag
+        try:
+            tag = Tag.objects.get(slug=tag_slug)
+            return (BreadcrumbTrail()
+                .add_section('home')
+                .add_section('institutes')
+                .current(f'وسم: {tag.name}')
+                .build())
+        except Tag.DoesNotExist:
+            return (BreadcrumbTrail()
+                .add_section('home')
+                .add_section('institutes')
+                .build())

@@ -194,9 +194,70 @@ class InstituteDetailViewTest(TestCase):
         
         # This test verifies that prefetch_related is working
         # by checking that accessing related objects doesn't cause additional queries
-        # Queries: 1 for redirect check, 1 for institute, 1 for courses, 1 for articles, 1 for site settings
-        with self.assertNumQueries(5):
+        # Queries: 1 for redirect check, 1 for institute, 1 for courses, 1 for articles, 1 for tags, 1 for site settings, 1 for attachments
+        with self.assertNumQueries(7):
             response = self.client.get(url)
             # Access the courses to ensure they're prefetched
             list(response.context['courses'])
+
+
+class InstituteAttachmentTestCase(TestCase):
+    """Test cases for InstituteAttachment model and view integration."""
+
+    def test_attachment_saves_file_size_automatically(self):
+        """Test that file_size is computed and saved automatically."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .models import Institute, InstituteAttachment
+
+        inst = Institute.objects.create(
+            name='Test Institute',
+            slug='test-inst',
+            main_image='main.png',
+            description='Test description',
+            registration_requirements='Requirements'
+        )
+
+        test_file = SimpleUploadedFile("brochure.pdf", b"file content here", content_type="application/pdf")
+        attachment = InstituteAttachment.objects.create(
+            institute=inst,
+            title='دليل المعهد',
+            file=test_file
+        )
+
+        self.assertEqual(attachment.file_size, len(b"file content here"))
+        self.assertEqual(attachment.title, 'دليل المعهد')
+        self.assertTrue(attachment.file.name.endswith('brochure.pdf'))
+
+        # Clean up file
+        attachment.delete()
+
+    def test_detail_view_renders_attachments(self):
+        """Test that the public detail view lists uploaded attachments."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .models import Institute, InstituteAttachment
+
+        inst = Institute.objects.create(
+            name='Published Inst',
+            slug='published-inst',
+            main_image='main.png',
+            description='Test description',
+            registration_requirements='Requirements',
+            publish_status='published'
+        )
+
+        test_file = SimpleUploadedFile("brochure.pdf", b"content", content_type="application/pdf")
+        attachment = InstituteAttachment.objects.create(
+            institute=inst,
+            title='دليل المعهد المرفق',
+            file=test_file
+        )
+
+        response = self.client.get(reverse('institutes:detail', kwargs={'slug': inst.slug}))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('دليل المعهد المرفق', content)
+
+        # Clean up file
+        attachment.delete()
+
 

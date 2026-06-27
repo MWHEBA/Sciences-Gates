@@ -192,7 +192,7 @@
                         
                         <!-- الحالة الحالية -->
                         <div class="flex items-center gap-2 mb-4 p-3 rounded-lg" style="background-color: var(--surface-2); border: 1px solid var(--border);">
-                            <span style="width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background-color: {% if form.publish_status.value == 'published' %}var(--success){% else %}var(--danger){% endif %};"></span>
+                            <span {% if form.publish_status.value == 'published' %}style="width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background-color: var(--success);"{% else %}style="width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background-color: var(--danger);"{% endif %}></span>
                             <span class="text-sm" style="color: var(--text-secondary);">الحالة:</span>
                             <span class="text-sm font-normal" style="color: var(--text-primary);">
                                 {% if form.publish_status.value == 'published' %}منشور{% else %}مسودة{% endif %}
@@ -203,11 +203,11 @@
                         <input type="hidden" name="publish_status" id="id_publish_status" value="{{ form.publish_status.value|default:'unpublished' }}">
 
                         <!-- أزرار -->
-                        <div class="flex flex-col gap-2">
+                        <div class="flex gap-2">
                             {% if form.publish_status.value == 'published' %}
                                 {% if form.instance.pk and form.instance.slug %}
                                 <a href="{% url 'articles:detail' form.instance.slug %}" target="_blank" rel="noopener noreferrer"
-                                   class="w-full px-4 py-2 rounded-lg font-normal text-center transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2"
+                                   class="flex-1 px-4 py-2 rounded-lg font-normal text-center transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2"
                                    style="background-color: var(--info-light); color: var(--info); border: 1px solid var(--info);">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
@@ -216,7 +216,7 @@
                                     استعراض
                                 </a>
                                 {% endif %}
-                                <button type="submit" class="w-full px-4 py-2 rounded-lg font-normal text-white transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'" onclick="document.getElementById('id_publish_status').value='published'">
+                                <button type="submit" class="flex-1 px-4 py-2 rounded-lg font-normal text-white transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'" onclick="document.getElementById('id_publish_status').value='published'">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                                         <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -225,14 +225,14 @@
                                     تحديث
                                 </button>
                             {% else %}
-                                <button type="submit" class="w-full px-4 py-2 rounded-lg font-normal text-white transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'" onclick="document.getElementById('id_publish_status').value='published'">
+                                <button type="submit" class="flex-1 px-4 py-2 rounded-lg font-normal text-white transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'" onclick="document.getElementById('id_publish_status').value='published'">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M12 5v14"></path>
                                         <path d="M5 12h14"></path>
                                     </svg>
                                     نشر
                                 </button>
-                                <button type="submit" class="w-full px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border);" onclick="document.getElementById('id_publish_status').value='unpublished'">
+                                <button type="submit" class="flex-1 px-4 py-2 rounded-lg font-normal transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border);" onclick="document.getElementById('id_publish_status').value='unpublished'">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M19 21H5a2 2 0 0 1-2-2V7h18v12a2 2 0 0 1-2 2z"></path>
                                         <path d="M16 3v4"></path>
@@ -304,15 +304,50 @@
                             border-radius: var(--radius-xl);
                             box-shadow: var(--shadow-sm);
                             padding: 20px;">
-                    <section x-data="{ showAdvanced: false }">
+                    <section x-data="{
+                        showAdvanced: false,
+                        metaTitle: '',
+                        metaDesc: '',
+                        init() {
+                            const titleEl = $el.querySelector('textarea[name=meta_title], input[name=meta_title]');
+                            const descEl = $el.querySelector('textarea[name=meta_description], input[name=meta_description]');
+                            if (titleEl) {
+                                this.metaTitle = titleEl.value;
+                                const updateTitle = () => { this.metaTitle = titleEl.value; };
+                                titleEl.addEventListener('input', updateTitle);
+                                titleEl.addEventListener('change', updateTitle);
+                            }
+                            if (descEl) {
+                                this.metaDesc = descEl.value;
+                                const updateDesc = () => { this.metaDesc = descEl.value; };
+                                descEl.addEventListener('input', updateDesc);
+                                descEl.addEventListener('change', updateDesc);
+                            }
+                        }
+                    }">
                         <h3 class="text-base font-semibold" style="color: var(--text-primary); margin-bottom: 16px;">تحسين محركات البحث</h3>
                         <div class="space-y-4">
                             <!-- عنوان SEO -->
                             <div>
-                                <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                    {{ form.meta_title.label }}
-                                </label>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-normal mb-0" style="color: var(--text-secondary); margin-bottom: 0;">
+                                        {{ form.meta_title.label }}
+                                    </label>
+                                    <span class="text-xs" :style="metaTitle.length > 45 ? 'color: var(--danger); font-weight: bold;' : (metaTitle.length >= 25 ? 'color: var(--success);' : 'color: var(--warning);')">
+                                        <span x-text="metaTitle.length"></span> / 45 (60 شاملة اسم الموقع)
+                                    </span>
+                                </div>
                                 {{ form.meta_title }}
+                                <div class="w-full mt-1.5" style="height: 4px; background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;">
+                                    <div style="height: 100%; transition: width 0.2s ease;"
+                                         :style="{ 
+                                             width: Math.min(100, (metaTitle.length / 45) * 100) + '%',
+                                             backgroundColor: metaTitle.length > 45 ? 'var(--danger)' : (metaTitle.length >= 25 ? 'var(--success)' : 'var(--warning)')
+                                         }"></div>
+                                </div>
+                                <p class="mt-1 text-xs" style="color: var(--text-secondary); font-size: 11px;">
+                                    * يضاف اسم الموقع تلقائياً في النهاية (" | بوابات العلوم" / 15 حرفاً)، لذا يوصى بطول بين 25 و 45 حرفاً للمدخل.
+                                </p>
                                 {% if form.meta_title.errors %}
                                     <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.meta_title.errors.0 }}</p>
                                 {% endif %}
@@ -320,10 +355,22 @@
 
                             <!-- وصف SEO -->
                             <div>
-                                <label for="{{ form.meta_description.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                    {{ form.meta_description.label }}
-                                </label>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label for="{{ form.meta_description.id_for_label }}" class="block text-sm font-normal mb-0" style="color: var(--text-secondary); margin-bottom: 0;">
+                                        {{ form.meta_description.label }}
+                                    </label>
+                                    <span class="text-xs" :style="metaDesc.length > 160 ? 'color: var(--danger); font-weight: bold;' : (metaDesc.length >= 120 ? 'color: var(--success);' : 'color: var(--warning);')">
+                                        <span x-text="metaDesc.length"></span> / 160
+                                    </span>
+                                </div>
                                 {{ form.meta_description }}
+                                <div class="w-full mt-1.5" style="height: 4px; background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;">
+                                    <div style="height: 100%; transition: width 0.2s ease;"
+                                         :style="{ 
+                                             width: Math.min(100, (metaDesc.length / 160) * 100) + '%',
+                                             backgroundColor: metaDesc.length > 160 ? 'var(--danger)' : (metaDesc.length >= 120 ? 'var(--success)' : 'var(--warning)')
+                                         }"></div>
+                                </div>
                                 {% if form.meta_description.errors %}
                                     <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.meta_description.errors.0 }}</p>
                                 {% endif %}
@@ -339,6 +386,92 @@
                                     <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.focus_keyword.errors.0 }}</p>
                                 {% endif %}
                             </div>
+
+                            <!-- مرادفات الكلمة المفتاحية -->
+                            <div>
+                                <label class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.keyphrase_synonyms.label }}
+                                </label>
+                                <div x-data="{
+                                    synonyms: [],
+                                    newSynonym: '',
+                                    isFocused: false,
+                                    init() {
+                                        const inputEl = $el.querySelector('input[name=keyphrase_synonyms]');
+                                        if (inputEl && inputEl.value) {
+                                            try {
+                                                const parsed = JSON.parse(inputEl.value);
+                                                this.synonyms = Array.isArray(parsed) ? parsed : [parsed];
+                                            } catch (e) {
+                                                this.synonyms = inputEl.value.split(',').map(s => s.trim()).filter(s => s);
+                                            }
+                                        } else {
+                                            this.synonyms = [];
+                                        }
+                                    },
+                                    addSynonym() {
+                                        const val = this.newSynonym.replace(/[،,]/g, '').trim();
+                                        if (val && !this.synonyms.includes(val)) {
+                                            this.synonyms.push(val);
+                                            this.syncToInput();
+                                        }
+                                        this.newSynonym = '';
+                                    },
+                                    removeSynonym(index) {
+                                        this.synonyms.splice(index, 1);
+                                        this.syncToInput();
+                                    },
+                                    syncToInput() {
+                                        const inputEl = $el.querySelector('input[name=keyphrase_synonyms]');
+                                        if (inputEl) {
+                                            inputEl.value = JSON.stringify(this.synonyms);
+                                            inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                                        }
+                                    }
+                                }" class="space-y-2">
+                                    <!-- Hidden Input -->
+                                    <div style="display: none;">
+                                        {{ form.keyphrase_synonyms }}
+                                    </div>
+
+                                    <!-- Visual Tags Input Wrapper -->
+                                    <div class="tags-input-wrapper"
+                                         :style="isFocused ? 'border-color: var(--primary); ring: 2px var(--primary);' : 'border-color: var(--border);'"
+                                         style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; padding: 6px 12px; border: 1px solid var(--border); background-color: var(--surface); border-radius: var(--radius-lg); transition: all 0.2s ease; min-height: 42px;"
+                                         @click="$refs.synInput.focus()">
+                                        
+                                        <template x-for="(syn, index) in synonyms" :key="index">
+                                            <span style="background-color: var(--background); color: var(--text-primary); border: 1px solid var(--border); display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 10px; font-size: 13px; gap: 6px; direction: rtl;">
+                                                <span x-text="syn"></span>
+                                                <button type="button" 
+                                                        @click.stop="removeSynonym(index)" 
+                                                        style="background: transparent; border: none; cursor: pointer; color: var(--text-muted); font-size: 14px; line-height: 1; padding: 0;"
+                                                        aria-label="حذف">
+                                                    &times;
+                                                </button>
+                                            </span>
+                                        </template>
+
+                                        <input type="text"
+                                               x-ref="synInput"
+                                               x-model="newSynonym"
+                                               @keydown.enter.prevent="addSynonym()"
+                                               @keydown.comma.prevent="addSynonym()"
+                                               @keydown.space="if (newSynonym.endsWith('،') || newSynonym.endsWith(',')) { addSynonym() }"
+                                               @input="if (newSynonym.includes(',') || newSynonym.includes('،')) { addSynonym() }"
+                                               @blur="addSynonym()"
+                                               @focus="isFocused = true"
+                                               @blur="isFocused = false; addSynonym()"
+                                               placeholder="اكتب مرادفاً واضغط Enter أو فاصلة..."
+                                               style="border: none; outline: none; background: transparent; font-size: 13px; color: var(--text-primary); flex-grow: 1; min-width: 150px; padding: 4px 0;"
+                                               dir="rtl">
+                                    </div>
+                                </div>
+                                {% if form.keyphrase_synonyms.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.keyphrase_synonyms.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
 
                             <!-- زر الإعدادات المتقدمة -->
                             <button type="button"
@@ -442,6 +575,7 @@ document.addEventListener('DOMContentLoaded', function() {
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/importer.js' %}?v=3"></script>
 <script src="{% static 'js/html_editor.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {

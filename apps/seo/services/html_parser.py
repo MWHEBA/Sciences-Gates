@@ -187,10 +187,27 @@ class SEOHTMLParser:
         # Using punctuation-aware word segmenting (matches unicode alphanumeric)
         words = [w for w in re.findall(r'\w+', clean_text) if w]
 
+        # Extract introduction paragraph text
+        first_p_tag = node_copy.find("p")
+        intro_text = ""
+        if first_p_tag:
+            intro_text = " ".join(first_p_tag.get_text().split())
+        if not intro_text:
+            intro_text = " ".join(words[:150])
+
+        # Extract all image alt texts
+        image_alts = []
+        for img in images:
+            alt = img.get("alt")
+            if alt is not None:
+                image_alts.append(alt.strip())
+
         return {
             "selector_missing": selector_missing,
             "word_count": len(words),
             "headings": headings,
             "links": links,
             "image_warnings": image_warnings,
+            "intro_text": intro_text,
+            "image_alts": image_alts,
         }

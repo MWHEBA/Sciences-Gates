@@ -1,0 +1,95 @@
+{% load static %}
+<div x-data="tagsInputComponent({
+    fieldId: '{{ field.id_for_label }}',
+    fieldName: '{{ field.name }}',
+    searchUrl: '{% url "dashboard:api_tags_search" %}',
+    createUrl: '{% url "dashboard:api_tags_create" %}'
+})"
+class="tags-input-container"
+@click.away="closeDropdown()">
+
+    <!-- Hidden Django Original Input Container -->
+    <div class="hidden" x-ref="djangoContainer" @change="syncFromCheckboxes()">
+        {{ field }}
+    </div>
+
+    <!-- Interactive Tags Input Wrapper -->
+    <div class="tags-input-wrapper" @click="$refs.searchInput.focus()">
+        <!-- Selected Tags Pills -->
+        <template x-for="tag in selectedTags" :key="tag.id">
+            <span class="tags-input-pill">
+                <span x-text="tag.name"></span>
+                <button type="button" class="tags-input-pill-remove" @click.stop="removeTag(tag)" aria-label="حذف الوسم">
+                    &times;
+                </button>
+            </span>
+        </template>
+
+        <!-- Text Input for Search/Create -->
+        <input type="text"
+               x-ref="searchInput"
+               x-model="searchQuery"
+               @input="onInput"
+               @keydown.down.prevent="nextSuggestion"
+               @keydown.up.prevent="prevSuggestion"
+               @keydown.enter.prevent="selectActiveOrCreate"
+               @keydown.escape="closeDropdown"
+               @keydown.backspace="handleBackspace"
+               class="tags-input-field"
+               placeholder="{% if not selectedTags.length %}ابحث أو أضف وسم جديد...{% else %}وسم آخر...{% endif %}"
+               autocomplete="off">
+    </div>
+
+    <!-- Dropdown Suggestions -->
+    <div x-show="showDropdown && (suggestions.length || (searchQuery.trim().length > 0 && !exactMatchExists))"
+         class="tags-input-dropdown"
+         x-transition:enter="transition ease-out duration-100"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-75"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         style="display: none;">
+        
+        <ul class="tags-input-dropdown-list">
+            <template x-for="(suggestion, index) in suggestions" :key="suggestion.id">
+                <li @click="selectTag(suggestion)"
+                    :class="{
+                        'tags-input-dropdown-item': true,
+                        'active': index === activeIndex,
+                        'selected': isSelected(suggestion)
+                    }"
+                    x-text="suggestion.name">
+                </li>
+            </template>
+        </ul>
+
+        <!-- Option to create a new tag -->
+        <div x-show="searchQuery.trim().length > 0 && !exactMatchExists">
+            <button type="button"
+                    class="tags-input-dropdown-create-btn"
+                    @click="createNewTag()">
+                <span>+ إنشاء الوسم الجديد:</span>
+                <strong x-text="' &ldquo;' + searchQuery.trim() + '&rdquo;'"></strong>
+        </div>
+    </div>
+
+    <!-- Recently Used Tags -->
+    <div class="tags-input-recent">
+        <span class="tags-input-recent-label">مستخدم مؤخراً:</span>
+        <div class="tags-input-recent-list">
+            {% for r_tag in recently_used_tags %}
+                <button type="button"
+                        class="tags-input-recent-badge"
+                        :class="isSelected({id: '{{ r_tag.id }}'}) ? 'selected' : ''"
+                        @click="selectTag({id: '{{ r_tag.id }}', name: '{{ r_tag.name|escapejs }}'})"
+                        :disabled="isSelected({id: '{{ r_tag.id }}'})">
+                    {{ r_tag.name }}
+                </button>
+            {% empty %}
+                <span class="tags-input-recent-empty">لا توجد وسوم مستخدمة مؤخراً</span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,228 @@
+/**
+ * University Attachments Custom CSS
+ * Styles for the modern drag-and-drop file upload zone and file cards.
+ */
+
+/* Container */
+.attachments-manager {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* File list container */
+.attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Individual File Card */
+.attachment-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.attachment-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Highlight new/pending files */
+.attachment-card.is-new {
+    border-color: var(--secondary);
+    background-color: var(--secondary-light);
+}
+
+/* File Type Icon */
+.attachment-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background-color: var(--primary-light);
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.attachment-card.is-new .attachment-icon {
+    background-color: var(--secondary-muted);
+    color: var(--secondary);
+}
+
+.attachment-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* File Info & Inputs */
+.attachment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-grow: 1;
+    min-w-0;
+}
+
+/* Title Input styling */
+.attachment-title-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.attachment-title-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-muted);
+}
+
+/* File metadata details */
+.attachment-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.attachment-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.attachment-card.is-new .attachment-badge {
+    background-color: var(--secondary-muted);
+    color: var(--secondary-hover);
+    border-color: var(--secondary-muted);
+}
+
+/* File Actions (download, delete) */
+.attachment-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.attachment-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.attachment-action-btn:hover {
+    background-color: var(--surface-2);
+    color: var(--text-primary);
+}
+
+.attachment-action-btn.btn-danger {
+    color: var(--danger);
+    border-color: var(--danger-light);
+}
+
+.attachment-action-btn.btn-danger:hover {
+    background-color: var(--danger-light);
+    color: var(--danger-hover);
+}
+
+/* Marked for deletion state */
+.attachment-card.marked-for-deletion {
+    opacity: var(--disabled-opacity, 0.5);
+    background-color: var(--surface-2);
+    border-color: var(--border);
+}
+
+.attachment-card.marked-for-deletion .attachment-title-input {
+    text-decoration: line-through;
+    pointer-events: none;
+    background-color: var(--surface-2);
+}
+
+.attachment-card.marked-for-deletion .attachment-action-btn.btn-danger {
+    background-color: var(--danger);
+    color: var(--white);
+    border-color: var(--danger);
+}
+
+/* Drag and Drop Zone */
+.attachment-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    text-align: center;
+}
+
+.attachment-dropzone:hover,
+.attachment-dropzone.dragover {
+    border-color: var(--primary);
+    background-color: var(--primary-muted);
+}
+
+.attachment-dropzone-icon {
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    transition: color 0.2s ease;
+}
+
+.attachment-dropzone:hover .attachment-dropzone-icon,
+.attachment-dropzone.dragover .attachment-dropzone-icon {
+    color: var(--primary);
+}
+
+.attachment-dropzone-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.attachment-dropzone-help {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* RTL Adjustments */
+[dir="rtl"] .attachment-card {
+    flex-direction: row;
+}
+
+[dir="rtl"] .attachment-actions {
+    margin-right: auto;
+    margin-left: 0;
+}

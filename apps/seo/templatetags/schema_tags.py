@@ -136,6 +136,14 @@ def university_schema(context, university):
             "addressCountry": "MY",
             "addressLocality": university.location
         }
+        
+    # Add telephone if available
+    if getattr(university, 'telephone', None):
+        schema["telephone"] = university.telephone
+        
+    # Add sameAs (website) if available
+    if getattr(university, 'website', None):
+        schema["sameAs"] = university.website
     
     return mark_safe(json.dumps(schema, ensure_ascii=False, indent=2))
 

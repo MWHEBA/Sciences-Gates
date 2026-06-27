@@ -1,0 +1,191 @@
+/* Custom Relations Select Styles */
+.relations-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.relations-select-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    min-height: 44px;
+    cursor: text;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.relations-select-wrapper:hover {
+    border-color: var(--border-strong);
+    background-color: var(--bg-light);
+}
+
+.relations-select-wrapper:focus-within {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-muted);
+    background-color: var(--surface);
+}
+
+.relations-select-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background-color: var(--primary-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    user-select: none;
+    transition: background-color 0.15s ease;
+}
+
+.relations-select-pill:hover {
+    background-color: var(--border-strong);
+}
+
+.relations-select-pill-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.relations-select-pill-remove:hover {
+    color: var(--danger);
+    background-color: var(--danger-light);
+}
+
+.relations-select-field {
+    flex: 1;
+    min-width: 150px;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 4px 0;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+
+.relations-select-field::placeholder {
+    color: var(--text-muted);
+}
+
+/* Dropdown Options */
+.relations-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    margin-top: 6px;
+    background-color: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.relations-select-dropdown-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.relations-select-dropdown-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--text-primary);
+    transition: background-color 0.15s ease;
+}
+
+.relations-select-dropdown-item:hover,
+.relations-select-dropdown-item.active {
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.relations-select-dropdown-no-results {
+    padding: 12px 14px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.highlight-match {
+    background-color: var(--secondary-muted);
+    color: var(--secondary-hover);
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+/* Recently Used Section */
+.relations-select-recent {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.relations-select-recent-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.relations-select-recent-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.relations-select-recent-badge {
+    background-color: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    transition: all 0.15s ease;
+}
+
+.relations-select-recent-badge:hover {
+    border-color: var(--primary-muted);
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.relations-select-recent-badge.selected {
+    background-color: var(--border);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    border-color: var(--border);
+}
+
+.relations-select-recent-empty {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-style: italic;
+}

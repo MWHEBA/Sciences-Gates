@@ -60,6 +60,14 @@
       'media_links': 'الروابط والوسائط المتعددة (Links & Media)'
     };
 
+    var categoryHints = {
+      'meta_indexability': 'تتطلب عنواناً (40-60 حرفاً شاملة اسم الموقع)، ووصفاً تعريفياً (120-160 حرفاً)، ورابطاً أساسياً (Canonical) صالحاً، وإعدادات فهرسة (Indexable).',
+      'content_completeness': 'تتطلب عدداً كافياً من الكلمات للمحتوى، وتغطية الأقسام المطلوبة، ونسبة مثالية للكلمة المفتاحية (0.5% - 2.5%).',
+      'eeat_signals': 'تتطلب وجود اسم الكاتب وتاريخ النشر ووجود عنوان رئيسي H1 واحد وتوزيع سليم للعناوين.',
+      'schema_quality': 'تتطلب وجود بيانات مهيكلة (Schema JSON-LD) صالحة وخالية من الأخطاء البرمجية.',
+      'media_links': 'تتطلب روابط داخلية كافية وصورة مشاركة (og:image) صالحة لتسهيل النشر.'
+    };
+
     var categoriesHTML = '';
     var categories = detailJson.categories || {};
     for (var key in categories) {
@@ -76,10 +84,11 @@
       }
       
       var label = categoryLabels[key] || key;
+      var hint = categoryHints[key] || '';
       categoriesHTML += `
-        <div style="margin-bottom:12px;">
+        <div style="margin-bottom:12px;" title="${escapeHtml(hint)}">
           <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px;">
-            <span style="color:var(--text-primary);">${label}</span>
+            <span style="color:var(--text-primary); cursor:help; border-bottom:1px dashed var(--text-muted);">${label}</span>
             <span style="color:var(--text-secondary);direction:ltr;">${earned} / ${max} (${pct}%)</span>
           </div>
           <div style="height:6px;background:var(--border);border-radius:var(--radius-sm);overflow:hidden;">

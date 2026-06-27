@@ -219,51 +219,7 @@
     </div>
 
     <!-- Pagination -->
-    {% if is_paginated %}
-    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px;">
-        {% if page_obj.has_previous %}
-        <a href="?page=1{{ query_params }}" style="padding: 8px 12px; border-radius: var(--radius);
-                                                   background-color: var(--surface-2); color: var(--text-secondary);
-                                                   text-decoration: none; font-size: 12px; font-weight: 600;
-                                                   transition: background-color 0.2s; cursor: pointer;"
-           onmouseover="this.style.backgroundColor='var(--border)'"
-           onmouseout="this.style.backgroundColor='var(--surface-2)'">
-            الأولى
-        </a>
-        <a href="?page={{ page_obj.previous_page_number }}{{ query_params }}" style="padding: 8px 12px; border-radius: var(--radius);
-                                                                                    background-color: var(--surface-2); color: var(--text-secondary);
-                                                                                    text-decoration: none; font-size: 12px; font-weight: 600;
-                                                                                    transition: background-color 0.2s; cursor: pointer;"
-           onmouseover="this.style.backgroundColor='var(--border)'"
-           onmouseout="this.style.backgroundColor='var(--surface-2)'">
-            السابقة
-        </a>
-        {% endif %}
-
-        <span style="padding: 8px 12px; font-size: 12px; color: var(--text-muted);">
-            الصفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
-        </span>
-
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{{ query_params }}" style="padding: 8px 12px; border-radius: var(--radius);
-                                                                               background-color: var(--surface-2); color: var(--text-secondary);
-                                                                               text-decoration: none; font-size: 12px; font-weight: 600;
-                                                                               transition: background-color 0.2s; cursor: pointer;"
-           onmouseover="this.style.backgroundColor='var(--border)'"
-           onmouseout="this.style.backgroundColor='var(--surface-2)'">
-            التالية
-        </a>
-        <a href="?page={{ page_obj.paginator.num_pages }}{{ query_params }}" style="padding: 8px 12px; border-radius: var(--radius);
-                                                                                   background-color: var(--surface-2); color: var(--text-secondary);
-                                                                                   text-decoration: none; font-size: 12px; font-weight: 600;
-                                                                                   transition: background-color 0.2s; cursor: pointer;"
-           onmouseover="this.style.backgroundColor='var(--border)'"
-           onmouseout="this.style.backgroundColor='var(--surface-2)'">
-            الأخيرة
-        </a>
-        {% endif %}
-    </div>
-    {% endif %}
+    {% include "dashboard/components/pagination.html" with page_obj=page_obj query_params=query_params %}
 
     {% else %}
     <!-- Empty State -->

@@ -186,3 +186,6 @@ WP_IMPORTER_TIMEOUT = config('WP_IMPORTER_TIMEOUT', default=30, cast=int)
 # Google Analytics & Search Console Settings
 GA4_MEASUREMENT_ID = config('GA4_MEASUREMENT_ID', default='')
 GOOGLE_SITE_VERIFICATION = config('GOOGLE_SITE_VERIFICATION', default='')
+
+# Increase maximum number of GET/POST fields for large forms (e.g. university form with many nested programs)
+DATA_UPLOAD_MAX_NUMBER_FIELDS = config('DATA_UPLOAD_MAX_NUMBER_FIELDS', default=10000, cast=int)

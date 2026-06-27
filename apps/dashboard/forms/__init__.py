@@ -5,8 +5,8 @@ Dashboard forms package.
 from django import forms
 from django.contrib.auth.models import User
 from apps.core.models import UserProfile, UserRole
-from .university import UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet
-from .institute import InstituteForm, CourseFormSet
+from .university import UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet
+from .institute import InstituteForm, CourseFormSet, InstituteAttachmentFormSet
 from .major import MajorForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet
 from .article import ArticleForm, CategoryForm, TagForm
 from .settings import SiteSettingsForm, SiteSEOSettingsForm, SEOSettingsForm
@@ -282,10 +282,12 @@ __all__ = [
     'UniversityForm',
     'UniversityFAQFormSet',
     'UniversityFacultyFormSet',
+    'UniversityAttachmentFormSet',
     'FacultyForm',
     'ProgramFormSet',
     'InstituteForm',
     'CourseFormSet',
+    'InstituteAttachmentFormSet',
     'MajorForm',
     'SubjectsTableFormSet',
     'SalaryTableFormSet',
