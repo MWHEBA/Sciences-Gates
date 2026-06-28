@@ -126,7 +126,7 @@
 
         <!-- معلومات الصفحة ممركزة بالأسفل -->
         <div class="text-xs" style="color: var(--text-muted);">
-            صفحة <span class="font-normal text-text-primary" style="color: var(--text-primary);">{{ page_obj.number }}</span> من <span class="font-normal text-text-primary" style="color: var(--text-primary);">{{ page_obj.paginator.num_pages }}</span>
+            عرض من <span class="font-normal text-text-primary" style="color: var(--text-primary);">{{ page_obj.start_index }}</span> إلى <span class="font-normal text-text-primary" style="color: var(--text-primary);">{{ page_obj.end_index }}</span> من إجمالي <span class="font-normal text-text-primary" style="color: var(--text-primary);">{{ page_obj.paginator.count }}</span>
         </div>
     </div>
 </footer>

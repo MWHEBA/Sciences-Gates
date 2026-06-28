@@ -75,19 +75,6 @@
                 </div>
                 <div class="detail-section-content">
                     {{ institute.description|safe }}
-                    
-                    {% if institute.tags.all %}
-                    <div class="mt-8 pt-6 border-t border-gray-100">
-                        <span class="text-sm font-semibold text-gray-500 block mb-3">الوسوم المرتبطة:</span>
-                        <div class="flex flex-wrap gap-2">
-                            {% for tag in institute.tags.all %}
-                            <a href="{% url 'institutes:tag' tag.slug %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-xs font-medium transition-colors" style="display: inline-block; margin: 2px;">
-                                #{{ tag.name }}
-                            </a>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
             </section>
 
@@ -171,6 +158,26 @@
                 </section>
             {% endif %}
 
+            <!-- Tags Section -->
+            {% if institute.tags.all %}
+            <section class="detail-section">
+                <div class="detail-section-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                    </svg>
+                    <h2 class="detail-section-title">الوسوم المرتبطة</h2>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    {% for tag in institute.tags.all %}
+                    <a href="{% url 'institutes:tag' tag.slug %}" class="bg-surface-2 border border-border px-3 py-1.5 rounded-lg text-text-secondary text-xs hover:border-secondary hover:text-secondary transition-all no-underline" title="عرض معاهد بوسم {{ tag.name }}">
+                        #{{ tag.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
         </div>
 
         <!-- Left Column: Sidebar / Meta Info & Inquiry Form (1/3 width) -->
@@ -210,30 +217,33 @@
                 </h3>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
                     {% for attachment in institute.attachments.all %}
-                    <li style="border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 10px; background-color: var(--surface-2);">
-                        <div style="display: flex; align-items: flex-start; gap: 8px;">
-                            <div style="color: var(--primary); margin-top: 2px; flex-shrink: 0;">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                </svg>
+                    <li>
+                        <a href="{{ attachment.file.url }}" download style="display: block; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background-color: var(--surface-2); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--border-strong)'; this.style.backgroundColor='var(--primary-light)'; var w=this.querySelector('.download-icon-wrapper'); if(w){w.style.backgroundColor='var(--primary)'; w.style.color='#ffffff';}" onmouseout="this.style.borderColor='var(--border)'; this.style.backgroundColor='var(--surface-2)'; var w=this.querySelector('.download-icon-wrapper'); if(w){w.style.backgroundColor='var(--surface)'; w.style.color='var(--primary)';}">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                                <div style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-w: 0;">
+                                    <div style="color: var(--text-muted); margin-top: 2px; flex-shrink: 0;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div style="flex: 1; min-w: 0; text-align: right;" dir="rtl">
+                                        <span style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); word-break: break-word; line-height: 1.4;">
+                                            {{ attachment.title }}
+                                        </span>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">
+                                            {{ attachment.file_size|filesizeformat }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="download-icon-wrapper" style="color: var(--primary); flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background-color: var(--surface); transition: all 0.2s;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </div>
                             </div>
-                            <div style="flex: 1; min-w: 0;">
-                                <span style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); word-break: break-word; line-height: 1.4;">
-                                    {{ attachment.title }}
-                                </span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">
-                                    {{ attachment.file_size|filesizeformat }}
-                                </span>
-                            </div>
-                        </div>
-                        <a href="{{ attachment.file.url }}" download class="btn btn--primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600; text-decoration: none; background: var(--primary); color: #ffffff; text-align: center; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            تحميل الملف
                         </a>
                     </li>
                     {% endfor %}

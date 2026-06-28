@@ -189,3 +189,14 @@ GOOGLE_SITE_VERIFICATION = config('GOOGLE_SITE_VERIFICATION', default='')
 
 # Increase maximum number of GET/POST fields for large forms (e.g. university form with many nested programs)
 DATA_UPLOAD_MAX_NUMBER_FIELDS = config('DATA_UPLOAD_MAX_NUMBER_FIELDS', default=10000, cast=int)
+
+# Storage Configurations (Django 4.2+)
+STORAGES = {
+    "default": {
+        "BACKEND": "apps.core.storage.SafeFileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+

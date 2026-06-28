@@ -2,6 +2,7 @@ import io
 import os
 import re
 import requests
+import urllib.parse
 from PIL import Image
 from datetime import datetime
 from django.core.files.base import ContentFile
@@ -28,6 +29,26 @@ def normalize_image_url(url):
     if url_clean.startswith('http://'):
         url_clean = 'https://' + url_clean[7:]
     return url_clean
+
+
+def quote_unicode_url(url):
+    """
+    Safely percent-encodes non-ASCII characters in a URL path and query to prevent requests
+    failing with UnicodeEncodeError or 404.
+    """
+    if not url:
+        return ""
+    parsed = urllib.parse.urlparse(url)
+    path = urllib.parse.quote(urllib.parse.unquote(parsed.path))
+    query = urllib.parse.quote(urllib.parse.unquote(parsed.query), safe='=&')
+    return urllib.parse.urlunparse((
+        parsed.scheme,
+        parsed.netloc,
+        path,
+        parsed.params,
+        query,
+        parsed.fragment
+    ))
 
 
 def is_media_file_valid(media_file):
@@ -87,6 +108,18 @@ def download_and_optimize_image(url, alt_text, caption='', description='', title
     if not url:
         return None, "رابط الصورة فارغ."
 
+    base_name = os.path.basename(url.split('?')[0])
+    try:
+        base_name = urllib.parse.unquote(base_name)
+    except Exception:
+        pass
+    
+    name_part = os.path.splitext(base_name)[0]
+    clean_basename = "".join(c for c in name_part if (c.isalnum() and c.isascii()) or c in ('-', '_'))
+    clean_basename = re.sub(r'[-_]+', '_', clean_basename).strip('-_')
+    if not clean_basename:
+        clean_basename = "wp_imported"
+
     # 1. جلب الصورة المخزنة مسبقاً إن وجدت كمرجع احتياطي (باستخدام الرابط المباشر أو المطبّع)
     existing_media = None
     normalized_url = normalize_image_url(url)
@@ -113,15 +146,15 @@ def download_and_optimize_image(url, alt_text, caption='', description='', title
         }
         
         # نحاول تحميل النسخة الأصلية عالية الجودة أولاً (Normalized URL)
-        download_url = normalized_url
+        download_url = quote_unicode_url(normalized_url)
         try:
             resp = requests.get(download_url, headers=headers, timeout=15, stream=True)
             if not resp.ok:
                 raise Exception(f"HTTP {resp.status_code}")
         except Exception:
             # إذا فشل، نتراجع للتحميل من الرابط الأصلي الممرر
-            if download_url != url:
-                download_url = url
+            if normalized_url != url:
+                download_url = quote_unicode_url(url)
                 resp = requests.get(download_url, headers=headers, timeout=15, stream=True)
                 if not resp.ok:
                     raise Exception(f"HTTP {resp.status_code}")
@@ -223,10 +256,6 @@ def download_and_optimize_image(url, alt_text, caption='', description='', title
                         save_name = os.path.basename(file_name)
                     else:
                         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                        base_name = os.path.basename(url.split('?')[0])
-                        clean_basename = "".join(c for c in os.path.splitext(base_name)[0] if c.isalnum() or c in ('-', '_'))
-                        if not clean_basename:
-                            clean_basename = "wp_imported"
                         save_name = f"{timestamp}_{clean_basename}{output_ext}"
                     
                     existing_media.file.save(save_name, ContentFile(file_data), save=False)
@@ -249,10 +278,6 @@ def download_and_optimize_image(url, alt_text, caption='', description='', title
 
         # 6. إنشاء صورة جديدة بالكامل إذا لم تكن موجودة مسبقاً
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        base_name = os.path.basename(url.split('?')[0])
-        clean_basename = "".join(c for c in os.path.splitext(base_name)[0] if c.isalnum() or c in ('-', '_'))
-        if not clean_basename:
-            clean_basename = "wp_imported"
         filename = f"{timestamp}_{clean_basename}{output_ext}"
 
         mapped_source_type = MediaFile.SourceType.EDITOR

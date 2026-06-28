@@ -182,6 +182,10 @@ class InstituteAttachment(TimestampedModel):
 
     def delete(self, *args, **kwargs):
         if self.file:
-            self.file.delete(save=False)
+            try:
+                self.file.delete(save=False)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Error deleting physical file for InstituteAttachment: {e}")
         super().delete(*args, **kwargs)
 

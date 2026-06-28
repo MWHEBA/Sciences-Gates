@@ -267,7 +267,8 @@ class TestUniversityAttachment:
 
         assert attachment.file_size == len(b"file content here")
         assert attachment.title == 'دليل الجامعة'
-        assert attachment.file.name.endswith('brochure.pdf')
+        assert 'brochure' in attachment.file.name
+        assert attachment.file.name.endswith('.pdf')
 
         # Clean up file
         attachment.delete()

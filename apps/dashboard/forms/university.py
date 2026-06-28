@@ -322,12 +322,9 @@ UniversityFAQFormSet = inlineformset_factory(
             'required': True,
             'dir': 'rtl',
         }),
-        'answer': forms.Textarea(attrs={
-            'class': 'faq-item__answer-input',
-            'placeholder': 'الإجابة',
-            'rows': 4,
+        'answer': CustomHTMLEditorWidget(attrs={
+            'data-placeholder': 'الإجابة...',
             'required': True,
-            'dir': 'rtl',
         }),
         'sort_order': forms.HiddenInput(),
     },

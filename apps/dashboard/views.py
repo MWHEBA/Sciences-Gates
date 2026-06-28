@@ -4076,6 +4076,8 @@ class MediaFileBulkDeleteView(ContentAdminRequiredMixin, View):
                 count += 1
             return JsonResponse({'success': True, 'deleted_count': count})
         except Exception as e:
+            import logging
+            logging.getLogger(__name__).exception("Error in MediaFileBulkDeleteView:")
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 

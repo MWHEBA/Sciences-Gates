@@ -1002,5 +1002,82 @@ class TestUniversityViews:
         assert formset.forms[1].instance.pk == faculty.id
         assert formset.forms[1].instance.name == "كليه الهندسه"
 
+    def test_delete_attachment_via_update_view(self):
+        """Test that university attachments can be deleted successfully via update view POST."""
+        from apps.universities.models import University, UniversityAttachment
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.contrib import messages
+
+        # Create university
+        uni = University.objects.create(
+            name="Test Uni Attach",
+            slug="test-uni-attach",
+            city="kl",
+            university_type="private",
+            description="Test Description",
+            location="Test Location",
+            logo="logo.png",
+            main_image="main_image.png"
+        )
+
+        # Create attachment
+        test_file = SimpleUploadedFile("brochure.pdf", b"brochure content", content_type="application/pdf")
+        attachment = UniversityAttachment.objects.create(
+            university=uni,
+            title='دليل الرسوم للجامعة',
+            file=test_file
+        )
+
+        # Ensure attachment exists
+        assert UniversityAttachment.objects.filter(id=attachment.id).exists()
+
+        # Login admin
+        self.client.login(username='uniadmin', password='testpass123')
+
+        # Prepare POST data to update university and delete the attachment
+        edit_url = reverse('dashboard:university_edit', kwargs={'pk': uni.pk})
+        
+        post_data = {
+            # Basic university info
+            'name': 'Updated Uni Attach',
+            'slug': 'test-uni-attach',
+            'university_type': 'private',
+            'city': 'kl',
+            'location': 'Test Location',
+            'description': 'Test Description',
+            'publish_status': 'unpublished',
+            
+            # FAQ Formset
+            'faqs-TOTAL_FORMS': '0',
+            'faqs-INITIAL_FORMS': '0',
+            'faqs-MIN_NUM_FORMS': '0',
+            'faqs-MAX_NUM_FORMS': '1000',
+            
+            # Faculty Formset
+            'faculties-TOTAL_FORMS': '0',
+            'faculties-INITIAL_FORMS': '0',
+            'faculties-MIN_NUM_FORMS': '0',
+            'faculties-MAX_NUM_FORMS': '1000',
+
+            # Attachment Formset - marked for deletion
+            'attachments-TOTAL_FORMS': '1',
+            'attachments-INITIAL_FORMS': '1',
+            'attachments-MIN_NUM_FORMS': '0',
+            'attachments-MAX_NUM_FORMS': '1000',
+            'attachments-0-id': str(attachment.id),
+            'attachments-0-title': 'دليل الرسوم للجامعة',
+            'attachments-0-DELETE': 'on',
+        }
+
+        # Send POST request
+        response = self.client.post(edit_url, post_data)
+        
+        # Check redirect on success (meaning form is valid)
+        assert response.status_code == 302, f"Form failed with status code {response.status_code}. Session messages: {list(messages.get_messages(response.wsgi_request))}"
+        
+        # Ensure attachment is deleted from the database
+        assert not UniversityAttachment.objects.filter(id=attachment.id).exists()
+
+
 
 

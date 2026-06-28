@@ -3,7 +3,7 @@
  * Handles fetching, sessionStorage, form autofill, confidence colors, and dynamic formsets.
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+function sg_init_importer() {
     // -------------------------------------------------------------------------
     // 1. IMPORT PAGE LOGIC (URL INPUT)
     // -------------------------------------------------------------------------
@@ -133,8 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
     // 3. BULK IMPORT ALL QUEUE LOGIC
     // -------------------------------------------------------------------------
+    console.log("[Importer] sg_init_importer is running.");
     const bulkImportBtns = document.querySelectorAll('.bulk-import-all-btn');
     const modal = document.getElementById('bulk-progress-modal');
+    console.log("[Importer] Found bulk buttons count:", bulkImportBtns.length);
+    console.log("[Importer] Found modal:", !!modal);
     const modalTitle = document.getElementById('bulk-modal-title');
     const modalClose = document.getElementById('bulk-modal-close');
     const progressStatus = document.getElementById('bulk-progress-status');
@@ -149,8 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let cancelBulkImport = false;
 
     if (bulkImportBtns.length > 0 && modal) {
+        console.log("[Importer] Registering click listeners on bulk buttons");
         bulkImportBtns.forEach(btn => {
+            console.log("[Importer] Binding button for category:", btn.getAttribute('data-category'));
             btn.addEventListener('click', async () => {
+                console.log("[Importer] Bulk import button clicked for:", btn.getAttribute('data-category'));
                 if (bulkImportActive) {
                     alert('هناك عملية استيراد جماعي جارية بالفعل. يرجى الانتظار أو إلغاؤها أولاً.');
                     return;
@@ -372,7 +378,13 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelBtn.textContent = 'إلغاء العملية';
         });
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', sg_init_importer);
+} else {
+    sg_init_importer();
+}
 
 /**
  * Fills flat fields (inputs, select, textareas, rich-text editors)

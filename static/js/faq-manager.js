@@ -63,6 +63,13 @@ class FAQManager {
         this.container.appendChild(item);
         this.totalFormsInput.value = newIndex + 1;
 
+        // تهيئة محرر النصوص المنسقة برمجياً
+        const mount = item.querySelector('.pro-editor-mount');
+        if (mount && typeof ProfessionalHTMLEditor !== 'undefined') {
+            mount.dataset.initialized = 'true';
+            new ProfessionalHTMLEditor(mount);
+        }
+
         // أنيميشن الظهور
         requestAnimationFrame(() => {
             item.classList.add('faq-item--visible');
@@ -127,13 +134,18 @@ class FAQManager {
                 </div>
                 <div class="faq-item__field">
                     <label for="id_faqs-${index}-answer">الإجابة</label>
-                    <textarea name="faqs-${index}-answer"
-                              id="id_faqs-${index}-answer"
-                              class="faq-item__answer-input"
-                              placeholder="الإجابة"
-                              rows="4"
-                              dir="rtl"
-                              required></textarea>
+                    <div class="pro-editor-mount"
+                         id="editor-mount-id_faqs-${index}-answer"
+                         data-field-name="faqs-${index}-answer">
+                        <textarea name="faqs-${index}-answer"
+                                  id="id_faqs-${index}-answer"
+                                  data-name="faqs-${index}-answer"
+                                  data-is-initial="true"
+                                  class="faq-item__answer-input"
+                                  placeholder="الإجابة"
+                                  dir="rtl"
+                                  required></textarea>
+                    </div>
                 </div>
                 <input type="hidden" name="faqs-${index}-sort_order" value="${index}">
                 <input type="hidden" name="faqs-${index}-id" value="">
@@ -618,6 +630,10 @@ class FAQManager {
         }
         if (answerInput) {
             answerInput.value = faq.answer;
+            const mount = answerInput.closest('.pro-editor-mount');
+            if (mount && mount.editorInstance) {
+                mount.editorInstance.setContent(faq.answer);
+            }
         }
     }
 

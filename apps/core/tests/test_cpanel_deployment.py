@@ -273,9 +273,7 @@ class MySQLMariaDBConnectionTest(TestCase):
     """Test MySQL/MariaDB database connection for cPanel."""
 
     def test_database_engine_is_mysql(self):
-        """Test that MySQL database engine is configured in production."""
-        # In test environment, we use SQLite, but production.py configures MySQL
-        # Check that production.py has the correct configuration
+        """Test that database engine is configured dynamically in production."""
         project_root = Path(settings.BASE_DIR)
         production_settings = project_root / 'config' / 'settings' / 'production.py'
         
@@ -283,10 +281,11 @@ class MySQLMariaDBConnectionTest(TestCase):
             content = f.read()
         
         self.assertIn(
-            'django.db.backends.mysql',
+            "config('DB_ENGINE'",
             content,
-            "Production settings should use MySQL database engine"
+            "Production settings should configure DB_ENGINE dynamically"
         )
+
 
     def test_database_connection_successful(self):
         """Test that database connection is successful."""
@@ -827,3 +826,35 @@ class IntegrationTest(TestCase):
         
         # Clean up
         university.delete()
+
+
+class SafeFileSystemStorageTest(TestCase):
+    """Test SafeFileSystemStorage custom filename sanitization and safe deletion."""
+
+    def test_filename_sanitization_arabic(self):
+        """Test that non-ASCII (Arabic) filenames are sanitized to safe ASCII names."""
+        from apps.core.storage import SafeFileSystemStorage
+        storage = SafeFileSystemStorage()
+        
+        # Test completely Arabic filename
+        clean_name = storage.get_valid_name("دليل_الرسوم.pdf")
+        self.assertTrue(clean_name.endswith(".pdf"))
+        # Check that it doesn't contain Arabic characters (strictly ASCII)
+        self.assertTrue(all(ord(c) < 128 for c in clean_name))
+        self.assertTrue(clean_name.startswith("file_"))
+
+        # Test mixed English and Arabic filename
+        clean_mixed = storage.get_valid_name("Cairo_University_دليل.pdf")
+        self.assertTrue(clean_mixed.endswith(".pdf"))
+        self.assertTrue(all(ord(c) < 128 for c in clean_mixed))
+        self.assertTrue(clean_mixed.startswith("cairo_university"))
+
+    def test_filename_sanitization_english(self):
+        """Test that English filenames are slugified and kept clean."""
+        from apps.core.storage import SafeFileSystemStorage
+        storage = SafeFileSystemStorage()
+        
+        clean_name = storage.get_valid_name("Cairo University Logo.PNG")
+        self.assertEqual(clean_name, "cairo_university_logo.png")
+
+

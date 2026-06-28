@@ -226,7 +226,8 @@ class InstituteAttachmentTestCase(TestCase):
 
         self.assertEqual(attachment.file_size, len(b"file content here"))
         self.assertEqual(attachment.title, 'دليل المعهد')
-        self.assertTrue(attachment.file.name.endswith('brochure.pdf'))
+        self.assertTrue('brochure' in attachment.file.name)
+        self.assertTrue(attachment.file.name.endswith('.pdf'))
 
         # Clean up file
         attachment.delete()

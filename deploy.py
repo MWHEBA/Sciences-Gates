@@ -128,23 +128,36 @@ class DeploymentManager:
                 
         # مطابقة أنماط gitignore
         for pattern in self.ignored_patterns:
-            clean_pattern = pattern.rstrip('/')
+            # التحقق إذا كان النمط يبدأ بـ / (مطابقة من الجذر)
+            match_from_root = pattern.startswith('/')
+            
+            # تنظيف النمط من السلاش في الأطراف
+            clean_pattern = pattern.strip('/')
             if not clean_pattern:
                 continue
                 
-            # إذا كان النمط يحتوي على / فإنه يطابق المسار بأكمله أو جزء منه
-            if '/' in clean_pattern:
-                # مطابقة باستخدام fnmatch للمسار بأكمله أو كبداية للمسار
-                if fnmatch.fnmatch(relative_path, clean_pattern) or fnmatch.fnmatch(relative_path, clean_pattern + '/*') or relative_path.startswith(clean_pattern + '/'):
+            if match_from_root:
+                # يجب أن يطابق من بداية المسار النسبي
+                if (fnmatch.fnmatch(relative_path, clean_pattern) or 
+                    fnmatch.fnmatch(relative_path, clean_pattern + '/*') or 
+                    relative_path.startswith(clean_pattern + '/')):
                     return True
             else:
-                # مطابقة اسم الملف أو أي مجلد في المسار للنمط
-                if fnmatch.fnmatch(file_path.name, clean_pattern):
-                    return True
-                for part in parts:
-                    if fnmatch.fnmatch(part, clean_pattern):
+                # إذا كان النمط يحتوي على / في المنتصف
+                if '/' in clean_pattern:
+                    # يطابق المسار بأكمله أو كبداية للمسار
+                    if (fnmatch.fnmatch(relative_path, clean_pattern) or 
+                        fnmatch.fnmatch(relative_path, clean_pattern + '/*') or 
+                        relative_path.startswith(clean_pattern + '/')):
                         return True
-                        
+                else:
+                    # مطابقة اسم الملف أو أي مجلد في المسار للنمط
+                    if fnmatch.fnmatch(file_path.name, clean_pattern):
+                        return True
+                    for part in parts:
+                        if fnmatch.fnmatch(part, clean_pattern):
+                            return True
+                            
         return False
 
     def get_file_hash(self, file_path):

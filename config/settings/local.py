@@ -8,8 +8,8 @@ DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 
 # Development: Use default static files storage (no hashing)
-# Production uses ManifestStaticFilesStorage in production.py
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+# Production overrides this in production.py
+
 
 # Development logging
 LOGGING = {

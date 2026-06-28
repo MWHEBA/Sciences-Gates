@@ -78,10 +78,18 @@ STATIC_ROOT.mkdir(parents=True, exist_ok=True)
 # Additional static files directories to collect from
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Static files storage backend for production
+# Storage Configurations (Django 4.2+)
 # Uses a custom SafeManifestStaticFilesStorage which prevents crashes if a file is missing in the manifest,
 # falling back gracefully to the original file path.
-STATICFILES_STORAGE = 'apps.core.storage.SafeManifestStaticFilesStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": "apps.core.storage.SafeFileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "apps.core.storage.SafeManifestStaticFilesStorage",
+    },
+}
+
 
 # ============================================================================
 # STATIC FILE CACHING HEADERS

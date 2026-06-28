@@ -9,6 +9,7 @@
 class ProfessionalHTMLEditor {
     constructor(containerElement) {
         this.container = containerElement;
+        this.container.editorInstance = this;
         this.editorArea = null;
         this.hiddenTextarea = null;
         this.toolbar = null;
@@ -2251,6 +2252,18 @@ class ProfessionalHTMLEditor {
         this._updateWordCount();
         this._bindAllTableEvents();
         this._bindImageEvents();
+    }
+
+    setContent(html) {
+        if (this.editorArea) {
+            this.editorArea.innerHTML = this._sanitize(html);
+            this._syncToTextarea();
+            this._updateWordCount();
+            this._bindAllTableEvents();
+            this._bindImageEvents();
+        } else if (this.hiddenTextarea) {
+            this.hiddenTextarea.value = html;
+        }
     }
 
     // ─── Tab Switching ─────────────────────────────────────────────────────────

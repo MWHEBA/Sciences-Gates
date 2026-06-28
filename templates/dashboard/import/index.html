@@ -583,9 +583,15 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    window.onerror = function(message, source, lineno, colno, error) {
+        alert("خطأ JavaScript في المتصفح:\n" + message + "\nالملف: " + source + "\nالسطر: " + lineno);
+        return false;
+    };
+</script>
 <script src="{% static 'js/importer.js' %}?v=3"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    function sg_init_import_tabs() {
         // Tab switching
         const tabSingleBtn = document.getElementById('tab-single-btn');
         const tabBulkBtn = document.getElementById('tab-bulk-btn');
@@ -681,6 +687,11 @@
                 document.getElementById('import-submit-btn').click();
             });
         });
-    });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', sg_init_import_tabs);
+    } else {
+        sg_init_import_tabs();
+    }
 </script>
 {% endblock %}

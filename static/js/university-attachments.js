@@ -306,7 +306,7 @@
                 
                 // If it's a cloned row and it's the last one, we could remove it, 
                 // but keeping it empty in the formset is safe as Django will ignore empty extra forms.
-            } else {
+            } else if (formData.deleteInput) {
                 // Standard delete toggle for existing files
                 const isChecked = formData.deleteInput.checked;
                 formData.deleteInput.checked = !isChecked;
