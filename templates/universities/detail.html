@@ -101,7 +101,7 @@
             </div>
             <div class="quick-info-text">
                 <span class="quick-info-label">الموقع</span>
-                <span class="quick-info-value">{{ university.get_city_display }}</span>
+                <span class="quick-info-value">{{ university.get_location_display }}</span>
             </div>
         </div>
 
@@ -170,7 +170,7 @@
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
-                    <h2 class="detail-section-title">عن الجامعة</h2>
+                    <h2 class="detail-section-title">نبذة عن {{ university.name }}</h2>
                 </div>
                 <div class="detail-section-content">
                     {{ university.description|safe }}
@@ -186,7 +186,7 @@
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                         <circle cx="12" cy="10" r="3"></circle>
                     </svg>
-                    <h2 class="detail-section-title">موقع الجامعة</h2>
+                    <h2 class="detail-section-title">موقع {{ university.name }}</h2>
                 </div>
                 <div class="detail-section-content">
                     {{ university.location|safe }}
@@ -224,7 +224,7 @@
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
-                    <h2 class="detail-section-title">شروط القبول والالتحاق</h2>
+                    <h2 class="detail-section-title">شروط القبول والالتحاق في {{ university.name }}</h2>
                 </div>
 
                 {% if university.admission_requirements_bachelor or university.admission_requirements_master or university.admission_requirements_phd %}

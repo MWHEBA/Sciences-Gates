@@ -88,14 +88,14 @@ class SEOScoringEngine:
 
         # Check title
         if title:
-            if 40 <= len(title) <= 60:
+            if 40 <= len(title) <= 65:
                 earned += 10
                 self.passed.append("title")
             else:
                 earned += 5
                 self.warnings.append({
                     "code": "TITLE_LENGTH_OUT_OF_RANGE",
-                    "message": f"طول عنوان الصفحة ({len(title)} حرف) خارج النطاق المثالي الموصى به (40 - 60 حرفاً شاملة اسم الموقع)."
+                    "message": f"طول عنوان الصفحة ({len(title)} حرف) خارج النطاق المثالي الموصى به (40 - 65 حرفاً شاملة اسم الموقع)."
                 })
                 self.passed.append("title")
         else:

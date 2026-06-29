@@ -1,0 +1,268 @@
+<!-- SEO Form Component -->
+<div style="background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            padding: 20px;">
+    <section x-data="{
+        showAdvanced: false,
+        metaTitle: '',
+        metaDesc: '',
+        init() {
+            const titleEl = $el.querySelector('textarea[name=meta_title], input[name=meta_title]');
+            const descEl = $el.querySelector('textarea[name=meta_description], input[name=meta_description]');
+            if (titleEl) {
+                this.metaTitle = titleEl.value;
+                const updateTitle = () => { this.metaTitle = titleEl.value; };
+                titleEl.addEventListener('input', updateTitle);
+                titleEl.addEventListener('change', updateTitle);
+            }
+            if (descEl) {
+                this.metaDesc = descEl.value;
+                const updateDesc = () => { this.metaDesc = descEl.value; };
+                descEl.addEventListener('input', updateDesc);
+                descEl.addEventListener('change', updateDesc);
+            }
+        }
+    }">
+        <h3 class="text-base font-semibold" style="color: var(--text-primary); margin-bottom: 16px;">تحسين محركات البحث</h3>
+        <div class="space-y-4">
+            <!-- عنوان SEO -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-normal mb-0" style="color: var(--text-secondary); margin-bottom: 0;">
+                        {{ form.meta_title.label }}
+                    </label>
+                    <span class="text-xs" :style="metaTitle.length > 49 ? 'color: var(--danger); font-weight: bold;' : (metaTitle.length >= 24 ? 'color: var(--success);' : 'color: var(--warning);')">
+                        <span x-text="metaTitle.length"></span> / 49 (65 شاملة اسم الموقع)
+                    </span>
+                </div>
+                {{ form.meta_title }}
+                <div class="w-full mt-1.5" style="height: 4px; background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;">
+                    <div style="height: 100%; transition: width 0.2s ease;"
+                         :style="{ 
+                             width: Math.min(100, (metaTitle.length / 49) * 100) + '%',
+                             backgroundColor: metaTitle.length > 49 ? 'var(--danger)' : (metaTitle.length >= 24 ? 'var(--success)' : 'var(--warning)')
+                         }"></div>
+                </div>
+                <p class="mt-1 text-xs" style="color: var(--text-secondary); font-size: 11px;">
+                    * يضاف اسم الموقع تلقائياً في النهاية (" - بوابات العلوم" / 16 حرفاً)، لذا يوصى بطول بين 24 و 49 حرفاً للمدخل.
+                </p>
+                {% if form.meta_title.errors %}
+                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.meta_title.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- وصف SEO -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label for="{{ form.meta_description.id_for_label }}" class="block text-sm font-normal mb-0" style="color: var(--text-secondary); margin-bottom: 0;">
+                        {{ form.meta_description.label }}
+                    </label>
+                    <span class="text-xs" :style="metaDesc.length > 160 ? 'color: var(--danger); font-weight: bold;' : (metaDesc.length >= 120 ? 'color: var(--success);' : 'color: var(--warning);')">
+                        <span x-text="metaDesc.length"></span> / 160
+                    </span>
+                </div>
+                {{ form.meta_description }}
+                <div class="w-full mt-1.5" style="height: 4px; background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;">
+                    <div style="height: 100%; transition: width 0.2s ease;"
+                         :style="{ 
+                             width: Math.min(100, (metaDesc.length / 160) * 100) + '%',
+                             backgroundColor: metaDesc.length > 160 ? 'var(--danger)' : (metaDesc.length >= 120 ? 'var(--success)' : 'var(--warning)')
+                         }"></div>
+                </div>
+                {% if form.meta_description.errors %}
+                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.meta_description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- الكلمة المفتاحية -->
+            <div>
+                <label for="{{ form.focus_keyword.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                    {{ form.focus_keyword.label }}
+                </label>
+                {{ form.focus_keyword }}
+                {% if form.focus_keyword.errors %}
+                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.focus_keyword.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- مرادفات الكلمة المفتاحية -->
+            <div>
+                <label class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                    {{ form.keyphrase_synonyms.label }}
+                </label>
+                <div x-data="{
+                    synonyms: [],
+                    newSynonym: '',
+                    isFocused: false,
+                    init() {
+                        const inputEl = $el.querySelector('input[name=keyphrase_synonyms]');
+                        if (inputEl) {
+                            inputEl.addEventListener('change', () => {
+                                if (inputEl.value) {
+                                    try {
+                                        const parsed = JSON.parse(inputEl.value);
+                                        this.synonyms = Array.isArray(parsed) ? parsed : [parsed];
+                                    } catch (e) {
+                                        this.synonyms = inputEl.value.split(',').map(s => s.trim()).filter(s => s);
+                                    }
+                                } else {
+                                    this.synonyms = [];
+                                }
+                            });
+                            if (inputEl.value) {
+                                try {
+                                    const parsed = JSON.parse(inputEl.value);
+                                    this.synonyms = Array.isArray(parsed) ? parsed : [parsed];
+                                } catch (e) {
+                                    this.synonyms = inputEl.value.split(',').map(s => s.trim()).filter(s => s);
+                                }
+                            } else {
+                                this.synonyms = [];
+                            }
+                        }
+                    },
+                    addSynonym() {
+                        const val = this.newSynonym.replace(/[،,]/g, '').trim();
+                        if (val && !this.synonyms.includes(val)) {
+                            this.synonyms.push(val);
+                            this.syncToInput();
+                        }
+                        this.newSynonym = '';
+                    },
+                    removeSynonym(index) {
+                        this.synonyms.splice(index, 1);
+                        this.syncToInput();
+                    },
+                    syncToInput() {
+                        const inputEl = $el.querySelector('input[name=keyphrase_synonyms]');
+                        if (inputEl) {
+                            inputEl.value = JSON.stringify(this.synonyms);
+                            inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                }" class="space-y-2">
+                    <!-- Hidden Input -->
+                    <div style="display: none;">
+                        {{ form.keyphrase_synonyms }}
+                    </div>
+
+                    <!-- Visual Tags Input Wrapper -->
+                    <div class="tags-input-wrapper w-full"
+                         @click="$refs.synInput.focus()">
+                        
+                        <template x-for="(syn, index) in synonyms" :key="index">
+                            <span class="tags-input-pill">
+                                <span x-text="syn"></span>
+                                <button type="button" 
+                                        @click.stop="removeSynonym(index)" 
+                                        class="tags-input-pill-remove"
+                                        aria-label="حذف">
+                                    &times;
+                                </button>
+                            </span>
+                        </template>
+
+                        <input type="text"
+                               x-ref="synInput"
+                               x-model="newSynonym"
+                               @keydown.enter.prevent="addSynonym()"
+                               @keydown.comma.prevent="addSynonym()"
+                               @keydown.space="if (newSynonym.endsWith('،') || newSynonym.endsWith(',')) { addSynonym() }"
+                               @input="if (newSynonym.includes(',') || newSynonym.includes('،')) { addSynonym() }"
+                               @blur="addSynonym()"
+                               @focus="isFocused = true"
+                               @blur="isFocused = false; addSynonym()"
+                               placeholder="اكتب مرادفاً واضغط Enter أو فاصلة..."
+                               class="tags-input-field"
+                               dir="rtl">
+                    </div>
+                </div>
+                {% if form.keyphrase_synonyms.errors %}
+                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.keyphrase_synonyms.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- زر الإعدادات المتقدمة -->
+            <button type="button"
+                    @click="showAdvanced = !showAdvanced"
+                    class="flex items-center gap-2 w-full pt-3 cursor-pointer"
+                    style="padding-top: 10px; border-top: 1px solid var(--border);">
+                <svg :class="showAdvanced ? 'rotate-90' : ''" style="width: 14px; height: 14px; color: var(--text-muted); transition: transform 0.2s ease;" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span class="text-sm" style="color: var(--text-muted);">إعدادات متقدمة</span>
+            </button>
+
+            <!-- الإعدادات المتقدمة — Collapsible -->
+            <div x-show="showAdvanced" x-collapse>
+                <div class="space-y-4 pt-3">
+                    <!-- الرابط الأساسي -->
+                    <div>
+                        <label for="{{ form.canonical_url.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                            {{ form.canonical_url.label }}
+                        </label>
+                        {{ form.canonical_url }}
+                        {% if form.canonical_url.errors %}
+                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.canonical_url.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- إعدادات الروبوتات -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            {{ form.robots_index }}
+                            <span class="text-sm" style="color: var(--text-secondary);">{{ form.robots_index.label }}</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            {{ form.robots_follow }}
+                            <span class="text-sm" style="color: var(--text-secondary);">{{ form.robots_follow.label }}</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            {{ form.sitemap_include }}
+                            <span class="text-sm" style="color: var(--text-secondary);">{{ form.sitemap_include.label }}</span>
+                        </label>
+                    </div>
+
+                    <!-- Open Graph -->
+                    <div class="pt-3" style="padding-top: 10px; border-top: 1px solid var(--border);">
+                        <p class="text-sm font-normal mb-3" style="color: var(--text-primary);">Open Graph</p>
+                        <div class="space-y-4">
+                            <!-- عنوان OG -->
+                            <div>
+                                <label for="{{ form.og_title.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.og_title.label }}
+                                </label>
+                                {{ form.og_title }}
+                                {% if form.og_title.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.og_title.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- وصف OG -->
+                            <div>
+                                <label for="{{ form.og_description.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.og_description.label }}
+                                </label>
+                                {{ form.og_description }}
+                                {% if form.og_description.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.og_description.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- صورة OG -->
+                            <div>
+                                {% if form.instance.og_image %}
+                                    {% include "dashboard/components/image_upload.html" with field=form.og_image current_image=form.instance.og_image.url %}
+                                {% else %}
+                                    {% include "dashboard/components/image_upload.html" with field=form.og_image %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

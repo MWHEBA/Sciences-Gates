@@ -13,7 +13,7 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         ('private', 'جامعة خاصة'),
     ]
     
-    CITY_CHOICES = [
+    STATE_CHOICES = [
         ('kl', 'كوالالمبور'),
         ('selangor', 'سيلانجور'),
         ('penang', 'بينانج'),
@@ -30,13 +30,201 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         ('terengganu', 'ترينجانو'),
         ('putrajaya', 'بوتراجايا'),
         ('labuan', 'لابوان'),
-        ('cyberjaya', 'سايبرجايا'),
     ]
+    CITY_CHOICES = STATE_CHOICES
+
+    STATE_CITIES = {
+        'kl': [
+            ('kl', 'كوالالمبور'),
+        ],
+        'selangor': [
+            ('shah-alam', 'شاه علم'),
+            ('petaling-jaya', 'بيتالينغ جايا'),
+            ('klang', 'كلانغ'),
+            ('subang-jaya', 'سوبانغ جايا'),
+            ('ampang-jaya', 'أمبانغ جايا'),
+            ('kajang', 'كاجanغ'),
+            ('cyberjaya', 'سيبرجايا'),
+            ('putrajaya', 'بوتراجايا'),
+            ('rawang', 'راوانغ'),
+            ('selayang', 'سيلايانغ'),
+            ('bangi', 'بانغي'),
+            ('kuala-selangor', 'كوالا سلانغور'),
+            ('sungai-buloh', 'سونغاي بولوه'),
+            # Keep existing mapped ones to avoid data errors
+            ('serdang', 'سردانج'),
+            ('semenyih', 'سيمينيه'),
+            ('seri-kembangan', 'سري كيمبانجان'),
+            ('sungai-long', 'سونغاي لونغ'),
+            ('bandar-sunway', 'بندر صنواي'),
+            ('damansara', 'دامانسارا'),
+            ('gombak', 'غومباك'),
+            ('saujana-putra', 'سوجانا بوترا'),
+            ('jenjarom', 'جينجاروم'),
+            ('other-selangor', 'سيلانجور (عام)'),
+        ],
+        'penang': [
+            ('georgetown', 'جورج تاون'),
+            ('bayan-lepas', 'بايان ليباس'),
+            ('bukit-mertajam', 'بوكيت ميرتاجام'),
+            ('butterworth', 'باتروورث'),
+            ('nibong-tebal', 'نيبونغ تيبال'),
+            ('perai', 'بيراي'),
+            ('tanjung-bungah', 'تانجونغ بونغا'),
+            ('ayer-itam', 'آير إيتام'),
+            ('other-penang', 'بينانج (عام)'),
+        ],
+        'johor': [
+            ('johor-bahru', 'جوهر بهرو'),
+            ('iskandar-puteri', 'إسكندر بوتري'),
+            ('pasir-gudang', 'باسير جودانغ'),
+            ('kluang', 'كلوانغ'),
+            ('muar', 'موار'),
+            ('batu-pahat', 'باتو باهات'),
+            ('segamat', 'سيغامات'),
+            ('kulai', 'كولاي'),
+            ('pontian', 'بونتيان'),
+            ('kota-tinggi', 'كوتا تينجي'),
+            ('mersing', 'ميرسينغ'),
+            ('skudai', 'سكوداي'),
+            ('other-johor', 'جوهور (عام)'),
+        ],
+        'kedah': [
+            ('alor-setar', 'ألور ستار'),
+            ('sungai-petani', 'سونغاي بيتاني'),
+            ('kulim', 'كوليم'),
+            ('langkawi', 'لانكاوي (كواه)'),
+            ('baling', 'بالينغ'),
+            ('kubang-pasu', 'كوبانغ باسو'),
+            ('jitra', 'جترا'),
+            ('yan', 'يان'),
+            ('sik', 'سيك'),
+            ('padang-terap', 'بادانغ تيراب'),
+            ('sintok', 'سينتوت'),
+            ('other-kedah', 'قدح (عام)'),
+        ],
+        'kelantan': [
+            ('kota-bharu', 'كوتا بهارو'),
+            ('bachok', 'باشوك'),
+            ('tanah-merah', 'تاناه ميراه'),
+            ('machang', 'ماتشانغ'),
+            ('kuala-krai', 'كوالا كراي'),
+            ('gua-musang', 'غوا موسانغ'),
+            ('pasir-mas', 'باسير ماس'),
+            ('pasir-puteh', 'باسير بوتيه'),
+            ('tumpat', 'تومبات'),
+            ('other-kelantan', 'كلنتان (عام)'),
+        ],
+        'melaka': [
+            ('melaka', 'مدينة ملقا'),
+            ('alor-gajah', 'ألور غاجاه'),
+            ('jasin', 'جاسين'),
+            ('masjid-tanah', 'ماسجيد تاناه'),
+            ('merlimau', 'ميرليمو'),
+            ('other-melaka', 'ملقا (عام)'),
+        ],
+        'negeri-sembilan': [
+            ('seremban', 'سريمبان'),
+            ('nilai', 'نيلاي'),
+            ('port-dickson', 'بورت ديكسون'),
+            ('bahau', 'باهاو'),
+            ('rembau', 'رِمباو'),
+            ('kuala-pilah', 'كوالا بيله'),
+            ('tampin', 'تامبين'),
+            ('jempol', 'جِمبول'),
+            ('other-negeri-sembilan', 'نيجري سمبيلان (عام)'),
+        ],
+        'pahang': [
+            ('kuantan', 'كوانتان'),
+            ('temerloh', 'تيميرلوه'),
+            ('bentong', 'بنتونغ'),
+            ('cameron-highlands', 'كاميرون هايلاندز'),
+            ('jerantut', 'جيرانتوت'),
+            ('pekan', 'بيكان'),
+            ('rompin', 'رومبين'),
+            ('maran', 'ماران'),
+            ('raub', 'راوب'),
+            ('gambang', 'غامبانغ'),
+            ('other-pahang', 'باهانغ (عام)'),
+        ],
+        'perak': [
+            ('ipoh', 'إيبوه'),
+            ('taiping', 'تايبينغ'),
+            ('teluk-intan', 'تيلوك إنتان'),
+            ('manjung', 'مانجونغ (سيتياوان)'),
+            ('kampar', 'كامبار'),
+            ('tapah', 'تاباه'),
+            ('batu-gajah', 'باتو غاجاه'),
+            ('kuala-kangsar', 'كوالا كانغسار'),
+            ('lumut', 'لوموت'),
+            ('tanjung-malim', 'تانجونغ ماليم'),
+            ('seri-iskandar', 'سري اسكندر'),
+            ('other-perak', 'بيرق (عام)'),
+        ],
+        'perlis': [
+            ('kangar', 'كانغار'),
+            ('arau', 'آراو'),
+            ('padang-besar', 'بادانغ بيسار'),
+            ('kuala-perlis', 'كوالا بيرليس'),
+            ('other-perlis', 'برليس (عام)'),
+        ],
+        'sabah': [
+            ('kota-kinabalu', 'كوتا كينابالو'),
+            ('sandakan', 'سانداكان'),
+            ('tawau', 'تاواو'),
+            ('lahad-datu', 'لحد داتو'),
+            ('keningau', 'كينينغاو'),
+            ('kodat', 'كودات'),
+            ('semporna', 'سيمبورنا'),
+            ('ranau', 'راناو'),
+            ('beaufort', 'بوفورت'),
+            ('tenom', 'تنوم'),
+            ('other-sabah', 'صباح (عام)'),
+        ],
+        'sarawak': [
+            ('kuching', 'كوتشينغ'),
+            ('miri', 'ميري'),
+            ('sibu', 'سيبو'),
+            ('bintulu', 'بينتولو'),
+            ('sri-aman', 'سري أمان'),
+            ('kapit', 'كابيت'),
+            ('sarikei', 'سارايكي'),
+            ('limbang', 'ليمبانغ'),
+            ('betong', 'بيتونغ'),
+            ('other-sarawak', 'سراوق (عام)'),
+        ],
+        'terengganu': [
+            ('kuala-terengganu', 'كوالا ترينغانو'),
+            ('kemaman', 'كيمان'),
+            ('dungun', 'دونغون'),
+            ('besut', 'بيسوت'),
+            ('marang', 'مارانغ'),
+            ('setiu', 'سيتيو'),
+            ('hulu-terengganu', 'هولو ترينغانو'),
+            ('other-terengganu', 'ترينجانو (عام)'),
+        ],
+        'putrajaya': [
+            ('putrajaya', 'بوتراجايا'),
+        ],
+        'labuan': [
+            ('victoria', 'فيكتوريا (بندر لابوان)'),
+            ('labuan', 'لابوان'),
+        ],
+    }
+    
+    state = models.CharField(
+        max_length=20,
+        choices=STATE_CHOICES,
+        default='kl',
+        verbose_name='الولاية',
+        help_text='الولاية التي تقع بها الجامعة لتسهيل التصفية والبحث',
+        db_index=True
+    )
     
     city = models.CharField(
-        max_length=20,
-        choices=CITY_CHOICES,
-        default='kl',
+        max_length=100,
+        blank=True,
+        default='',
         verbose_name='المدينة',
         help_text='المدينة التي تقع بها الجامعة لتسهيل التصفية والبحث',
         db_index=True
@@ -185,6 +373,20 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
                 # Signal to create redirect (handled in dashboard)
                 self._old_slug = old_instance.slug
         super().save(*args, **kwargs)
+
+    def get_location_display(self):
+        """Returns the formatted location display (e.g. 'Subang Jaya, Selangor' in Arabic)."""
+        state_display = self.get_state_display()
+        city_name = ""
+        if self.state in self.STATE_CITIES:
+            for c_slug, c_name in self.STATE_CITIES[self.state]:
+                if c_slug == self.city:
+                    city_name = c_name
+                    break
+        
+        if city_name and city_name != state_display and "عام" not in city_name:
+            return f"{city_name}، {state_display}"
+        return state_display
 
 
 class Faculty(models.Model):

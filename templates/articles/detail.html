@@ -3,7 +3,7 @@
 {% load breadcrumbs %}
 {% load schema_tags %}
 
-{% block title %}{{ article.title }} | بوابات العلوم{% endblock %}
+{% block title %}{{ article.meta_title|default:article.title }} | بوابات العلوم{% endblock %}
 {% block meta_description %}{{ article.meta_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}
 
 {% block og_title %}{{ article.og_title|default:article.title }}{% endblock %}

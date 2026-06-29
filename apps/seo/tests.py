@@ -488,3 +488,80 @@ class TestUniversitySchemaTag:
         assert schema['name'] == 'جامعة اختبار'
         assert schema['telephone'] == '+60 3-1234 5678'
         assert schema['sameAs'] == 'https://test-uni.edu.my'
+
+
+@pytest.mark.django_db
+class TestInstituteSchemaTag:
+    """Test institute_schema template tag."""
+    
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.factory = RequestFactory()
+        self.request = self.factory.get('/')
+        
+    def test_institute_schema_generation(self):
+        """Test that institute_schema correctly generates EducationalOrganization schema."""
+        from apps.institutes.models import Institute
+        from apps.seo.templatetags.schema_tags import institute_schema
+        import json
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        
+        # Create a mock image
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x00\x00\x00\x21\xf9\x04'
+            b'\x01\x0a\x00\x01\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02'
+            b'\x02\x4c\x01\x00\x3b'
+        )
+        main_image = SimpleUploadedFile("small.gif", small_gif, content_type="image/gif")
+
+        institute = Institute.objects.create(
+            name="معهد اختبار",
+            slug="test-inst",
+            description="وصف اختبار للمعهد",
+            location="كوالالمبور",
+            website="https://test-inst.edu.my",
+            telephone="+60 3-8765 4321",
+            main_image=main_image
+        )
+        
+        # Call the template tag
+        context = {'request': self.request}
+        result_json = institute_schema(context, institute)
+        
+        # Parse the JSON safe string result
+        schema = json.loads(str(result_json))
+        
+        assert schema['@context'] == 'https://schema.org'
+        assert schema['@type'] == 'EducationalOrganization'
+        assert schema['name'] == 'معهد اختبار'
+        assert schema['sameAs'] == 'https://test-inst.edu.my'
+        assert schema['telephone'] == '+60 3-8765 4321'
+        assert 'logo' in schema
+        assert 'address' in schema
+
+
+class TestSEOHTMLParser:
+    """Test SEOHTMLParser utility."""
+    
+    def test_extract_intro_text_fallback(self):
+        """Test that intro_text falls back to first 150 words when <p> tag is far down."""
+        from apps.seo.services.html_parser import SEOHTMLParser
+        
+        preceding_text = " ".join(["كلمة"] * 60)
+        html_content = f"""
+        <div data-seo-content>
+            {preceding_text}
+            الجامعة الوطنية الماليزية هي جامعة بحثية رائدة.
+            <div class="reg-card">
+                <p>قم بتحضير الأوراق التالية للخطوة الأولى.</p>
+            </div>
+        </div>
+        """
+        parser = SEOHTMLParser(html_content, "[data-seo-content]")
+        data = parser.extract_main_content_data()
+        
+        assert data["intro_text"] != "قم بتحضير الأوراق التالية للخطوة الأولى."
+        assert data["intro_text"].startswith("كلمة")
+        assert "الجامعة الوطنية الماليزية" in data["intro_text"]
+
+

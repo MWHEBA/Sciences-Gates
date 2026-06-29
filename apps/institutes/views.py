@@ -41,13 +41,20 @@ class InstituteListView(BreadcrumbMixin, ListView):
                 Q(description__icontains=q)
             )
             
-        # Apply city filter (matching description as fallback)
+        # Apply state filter
+        state = self.request.GET.get('state', '').strip().lower()
+        if state:
+            queryset = queryset.filter(state=state)
+            
+        # Apply city filter
         city = self.request.GET.get('city', '').strip().lower()
         if city:
             from apps.universities.models import University
-            city_label = next((label for code, label in University.CITY_CHOICES if code == city), None)
-            if city_label:
-                queryset = queryset.filter(description__icontains=city_label)
+            state_codes = [code for code, _ in University.STATE_CHOICES]
+            if city in state_codes:
+                queryset = queryset.filter(state=city)
+            else:
+                queryset = queryset.filter(city=city)
                 
         return queryset
     
@@ -56,8 +63,12 @@ class InstituteListView(BreadcrumbMixin, ListView):
         context = super().get_context_data(**kwargs)
         from django.urls import reverse
         from apps.universities.models import University
+        import json
         context['clear_url'] = reverse('institutes:list')
-        context['city_choices'] = University.CITY_CHOICES
+        context['state_choices'] = University.STATE_CHOICES
+        context['state_cities_json'] = json.dumps(University.STATE_CITIES)
+        context['selected_state'] = self.request.GET.get('state', '')
+        context['selected_city'] = self.request.GET.get('city', '')
         return context
 
     def get_breadcrumbs(self):
@@ -93,7 +104,7 @@ class InstituteDetailView(BreadcrumbMixin, DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         obj = self.get_object()
-        if obj.is_legacy and request.resolver_match.view_name != 'legacy_detail':
+        if obj.is_legacy and request.resolver_match and request.resolver_match.view_name != 'legacy_detail':
             from django.shortcuts import redirect
             return redirect(obj.get_absolute_url(), permanent=True)
         return super().dispatch(request, *args, **kwargs)
@@ -104,19 +115,19 @@ class InstituteDetailView(BreadcrumbMixin, DetailView):
         
         Uses:
         - select_related: for foreign key relationships (none in this case)
-        - prefetch_related: for reverse foreign key relationships (courses, related articles)
+        - prefetch_related: for reverse foreign key relationships (courses, related articles, faqs)
         """
-        # Prefetch courses
         courses_prefetch = Prefetch(
             'courses',
-            Course.objects.all().order_by('name')
+            Course.objects.all().order_by('sort_order', 'id')
         )
         
         return apply_preview_filter(self.request, Institute.objects).prefetch_related(
             courses_prefetch,
             'related_articles',
             'tags',
-            'attachments'
+            'attachments',
+            'faqs'
         )
     
     def get_breadcrumbs(self):
@@ -156,6 +167,7 @@ class InstituteDetailView(BreadcrumbMixin, DetailView):
         # Get courses (already prefetched)
         institute = self.object
         context['courses'] = institute.courses.all()
+        context['faqs'] = institute.faqs.all()
         
         # Add lead form
         from apps.leads.forms import LeadForm
@@ -164,72 +176,6 @@ class InstituteDetailView(BreadcrumbMixin, DetailView):
         
         return context
 
-
-class InstituteTypeListView(BreadcrumbMixin, TemplateView):
-    """
-    Display institutes filtered by type (language/academic).
-    
-    Shows paginated list of institutes for a specific type.
-    """
-    template_name = 'institutes/type_list.html'
-    
-    def get_breadcrumbs(self):
-        """Build breadcrumb trail for institute type list page."""
-        institute_type = self.kwargs.get('type', 'academic')
-        type_labels = {
-            'language': 'معاهد اللغات',
-            'academic': 'المعاهد الأكاديمية'
-        }
-        type_label = type_labels.get(institute_type, 'المعاهد')
-        
-        return (BreadcrumbTrail()
-            .add_section('home')
-            .add_section('institutes')
-            .current(type_label)
-            .build())
-    
-    def get_context_data(self, **kwargs):
-        """Get institutes by type with pagination."""
-        context = super().get_context_data(**kwargs)
-        institute_type = self.kwargs.get('type')
-        
-        # Validate type
-        if institute_type not in ['language', 'academic']:
-            institute_type = 'academic'
-        
-        # Prefetch courses
-        courses_prefetch = Prefetch(
-            'courses',
-            Course.objects.all().order_by('name')
-        )
-        
-        queryset = Institute.objects.filter(
-            publish_status='published',
-            institute_type=institute_type
-        ).prefetch_related(
-            courses_prefetch,
-            'related_articles'
-        ).order_by('name')
-        
-        # Pagination
-        paginator = Paginator(queryset, 12)
-        page_number = self.request.GET.get('page', 1)
-        page_obj = paginator.get_page(page_number)
-        
-        # Type labels
-        type_labels = {
-            'language': 'معاهد اللغات',
-            'academic': 'المعاهد الأكاديمية'
-        }
-        
-        context['institutes'] = page_obj.object_list
-        context['page_obj'] = page_obj
-        context['paginator'] = paginator
-        context['institute_type'] = institute_type
-        context['type_label'] = type_labels.get(institute_type, 'المعاهد')
-        context['page_title'] = type_labels.get(institute_type, 'المعاهد')
-        
-        return context
 
 
 class TagInstituteListView(BreadcrumbMixin, ListView):

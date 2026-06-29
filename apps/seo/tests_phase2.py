@@ -63,7 +63,7 @@ class Phase2SEOPreviewTests(TestCase):
             slug="test-institute-preview",
             main_image=SimpleUploadedFile("inst_img.jpg", b"inst_img_data", content_type="image/jpeg"),
             description="وصف المعهد التجريبي للمعاينة والتحليل.",
-            registration_requirements="شروط التسجيل في المعهد التجريبي.",
+            why_choose_us="لماذا تختار المعهد التجريبي للمعاينة والتحليل للاستفادة الكاملة من الدورات والبرامج.",
             publish_status="unpublished",
         )
 

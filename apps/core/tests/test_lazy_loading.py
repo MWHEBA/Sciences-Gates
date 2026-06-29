@@ -145,7 +145,6 @@ class LazyLoadingPublicTemplatesTests(TestCase):
             slug='test-institute',
             main_image=self.test_image,
             description='Test description',
-            registration_requirements='Test requirements',
             publish_status='published'
         )
         

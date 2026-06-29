@@ -1042,6 +1042,7 @@ class TestUniversityViews:
             'name': 'Updated Uni Attach',
             'slug': 'test-uni-attach',
             'university_type': 'private',
+            'state': 'kl',
             'city': 'kl',
             'location': 'Test Location',
             'description': 'Test Description',

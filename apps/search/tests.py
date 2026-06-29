@@ -28,13 +28,11 @@ class SearchUtilsTestCase(TestCase):
             publish_status='published'
         )
         
-        # Create test institutes
         self.institute = Institute.objects.create(
             name='معهد التكنولوجيا',
             slug='tech-institute',
             main_image='test.jpg',
             description='معهد متخصص في التكنولوجيا',
-            registration_requirements='متطلبات التسجيل',
             publish_status='published'
         )
         

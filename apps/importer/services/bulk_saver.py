@@ -207,7 +207,7 @@ def _save_university(mapped_data, user):
 
 def _save_institute(mapped_data, user):
     from apps.institutes.models import Institute
-    from apps.dashboard.forms.institute import InstituteForm, CourseFormSet
+    from apps.dashboard.forms.institute import InstituteForm, CourseFormSet, InstituteFAQFormSet
     
     form_initial = mapped_data['form_initial']
     slug = form_initial.get('slug', '').strip()
@@ -224,25 +224,90 @@ def _save_institute(mapped_data, user):
         if img_path:
             form_data[f'imported_{img_key}_path'] = img_path
             
-    # Preserve existing courses (since importer doesn't fetch courses for institutes)
-    existing_courses = list(existing_obj.courses.all()) if existing_obj else []
-    courses_count = len(existing_courses)
+    # Institute FAQs
+    existing_faqs = list(existing_obj.faqs.all()) if existing_obj else []
+    faqs_count = len(existing_faqs)
+    imported_faqs = mapped_data.get('faqs_data', [])
+    total_faqs = faqs_count + len(imported_faqs)
     
     form_data.update({
-        'courses-TOTAL_FORMS': str(courses_count),
-        'courses-INITIAL_FORMS': str(courses_count),
-        'courses-MIN_NUM_FORMS': '0',
-        'courses-MAX_NUM_FORMS': '1000',
+        'faqs-TOTAL_FORMS': str(total_faqs),
+        'faqs-INITIAL_FORMS': str(faqs_count),
+        'faqs-MIN_NUM_FORMS': '0',
+        'faqs-MAX_NUM_FORMS': '1000',
     })
-    for i, course in enumerate(existing_courses):
+    for i, faq in enumerate(existing_faqs):
         form_data.update({
-            f'courses-{i}-id': str(course.id),
-            f'courses-{i}-name': course.name,
-            f'courses-{i}-duration': course.duration,
-            f'courses-{i}-fees': course.fees,
-            f'courses-{i}-description': course.description,
-            f'courses-{i}-notes': course.notes,
+            f'faqs-{i}-id': str(faq.id),
+            f'faqs-{i}-question': faq.question,
+            f'faqs-{i}-answer': faq.answer,
+            f'faqs-{i}-sort_order': str(faq.sort_order),
+            f'faqs-{i}-DELETE': 'on',
         })
+    for j, faq_item in enumerate(imported_faqs):
+        i = faqs_count + j
+        form_data.update({
+            f'faqs-{i}-id': '',
+            f'faqs-{i}-question': faq_item.get('question', ''),
+            f'faqs-{i}-answer': faq_item.get('answer', ''),
+            f'faqs-{i}-sort_order': str(i),
+        })
+
+    # Preserve or update courses
+    existing_courses = list(existing_obj.courses.all()) if existing_obj else []
+    courses_count = len(existing_courses)
+    imported_courses = mapped_data.get('courses_data', [])
+    
+    if imported_courses:
+        total_courses = courses_count + len(imported_courses)
+        form_data.update({
+            'courses-TOTAL_FORMS': str(total_courses),
+            'courses-INITIAL_FORMS': str(courses_count),
+            'courses-MIN_NUM_FORMS': '0',
+            'courses-MAX_NUM_FORMS': '1000',
+        })
+        # Mark existing courses for deletion
+        for i, course in enumerate(existing_courses):
+            form_data.update({
+                f'courses-{i}-id': str(course.id),
+                f'courses-{i}-duration': course.duration,
+                f'courses-{i}-fees_myr': course.fees_myr,
+                f'courses-{i}-fees_usd': course.fees_usd,
+                f'courses-{i}-fees_sar': course.fees_sar,
+                f'courses-{i}-visa_duration': course.visa_duration,
+                f'courses-{i}-sort_order': str(course.sort_order),
+                f'courses-{i}-DELETE': 'on',
+            })
+        # Add imported courses
+        for j, course_item in enumerate(imported_courses):
+            i = courses_count + j
+            form_data.update({
+                f'courses-{i}-id': '',
+                f'courses-{i}-duration': course_item.get('duration', ''),
+                f'courses-{i}-fees_myr': course_item.get('fees_myr', ''),
+                f'courses-{i}-fees_usd': course_item.get('fees_usd', ''),
+                f'courses-{i}-fees_sar': course_item.get('fees_sar', ''),
+                f'courses-{i}-visa_duration': course_item.get('visa_duration', ''),
+                f'courses-{i}-sort_order': str(i),
+            })
+    else:
+        # Preserve existing courses
+        form_data.update({
+            'courses-TOTAL_FORMS': str(courses_count),
+            'courses-INITIAL_FORMS': str(courses_count),
+            'courses-MIN_NUM_FORMS': '0',
+            'courses-MAX_NUM_FORMS': '1000',
+        })
+        for i, course in enumerate(existing_courses):
+            form_data.update({
+                f'courses-{i}-id': str(course.id),
+                f'courses-{i}-duration': course.duration,
+                f'courses-{i}-fees_myr': course.fees_myr,
+                f'courses-{i}-fees_usd': course.fees_usd,
+                f'courses-{i}-fees_sar': course.fees_sar,
+                f'courses-{i}-visa_duration': course.visa_duration,
+                f'courses-{i}-sort_order': str(course.sort_order),
+            })
 
     with transaction.atomic():
         form = InstituteForm(form_data, instance=existing_obj)
@@ -250,16 +315,26 @@ def _save_institute(mapped_data, user):
             if field_name in form.fields:
                 form.fields[field_name].required = False
         course_formset = CourseFormSet(form_data, instance=existing_obj)
+        faq_formset = InstituteFAQFormSet(form_data, instance=existing_obj)
         
-        if form.is_valid() and course_formset.is_valid():
+        all_valid = form.is_valid()
+        if not course_formset.is_valid():
+            all_valid = False
+        if not faq_formset.is_valid():
+            all_valid = False
+            
+        if all_valid:
             saved_instance = form.save()
             course_formset.instance = saved_instance
             course_formset.save()
+            faq_formset.instance = saved_instance
+            faq_formset.save()
             return saved_instance, action_type
         else:
             errors = {}
             if form.errors: errors['form'] = form.errors
             if course_formset.errors: errors['courses'] = course_formset.errors
+            if faq_formset.errors: errors['faq'] = faq_formset.errors
             raise ValueError(f"Validation failed: {errors}")
 
 def _save_major(mapped_data, user):

@@ -79,7 +79,7 @@ class ModelAwareChecker:
                     "key": key,
                     "status": "warning",
                     "label": label,
-                    "message": f"{label}: المحتوى قصير ({len(best_cleaned)} حرف بعد تنظيف الـ HTML). الحد الأدنى {min_chars}.",
+                    "message": f"{label}: المحتوى قصير ({len(best_cleaned)} حرف). الحد الأدنى {min_chars}.",
                 }
         else:
             val = values[0] if values else ""
@@ -92,7 +92,7 @@ class ModelAwareChecker:
                     "key": key,
                     "status": "warning",
                     "label": label,
-                    "message": f"{label}: المحتوى قصير ({len(cleaned_val)} حرف بعد تنظيف الـ HTML). الحد الأدنى {min_chars}.",
+                    "message": f"{label}: المحتوى قصير ({len(cleaned_val)} حرف). الحد الأدنى {min_chars}.",
                 }
 
         return {"key": key, "status": "pass", "label": label, "message": f"{label}: مكتمل."}

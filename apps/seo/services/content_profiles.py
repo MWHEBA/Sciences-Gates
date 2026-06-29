@@ -53,7 +53,7 @@ class InstituteSEOProfile(BaseSEOProfile):
     expected_schemas: tuple[str, ...] = ("EducationalOrganization",)
     section_checks: list[dict[str, Any]] = field(default_factory=lambda: [
         {"key": "description", "label": "وصف المعهد", "field_names": ["description"], "min_chars": 100},
-        {"key": "registration", "label": "شروط التسجيل", "field_names": ["registration_requirements"], "min_chars": 80},
+        {"key": "why_choose_us", "label": "لماذا تختار المعهد", "field_names": ["why_choose_us"], "min_chars": 100},
         {"key": "courses", "label": "الدورات", "field_names": ["courses"], "min_chars": 0, "is_relation": True},
     ])
 

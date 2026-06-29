@@ -469,3 +469,90 @@ html[dir="rtl"] main {
     color: var(--danger);
     font-weight: 600;
 }
+
+/* ─── Global Auto-grow Textarea Helper ─── */
+.auto-grow-textarea {
+    resize: none;
+    overflow-y: hidden;
+    min-height: 38px;
+    height: 38px;
+    line-height: 1.5;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    display: block;
+    box-sizing: border-box;
+}
+
+/* ─── Dashboard Floating Buttons Stack ─── */
+.dashboard-float-btn {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(11, 45, 77, 0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.dashboard-float-btn--website {
+    background-color: var(--primary);
+}
+
+.dashboard-float-btn--website:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(11, 45, 77, 0.25);
+}
+
+.dashboard-float-btn--preview {
+    background-color: var(--secondary);
+}
+
+.dashboard-float-btn--preview:hover {
+    background-color: var(--secondary-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(200, 160, 65, 0.25);
+}
+
+.dashboard-float-btn svg {
+    stroke: var(--white);
+}
+
+.dashboard-float-btn__tooltip {
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.dashboard-float-btn:hover .dashboard-float-btn__tooltip {
+    opacity: 1;
+}
+
+/* ─── Dashboard Floating Actions Scroll Hide/Show ─── */
+.dashboard-float-actions {
+    transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, transform 0.3s, box-shadow 0.3s !important;
+}
+
+.dashboard-float-actions.floating-hide {
+    translate: -80px 0;
+    transform: translateX(-80px) !important;
+    opacity: 0;
+    pointer-events: none;
+}

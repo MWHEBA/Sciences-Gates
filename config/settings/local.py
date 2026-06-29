@@ -3,6 +3,8 @@ Local development settings for science_gates project.
 Uses SQLite for quick development and testing.
 """
 from .base import *
+import os
+os.environ.setdefault('DJANGO_RUNSERVER_HIDE_WARNING', 'true')
 
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']

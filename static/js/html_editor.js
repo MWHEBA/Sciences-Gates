@@ -2231,7 +2231,8 @@ class ProfessionalHTMLEditor {
         const text = this.editorArea.innerText || '';
         const words = text.trim().split(/\s+/).filter(w => w.length > 0);
         const count = words.length;
-        this._wordCountEl.textContent = `${count} كلمة`;
+        const charCount = text.length;
+        this._wordCountEl.textContent = `${count} كلمة | ${charCount} حرف`;
     }
 
     // ─── Sync ──────────────────────────────────────────────────────────────────

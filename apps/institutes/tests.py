@@ -18,7 +18,6 @@ class InstituteListViewTest(TestCase):
             slug='tech-institute',
             main_image='test.jpg',
             description='معهد متخصص في التكنولوجيا',
-            registration_requirements='شروط التسجيل',
             publish_status='published'
         )
         
@@ -27,7 +26,6 @@ class InstituteListViewTest(TestCase):
             slug='language-institute',
             main_image='test.jpg',
             description='معهد متخصص في اللغات',
-            registration_requirements='شروط التسجيل',
             publish_status='published'
         )
         
@@ -37,7 +35,6 @@ class InstituteListViewTest(TestCase):
             slug='unpublished-institute',
             main_image='test.jpg',
             description='معهد غير منشور',
-            registration_requirements='شروط التسجيل',
             publish_status='unpublished'
         )
     
@@ -68,7 +65,6 @@ class InstituteListViewTest(TestCase):
                 slug=f'institute-{i}',
                 main_image='test.jpg',
                 description='وصف',
-                registration_requirements='شروط',
                 publish_status='published'
             )
         
@@ -105,28 +101,28 @@ class InstituteDetailViewTest(TestCase):
             slug='tech-institute',
             main_image='test.jpg',
             description='وصف المعهد',
-            registration_requirements='شروط التسجيل',
-            registration_section='خطوات التسجيل',
             publish_status='published'
         )
         
         # Create courses
         self.course1 = Course.objects.create(
             institute=self.institute,
-            name='دورة البرمجة',
             duration='3 أشهر',
-            fees='5000 رنجت',
-            description='وصف الدورة',
-            notes='ملاحظات'
+            fees_myr='3,400',
+            fees_usd='857',
+            fees_sar='3,216',
+            visa_duration='بدون تأشيرة',
+            sort_order=1
         )
         
         self.course2 = Course.objects.create(
             institute=self.institute,
-            name='دورة الويب',
             duration='4 أشهر',
-            fees='6000 رنجت',
-            description='وصف الدورة',
-            notes=''
+            fees_myr='6,300',
+            fees_usd='1,588',
+            fees_sar='5,960',
+            visa_duration='بدون تأشيرة',
+            sort_order=2
         )
         
         # Create unpublished institute
@@ -135,7 +131,6 @@ class InstituteDetailViewTest(TestCase):
             slug='unpublished-institute',
             main_image='test.jpg',
             description='وصف',
-            registration_requirements='شروط',
             publish_status='unpublished'
         )
     
@@ -166,8 +161,8 @@ class InstituteDetailViewTest(TestCase):
         self.assertEqual(len(response.context['courses']), 2)
         self.assertIn(self.course1, response.context['courses'])
         self.assertIn(self.course2, response.context['courses'])
-        self.assertContains(response, self.course1.name)
-        self.assertContains(response, self.course2.name)
+        self.assertContains(response, self.course1.duration)
+        self.assertContains(response, self.course1.fees_myr)
     
     def test_detail_view_unpublished_institute_not_found(self):
         """Test that unpublished institutes return 404."""
@@ -186,7 +181,7 @@ class InstituteDetailViewTest(TestCase):
         """Test that registration section is displayed."""
         url = reverse('institutes:detail', kwargs={'slug': self.institute.slug})
         response = self.client.get(url)
-        self.assertContains(response, self.institute.registration_section)
+        self.assertContains(response, 'تقديم الطلب والوثائق')
     
     def test_detail_view_query_optimization(self):
         """Test that queries are optimized with prefetch_related."""
@@ -194,8 +189,8 @@ class InstituteDetailViewTest(TestCase):
         
         # This test verifies that prefetch_related is working
         # by checking that accessing related objects doesn't cause additional queries
-        # Queries: 1 for redirect check, 1 for institute, 1 for courses, 1 for articles, 1 for tags, 1 for site settings, 1 for attachments
-        with self.assertNumQueries(7):
+        # Queries: 1 for redirect check, 1 for institute, 1 for courses, 1 for articles, 1 for tags, 1 for site settings, 1 for attachments, 1 for faqs
+        with self.assertNumQueries(8):
             response = self.client.get(url)
             # Access the courses to ensure they're prefetched
             list(response.context['courses'])
@@ -213,8 +208,7 @@ class InstituteAttachmentTestCase(TestCase):
             name='Test Institute',
             slug='test-inst',
             main_image='main.png',
-            description='Test description',
-            registration_requirements='Requirements'
+            description='Test description'
         )
 
         test_file = SimpleUploadedFile("brochure.pdf", b"file content here", content_type="application/pdf")
@@ -242,7 +236,6 @@ class InstituteAttachmentTestCase(TestCase):
             slug='published-inst',
             main_image='main.png',
             description='Test description',
-            registration_requirements='Requirements',
             publish_status='published'
         )
 

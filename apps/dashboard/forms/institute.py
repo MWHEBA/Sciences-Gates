@@ -4,8 +4,8 @@ Institute forms for the dashboard.
 """
 from django import forms
 from django.forms import inlineformset_factory
-from apps.institutes.models import Institute, Course, InstituteAttachment
-from apps.core.widgets import SimpleRichTextWidget
+from apps.institutes.models import Institute, Course, InstituteAttachment, InstituteFAQ
+from apps.html_editor.widgets import CustomHTMLEditorWidget
 
 
 class InstituteForm(forms.ModelForm):
@@ -13,14 +13,36 @@ class InstituteForm(forms.ModelForm):
     Form for creating and editing institutes with structured template editor.
     نموذج إنشاء وتعديل المعاهد مع محرر القالب المنظم
     """
-    
+    city = forms.ChoiceField(
+        choices=[],
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+        }),
+        required=False,
+        label='المدينة',
+        help_text='المدينة التي يقع بها المعهد لتسهيل التصفية والبحث'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.universities.models import University
+        all_cities = [('', 'اختر المدينة')]
+        for state_code, cities in University.STATE_CITIES.items():
+            all_cities.extend(cities)
+        self.fields['city'].choices = all_cities
+
+        if self.data:
+            if self.data.get('imported_main_image_path'):
+                self.fields['main_image'].required = False
+
     class Meta:
         model = Institute
         fields = [
             # Basic Information
-            'name', 'slug', 'is_legacy', 'institute_type', 'main_image', 'main_image_alt',
+            'name', 'slug', 'is_legacy', 'state', 'city', 'main_image', 'main_image_alt', 'location',
+            'telephone', 'website',
             # Rich Text Sections
-            'description', 'registration_requirements', 'registration_section',
+            'introduction', 'description', 'why_choose_us', 'english_study',
             # Relationships
             'related_articles', 'tags',
             # Publishing
@@ -33,21 +55,22 @@ class InstituteForm(forms.ModelForm):
         widgets = {
             # Basic Information Section
             'name': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 paste-trigger',
                 'placeholder': 'اسم المعهد',
                 'required': True,
                 'dir': 'rtl',
             }),
             'slug': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 paste-trigger',
                 'placeholder': 'الرابط (يدعم الأحرف العربية)',
                 'required': True,
                 'dir': 'ltr',
+                'data-paste-clean': 'slug',
             }),
             'is_legacy': forms.CheckboxInput(attrs={
                 'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
             }),
-            'institute_type': forms.Select(attrs={
+            'state': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'required': True,
             }),
@@ -61,25 +84,32 @@ class InstituteForm(forms.ModelForm):
                 'placeholder': 'الوصف البديل للصورة الرئيسية (SEO)',
                 'dir': 'rtl',
             }),
+            'location': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'موقع المعهد (المدينة، الولاية)...',
+            }),
+            'telephone': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'رقم هاتف التواصل للمعهد لتسهيل التواصل والبحث المحلي',
+                'dir': 'ltr',
+            }),
+            'website': forms.URLInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'رابط الموقع الرسمي للمعهد (sameAs)',
+                'dir': 'ltr',
+            }),
             
             # Rich Text Sections
-            'description': SimpleRichTextWidget(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'وصف شامل عن المعهد',
-                'rows': 10,
-                'dir': 'rtl',
+            'introduction': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'مقدمة اختيارية تظهر في بداية صفحة المعهد...',
             }),
-            'registration_requirements': SimpleRichTextWidget(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'شروط التسجيل في المعهد',
-                'rows': 8,
-                'dir': 'rtl',
+            'description': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'وصف شامل عن المعهد...',
             }),
-            'registration_section': SimpleRichTextWidget(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'معلومات عملية التسجيل والخطوات',
-                'rows': 8,
-                'dir': 'rtl',
+            'why_choose_us': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'لماذا يختار الطلاب العرب هذا المعهد...',
+            }),
+            'english_study': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'معلومات وتفاصيل عن دراسة اللغة الإنجليزية في المعهد...',
             }),
             
             # Relationships
@@ -96,11 +126,12 @@ class InstituteForm(forms.ModelForm):
             }),
             
             # SEO Fields
-            'meta_title': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'meta_title': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 auto-grow-textarea',
                 'placeholder': '60 حرف كحد أقصى',
                 'maxlength': '60',
                 'dir': 'rtl',
+                'rows': 1,
             }),
             'meta_description': forms.Textarea(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -156,14 +187,19 @@ class InstituteForm(forms.ModelForm):
             'name': 'اسم المعهد',
             'slug': 'الرابط',
             'is_legacy': 'رابط قديم',
-            'institute_type': 'نوع المعهد',
+            'state': 'الولاية',
+            'city': 'المدينة',
             'main_image': 'الصورة الرئيسية',
             'main_image_alt': 'النص البديل للصورة الرئيسية',
+            'location': 'الموقع',
+            'telephone': 'رقم الهاتف',
+            'website': 'الموقع الرسمي للمعهد',
             
             # Rich Text Sections
+            'introduction': 'المقدمة',
             'description': 'وصف المعهد',
-            'registration_requirements': 'شروط التسجيل',
-            'registration_section': 'قسم التسجيل',
+            'why_choose_us': 'لماذا يختار الطلاب العرب المعهد',
+            'english_study': 'دراسة اللغة الإنجليزية',
             
             # Relationships
             'related_articles': 'المقالات المرتبطة',
@@ -189,14 +225,19 @@ class InstituteForm(forms.ModelForm):
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
             'is_legacy': 'تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /institutes/slug/)',
-            'institute_type': 'تصنيف المعهد (لغة أو أكاديمي)',
+            'state': 'الولاية التي يقع بها المعهد لتسهيل التصفية والبحث',
+            'city': 'المدينة التي يقع بها المعهد لتسهيل التصفية والبحث',
             'main_image': 'صورة رئيسية للمعهد',
             'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للمعهد لمحركات البحث ومستعرضات الصور',
+            'location': 'موقع المعهد الجغرافي بالتفصيل',
+            'telephone': 'رقم هاتف التواصل للمعهد لتسهيل التواصل والبحث المحلي',
+            'website': 'رابط الموقع الإلكتروني الرسمي للمعهد (sameAs)',
             
             # Rich Text Sections
-            'description': 'وصف شامل عن المعهد',
-            'registration_requirements': 'شروط التسجيل في المعهد',
-            'registration_section': 'معلومات عملية التسجيل والخطوات',
+            'introduction': 'مقدمة اختيارية تظهر في بداية صفحة المعهد',
+            'description': 'وصف شامل عن المعهد للزوار والطلاب المهتمين',
+            'why_choose_us': 'توضيح المميزات وأسباب تفضيل المعهد عن غيره للطلاب العرب',
+            'english_study': 'معلومات عن دورات ومستويات اللغة الإنجليزية المتاحة بالمعهد وكيفية دراستها',
             
             # Relationships
             'related_articles': 'اختر المقالات المرتبطة بهذا المعهد',
@@ -219,11 +260,7 @@ class InstituteForm(forms.ModelForm):
             'og_image': 'الصورة عند المشاركة على وسائل التواصل (1200x630 بكسل)',
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.data:
-            if self.data.get('imported_main_image_path'):
-                self.fields['main_image'].required = False
+
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -249,59 +286,61 @@ class InstituteForm(forms.ModelForm):
         return instance
 
 
-# Create inline formset for Course entries
+# Create inline formset for Course entries (Fee rows)
 CourseFormSet = inlineformset_factory(
     Institute,
     Course,
-    fields=['name', 'duration', 'fees', 'description', 'notes'],
-    extra=1,
+    fields=['duration', 'fees_myr', 'fees_usd', 'fees_sar', 'visa_duration', 'sort_order'],
+    extra=0,
     can_delete=True,
     widgets={
-        'name': forms.TextInput(attrs={
-            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-            'placeholder': 'اسم الدورة',
-            'required': True,
-            'dir': 'rtl',
-        }),
         'duration': forms.TextInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-            'placeholder': 'مثال: 6 أشهر',
+            'placeholder': 'مثال: شهر، شهرين، 3 أشهر',
             'required': True,
             'dir': 'rtl',
         }),
-        'fees': forms.TextInput(attrs={
+        'fees_myr': forms.TextInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-            'placeholder': 'مثال: 5,000 رنجت ماليزي',
+            'placeholder': 'مثال: 3,400',
             'required': True,
             'dir': 'rtl',
         }),
-        'description': forms.Textarea(attrs={
+        'fees_usd': forms.TextInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-            'placeholder': 'وصف الدورة',
-            'rows': 4,
-            'required': True,
+            'placeholder': 'مثال: 857',
+            'required': False,
             'dir': 'rtl',
         }),
-        'notes': forms.Textarea(attrs={
+        'fees_sar': forms.TextInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-            'placeholder': 'ملاحظات إضافية عن الدورة',
-            'rows': 3,
+            'placeholder': 'مثال: 3,216',
+            'required': False,
             'dir': 'rtl',
         }),
+        'visa_duration': forms.TextInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': 'مثال: بدون تأشيرة، 6 أشهر، سنة',
+            'required': False,
+            'dir': 'rtl',
+        }),
+        'sort_order': forms.HiddenInput(),
     },
     labels={
-        'name': 'اسم الدورة',
-        'duration': 'مدة الدورة',
-        'fees': 'الرسوم',
-        'description': 'الوصف',
-        'notes': 'ملاحظات',
+        'duration': 'مدة الكورس',
+        'fees_myr': 'التكلفة بالرنجت MYR',
+        'fees_usd': 'التكلفة بالدولار USD',
+        'fees_sar': 'التكلفة بالريال SAR',
+        'visa_duration': 'مدة تأشيرة الطالب',
+        'sort_order': 'الترتيب',
     },
     help_texts={
-        'name': 'اسم الدورة',
-        'duration': 'مدة الدورة (مثال: 6 أشهر)',
-        'fees': 'الرسوم (مثال: 5,000 رنجت ماليزي)',
-        'description': 'وصف الدورة',
-        'notes': 'ملاحظات إضافية عن الدورة',
+        'duration': 'مثال: شهر، شهرين، 3 أشهر',
+        'fees_myr': 'مثال: 3,400',
+        'fees_usd': 'مثال: 857',
+        'fees_sar': 'مثال: 3,216',
+        'visa_duration': 'مثال: بدون تأشيرة، 6 أشهر، سنة',
+        'sort_order': 'ترتيب ظهور الصف في الجدول (الأصغر أولاً)',
     }
 )
 
@@ -335,4 +374,37 @@ InstituteAttachmentFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
 )
+
+
+# Create inline formset for FAQ entries
+InstituteFAQFormSet = inlineformset_factory(
+    Institute,
+    InstituteFAQ,
+    fields=['question', 'answer', 'sort_order'],
+    extra=0,
+    can_delete=True,
+    widgets={
+        'question': forms.TextInput(attrs={
+            'class': 'faq-item__question-input',
+            'placeholder': 'السؤال',
+            'required': True,
+            'dir': 'rtl',
+        }),
+        'answer': CustomHTMLEditorWidget(attrs={
+            'data-placeholder': 'الإجابة...',
+            'required': True,
+        }),
+        'sort_order': forms.HiddenInput(),
+    },
+    labels={
+        'question': 'السؤال',
+        'answer': 'الإجابة',
+        'sort_order': 'ترتيب العرض',
+    },
+    help_texts={
+        'question': 'السؤال الشائع',
+        'answer': 'الإجابة عن السؤال الشائع',
+    }
+)
+
 

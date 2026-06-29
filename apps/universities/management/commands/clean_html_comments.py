@@ -49,21 +49,6 @@ class Command(BaseCommand):
         
         self.stdout.write(self.style.SUCCESS(f'Updated {updated_count} institutes'))
         
-        # Clean Institute Courses
-        courses = Course.objects.all()
-        updated_count = 0
-        
-        for course in courses:
-            original_desc = course.description
-            
-            course.description = re.sub(pattern, '', course.description, flags=re.DOTALL) if course.description else ''
-            
-            if course.description != original_desc:
-                course.save()
-                updated_count += 1
-        
-        self.stdout.write(self.style.SUCCESS(f'Updated {updated_count} courses'))
-        
         # Clean Majors
         majors = Major.objects.all()
         updated_count = 0

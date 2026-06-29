@@ -3,169 +3,169 @@ from django.utils.text import slugify
 
 CITY_MAP = {
     # kl (Kuala Lumpur)
-    'كوالالمبور': 'kl',
-    'كوالالامبور': 'kl',
-    'كوالا لمبور': 'kl',
-    'kuala lumpur': 'kl',
-    'kl': 'kl',
+    'كوالالمبور': ('kl', 'kl'),
+    'كوالالامبور': ('kl', 'kl'),
+    'كوالا لمبور': ('kl', 'kl'),
+    'kuala lumpur': ('kl', 'kl'),
+    'kl': ('kl', 'kl'),
     
     # selangor (Selangor)
-    'سيلانجور': 'selangor',
-    'سيلانغور': 'selangor',
-    'selangor': 'selangor',
-    'سردانج': 'selangor',
-    'سردانغ': 'selangor',
-    'سيردانغ': 'selangor',
-    'serdang': 'selangor',
-    'شاه علم': 'selangor',
-    'shah alam': 'selangor',
-    'سوبانج': 'selangor',
-    'سوبانغ': 'selangor',
-    'subang': 'selangor',
-    'سوبانج جايا': 'selangor',
-    'سوبانغ جايا': 'selangor',
-    'subang jaya': 'selangor',
-    'بانجي': 'selangor',
-    'بانغي': 'selangor',
-    'bangi': 'selangor',
-    'كاجانج': 'selangor',
-    'كاجانغ': 'selangor',
-    'kajang': 'selangor',
-    'سيمينيه': 'selangor',
-    'semenyih': 'selangor',
-    'كلانج': 'selangor',
-    'كلانغ': 'selangor',
-    'klang': 'selangor',
-    'بيتالينج جايا': 'selangor',
-    'بيتالينغ جايا': 'selangor',
-    'petaling jaya': 'selangor',
-    'pj': 'selangor',
-    'سري كيمبانجان': 'selangor',
-    'سري كيمبانغان': 'selangor',
-    'seri kembangan': 'selangor',
-    'سونغاي لونغ': 'selangor',
-    'sungai long': 'selangor',
-    'صنواي': 'selangor',
-    'sunway': 'selangor',
-    'بندر صنواي': 'selangor',
-    'bandar sunway': 'selangor',
-    'دامانسارا': 'selangor',
-    'دمنسارا': 'selangor',
-    'damansara': 'selangor',
-    'غومباك': 'selangor',
-    'جومباك': 'selangor',
-    'gombak': 'selangor',
-    'سوجانا بوترا': 'selangor',
-    'saujana putra': 'selangor',
-    'saujana': 'selangor',
-    'jenjarom': 'selangor',
-    'جينجاروم': 'selangor',
+    'سيلانجور': ('selangor', 'other-selangor'),
+    'سيلانغور': ('selangor', 'other-selangor'),
+    'selangor': ('selangor', 'other-selangor'),
+    'سردانج': ('selangor', 'serdang'),
+    'سردانغ': ('selangor', 'serdang'),
+    'سيردانغ': ('selangor', 'serdang'),
+    'serdang': ('selangor', 'serdang'),
+    'شاه علم': ('selangor', 'shah-alam'),
+    'shah alam': ('selangor', 'shah-alam'),
+    'سوبانج': ('selangor', 'subang-jaya'),
+    'سوبانغ': ('selangor', 'subang-jaya'),
+    'subang': ('selangor', 'subang-jaya'),
+    'سوبانج جايا': ('selangor', 'subang-jaya'),
+    'سوبانغ جايا': ('selangor', 'subang-jaya'),
+    'subang jaya': ('selangor', 'subang-jaya'),
+    'بانجي': ('selangor', 'bangi'),
+    'بانغي': ('selangor', 'bangi'),
+    'bangi': ('selangor', 'bangi'),
+    'كاجانج': ('selangor', 'kajang'),
+    'كاجانغ': ('selangor', 'kajang'),
+    'kajang': ('selangor', 'kajang'),
+    'سيمينيه': ('selangor', 'semenyih'),
+    'semenyih': ('selangor', 'semenyih'),
+    'كلانج': ('selangor', 'klang'),
+    'كلانغ': ('selangor', 'klang'),
+    'klang': ('selangor', 'klang'),
+    'بيتالينج جايا': ('selangor', 'petaling-jaya'),
+    'بيتالينغ جايا': ('selangor', 'petaling-jaya'),
+    'petaling jaya': ('selangor', 'petaling-jaya'),
+    'pj': ('selangor', 'petaling-jaya'),
+    'سري كيمبانجان': ('selangor', 'seri-kembangan'),
+    'سري كيمبانغان': ('selangor', 'seri-kembangan'),
+    'seri kembangan': ('selangor', 'seri-kembangan'),
+    'سونغاي لونغ': ('selangor', 'sungai-long'),
+    'sungai long': ('selangor', 'sungai-long'),
+    'صنواي': ('selangor', 'bandar-sunway'),
+    'sunway': ('selangor', 'bandar-sunway'),
+    'بندر صنواي': ('selangor', 'bandar-sunway'),
+    'bandar sunway': ('selangor', 'bandar-sunway'),
+    'دامانسارا': ('selangor', 'damansara'),
+    'دمنسارا': ('selangor', 'damansara'),
+    'damansara': ('selangor', 'damansara'),
+    'غومباك': ('selangor', 'gombak'),
+    'جومباك': ('selangor', 'gombak'),
+    'gombak': ('selangor', 'gombak'),
+    'سوجانا بوترا': ('selangor', 'saujana-putra'),
+    'saujana putra': ('selangor', 'saujana-putra'),
+    'saujana': ('selangor', 'saujana-putra'),
+    'jenjarom': ('selangor', 'jenjarom'),
+    'جينجاروم': ('selangor', 'jenjarom'),
     
     # penang (Penang)
-    'بينانج': 'penang',
-    'بينانغ': 'penang',
-    'penang': 'penang',
-    'جورج تاون': 'penang',
-    'georgetown': 'penang',
-    'george town': 'penang',
+    'بينانج': ('penang', 'other-penang'),
+    'بينانغ': ('penang', 'other-penang'),
+    'penang': ('penang', 'other-penang'),
+    'جورج تاون': ('penang', 'georgetown'),
+    'georgetown': ('penang', 'georgetown'),
+    'george town': ('penang', 'georgetown'),
     
     # putrajaya (Putrajaya)
-    'بوتراجايا': 'putrajaya',
-    'بتروجايا': 'putrajaya',
-    'putrajaya': 'putrajaya',
+    'بوتراجايا': ('putrajaya', 'putrajaya'),
+    'بتروجايا': ('putrajaya', 'putrajaya'),
+    'putrajaya': ('putrajaya', 'putrajaya'),
     
-    # cyberjaya (Cyberjaya)
-    'سايبرجايا': 'cyberjaya',
-    'cyberjaya': 'cyberjaya',
+    # cyberjaya (Cyberjaya) - mapped under Selangor
+    'سايبرجايا': ('selangor', 'cyberjaya'),
+    'cyberjaya': ('selangor', 'cyberjaya'),
     
     # johor (Johor)
-    'جوهر': 'johor',
-    'جوهور': 'johor',
-    'johor': 'johor',
-    'سكوداي': 'johor',
-    'اسكوداي': 'johor',
-    'skudai': 'johor',
-    'جوهر بهرو': 'johor',
-    'جوهور بارو': 'johor',
-    'johor bahru': 'johor',
-    'jb': 'johor',
-    'باتو باهات': 'johor',
-    'batu pahat': 'johor',
+    'جوهر': ('johor', 'other-johor'),
+    'جوهور': ('johor', 'other-johor'),
+    'johor': ('johor', 'other-johor'),
+    'سكوداي': ('johor', 'skudai'),
+    'اسكوداي': ('johor', 'skudai'),
+    'skudai': ('johor', 'skudai'),
+    'جوهر بهرو': ('johor', 'johor-bahru'),
+    'جوهور بارو': ('johor', 'johor-bahru'),
+    'johor bahru': ('johor', 'johor-bahru'),
+    'jb': ('johor', 'johor-bahru'),
+    'باتو باهات': ('johor', 'batu-pahat'),
+    'batu pahat': ('johor', 'batu-pahat'),
     
     # kedah (Kedah)
-    'قدح': 'kedah',
-    'kedah': 'kedah',
-    'ألو سيتار': 'kedah',
-    'alor setar': 'kedah',
-    'سينتوت': 'kedah',
-    'سينتوك': 'kedah',
-    'sintok': 'kedah',
+    'قدح': ('kedah', 'other-kedah'),
+    'kedah': ('kedah', 'other-kedah'),
+    'ألو سيتار': ('kedah', 'alor-setar'),
+    'alor setar': ('kedah', 'alor-setar'),
+    'سينتوت': ('kedah', 'sintok'),
+    'سينتوك': ('kedah', 'sintok'),
+    'sintok': ('kedah', 'sintok'),
     
     # kelantan (Kelantan)
-    'كلنتان': 'kelantan',
-    'kelantan': 'kelantan',
-    'كوت بهرو': 'kelantan',
-    'kota bharu': 'kelantan',
+    'كلنتان': ('kelantan', 'other-kelantan'),
+    'kelantan': ('kelantan', 'other-kelantan'),
+    'كوت بهرو': ('kelantan', 'kota-bharu'),
+    'kota bharu': ('kelantan', 'kota-bharu'),
     
     # melaka (Melaka)
-    'ملقا': 'melaka',
-    'ملكا': 'melaka',
-    'ملاكا': 'melaka',
-    'melaka': 'melaka',
-    'malacca': 'melaka',
+    'ملقا': ('melaka', 'melaka'),
+    'ملكا': ('melaka', 'melaka'),
+    'ملاكا': ('melaka', 'melaka'),
+    'melaka': ('melaka', 'melaka'),
+    'malacca': ('melaka', 'melaka'),
     
     # negeri-sembilan (Negeri Sembilan)
-    'نيجري سمبيلان': 'negeri-sembilan',
-    'negeri sembilan': 'negeri-sembilan',
-    'نيلاي': 'negeri-sembilan',
-    'nilai': 'negeri-sembilan',
+    'نيجري سمبيلان': ('negeri-sembilan', 'other-negeri-sembilan'),
+    'negeri sembilan': ('negeri-sembilan', 'other-negeri-sembilan'),
+    'نيلاي': ('negeri-sembilan', 'nilai'),
+    'nilai': ('negeri-sembilan', 'nilai'),
     
     # pahang (Pahang)
-    'باهانغ': 'pahang',
-    'باهانج': 'pahang',
-    'pahang': 'pahang',
-    'كونتان': 'pahang',
-    'kuantan': 'pahang',
+    'باهانغ': ('pahang', 'other-pahang'),
+    'باهانج': ('pahang', 'other-pahang'),
+    'pahang': ('pahang', 'other-pahang'),
+    'كونتان': ('pahang', 'kuantan'),
+    'kuantan': ('pahang', 'kuantan'),
     
     # perak (Perak)
-    'بيرق': 'perak',
-    'perak': 'perak',
-    'إيبوه': 'perak',
-    'ipoh': 'perak',
-    'كامبار': 'perak',
-    'kampar': 'perak',
-    'سري اسكندر': 'perak',
-    'seri iskandar': 'perak',
+    'بيرق': ('perak', 'other-perak'),
+    'perak': ('perak', 'other-perak'),
+    'إيبوه': ('perak', 'ipoh'),
+    'ipoh': ('perak', 'ipoh'),
+    'كامبار': ('perak', 'kampar'),
+    'kampar': ('perak', 'kampar'),
+    'سري اسكندر': ('perak', 'seri-iskandar'),
+    'seri iskandar': ('perak', 'seri-iskandar'),
     
     # perlis (Perlis)
-    'برليس': 'perlis',
-    'perlis': 'perlis',
-    'أراو': 'perlis',
-    'arau': 'perlis',
+    'برليس': ('perlis', 'other-perlis'),
+    'perlis': ('perlis', 'other-perlis'),
+    'أراو': ('perlis', 'kangar'),
+    'arau': ('perlis', 'kangar'),
     
     # sabah (Sabah)
-    'صباح': 'sabah',
-    'sabah': 'sabah',
-    'كوتا كينابالو': 'sabah',
-    'kota kinabalu': 'sabah',
+    'صباح': ('sabah', 'other-sabah'),
+    'sabah': ('sabah', 'other-sabah'),
+    'كوتا كينابالو': ('sabah', 'kota-kinabalu'),
+    'kota kinabalu': ('sabah', 'kota-kinabalu'),
     
     # sarawak (Sarawak)
-    'سراوق': 'sarawak',
-    'ساراواك': 'sarawak',
-    'sarawak': 'sarawak',
-    'كوتشينغ': 'sarawak',
-    'kuching': 'sarawak',
-    'ساماراهان': 'sarawak',
-    'samarahan': 'sarawak',
+    'سراوق': ('sarawak', 'other-sarawak'),
+    'ساراواك': ('sarawak', 'other-sarawak'),
+    'sarawak': ('sarawak', 'other-sarawak'),
+    'كوتشينغ': ('sarawak', 'kuching'),
+    'kuching': ('sarawak', 'kuching'),
+    'ساماراهان': ('sarawak', 'kuching'),
+    'samarahan': ('sarawak', 'kuching'),
     
     # terengganu (Terengganu)
-    'ترينجانو': 'terengganu',
-    'ترينغانو': 'terengganu',
-    'terengganu': 'terengganu',
-    'كوالا ترينجانو': 'terengganu',
-    'kuala terengganu': 'terengganu',
-    'لابوان': 'labuan',
-    'labuan': 'labuan',
+    'ترينجانو': ('terengganu', 'other-terengganu'),
+    'ترينغانو': ('terengganu', 'other-terengganu'),
+    'terengganu': ('terengganu', 'other-terengganu'),
+    'كوالا ترينجانو': ('terengganu', 'kuala-terengganu'),
+    'kuala terengganu': ('terengganu', 'kuala-terengganu'),
+    'لابوان': ('labuan', 'labuan'),
+    'labuan': ('labuan', 'labuan'),
 }
 
 class ContentMapper:
@@ -176,7 +176,7 @@ class ContentMapper:
         
         # 1. Map City
         city_raw = wp_data.get('city_raw', '')
-        city_slug, city_confidence = self._detect_city_smart(wp_data)
+        (state_slug, city_slug), city_confidence = self._detect_city_smart(wp_data)
 
         # 2. Extract values and confidence levels from WP fields structure
         wp_fields = wp_data.get('fields', {})
@@ -203,8 +203,10 @@ class ContentMapper:
         # Add content-type specific defaults
         if content_type == 'university':
             form_initial['university_type'] = wp_data.get('sub_type', 'private')
+            form_initial['state'] = state_slug
             form_initial['city'] = city_slug
             confidence['university_type'] = 'high'
+            confidence['state'] = city_confidence
             confidence['city'] = city_confidence
             
             # Split combined admission requirements if they are inside the bachelor field
@@ -224,8 +226,10 @@ class ContentMapper:
                         form_initial['admission_requirements_phd'] = split_req['phd']
                         confidence['admission_requirements_phd'] = confidence.get('admission_requirements_bachelor', 'medium')
         elif content_type == 'institute':
-            form_initial['institute_type'] = wp_data.get('sub_type', 'academic')
-            confidence['institute_type'] = 'high'
+            form_initial['state'] = state_slug
+            form_initial['city'] = city_slug
+            confidence['state'] = city_confidence
+            confidence['city'] = city_confidence
         elif content_type == 'major':
             form_initial['major_category'] = wp_data.get('major_category', 'science')
             confidence['major_category'] = 'high'
@@ -321,6 +325,7 @@ class ContentMapper:
 
         # Apply justify alignment to specific fields if they exist
         justify_fields = [
+            'introduction',
             'description',
             'location',
             'admission_requirements_bachelor',
@@ -379,17 +384,104 @@ class ContentMapper:
             else:
                 redirect_url = '/dashboard/universities/create/'
 
+        courses_data = []
+        faqs_data = wp_data.get('faqs', [])
+
+        if content_type == 'institute':
+            courses_by_duration = {}
+            faq_list = []
+            
+            # Start with standard faqs
+            for faq in wp_data.get('faqs', []):
+                faq_list.append({
+                    'question': faq.get('question', ''),
+                    'answer': faq.get('answer', ''),
+                })
+                
+            for item in wp_data.get('faculties', []):
+                name = item.get('name', '').strip()
+                programs = item.get('programs', [])
+                
+                # Check if it's an FAQ item
+                is_faq = '؟' in name or '?' in name or (
+                    len(programs) == 1 and 
+                    programs[0].get('duration') == 'غير محدد' and 
+                    programs[0].get('tuition_fees') == 'غير محدد'
+                )
+                
+                if is_faq:
+                    ans = programs[0].get('name', '').strip() if programs else ''
+                    faq_list.append({
+                        'question': name,
+                        'answer': ans,
+                    })
+                else:
+                    # It's a courses table
+                    lower_name = name.lower()
+                    currency = 'usd'
+                    if any(x in lower_name for x in ['myr', 'rm', 'رنجت', 'ماليزي']):
+                        currency = 'myr'
+                    elif any(x in lower_name for x in ['sar', 'ريال', 'سعودي']):
+                        currency = 'sar'
+                    elif any(x in lower_name for x in ['usd', 'دولار', '$']):
+                        currency = 'usd'
+                        
+                    for prog in programs:
+                        dur = prog.get('name', '').strip()
+                        fee_val = prog.get('duration', '').strip()
+                        visa_val = prog.get('tuition_fees', '').strip()
+                        
+                        if not dur:
+                            continue
+                            
+                        # Clean fee_val (extract digits, commas, dots)
+                        cleaned_fee = re.sub(r'[^\d\.,]', '', fee_val).strip()
+                        if not cleaned_fee:
+                            cleaned_fee = fee_val
+                            
+                        if dur not in courses_by_duration:
+                            courses_by_duration[dur] = {
+                                'duration': dur,
+                                'fees_myr': '',
+                                'fees_usd': '',
+                                'fees_sar': '',
+                                'visa_duration': '',
+                            }
+                            
+                        if currency == 'myr':
+                            courses_by_duration[dur]['fees_myr'] = cleaned_fee
+                        elif currency == 'usd':
+                            courses_by_duration[dur]['fees_usd'] = cleaned_fee
+                        elif currency == 'sar':
+                            courses_by_duration[dur]['fees_sar'] = cleaned_fee
+                            
+                        if visa_val and visa_val != 'غير محدد':
+                            courses_by_duration[dur]['visa_duration'] = visa_val
+            
+            # Fill missing fees_myr with USD estimation (approx. 1 USD = 4.7 MYR)
+            for dur, c_info in courses_by_duration.items():
+                if not c_info['fees_myr'] and c_info['fees_usd']:
+                    try:
+                        usd_val = float(c_info['fees_usd'].replace(',', ''))
+                        c_info['fees_myr'] = f"{int(usd_val * 4.7):,}"
+                    except ValueError:
+                        pass
+                        
+            courses_data = list(courses_by_duration.values())
+            faqs_data = faq_list
+
         # Prepare final output structure
         return {
             'form_initial': form_initial,
             'confidence': confidence,
             'faculties_data': wp_data.get('faculties', []),
             'faculties_raw_html': wp_data.get('faculties_raw_html', ''),
-            'faqs_data': wp_data.get('faqs', []),
+            'faqs_data': faqs_data,
             'faqs_raw_html': wp_data.get('faqs_raw_html', ''),
             'subjects_tables': wp_data.get('subjects_tables', []),
             'salary_tables': wp_data.get('salary_tables', []),
             'countries_tables': wp_data.get('countries_tables', []),
+            'courses_data': courses_data,
             'image_paths': image_paths,
             'image_warnings': image_warnings,
             'content_type': content_type,
@@ -399,7 +491,7 @@ class ContentMapper:
 
     def _map_city(self, city_raw: str) -> tuple:
         if not city_raw:
-            return '', 'none'
+            return ('', ''), 'none'
         
         city_raw_clean = city_raw.strip().lower()
         
@@ -408,11 +500,11 @@ class ContentMapper:
             return CITY_MAP[city_raw_clean], 'high'
             
         # Check partial contains matches
-        for kw, slug in CITY_MAP.items():
+        for kw, slug_pair in CITY_MAP.items():
             if kw in city_raw_clean or city_raw_clean in kw:
-                return slug, 'high'
+                return slug_pair, 'high'
                 
-        return '', 'none'
+        return ('', ''), 'none'
 
     def _detect_city_smart(self, wp_data: dict) -> tuple:
         """
@@ -458,20 +550,104 @@ class ContentMapper:
         city_raw = wp_data.get('city_raw', '')
         if city_raw:
             city_slug, city_confidence = self._map_city(city_raw)
-            if city_slug:
+            if city_slug[0]:
                 return city_slug, 'medium'
                 
-        return 'kl', 'none'
+        return ('kl', 'kl'), 'none'
 
 
     def _split_admission_requirements(self, html_content: str) -> dict:
         """
         Splits combined admission requirements HTML into Bachelor's, Master's, and PhD stages.
-        Preserves all HTML tags and formatting, removing stage headers and intro text.
+        Uses h3 headers as primary markers, with a regex-based keyword splitting fallback.
         """
         if not html_content:
             return {'bachelor': '', 'master': '', 'phd': ''}
 
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        # Find all h3 elements
+        h3s = soup.find_all('h3')
+        
+        # Check if we have valid stage h3 tags
+        stages = {}
+        for h3 in h3s:
+            text = h3.get_text().lower()
+            if 'بكالوريوس' in text or 'bachelor' in text:
+                stages['bachelor'] = h3
+            elif 'ماجستير' in text or 'master' in text:
+                stages['master'] = h3
+            elif 'دكتوراه' in text or 'phd' in text or 'doctorate' in text:
+                stages['phd'] = h3
+                
+        # If we have at least master or phd headers, split by inserting comment markers
+        if 'master' in stages or 'phd' in stages or 'bachelor' in stages:
+            for h3 in h3s:
+                text = h3.get_text().lower()
+                if 'بكالوريوس' in text or 'bachelor' in text:
+                    h3.replace_with(soup.new_string('<!-- STAGE_BACHELOR -->'))
+                elif 'ماجستير' in text or 'master' in text:
+                    h3.replace_with(soup.new_string('<!-- STAGE_MASTER -->'))
+                elif 'دكتوراه' in text or 'phd' in text or 'doctorate' in text:
+                    h3.replace_with(soup.new_string('<!-- STAGE_PHD -->'))
+            
+            modified_html = str(soup)
+            
+            pos_bachelor = modified_html.find('<!-- STAGE_BACHELOR -->')
+            pos_master = modified_html.find('<!-- STAGE_MASTER -->')
+            pos_phd = modified_html.find('<!-- STAGE_PHD -->')
+            
+            markers = []
+            if pos_bachelor != -1:
+                markers.append((pos_bachelor, 'bachelor', len('<!-- STAGE_BACHELOR -->')))
+            if pos_master != -1:
+                markers.append((pos_master, 'master', len('<!-- STAGE_MASTER -->')))
+            if pos_phd != -1:
+                markers.append((pos_phd, 'phd', len('<!-- STAGE_PHD -->')))
+                
+            markers.sort(key=lambda x: x[0])
+            
+            if markers:
+                result = {'bachelor': '', 'master': '', 'phd': ''}
+                first_pos, first_stage, first_len = markers[0]
+                intro_content = modified_html[:first_pos].strip()
+                
+                # Prepend intro content to bachelor stage by default
+                if intro_content:
+                    result['bachelor'] = intro_content
+                    
+                current_pos = first_pos + first_len
+                active_stage = first_stage
+                
+                for idx in range(1, len(markers)):
+                    next_pos, next_stage, next_len = markers[idx]
+                    segment = modified_html[current_pos:next_pos]
+                    
+                    if result[active_stage]:
+                        result[active_stage] += segment
+                    else:
+                        result[active_stage] = segment
+                        
+                    current_pos = next_pos + next_len
+                    active_stage = next_stage
+                    
+                segment = modified_html[current_pos:]
+                if result[active_stage]:
+                    result[active_stage] += segment
+                else:
+                    result[active_stage] = segment
+                    
+                for stage in result:
+                    result[stage] = self._strip_html_content(result[stage])
+                    
+                return result
+
+        # Fallback to the original regex block-level splitter
+        return self._split_admission_requirements_fallback(html_content)
+
+    def _split_admission_requirements_fallback(self, html_content: str) -> dict:
+        """Original regex keyword splitter fallback."""
         # Match opening and closing tags for block level elements (h1-h6, p, div)
         tag_rx = re.compile(r'<(h[1-6]|p|div)\b[^>]*>(.*?)</\1>', re.IGNORECASE | re.DOTALL)
         
@@ -479,14 +655,10 @@ class ContentMapper:
         for match in tag_rx.finditer(html_content):
             full_tag = match.group(0)
             inner_content = match.group(2)
-            # Remove inner HTML tags to get clean plain text
             clean_text = re.sub(r'<[^>]+>', '', inner_content).strip()
             
-            # Header tags must be reasonably short to avoid matching full description paragraphs
             if len(clean_text) < 80:
                 clean_text_lower = clean_text.lower()
-                
-                # Exclude keywords that specify subheaders (e.g. language requirements, academic requirements)
                 exclude_keywords = ['لغة', 'language', 'أكاديمية', 'academic', 'سنوات', 'duration', 'رسوم', 'fees']
                 if any(kw in clean_text_lower for kw in exclude_keywords):
                     continue
@@ -496,7 +668,6 @@ class ContentMapper:
                 has_phd = any(kw in clean_text_lower for kw in ['دكتوراه', 'phd', 'doctorate'])
                 
                 if has_bachelor or has_master or has_phd:
-                    # Semantic keywords indicating it's a section header, or if it's very short (just the name)
                     header_keywords = ['برنامج', 'شروط', 'قبول', 'متطلبات', 'مرحلة', 'دراسة', 
                                        'program', 'admission', 'requirements', 'study', 'degree', 'course']
                     is_short_or_has_kw = len(clean_text) < 35 or any(kw in clean_text_lower for kw in header_keywords)
@@ -516,7 +687,6 @@ class ContentMapper:
                             'text': clean_text
                         })
 
-        # Remove nested/overlapping matches (e.g. <div><h3>Header</h3></div>)
         filtered_matches = []
         last_end = -1
         for match in sorted(matches, key=lambda x: x['start']):
@@ -528,19 +698,13 @@ class ContentMapper:
             return {'bachelor': html_content, 'master': '', 'phd': ''}
 
         result = {'bachelor': '', 'master': '', 'phd': ''}
-        
-        # Identify if we have a bachelor header in matches
         has_bachelor_header = any(m['stage'] == 'bachelor' for m in filtered_matches)
-        
-        # Handle content before the first header
         first_header_start = filtered_matches[0]['start']
         pre_content = self._strip_html_content(html_content[:first_header_start])
         
         if pre_content and not has_bachelor_header:
-            # If no bachelor header is present, the pre-content is the bachelor section
             result['bachelor'] = pre_content
 
-        # Process each match and extract content between them
         for idx, match in enumerate(filtered_matches):
             stage = match['stage']
             start_pos = match['end']

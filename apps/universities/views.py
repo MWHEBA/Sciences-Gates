@@ -52,10 +52,19 @@ class UniversityListView(BreadcrumbMixin, ListView):
         if university_type:
             queryset = queryset.filter(university_type=university_type)
             
-        # Apply city/location filter (e.g. kl, selangor, etc.)
+        # Apply state filter
+        state = self.request.GET.get('state', '').strip().lower()
+        if state:
+            queryset = queryset.filter(state=state)
+            
+        # Apply city/location filter (e.g. kl, subang-jaya, etc.)
         city = self.request.GET.get('city', '').strip().lower()
         if city:
-            queryset = queryset.filter(city=city)
+            state_codes = [code for code, _ in University.STATE_CHOICES]
+            if city in state_codes:
+                queryset = queryset.filter(state=city)
+            else:
+                queryset = queryset.filter(city=city)
                 
         return queryset
 
@@ -65,9 +74,13 @@ class UniversityListView(BreadcrumbMixin, ListView):
         from django.urls import reverse
         from apps.majors.models import Major
         from apps.articles.models import Article
+        import json
 
         context['clear_url'] = reverse('universities:list')
-        context['city_choices'] = University.CITY_CHOICES
+        context['state_choices'] = University.STATE_CHOICES
+        context['state_cities_json'] = json.dumps(University.STATE_CITIES)
+        context['selected_state'] = self.request.GET.get('state', '')
+        context['selected_city'] = self.request.GET.get('city', '')
 
         # Hub Pages SEO: cross-link to popular majors and latest articles
         context['popular_majors'] = Major.objects.filter(
@@ -114,7 +127,7 @@ class UniversityDetailView(BreadcrumbMixin, DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         obj = self.get_object()
-        if obj.is_legacy and request.resolver_match.view_name != 'legacy_detail':
+        if obj.is_legacy and request.resolver_match and request.resolver_match.view_name != 'legacy_detail':
             from django.shortcuts import redirect
             return redirect(obj.get_absolute_url(), permanent=True)
         return super().dispatch(request, *args, **kwargs)

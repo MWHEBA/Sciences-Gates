@@ -545,11 +545,8 @@ class Command(BaseCommand):
             slug='modern-languages-institute',
             defaults={
                 'name': 'معهد اللغات الحديثة',
-                'institute_type': 'language',
                 'main_image': self.load_generated_image(classroom_path, '#0284c7', 'lang_main.jpg'), # صورة الفصل الدراسي مناسبة جداً
                 'description': 'معهد اللغات الحديثة هو مركز رائد معتمد دولياً لتعليم اللغة الإنجليزية كلغة ثانية، ويقدم دورات مكثفة ومصممة لمساعدة الطلاب الدوليين على اجتياز اختبارات آيلتس وتوفل بنظام تعليمي تفاعلي حديث.',
-                'registration_requirements': 'نسخة ملونة من جواز السفر (ساري المفعول لـ 6 أشهر على الأقل)، وصورة شخصية بخلفية بيضاء، ودفع رسوم حجز المقعد وتحديد المستوى.',
-                'registration_section': 'خطوات التسجيل: 1. تقديم الطلب وتحديد المستوى عبر الإنترنت. 2. استلام الفاتورة وسداد رسوم الدورة. 3. إصدار خطاب القبول وبدء إجراءات الفيزا الدراسية (للدورات الطويلة).',
                 'publish_status': PublishStatus.PUBLISHED,
                 'meta_title': 'دراسة اللغة الإنجليزية في معهد اللغات الحديثة',
                 'meta_description': 'احصل على قبول سريع ودورة لغة إنجليزية مكثفة ومتميزة في معهد اللغات الحديثة لتأهيلك للدراسة الجامعية في ماليزيا.',
@@ -559,19 +556,39 @@ class Command(BaseCommand):
         if lang_created:
             Course.objects.create(
                 institute=inst_lang,
-                name='دورة اللغة الإنجليزية العامة المكثفة',
-                duration='3 أشهر',
-                fees='4,500 رنجت ماليزي',
-                description='دورة يومية تركز على مهارات التحدث، الاستماع، القراءة، القواعد، والكتابة الأكاديمية تحت إشراف معلمين متحدثين أصليين للغة.',
-                notes='تبدأ دورة جديدة في الأول من كل شهر ميلادي.'
+                duration='شهر',
+                fees_myr='3,400',
+                fees_usd='857',
+                fees_sar='3,216',
+                visa_duration='بدون تاشيرة',
+                sort_order=1
             )
             Course.objects.create(
                 institute=inst_lang,
-                name='برنامج الإعداد المكثف لاختبار آيلتس (IELTS Preparation)',
-                duration='شهران',
-                fees='3,500 رنجت ماليزي',
-                description='دورة تخصصية تركز على استراتيجيات الحل السريع والتدريب على أقسام اختبار آيلتس الأربعة مع اختبارات تجريبية أسبوعية.',
-                notes='يشترط لدخول هذه الدورة اجتياز المستوى المتوسط في معهدنا أو ما يعادله.'
+                duration='شهرين',
+                fees_myr='6,300',
+                fees_usd='1,588',
+                fees_sar='5,960',
+                visa_duration='بدون تاشيرة',
+                sort_order=2
+            )
+            Course.objects.create(
+                institute=inst_lang,
+                duration='3 أشهر',
+                fees_myr='9,200',
+                fees_usd='2,318',
+                fees_sar='8,703',
+                visa_duration='بدون تاشيرة',
+                sort_order=3
+            )
+            Course.objects.create(
+                institute=inst_lang,
+                duration='6 أشهر',
+                fees_myr='21,100',
+                fees_usd='5,317',
+                fees_sar='19,961',
+                visa_duration='6 أشهر',
+                sort_order=4
             )
 
         # المعهد الثاني: المعهد التقني العالي
@@ -579,11 +596,8 @@ class Command(BaseCommand):
             slug='high-technical-institute',
             defaults={
                 'name': 'المعهد التقني العالي',
-                'institute_type': 'academic',
                 'main_image': self.load_generated_image(se_path, '#4b5563', 'tech_main.jpg'), # صورة الكود والشاشات مناسبة للمعهد التقني
                 'description': 'يقدم المعهد التقني العالي دبلومات تدريبية مهنية وتطبيقية قصيرة وطويلة المدى، تركز على التطبيقات العملية المباشرة واحتياجات سوق العمل الحديث في مجالات التكنولوجيا وإدارة الشبكات.',
-                'registration_requirements': 'شهادة الثانوية العامة أو ما يعادلها، واجتياز اختبار المبادئ الأساسية للحاسب الآلي الذي يعقده المعهد.',
-                'registration_section': 'التسجيل متاح طوال العام، ويبدأ الفصل الدراسي الجديد كل 4 أشهر (يناير، مايو، سبتمبر). يتم التقديم برفع الأوراق على بوابة المعهد الرقمية.',
                 'publish_status': PublishStatus.PUBLISHED,
                 'meta_title': 'المعهد التقني العالي | دبلومات مهنية معتمدة في الشبكات والبرمجة',
                 'meta_description': 'سجل الآن في المعهد التقني العالي واحصل على تدريب وتأهيل مهني متميز بشهادات معتمدة تؤهلك لسوق العمل فوراً.',
@@ -593,11 +607,30 @@ class Command(BaseCommand):
         if tech_created:
             Course.objects.create(
                 institute=inst_tech,
-                name='دبلوم تصميم وتطوير تطبيقات الويب الكاملة (Full Stack Developer)',
+                duration='3 أشهر',
+                fees_myr='4,500',
+                fees_usd='1,000',
+                fees_sar='3,750',
+                visa_duration='بدون تاشيرة',
+                sort_order=1
+            )
+            Course.objects.create(
+                institute=inst_tech,
+                duration='6 أشهر',
+                fees_myr='8,500',
+                fees_usd='1,900',
+                fees_sar='7,125',
+                visa_duration='6 أشهر',
+                sort_order=2
+            )
+            Course.objects.create(
+                institute=inst_tech,
                 duration='سنة واحدة',
-                fees='12,000 رنجت ماليزي',
-                description='برنامج عملي متكامل يغطي تقنيات الـ Front-end (React, Tailwind) وتقنيات الـ Back-end (NodeJS, Database) مع مشروع تخرج تطبيقي.',
-                notes='الرسوم تشمل الكتب الدراسية والوصول للمختبرات الرقمية المتطورة.'
+                fees_myr='16,000',
+                fees_usd='3,600',
+                fees_sar='13,500',
+                visa_duration='سنة',
+                sort_order=3
             )
 
         # المعهد الثالث: معهد إعداد القادة
@@ -605,11 +638,8 @@ class Command(BaseCommand):
             slug='leadership-development-institute',
             defaults={
                 'name': 'معهد إعداد القادة',
-                'institute_type': 'academic',
                 'main_image': self.load_generated_image(meeting_path, '#b45309', 'lead_main.jpg'), # صورة قاعة الاجتماعات مناسبة للإدارة والقيادة
                 'description': 'مركز تدريب متقدم يهدف لتأهيل الكوادر الإدارية وتطوير المهارات القيادية والشخصية للأفراد والمؤسسات والشركات، عبر برامج تفاعلية وورش عمل مستمرة بالتعاون مع كبار الخبراء الإداريين.',
-                'registration_requirements': 'تقديم السيرة الذاتية وإثبات جهة العمل الحالية أو وجود مؤهل جامعي مع خبرة سابقة.',
-                'registration_section': 'التسجيل يتم بالتنسيق المباشر مع مكتب التدريب بالمعهد أو بترشيح من الشركة/المؤسسة الراعية للمتدرب.',
                 'publish_status': PublishStatus.PUBLISHED,
                 'meta_title': 'معهد إعداد القادة لتطوير المهارات الإدارية والتنفيذية',
                 'meta_description': 'طور مهاراتك القيادية والتخطيط الاستراتيجي مع ورش العمل والدورات التنفيذية في معهد إعداد القادة المتميز.',
@@ -619,11 +649,21 @@ class Command(BaseCommand):
         if lead_created:
             Course.objects.create(
                 institute=inst_lead,
-                name='البرنامج التنفيذي للتخطيط الاستراتيجي وصناعة القرار',
-                duration='3 أسابيع',
-                fees='6,000 رنجت ماليزي',
-                description='ورش عمل مكثفة تغطي أحدث نظريات الإدارة الاستراتيجية، محاكاة اتخاذ القرارات وحل الأزمات الإدارية والمؤسسية.',
-                notes='يقدم البرنامج في نهاية الأسبوع لمراعاة جدول أعمال الموظفين والمدراء.'
+                duration='أسبوعين',
+                fees_myr='3,000',
+                fees_usd='675',
+                fees_sar='2,530',
+                visa_duration='بدون تاشيرة',
+                sort_order=1
+            )
+            Course.objects.create(
+                institute=inst_lead,
+                duration='شهر',
+                fees_myr='5,500',
+                fees_usd='1,240',
+                fees_sar='4,650',
+                visa_duration='بدون تاشيرة',
+                sort_order=2
             )
 
         self.stdout.write(self.style.SUCCESS('تم إنشاء المعاهد والدورات بنجاح!'))

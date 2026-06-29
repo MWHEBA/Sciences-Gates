@@ -14,7 +14,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.utils import timezone
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from datetime import timedelta
 from django.db import transaction
 from apps.leads.models import Lead, LeadType
@@ -28,7 +28,7 @@ from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin
 from apps.dashboard.forms import (
     UserCreateForm, UserUpdateForm, RedirectForm, 
     UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet,
-    InstituteForm, CourseFormSet, InstituteAttachmentFormSet,
+    InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet,
     MajorForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet,
     ArticleForm, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm
 )
@@ -585,12 +585,13 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
             'related_articles'
         ).order_by('-created_at')
         
-        # Search by name, slug, or city
+        # Search by name, slug, state, or city
         search_query = self.request.GET.get('search', '').strip()
         if search_query:
             queryset = queryset.filter(
                 Q(name__icontains=search_query) |
                 Q(slug__icontains=search_query) |
+                Q(state__icontains=search_query) |
                 Q(city__icontains=search_query)
             )
         
@@ -606,6 +607,11 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         if type_filter in ['public', 'private']:
             queryset = queryset.filter(university_type=type_filter)
         
+        # Filter by state
+        state_filter = self.request.GET.get('state', '').strip().lower()
+        if state_filter:
+            queryset = queryset.filter(state=state_filter)
+            
         # Filter by city
         city_filter = self.request.GET.get('city', '').strip().lower()
         if city_filter:
@@ -623,6 +629,7 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
         context['type_filter'] = self.request.GET.get('type', '')
+        context['state_filter'] = self.request.GET.get('state', '')
         context['city_filter'] = self.request.GET.get('city', '')
         
         # Add items for list_page.html template
@@ -635,9 +642,21 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         context['base_url'] = reverse('dashboard:university_list')
         context['bulk_action_url'] = reverse('dashboard:university_bulk_action')
         
-        # Get only the cities that are actually assigned to at least one university
+        # Get only the states and cities that are actually assigned
+        used_states = University.objects.values_list('state', flat=True).order_by().distinct()
+        state_choices_dict = dict(University.STATE_CHOICES)
+        used_state_options = []
+        for code in used_states:
+            if code and code in state_choices_dict:
+                used_state_options.append({'value': code, 'label': state_choices_dict[code]})
+        used_state_options.sort(key=lambda x: x['label'])
+
         used_cities = University.objects.values_list('city', flat=True).order_by().distinct()
-        city_choices_dict = dict(University.CITY_CHOICES)
+        city_choices_dict = {}
+        for state_code, cities in University.STATE_CITIES.items():
+            for c_slug, c_name in cities:
+                city_choices_dict[c_slug] = c_name
+        
         used_city_options = []
         for code in used_cities:
             if code and code in city_choices_dict:
@@ -663,6 +682,12 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
                     {'value': 'private', 'label': 'خاصة'},
                 ],
                 'selected': context['type_filter'],
+            },
+            {
+                'name': 'state',
+                'label': 'الولاية',
+                'options': used_state_options,
+                'selected': context['state_filter'],
             },
             {
                 'name': 'city',
@@ -699,7 +724,7 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
             university.faculties_count = university.faculties.count()
             university.university_type_display = university.get_university_type_display()
             university.publish_status_display = university.get_publish_status_display()
-            university.city_display = university.get_city_display()
+            university.city_display = university.get_location_display()
         
         return context
 
@@ -730,6 +755,8 @@ class UniversityCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
     def get_context_data(self, **kwargs):
         """Add formsets to context with nested program formsets."""
         context = super().get_context_data(**kwargs)
+        import json
+        context['state_cities_json'] = json.dumps(University.STATE_CITIES)
         
         if self.request.POST:
             context['faq_formset'] = UniversityFAQFormSet(self.request.POST, instance=self.object)
@@ -912,6 +939,9 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
     template_name = 'dashboard/universities/form.html'
     success_url = reverse_lazy('dashboard:university_list')
 
+    def get_success_url(self):
+        return reverse('dashboard:university_edit', kwargs={'pk': self.object.pk})
+
     def _is_ajax(self):
         return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
@@ -926,6 +956,8 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
     def get_context_data(self, **kwargs):
         """Add formsets and faculties to context with nested programs."""
         context = super().get_context_data(**kwargs)
+        import json
+        context['state_cities_json'] = json.dumps(University.STATE_CITIES)
         
         if self.request.POST:
             context['faq_formset'] = UniversityFAQFormSet(self.request.POST, instance=self.object)
@@ -1074,7 +1106,7 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
                 
                 if self._is_ajax():
                     return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
-                return redirect(self.success_url)
+                return redirect(self.get_success_url())
             except Exception as e:
                 logger.error(f"Error updating university: {e}")
                 messages.error(self.request, 'حدث خطأ أثناء تحديث الجامعة. لم يتم حفظ أي تغييرات.')
@@ -1471,7 +1503,9 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
         if search_query:
             queryset = queryset.filter(
                 Q(name__icontains=search_query) |
-                Q(slug__icontains=search_query)
+                Q(slug__icontains=search_query) |
+                Q(state__icontains=search_query) |
+                Q(city__icontains=search_query)
             )
         
         # Filter by publish_status
@@ -1480,24 +1514,32 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
             queryset = queryset.filter(publish_status='published')
         elif status_filter == 'unpublished':
             queryset = queryset.filter(publish_status='unpublished')
-        
-        # Filter by institute_type
-        type_filter = self.request.GET.get('type', '').strip()
-        if type_filter in ['language', 'academic']:
-            queryset = queryset.filter(institute_type=type_filter)
+            
+        # Filter by state
+        state_filter = self.request.GET.get('state', '').strip().lower()
+        if state_filter:
+            queryset = queryset.filter(state=state_filter)
+            
+        # Filter by city
+        city_filter = self.request.GET.get('city', '').strip().lower()
+        if city_filter:
+            queryset = queryset.filter(city=city_filter)
         
         return queryset
-
+    
     def get_context_data(self, **kwargs):
         """Add page title and search/filter info to context."""
         from django.urls import reverse
+        from apps.universities.models import University
+        import json
         
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة المعاهد'
         context['page_type'] = 'institutes'
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
-        context['type_filter'] = self.request.GET.get('type', '')
+        context['state_filter'] = self.request.GET.get('state', '')
+        context['city_filter'] = self.request.GET.get('city', '')
         
         # Add items for list_page.html template
         context['items'] = context.get('institutes', context.get('object_list', []))
@@ -1508,6 +1550,27 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
         context['base_url'] = reverse('dashboard:institute_list')
         context['bulk_action_url'] = reverse('dashboard:institute_bulk_action')
         
+        # Get only the states and cities that are actually assigned
+        used_states = Institute.objects.values_list('state', flat=True).order_by().distinct()
+        state_choices_dict = dict(University.STATE_CHOICES)
+        used_state_options = []
+        for code in used_states:
+            if code and code in state_choices_dict:
+                used_state_options.append({'value': code, 'label': state_choices_dict[code]})
+        used_state_options.sort(key=lambda x: x['label'])
+
+        used_cities = Institute.objects.values_list('city', flat=True).order_by().distinct()
+        city_choices_dict = {}
+        for state_code, cities in University.STATE_CITIES.items():
+            for c_slug, c_name in cities:
+                city_choices_dict[c_slug] = c_name
+        
+        used_city_options = []
+        for code in used_cities:
+            if code and code in city_choices_dict:
+                used_city_options.append({'value': code, 'label': city_choices_dict[code]})
+        used_city_options.sort(key=lambda x: x['label'])
+
         # Filters
         context['filters'] = [
             {
@@ -1520,20 +1583,23 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
                 'selected': context['status_filter'],
             },
             {
-                'name': 'type',
-                'label': 'نوع المعهد',
-                'options': [
-                    {'value': 'language', 'label': 'معهد لغة'},
-                    {'value': 'academic', 'label': 'معهد أكاديمي'},
-                ],
-                'selected': context['type_filter'],
+                'name': 'state',
+                'label': 'الولاية',
+                'options': used_state_options,
+                'selected': context['state_filter'],
+            },
+            {
+                'name': 'city',
+                'label': 'المدينة',
+                'options': used_city_options,
+                'selected': context['city_filter'],
             },
         ]
         
         # Columns for data table
         context['columns'] = [
             {'label': 'اسم المعهد', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:institute_edit', 'link_param': 'pk'},
-            {'label': 'النوع', 'key': 'institute_type_display', 'type': 'text'},
+            {'label': 'الموقع', 'key': 'city_display', 'type': 'text'},
             {'label': 'الدورات', 'key': 'courses_count', 'type': 'text'},
             {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
             {'label': 'التاريخ', 'key': 'created_at', 'type': 'date'},
@@ -1554,12 +1620,12 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
         # Add computed properties to each institute
         for institute in context['items']:
             institute.courses_count = institute.courses.count()
-            institute.institute_type_display = 'معهد لغة' if institute.institute_type == 'language' else 'معهد أكاديمي'
+            institute.city_display = institute.get_location_display()
             
         return context
 
 
-class InstituteCreateView(ContentAdminRequiredMixin, CreateView):
+class InstituteCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, CreateView):
     """
     Create a new institute with inline Course formset.
     إنشاء معهد جديد مع نموذج الدورات المدمج
@@ -1572,18 +1638,38 @@ class InstituteCreateView(ContentAdminRequiredMixin, CreateView):
     """
     model = Institute
     form_class = InstituteForm
-    template_name = 'dashboard/institutes/create.html'
+    template_name = 'dashboard/institutes/form.html'
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for institute create page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_institutes')
+            .current('إضافة معهد')
+            .build())
 
     def get_context_data(self, **kwargs):
         """Add formsets to context."""
         context = super().get_context_data(**kwargs)
+        import json
+        from apps.universities.models import University
+        context['state_cities_json'] = json.dumps(University.STATE_CITIES)
         if self.request.POST:
             context['course_formset'] = CourseFormSet(self.request.POST, instance=self.object)
             context['attachment_formset'] = InstituteAttachmentFormSet(self.request.POST, self.request.FILES, instance=self.object)
+            context['faq_formset'] = InstituteFAQFormSet(self.request.POST, instance=self.object)
         else:
             context['course_formset'] = CourseFormSet(instance=self.object)
             context['attachment_formset'] = InstituteAttachmentFormSet(instance=self.object)
+            context['faq_formset'] = InstituteFAQFormSet(instance=self.object)
         context['page_title'] = 'إنشاء معهد جديد'
+        
+        # Add recently used relations to context
+        from apps.articles.models import Article, Tag
+        recent_inst_ids = Institute.objects.order_by('-updated_at').values_list('id', flat=True)[:10]
+        context['recently_used_articles'] = list(Article.objects.filter(institutes__in=recent_inst_ids).distinct()[:5])
+        context['recently_used_tags'] = list(Tag.objects.filter(institutes__in=recent_inst_ids).distinct()[:5])
+        
         return context
 
     def form_valid(self, form):
@@ -1593,8 +1679,9 @@ class InstituteCreateView(ContentAdminRequiredMixin, CreateView):
         context = self.get_context_data()
         course_formset = context['course_formset']
         attachment_formset = context['attachment_formset']
+        faq_formset = context['faq_formset']
         
-        if course_formset.is_valid() and attachment_formset.is_valid():
+        if course_formset.is_valid() and attachment_formset.is_valid() and faq_formset.is_valid():
             try:
                 with transaction.atomic():
                     self.object = form.save()
@@ -1602,6 +1689,8 @@ class InstituteCreateView(ContentAdminRequiredMixin, CreateView):
                     course_formset.save()
                     attachment_formset.instance = self.object
                     attachment_formset.save()
+                    faq_formset.instance = self.object
+                    faq_formset.save()
                 
                 messages.success(
                     self.request,
@@ -1628,6 +1717,13 @@ class InstituteCreateView(ContentAdminRequiredMixin, CreateView):
                 for field, errors in error_dict.items():
                     for error in errors:
                         messages.error(self.request, f'خطأ في المرفقات: {error}')
+
+            for error in faq_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
+            for error_dict in faq_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -1638,7 +1734,7 @@ class InstituteCreateView(ContentAdminRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
+class InstituteUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, UpdateView):
     """
     Update an existing institute with inline Course formset.
     تحديث معهد موجود مع نموذج الدورات المدمج
@@ -1652,8 +1748,19 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
     """
     model = Institute
     form_class = InstituteForm
-    template_name = 'dashboard/institutes/edit.html'
+    template_name = 'dashboard/institutes/form.html'
     success_url = reverse_lazy('dashboard:institute_list')
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for institute update page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_institutes')
+            .current('تعديل المعهد')
+            .build())
+
+    def get_success_url(self):
+        return reverse('dashboard:institute_edit', kwargs={'pk': self.object.pk})
 
     def _is_ajax(self):
         return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -1661,16 +1768,27 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         """Add formset and courses to context."""
         context = super().get_context_data(**kwargs)
+        import json
+        from apps.universities.models import University
+        context['state_cities_json'] = json.dumps(University.STATE_CITIES)
         if self.request.POST:
             context['course_formset'] = CourseFormSet(self.request.POST, instance=self.object)
             context['attachment_formset'] = InstituteAttachmentFormSet(self.request.POST, self.request.FILES, instance=self.object)
+            context['faq_formset'] = InstituteFAQFormSet(self.request.POST, instance=self.object)
         else:
             context['course_formset'] = CourseFormSet(instance=self.object)
             context['attachment_formset'] = InstituteAttachmentFormSet(instance=self.object)
+            context['faq_formset'] = InstituteFAQFormSet(instance=self.object)
         
         # Add courses list
-        context['courses'] = self.object.courses.all().order_by('name')
+        context['courses'] = self.object.courses.all().order_by('sort_order', 'id')
         context['page_title'] = f'تحديث المعهد: {self.object.name}'
+        
+        # Add recently used relations to context
+        from apps.articles.models import Article, Tag
+        recent_inst_ids = Institute.objects.order_by('-updated_at').values_list('id', flat=True)[:10]
+        context['recently_used_articles'] = list(Article.objects.filter(institutes__in=recent_inst_ids).distinct()[:5])
+        context['recently_used_tags'] = list(Tag.objects.filter(institutes__in=recent_inst_ids).distinct()[:5])
         
         # Check if slug was changed and show warning
         if hasattr(self.object, '_old_slug'):
@@ -1686,8 +1804,9 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
         context = self.get_context_data()
         course_formset = context['course_formset']
         attachment_formset = context['attachment_formset']
+        faq_formset = context['faq_formset']
         
-        if course_formset.is_valid() and attachment_formset.is_valid():
+        if course_formset.is_valid() and attachment_formset.is_valid() and faq_formset.is_valid():
             try:
                 with transaction.atomic():
                     # حفظ الـ slug القديم قبل الحفظ
@@ -1698,6 +1817,8 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
                     course_formset.save()
                     attachment_formset.instance = self.object
                     attachment_formset.save()
+                    faq_formset.instance = self.object
+                    faq_formset.save()
                     
                     # إنشاء redirect لو الـ slug اتغير
                     new_slug = form.cleaned_data.get('slug')
@@ -1734,7 +1855,7 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
                 
                 if self._is_ajax():
                     return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
-                return redirect(self.success_url)
+                return redirect(self.get_success_url())
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).error(f"Error updating institute: {e}")
@@ -1755,6 +1876,13 @@ class InstituteUpdateView(ContentAdminRequiredMixin, UpdateView):
                 for field, errors in error_dict.items():
                     for error in errors:
                         messages.error(self.request, f'خطأ في المرفقات: {error}')
+
+            for error in faq_formset.non_form_errors():
+                messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
+            for error_dict in faq_formset.errors:
+                for field, errors in error_dict.items():
+                    for error in errors:
+                        messages.error(self.request, f'خطأ في الأسئلة الشائعة: {error}')
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -2788,6 +2916,9 @@ class ArticleUpdateView(ContentAdminRequiredMixin, UpdateView):
     template_name = 'dashboard/articles/form.html'
     success_url = reverse_lazy('dashboard:article_list')
 
+    def get_success_url(self):
+        return reverse('dashboard:article_edit', kwargs={'pk': self.object.pk})
+
     def _is_ajax(self):
         return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
@@ -2854,7 +2985,7 @@ class ArticleUpdateView(ContentAdminRequiredMixin, UpdateView):
             
             if self._is_ajax():
                 return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
-            return redirect(self.success_url)
+            return redirect(self.get_success_url())
         except Exception as e:
             import logging
             logging.getLogger(__name__).error(f"Error updating article: {e}")
@@ -3850,7 +3981,7 @@ class PreviewInstituteDetailView(ContentAdminRequiredMixin, PreviewMetaAndBanner
     def get_queryset(self):
         courses_prefetch = Prefetch(
             'courses',
-            Course.objects.all().order_by('name')
+            Course.objects.all().order_by('sort_order', 'id')
         )
         return Institute.objects.prefetch_related(
             courses_prefetch,

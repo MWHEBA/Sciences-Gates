@@ -13,12 +13,34 @@ class UniversityForm(forms.ModelForm):
     Form for creating and editing universities with structured template editor.
     نموذج إنشاء وتعديل الجامعات مع محرر القالب المنظم
     """
-    
+    city = forms.ChoiceField(
+        choices=[],
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+        }),
+        required=False,
+        label='المدينة',
+        help_text='المدينة التي تقع بها الجامعة لتسهيل التصفية والبحث'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        all_cities = [('', 'اختر المدينة')]
+        for state_code, cities in University.STATE_CITIES.items():
+            all_cities.extend(cities)
+        self.fields['city'].choices = all_cities
+
+        if self.data:
+            if self.data.get('imported_logo_path'):
+                self.fields['logo'].required = False
+            if self.data.get('imported_main_image_path'):
+                self.fields['main_image'].required = False
+
     class Meta:
         model = University
         fields = [
             # Basic Information
-            'name', 'slug', 'is_legacy', 'university_type', 'city', 'logo', 'logo_alt', 'main_image', 'main_image_alt', 'location', 'video_url',
+            'name', 'slug', 'is_legacy', 'university_type', 'state', 'city', 'logo', 'logo_alt', 'main_image', 'main_image_alt', 'location', 'video_url',
             'telephone', 'website',
             # Rich Text Sections
             'description',
@@ -54,7 +76,7 @@ class UniversityForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'required': True,
             }),
-            'city': forms.Select(attrs={
+            'state': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'required': True,
             }),
@@ -191,6 +213,7 @@ class UniversityForm(forms.ModelForm):
             'slug': 'الرابط (Slug)',
             'is_legacy': 'رابط قديم',
             'university_type': 'نوع الجامعة',
+            'state': 'الولاية',
             'city': 'المدينة',
             'logo': 'شعار الجامعة',
             'logo_alt': 'النص البديل للشعار',
@@ -233,6 +256,7 @@ class UniversityForm(forms.ModelForm):
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
             'is_legacy': 'تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /universities/slug/)',
             'university_type': 'تصنيف الجامعة (حكومية أو خاصة)',
+            'state': 'الولاية التي تقع بها الجامعة لتسهيل التصفية والبحث',
             'city': 'المدينة التي تقع بها الجامعة لتسهيل التصفية والبحث',
             'logo': 'شعار الجامعة (PNG مع خلفية شفافة مفضل)',
             'logo_alt': 'نص يصف محتوى شعار الجامعة لمحركات البحث ومستعرضات الصور',
@@ -269,13 +293,7 @@ class UniversityForm(forms.ModelForm):
             'og_image': 'الصورة عند المشاركة على وسائل التواصل (1200x630 بكسل)',
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.data:
-            if self.data.get('imported_logo_path'):
-                self.fields['logo'].required = False
-            if self.data.get('imported_main_image_path'):
-                self.fields['main_image'].required = False
+
 
     def save(self, commit=True):
         instance = super().save(commit=False)

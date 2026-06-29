@@ -273,7 +273,7 @@ function initializeVideoPopups() {
  * Handles auto-hide on scroll idle and show on scroll/hover.
  */
 function initializeFloatingButtons() {
-    var floats = document.querySelectorAll('.reg-float-btn, .whatsapp-widget, .admin-dashboard-float, .admin-edit-float');
+    var floats = document.querySelectorAll('.reg-float-btn, .whatsapp-widget, .admin-dashboard-float, .admin-edit-float, .dashboard-float-actions');
     if (floats.length === 0) return;
 
     var scrollTimeout = null;

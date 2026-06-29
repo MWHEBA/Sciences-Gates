@@ -104,7 +104,7 @@ class ArticleDetailView(BreadcrumbMixin, DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         obj = self.get_object()
-        if obj.is_legacy and request.resolver_match.view_name != 'legacy_detail':
+        if obj.is_legacy and request.resolver_match and request.resolver_match.view_name != 'legacy_detail':
             from django.shortcuts import redirect
             return redirect(obj.get_absolute_url(), permanent=True)
         return super().dispatch(request, *args, **kwargs)

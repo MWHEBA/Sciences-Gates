@@ -149,6 +149,56 @@ def university_schema(context, university):
 
 
 @register.simple_tag(takes_context=True)
+def institute_schema(context, institute):
+    """
+    Generate EducationalOrganization schema for institute content.
+    
+    Usage:
+        {% load schema_tags %}
+        <script type="application/ld+json">
+        {% institute_schema institute %}
+        </script>
+    """
+    request = context.get('request')
+    if not request or not institute:
+        return '{}'
+    
+    schema = {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": institute.name,
+        "description": institute.get_meta_description(),
+        "url": request.build_absolute_uri(institute.get_absolute_url()),
+        "inLanguage": "ar",
+    }
+    
+    # Add logo if available
+    if getattr(institute, 'main_image', None):
+        schema["logo"] = {
+            "@type": "ImageObject",
+            "url": request.build_absolute_uri(institute.main_image.url)
+        }
+    
+    # Add location
+    if getattr(institute, 'location', None):
+        schema["address"] = {
+            "@type": "PostalAddress",
+            "addressCountry": "MY",
+            "addressLocality": institute.location
+        }
+        
+    # Add telephone if available
+    if getattr(institute, 'telephone', None):
+        schema["telephone"] = institute.telephone
+        
+    # Add sameAs (website) if available
+    if getattr(institute, 'website', None):
+        schema["sameAs"] = institute.website
+    
+    return mark_safe(json.dumps(schema, ensure_ascii=False, indent=2))
+
+
+@register.simple_tag(takes_context=True)
 def major_course_schema(context, major):
     """
     Generate Course schema for major/specialization content.

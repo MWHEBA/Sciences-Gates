@@ -10,27 +10,27 @@ class TestContentMapper(SimpleTestCase):
     def test_city_mapping_exact(self):
         mapper = ContentMapper()
         city, confidence = mapper._map_city('كوالالمبور')
-        assert city == 'kl'
+        assert city == ('kl', 'kl')
         assert confidence == 'high'
 
         city, confidence = mapper._map_city('Selangor')
-        assert city == 'selangor'
+        assert city == ('selangor', 'other-selangor')
         assert confidence == 'high'
 
         city, confidence = mapper._map_city('ملقا')
-        assert city == 'melaka'
+        assert city == ('melaka', 'melaka')
         assert confidence == 'high'
 
     def test_city_mapping_partial(self):
         mapper = ContentMapper()
         city, confidence = mapper._map_city('في كوالالمبور العاصمة')
-        assert city == 'kl'
+        assert city == ('kl', 'kl')
         assert confidence == 'high'
 
     def test_city_mapping_not_found(self):
         mapper = ContentMapper()
         city, confidence = mapper._map_city('القاهرة')
-        assert city == ''
+        assert city == ('', '')
         assert confidence == 'none'
 
     def test_map_university_data(self):

@@ -32,7 +32,7 @@
             <!-- University Info -->
             <div class="p-6">
                 <h3 class="text-xl font-bold text-gray-900 mb-2">{{ university.name }}</h3>
-                <p class="text-gray-600 text-sm mb-4"><i class="fa-solid fa-location-dot ml-1 text-secondary"></i> {{ university.get_city_display }}</p>
+                <p class="text-gray-600 text-sm mb-4"><i class="fa-solid fa-location-dot ml-1 text-secondary"></i> {{ university.get_location_display }}</p>
                 
                 <!-- Description -->
                 <p class="text-gray-700 text-sm mb-4 line-clamp-3">{{ university.description|clean_desc }}</p>

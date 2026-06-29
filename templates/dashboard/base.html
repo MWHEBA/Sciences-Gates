@@ -183,5 +183,42 @@
     <script src="{% static 'js/bulk-paste.min.js' %}"></script>
     {% endif %}
     {% block extra_js %}{% endblock %}
+
+    <!-- Dashboard Floating Actions Stack -->
+    <div class="dashboard-float-actions" style="position: fixed; bottom: 32px; left: 32px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+        
+        <!-- Top Button: Preview (Optional) -->
+        {% if form.instance.pk and form.instance.slug %}
+            {% if form.instance.university_type %}
+                {% url 'universities:detail' form.instance.slug as preview_url %}
+            {% elif form.instance.courses %}
+                {% url 'institutes:detail' form.instance.slug as preview_url %}
+            {% elif form.instance.title %}
+                {% url 'articles:detail' form.instance.slug as preview_url %}
+            {% elif form.instance.major_category %}
+                {% url 'majors:detail' form.instance.slug as preview_url %}
+            {% endif %}
+            
+            {% if preview_url %}
+            <a href="{{ preview_url }}" target="_blank" class="dashboard-float-btn dashboard-float-btn--preview" aria-label="استعراض">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span class="dashboard-float-btn__tooltip">استعراض الصفحة</span>
+            </a>
+            {% endif %}
+        {% endif %}
+
+        <!-- Bottom Button: View Public Website -->
+        <a href="/" target="_blank" class="dashboard-float-btn dashboard-float-btn--website" aria-label="عرض الموقع الإلكتروني">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span class="dashboard-float-btn__tooltip">عرض الموقع الإلكتروني</span>
+        </a>
+    </div>
 </body>
 </html>

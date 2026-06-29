@@ -702,7 +702,6 @@
 
     .detail-section--admission .detail-section-title {
         color: var(--white) !important;
-        font-size: 1.6rem;
     }
 
     .detail-section--admission .detail-section-header svg {
@@ -796,12 +795,356 @@
 
     .reg-card__cta-btn--secondary {
         background-color: transparent;
-        color: var(--white);
-        border-color: rgba(255, 255, 255, 0.35);
+        color: var(--primary);
+        border-color: var(--primary);
     }
 
     .reg-card__cta-btn--secondary:hover {
-        background-color: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.6);
+        background-color: var(--primary-muted);
+        border-color: var(--primary);
     }
 
+    @media (max-width: 768px) {
+        .quick-info-container {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .quick-info-card {
+            padding: 1.25rem;
+        }
+    }
+
+    /* Header Logo Layout Styles */
+    .detail-header-main-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 2rem;
+        width: 100%;
+    }
+
+    .detail-header-info {
+        flex: 1;
+    }
+
+    .detail-header-logo-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ffffff5c;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.75rem;
+        box-shadow: var(--shadow-soft);
+        width: 120px;
+        height: 120px;
+        flex-shrink: 0;
+    }
+
+    .detail-header-logo {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    @media (max-width: 768px) {
+        .detail-header-main-row {
+            flex-direction: column-reverse;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+
+        .detail-header-logo-container {
+            width: 80px;
+            height: 80px;
+            padding: 0.5rem;
+        }
+    }
+
+    /* Dynamic Banner Height */
+    .detail-header-banner {
+        height: calc(100vh - 280px);
+        min-height: 250px;
+        max-height: 480px;
+    }
+
+    @media (max-width: 768px) {
+        .detail-header-banner {
+            height: 200px;
+        }
+    }
+
+    /* Admission Section Highlights */
+    .detail-section--admission {
+        background-color: var(--primary) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        position: relative;
+        overflow: hidden;
+        padding: 2.5rem 2rem !important;
+        background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm1 1v18h18V1H1z' fill='%23ffffff' fill-opacity='0.012' fill-rule='evenodd'/%3E%3C/svg%3E") !important;
+    }
+
+    .detail-section--admission::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 4px;
+        height: 100%;
+        background-color: var(--secondary);
+    }
+
+    .detail-section--admission .detail-section-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+        margin-bottom: 2rem;
+    }
+
+    .detail-section--admission .detail-section-title {
+        color: var(--white) !important;
+    }
+
+    .detail-section--admission .detail-section-header svg {
+        color: var(--secondary) !important;
+    }
+
+    /* Tabs inside dark section */
+    .detail-section--admission .admission-tabs-container {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        box-shadow: none !important;
+    }
+
+    .detail-section--admission .admission-tabs-headers {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .detail-section--admission .admission-tab-btn {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .detail-section--admission .admission-tab-btn:hover {
+        color: var(--white) !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .detail-section--admission .admission-tab-btn--active {
+        color: var(--white) !important;
+        border-bottom-color: var(--secondary) !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        font-weight: 700 !important;
+    }
+
+    .detail-section--admission .admission-tabs-content {
+        background-color: transparent !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .detail-section--admission .detail-section-content {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .detail-section--admission .detail-section-content strong,
+    .detail-section--admission .detail-section-content h3,
+    .detail-section--admission .detail-section-content h4 {
+        color: var(--white) !important;
+    }
+
+    .detail-section--admission .detail-section-content li {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    .detail-section--admission:hover {
+        border-color: var(--secondary) !important;
+    }
+
+    /* CTA Buttons inside last registration step card */
+    .reg-card__cta-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.625rem;
+        margin-top: 1.25rem;
+    }
+
+    .reg-card__cta-btn {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        font-weight: 700;
+        font-family: inherit;
+        text-align: center;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        border: 2px solid transparent;
+    }
+
+    .reg-card__cta-btn--primary {
+        background-color: var(--secondary);
+        color: var(--primary);
+        border-color: var(--secondary);
+    }
+
+    .reg-card__cta-btn--primary:hover {
+        background-color: var(--secondary-hover, var(--secondary));
+        filter: brightness(0.92);
+    }
+
+    .reg-card__cta-btn--secondary {
+        background-color: transparent;
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .reg-card__cta-btn--secondary:hover {
+        background-color: var(--primary-muted);
+        border-color: var(--primary);
+    }
+
+    /* How to Apply Section (Dark) Refined Styling */
+    .apply-subtitle {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--white);
+        text-align: right;
+    }
+
+    .apply-methods-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .apply-method-row {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 1.5rem 1.75rem;
+        border-radius: var(--radius);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        text-align: right;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+
+    .apply-method-row:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .apply-method-header {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        color: var(--secondary);
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        direction: rtl;
+    }
+
+    .apply-method-number {
+        background: var(--secondary);
+        color: var(--primary);
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 0.85rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .apply-method-desc {
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.7;
+        font-size: 0.95rem;
+        margin-right: 2.25rem;
+    }
+
+    .apply-services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.85rem;
+        margin-top: 1rem;
+        margin-right: 2.25rem;
+    }
+
+    .apply-service-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-size: 0.9rem;
+        direction: rtl;
+    }
+
+    .apply-service-check {
+        color: var(--secondary);
+        font-weight: bold;
+        font-size: 1.05rem;
+        flex-shrink: 0;
+        margin-left: 0.25rem;
+    }
+
+    .apply-cta-wrapper {
+        text-align: center;
+        margin-top: 1.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-top: 1.5rem;
+    }
+
+    .apply-cta-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.625rem;
+        width: auto;
+        min-width: 360px;
+        padding: 0.8rem 2.25rem;
+        font-size: 0.95rem;
+        border-radius: var(--radius);
+        transition: all 0.25s ease;
+        text-decoration: none;
+        font-weight: 700;
+        color: var(--primary) !important;
+        background-color: var(--secondary);
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .apply-cta-btn:hover {
+        background-color: var(--secondary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(200, 160, 65, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .apply-method-row {
+            padding: 1.25rem 1rem;
+        }
+
+        .apply-method-desc,
+        .apply-services-grid {
+            margin-right: 0;
+        }
+
+        .apply-method-header {
+            font-size: 1.05rem;
+        }
+
+        .apply-services-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .apply-cta-btn {
+            width: 100%;
+            min-width: 0;
+            padding: 0.8rem 1.25rem;
+        }
+    }

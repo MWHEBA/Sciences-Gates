@@ -88,7 +88,7 @@
       categoriesHTML += `
         <div style="margin-bottom:12px;" title="${escapeHtml(hint)}">
           <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px;">
-            <span style="color:var(--text-primary); cursor:help; border-bottom:1px dashed var(--text-muted);">${label}</span>
+            <span style="color:var(--text-primary); cursor:help;">${label}</span>
             <span style="color:var(--text-secondary);direction:ltr;">${earned} / ${max} (${pct}%)</span>
           </div>
           <div style="height:6px;background:var(--border);border-radius:var(--radius-sm);overflow:hidden;">
@@ -451,6 +451,14 @@
       status.style.display = 'none';
       renderReport(detailJson, analyzeJson.seo_score, analyzeJson.seo_grade, details, isPreviewMode);
       details.style.display = 'block';
+
+      // Scroll to the SEO Analyzer section title/panel smoothly
+      setTimeout(function () {
+        var panel = document.getElementById('seo-analyzer-panel');
+        if (panel) {
+          panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
 
     } catch (err) {
       status.innerHTML = '<span style="color:var(--danger)">⚠️ حدث خطأ غير متوقع أثناء التحليل.</span>';

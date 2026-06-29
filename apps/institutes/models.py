@@ -4,14 +4,11 @@ Institute content models.
 from django.db import models
 from django.urls import reverse
 from apps.core.models import TimestampedModel, PublishableModel, SEOMixin
+from apps.universities.models import University
 
 
 class Institute(TimestampedModel, PublishableModel, SEOMixin):
     """Institute content model."""
-    INSTITUTE_TYPE_CHOICES = [
-        ('language', 'معهد لغة'),
-        ('academic', 'معهد أكاديمي'),
-    ]
     
     name = models.CharField(
         max_length=200,
@@ -30,13 +27,47 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='رابط قديم',
         help_text='تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /institutes/slug/)'
     )
-    institute_type = models.CharField(
+    state = models.CharField(
         max_length=20,
-        choices=INSTITUTE_TYPE_CHOICES,
-        default='academic',
-        verbose_name='نوع المعهد',
-        help_text='تصنيف المعهد (لغة أو أكاديمي)',
+        choices=University.STATE_CHOICES,
+        default='kl',
+        verbose_name='الولاية',
+        help_text='الولاية التي يقع بها المعهد لتسهيل التصفية والبحث',
         db_index=True
+    )
+    city = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        verbose_name='المدينة',
+        help_text='المدينة التي يقع بها المعهد لتسهيل التصفية والبحث',
+        db_index=True
+    )
+    website = models.URLField(
+        blank=True,
+        verbose_name='الموقع الرسمي للمعهد',
+        help_text='رابط الموقع الإلكتروني الرسمي للمعهد (sameAs)'
+    )
+    telephone = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='رقم الهاتف',
+        help_text='رقم هاتف التواصل للمعهد لتسهيل التواصل والبحث المحلي'
+    )
+    location = models.TextField(
+        blank=True,
+        verbose_name='الموقع',
+        help_text='موقع المعهد (المدينة، الولاية)'
+    )
+    why_choose_us = models.TextField(
+        blank=True,
+        verbose_name='لماذا يختار الطلاب العرب هذا المعهد',
+        help_text='أسباب اختيار الطلاب العرب للدراسة في هذا المعهد'
+    )
+    english_study = models.TextField(
+        blank=True,
+        verbose_name='دراسة اللغة الإنجليزية',
+        help_text='معلومات وتفاصيل عن دراسة اللغة الإنجليزية في المعهد'
     )
     main_image = models.ImageField(
         upload_to='institutes/images/',
@@ -48,18 +79,14 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='النص البديل للصورة الرئيسية',
         help_text='النص البديل للصورة الرئيسية للمعهد (SEO)'
     )
+    introduction = models.TextField(
+        blank=True,
+        verbose_name='المقدمة',
+        help_text='مقدمة اختيارية تظهر في بداية صفحة المعهد'
+    )
     description = models.TextField(
         verbose_name='الوصف',
         help_text='وصف شامل عن المعهد'
-    )
-    registration_requirements = models.TextField(
-        verbose_name='شروط التسجيل',
-        help_text='شروط التسجيل في المعهد'
-    )
-    registration_section = models.TextField(
-        blank=True,
-        verbose_name='قسم التسجيل',
-        help_text='معلومات عملية التسجيل والخطوات'
     )
 
     # Relationships
@@ -104,46 +131,100 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
                 self._old_slug = old_instance.slug
         super().save(*args, **kwargs)
 
+    def get_location_display(self):
+        """Returns the formatted location display (e.g. 'Subang Jaya, Selangor' in Arabic)."""
+        state_display = self.get_state_display()
+        city_name = ""
+        if self.state in University.STATE_CITIES:
+            for c_slug, c_name in University.STATE_CITIES[self.state]:
+                if c_slug == self.city:
+                    city_name = c_name
+                    break
+        
+        if city_name and city_name != state_display and "عام" not in city_name:
+            return f"{city_name}، {state_display}"
+        return state_display
+
+
+class InstituteFAQ(models.Model):
+    """FAQ entry for an institute."""
+    institute = models.ForeignKey(
+        Institute,
+        on_delete=models.CASCADE,
+        related_name='faqs',
+        verbose_name='المعهد'
+    )
+    question = models.CharField(
+        max_length=300,
+        verbose_name='السؤال'
+    )
+    answer = models.TextField(
+        verbose_name='الإجابة'
+    )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='ترتيب العرض',
+        help_text='ترتيب ظهور السؤال (الأصغر أولاً)'
+    )
+
+    class Meta:
+        verbose_name = 'سؤال شائع'
+        verbose_name_plural = 'الأسئلة الشائعة'
+        ordering = ['sort_order']
+
+    def __str__(self):
+        return self.question
+
 
 class Course(models.Model):
-    """Course within an institute."""
+    """Course within an institute (Fee row)."""
     institute = models.ForeignKey(
         Institute,
         on_delete=models.CASCADE,
         related_name='courses',
         verbose_name='المعهد'
     )
-    name = models.CharField(
-        max_length=200,
-        verbose_name='اسم الدورة'
-    )
     duration = models.CharField(
         max_length=100,
-        verbose_name='مدة الدورة',
-        help_text='مثال: 6 أشهر'
+        verbose_name='مدة الكورس',
+        help_text='مثال: شهر، شهرين، 3 أشهر'
     )
-    fees = models.CharField(
+    fees_myr = models.CharField(
         max_length=100,
-        verbose_name='الرسوم',
-        help_text='مثال: 5,000 رنجت ماليزي'
+        verbose_name='التكلفة بالرنجت MYR',
+        help_text='مثال: 3,400 MYR'
     )
-    description = models.TextField(
-        verbose_name='الوصف',
-        help_text='وصف الدورة'
-    )
-    notes = models.TextField(
+    fees_usd = models.CharField(
+        max_length=100,
         blank=True,
-        verbose_name='ملاحظات',
-        help_text='ملاحظات إضافية عن الدورة'
+        verbose_name='التكلفة بالدولار USD',
+        help_text='مثال: 857 USD'
+    )
+    fees_sar = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='التكلفة بالريال SAR',
+        help_text='مثال: 3,216 SAR'
+    )
+    visa_duration = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='مدة تأشيرة الطالب',
+        help_text='مثال: بدون تأشيرة، 6 أشهر، سنة'
+    )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='الترتيب',
+        help_text='ترتيب عرض الصف (الأصغر أولاً)'
     )
 
     class Meta:
-        verbose_name = 'دورة'
-        verbose_name_plural = 'الدورات'
-        ordering = ['name']
+        verbose_name = 'رسوم الكورس'
+        verbose_name_plural = 'جدول الرسوم'
+        ordering = ['sort_order', 'id']
 
     def __str__(self):
-        return f'{self.name} - {self.institute.name}'
+        return f'{self.duration} - {self.institute.name}'
 
 
 class InstituteAttachment(TimestampedModel):

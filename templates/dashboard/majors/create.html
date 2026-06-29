@@ -457,20 +457,20 @@
                 <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-0">
                     {{ form.meta_title.label }}
                 </label>
-                <span class="text-xs" :style="metaTitle.length > 46 ? 'color: var(--danger); font-weight: bold;' : (metaTitle.length >= 26 ? 'color: var(--success);' : 'color: var(--warning);')">
-                    <span x-text="metaTitle.length"></span> / 46 (60 شاملة اسم الموقع)
+                <span class="text-xs" :style="metaTitle.length > 49 ? 'color: var(--danger); font-weight: bold;' : (metaTitle.length >= 24 ? 'color: var(--success);' : 'color: var(--warning);')">
+                    <span x-text="metaTitle.length"></span> / 49 (65 شاملة اسم الموقع)
                 </span>
             </div>
             {{ form.meta_title }}
             <div class="w-full mt-1.5" style="height: 4px; background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;">
                 <div style="height: 100%; transition: width 0.2s ease;"
                      :style="{ 
-                         width: Math.min(100, (metaTitle.length / 46) * 100) + '%',
-                         backgroundColor: metaTitle.length > 46 ? 'var(--danger)' : (metaTitle.length >= 26 ? 'var(--success)' : 'var(--warning)')
+                         width: Math.min(100, (metaTitle.length / 49) * 100) + '%',
+                         backgroundColor: metaTitle.length > 49 ? 'var(--danger)' : (metaTitle.length >= 24 ? 'var(--success)' : 'var(--warning)')
                      }"></div>
             </div>
             <p class="mt-1 text-xs text-gray-500" style="font-size: 11px;">
-                * يضاف اسم الموقع تلقائياً في النهاية (" - بوابات العلوم" / 14 حرفاً)، لذا يوصى بطول بين 26 و 46 حرفاً للمدخل.
+                * يضاف اسم الموقع تلقائياً في النهاية (" - بوابات العلوم" / 16 حرفاً)، لذا يوصى بطول بين 24 و 49 حرفاً للمدخل.
             </p>
             {% if form.meta_title.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ form.meta_title.errors.0 }}</p>
@@ -682,5 +682,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/importer.js' %}?v=3"></script>
+<script src="{% static 'js/importer.js' %}?v=5"></script>
 {% endblock %}

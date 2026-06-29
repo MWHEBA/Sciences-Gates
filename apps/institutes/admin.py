@@ -27,7 +27,7 @@ class InstituteAdmin(admin.ModelAdmin):
             'fields': ('name', 'slug', 'main_image')
         }),
         ('المحتوى', {
-            'fields': ('description', 'registration_requirements', 'registration_section')
+            'fields': ('description',)
         }),
         ('العلاقات', {
             'fields': ('related_articles', 'tags')
@@ -50,7 +50,7 @@ class InstituteAdmin(admin.ModelAdmin):
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     """Admin interface for Course model."""
-    list_display = ('name', 'institute', 'duration', 'fees')
+    list_display = ('duration', 'institute', 'fees_myr', 'fees_usd', 'fees_sar', 'visa_duration', 'sort_order')
     list_filter = ('institute',)
-    search_fields = ('name', 'institute__name', 'description')
-    ordering = ('institute', 'name')
+    search_fields = ('duration', 'institute__name')
+    ordering = ('institute', 'sort_order')

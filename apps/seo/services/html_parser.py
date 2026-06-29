@@ -189,11 +189,22 @@ class SEOHTMLParser:
 
         # Extract introduction paragraph text
         first_p_tag = node_copy.find("p")
+        first_150_words = " ".join(words[:150])
         intro_text = ""
         if first_p_tag:
-            intro_text = " ".join(first_p_tag.get_text().split())
+            p_text = " ".join(first_p_tag.get_text().split())
+            if p_text:
+                # Check if this p tag is near the beginning of the text
+                p_index = clean_text.find(p_text)
+                if p_index != -1:
+                    leading_text = clean_text[:p_index]
+                    leading_words = [w for w in re.findall(r'\w+', leading_text) if w]
+                    # If there are fewer than 50 words of text preceding the first <p> tag,
+                    # we can safely treat the <p> tag as the introduction.
+                    if len(leading_words) < 50:
+                        intro_text = p_text
         if not intro_text:
-            intro_text = " ".join(words[:150])
+            intro_text = first_150_words
 
         # Extract all image alt texts
         image_alts = []

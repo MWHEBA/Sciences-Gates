@@ -4,7 +4,7 @@
 {% load breadcrumbs %}
 {% load schema_tags %}
 
-{% block title %}{{ major.name }} - بوابات العلوم{% endblock %}
+{% block title %}{{ major.meta_title|default:major.name }} - بوابات العلوم{% endblock %}
 {% block meta_description %}{{ major.meta_description|default:major.description|clean_desc|truncatewords:30 }}{% endblock %}
 
 {% block og_title %}{{ major.og_title|default:major.name }}{% endblock %}
@@ -71,7 +71,7 @@
             <section class="detail-section">
                 <div class="detail-section-header">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                    <h2 class="detail-section-title">عن التخصص</h2>
+                    <h2 class="detail-section-title">نبذة عن {{ major.name }}</h2>
                 </div>
                 <div class="detail-section-content">
                     {{ major.description|safe }}
@@ -268,7 +268,7 @@
                                     </div>
                                 {% endif %}
                                 <h3 class="detail-university-name">{{ university.name }}</h3>
-                                <p class="detail-university-location">{{ university.get_city_display }}</p>
+                                <p class="detail-university-location">{{ university.get_location_display }}</p>
                                 <a 
                                     href="{{ university.get_absolute_url }}"
                                     class="btn btn--primary btn--sm btn--block"
@@ -303,7 +303,7 @@
                                     </div>
                                 {% endif %}
                                 <h3 class="detail-university-name">{{ university.name }}</h3>
-                                <p class="detail-university-location">{{ university.get_city_display }}</p>
+                                <p class="detail-university-location">{{ university.get_location_display }}</p>
                                 <a 
                                     href="{{ university.get_absolute_url }}"
                                     class="btn btn--primary btn--sm btn--block"

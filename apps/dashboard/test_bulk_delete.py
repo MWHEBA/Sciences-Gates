@@ -134,7 +134,6 @@ class TestBulkActions:
             slug='inst-1',
             main_image='test.jpg',
             description='Test 1',
-            registration_requirements='Req 1',
             publish_status='unpublished'
         )
         i2 = Institute.objects.create(
@@ -142,7 +141,6 @@ class TestBulkActions:
             slug='inst-2',
             main_image='test.jpg',
             description='Test 2',
-            registration_requirements='Req 2',
             publish_status='unpublished'
         )
         

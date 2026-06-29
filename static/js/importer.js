@@ -792,20 +792,13 @@ function sg_fill_formsets(importData) {
                     const answerInput = existingItem.querySelector('textarea[name$="-answer"]');
                     if (answerInput) {
                         answerInput.value = faq.answer;
+                        const mount = answerInput.closest('.pro-editor-mount');
+                        if (mount && mount.editorInstance) {
+                            mount.editorInstance.setContent(faq.answer);
+                        }
                     }
                 } else {
-                    window.faqManager.addFAQ();
-                    const allItems = window.faqManager.container.querySelectorAll('.faq-item');
-                    const newFAQItem = allItems[allItems.length - 1];
-                    const questionInput = newFAQItem.querySelector('input[name$="-question"]');
-                    const answerInput = newFAQItem.querySelector('textarea[name$="-answer"]');
-                    if (questionInput) {
-                        questionInput.value = faq.question;
-                        window.faqManager.updateQuestionPreview(newFAQItem);
-                    }
-                    if (answerInput) {
-                        answerInput.value = faq.answer;
-                    }
+                    window.faqManager.importFAQ(faq);
                 }
             } catch (err) {
                 console.error('Error importing FAQ', err);
@@ -831,7 +824,77 @@ function sg_fill_formsets(importData) {
         } catch (err) {}
     }
 
-    // 3. Subjects Table (Majors)
+    // 3. Institute Courses (using window.coursesManager and courses_data with smart reuse)
+    if (window.coursesManager && importData.courses_data && importData.courses_data.length > 0) {
+        const existingCourses = Array.from(window.coursesManager.container.querySelectorAll('.course-item'));
+        const existingMap = {};
+        existingCourses.forEach(item => {
+            const durationInput = item.querySelector('input[name$="-duration"]');
+            if (durationInput) {
+                const duration = normalizeArabic(durationInput.value);
+                if (duration) {
+                    existingMap[duration] = item;
+                }
+            }
+        });
+        
+        const reusedCourses = new Set();
+        importData.courses_data.forEach(course => {
+            try {
+                const importedDuration = normalizeArabic(course.duration);
+                const existingItem = existingMap[importedDuration];
+                if (existingItem) {
+                    reusedCourses.add(existingItem);
+                    
+                    const deleteInput = existingItem.querySelector('input[name$="-DELETE"]');
+                    if (deleteInput) {
+                        deleteInput.value = '';
+                        deleteInput.checked = false;
+                    }
+                    existingItem.style.opacity = '1';
+                    existingItem.style.pointerEvents = 'auto';
+                    existingItem.classList.remove('course-item--deleted');
+                    existingItem.style.display = '';
+                    
+                    const myrInput = existingItem.querySelector('input[name$="-fees_myr"]');
+                    const usdInput = existingItem.querySelector('input[name$="-fees_usd"]');
+                    const sarInput = existingItem.querySelector('input[name$="-fees_sar"]');
+                    const visaInput = existingItem.querySelector('input[name$="-visa_duration"]');
+                    
+                    if (myrInput) myrInput.value = course.fees_myr || '';
+                    if (usdInput) usdInput.value = course.fees_usd || '';
+                    if (sarInput) sarInput.value = course.fees_sar || '';
+                    if (visaInput) visaInput.value = course.visa_duration || '';
+                    
+                    window.coursesManager.updatePreview(existingItem);
+                } else {
+                    window.coursesManager.importCourse(course);
+                }
+            } catch (err) {
+                console.error('Error importing course', err);
+            }
+        });
+        
+        // Delete any existing items that were not reused
+        existingCourses.forEach(item => {
+            if (!reusedCourses.has(item)) {
+                const deleteInput = item.querySelector('input[name$="-DELETE"]');
+                if (deleteInput) {
+                    deleteInput.value = 'on';
+                    deleteInput.checked = true;
+                }
+                item.style.opacity = '0.5';
+                item.style.pointerEvents = 'none';
+                item.classList.add('course-item--deleted');
+            }
+        });
+        
+        try {
+            window.coursesManager.updateState();
+        } catch (err) {}
+    }
+
+    // 4. Subjects Table (Majors)
     if (importData.subjects_tables && importData.subjects_tables.length > 0) {
         sg_clear_django_formset('subjects_tables');
         sg_fill_django_formset('subjects_tables', importData.subjects_tables, {

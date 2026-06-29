@@ -529,9 +529,11 @@ const SG_KEYWORDS = array(
         'location'                        => array('موقع', 'location', 'عنوان', 'المدينة', 'العنوان', 'سكن', 'السكن'),
     ),
     'institute' => array(
-        'description'               => array('عن المعهد', 'نبذة', 'تعريف', 'لمحة', 'overview', 'about'),
-        'registration_requirements' => array('شروط التسجيل', 'متطلبات', 'requirements', 'القبول', 'شروط القبول'),
-        'registration_section'      => array('خطوات التسجيل', 'كيفية التسجيل', 'how to apply', 'طريقة التسجيل', 'خطوات التقديم'),
+        'introduction'  => array('دراسة اللغة الإنجليزية في معهد', 'دراسة اللغة في معهد', 'مقدمة', 'تمهيد'),
+        'description'   => array('عن المعهد', 'نبذة', 'تعريف', 'لمحة', 'overview', 'about'),
+        'why_choose_us' => array('لماذا يختار الطلاب', 'لماذا يختار الطلاب العرب', 'لماذا تدرس', 'لماذا تختار', 'why choose'),
+        'english_study' => array('دراسة اللغة الانجليزية', 'دراسة اللغة', 'اللغة الانجليزية', 'english study'),
+        'location'      => array('موقع', 'location', 'عنوان', 'العنوان', 'موقع المعهد'),
     ),
     'major' => array(
         'description'          => array('عن التخصص', 'نبذة', 'تعريف', 'لمحة', 'overview', 'about'),
@@ -584,7 +586,7 @@ function sg_map_fields($type, $blocks) {
     if ($type === 'university') {
         $order_map = array('description', 'location', 'admission_requirements_bachelor', 'admission_requirements_master', 'admission_requirements_phd');
     } elseif ($type === 'institute') {
-        $order_map = array('description', 'registration_requirements', 'registration_section');
+        $order_map = array('introduction', 'description', 'location', 'why_choose_us', 'english_study');
     } else {
         $order_map = array('description', 'why_study_section', 'career_opportunities', 'how_to_apply_section');
     }

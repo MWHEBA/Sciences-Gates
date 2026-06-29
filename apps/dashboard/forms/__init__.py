@@ -6,7 +6,7 @@ from django import forms
 from django.contrib.auth.models import User
 from apps.core.models import UserProfile, UserRole
 from .university import UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet
-from .institute import InstituteForm, CourseFormSet, InstituteAttachmentFormSet
+from .institute import InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet
 from .major import MajorForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet
 from .article import ArticleForm, CategoryForm, TagForm
 from .settings import SiteSettingsForm, SiteSEOSettingsForm, SEOSettingsForm
