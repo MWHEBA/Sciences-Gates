@@ -747,4 +747,15 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="{% static 'js/tags_input.js' %}"></script>
 <script src="{% static 'js/relations_select.js' %}"></script>
 <script src="{% static 'js/university-attachments.js' %}"></script>
+<script src="{% static 'js/content-lock.js' %}"></script>
+{% if form.instance.pk %}
+{{ form.instance.pk|json_script:"lock-object-id" }}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const objectId = JSON.parse(document.getElementById('lock-object-id').textContent);
+        const lockManager = new ContentLockManager('institute', objectId);
+        lockManager.init();
+    });
+</script>
+{% endif %}
 {% endblock %}

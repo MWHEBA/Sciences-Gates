@@ -1,5 +1,5 @@
 from django.contrib import admin
-from apps.core.models import UserProfile, SiteSettings
+from apps.core.models import UserProfile, SiteSettings, ContentLock
 
 
 @admin.register(UserProfile)
@@ -55,3 +55,13 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         """Prevent deletion of the singleton instance."""
         return False
+
+
+@admin.register(ContentLock)
+class ContentLockAdmin(admin.ModelAdmin):
+    """Admin interface for managing content locks."""
+    list_display = ('content_type', 'object_id', 'user', 'client_token', 'created_at', 'expires_at')
+    list_filter = ('content_type', 'created_at', 'expires_at')
+    search_fields = ('user__username', 'user__email', 'client_token')
+    readonly_fields = ('created_at',)
+

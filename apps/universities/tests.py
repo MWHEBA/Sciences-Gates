@@ -303,3 +303,113 @@ class TestUniversityAttachment:
         # Clean up file
         attachment.delete()
 
+
+@pytest.mark.django_db
+class TestProgramYearlyFees:
+    """Test Program model yearly_fees field and forms."""
+
+    def test_yearly_fees_model_storage(self):
+        """Test storing and retrieving yearly_fees JSON on Program model."""
+        from .models import University, Faculty, Program
+
+        uni = University.objects.create(
+            name='Test Uni',
+            slug='test-uni',
+            description='Test',
+            location='Test'
+        )
+        faculty = Faculty.objects.create(
+            university=uni,
+            name='Faculty of Engineering'
+        )
+        program = Program.objects.create(
+            faculty=faculty,
+            name='Computer Engineering',
+            duration='4 years',
+            tuition_fees='15,000 USD',
+            yearly_fees={
+                "السنة الأولى": "5,424",
+                "السنة الثانية": "4,964"
+            }
+        )
+
+        # Reload from DB
+        program.refresh_from_db()
+        assert program.yearly_fees == {
+            "السنة الأولى": "5,424",
+            "السنة الثانية": "4,964"
+        }
+
+    def test_program_form_yearly_fees_parsing(self):
+        """Test that ProgramForm correctly parses textarea yearly_fees and saves as dict."""
+        from apps.dashboard.forms.university import ProgramForm
+        from .models import University, Faculty
+
+        uni = University.objects.create(
+            name='Test Uni',
+            slug='test-uni',
+            description='Test',
+            location='Test'
+        )
+        faculty = Faculty.objects.create(
+            university=uni,
+            name='Faculty of Science'
+        )
+
+        # Test valid input
+        form_data = {
+            'name': 'Physics',
+            'duration': '3 years',
+            'tuition_fees': '5,000 USD',
+            'yearly_fees': 'السنة الأولى: 5,424\nالسنة الثانية: 4,964\nالسنة الثالثة: 6,313',
+            'sort_order': 0,
+        }
+        form = ProgramForm(data=form_data)
+        assert form.is_valid()
+        program = form.save(commit=False)
+        program.faculty = faculty
+        program.save()
+
+        assert program.yearly_fees == {
+            "السنة الأولى": "5,424",
+            "السنة الثانية": "4,964",
+            "السنة الثالثة": "6,313"
+        }
+
+        # Test invalid input (missing colon)
+        invalid_data = form_data.copy()
+        invalid_data['yearly_fees'] = 'السنة الأولى 5,424'
+        form = ProgramForm(data=invalid_data)
+        assert not form.is_valid()
+        assert 'yearly_fees' in form.errors
+
+    def test_program_form_initial_value(self):
+        """Test that ProgramForm populates initial yearly_fees string from JSON."""
+        from apps.dashboard.forms.university import ProgramForm
+        from .models import University, Faculty, Program
+
+        uni = University.objects.create(
+            name='Test Uni',
+            slug='test-uni',
+            description='Test',
+            location='Test'
+        )
+        faculty = Faculty.objects.create(
+            university=uni,
+            name='Faculty of Arts'
+        )
+        program = Program.objects.create(
+            faculty=faculty,
+            name='History',
+            duration='3 years',
+            tuition_fees='4,000 USD',
+            yearly_fees={
+                "السنة الأولى": "4,000",
+                "السنة الثانية": "4,200"
+            }
+        )
+
+        form = ProgramForm(instance=program)
+        assert form.initial['yearly_fees'] == "السنة الأولى: 4,000\nالسنة الثانية: 4,200"
+
+

@@ -603,6 +603,7 @@ function sg_import_faculty_programs(facultyItem, programs) {
         const nameField = newRow.querySelector('textarea[name$="-name"], input[name$="-name"]');
         const durationInput = newRow.querySelector('input[name$="-duration"]');
         const tuitionInput = newRow.querySelector('input[name$="-tuition_fees"]');
+        const yearlyFeesInput = newRow.querySelector('textarea[name$="-yearly_fees"]');
         
         if (nameField) {
             nameField.value = program.name || '';
@@ -612,6 +613,12 @@ function sg_import_faculty_programs(facultyItem, programs) {
         }
         if (durationInput) durationInput.value = program.duration || '';
         if (tuitionInput) tuitionInput.value = program.tuition_fees || '';
+        if (yearlyFeesInput) {
+            yearlyFeesInput.value = program.yearly_fees || '';
+            if (typeof fpm.autoResizeTextarea === 'function') {
+                fpm.autoResizeTextarea(yearlyFeesInput);
+            }
+        }
     });
 }
 

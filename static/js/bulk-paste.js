@@ -278,7 +278,7 @@ class BulkPaste {
         if (!text) return { rows: [], errors: ['لا توجد بيانات للصق'] };
 
         // تقسيم الصفوف
-        const lines = text.split('\n').filter(line => line.trim());
+        const lines = text.split('\n').map(line => line.trim()).filter(line => line);
         const rows = [];
         const errors = [];
 
@@ -291,21 +291,65 @@ class BulkPaste {
 
             const cells = line.split(delimiter).map(cell => cell.trim());
 
-            // التحقق من عدد الأعمدة
-            if (cells.length !== this.fields.length) {
-                errors.push(
-                    `الصف ${lineIndex + 1}: عدد الأعمدة غير متطابق (متوقع: ${this.fields.length}, فعلي: ${cells.length})`
-                );
+            // Helper to check if a row is a sub-fee row (e.g. from a rowspan merge)
+            const isSubFeeLine = (cls) => {
+                if (cls.length === 1) {
+                    return cls[0].includes(':') || cls[0].includes('السنة') || cls[0].includes('year') || /\d+/.test(cls[0]);
+                }
+                const nonEmpty = cls.filter(c => c !== '');
+                if (nonEmpty.length === 1) {
+                    const val = nonEmpty[0];
+                    return val.includes(':') || val.includes('السنة') || val.includes('year') || /\d+/.test(val);
+                }
+                return false;
+            };
+
+            if (isSubFeeLine(cells) && rows.length > 0) {
+                // This is a sub-fee row. Append it to the previous program's yearly_fees
+                const prevRow = rows[rows.length - 1];
+                const feeVal = cells.find(c => c !== '') || cells[0];
+                
+                if (!prevRow.yearly_fees) {
+                    // If the previous row's tuition_fees has a colon/year name, move it to yearly_fees
+                    if (prevRow.tuition_fees && (prevRow.tuition_fees.includes(':') || prevRow.tuition_fees.includes('السنة') || prevRow.tuition_fees.includes('year'))) {
+                        prevRow.yearly_fees = prevRow.tuition_fees;
+                    } else {
+                        prevRow.yearly_fees = '';
+                    }
+                }
+                
+                prevRow.yearly_fees = prevRow.yearly_fees 
+                    ? prevRow.yearly_fees + '\n' + feeVal 
+                    : feeVal;
                 return;
             }
 
-            // إنشاء كائن الصف
+            // Normal program row
             const row = {};
             this.fields.forEach((field, fieldIndex) => {
-                row[field] = cells[fieldIndex];
+                if (fieldIndex < cells.length) {
+                    row[field] = cells[fieldIndex];
+                } else {
+                    row[field] = '';
+                }
             });
 
+            // If the tuition_fees column contains a year description, copy it to yearly_fees
+            if (row.tuition_fees && (row.tuition_fees.includes(':') || row.tuition_fees.includes('السنة') || row.tuition_fees.includes('year'))) {
+                row.yearly_fees = row.tuition_fees;
+            }
+
             rows.push(row);
+        });
+
+        // Validation: each row must have a name and duration
+        rows.forEach((row, idx) => {
+            if (!row.name) {
+                errors.push(`الصف ${idx + 1}: اسم البرنامج مطلوب.`);
+            }
+            if (!row.duration) {
+                errors.push(`الصف ${idx + 1}: المدة الدراسية مطلوبة.`);
+            }
         });
 
         return { rows, errors };
@@ -410,6 +454,18 @@ class BulkPaste {
                         >${this.escapeHtml(value)}</textarea>
                     </td>
                 `;
+            } else if (field === 'yearly_fees') {
+                fieldsHtml += `
+                    <td>
+                        <textarea 
+                            name="${inputName}" 
+                            class="fpm-program-input fpm-program-input--textarea"
+                            dir="rtl"
+                            rows="2"
+                            placeholder="السنة الاولى: 5,424\nالسنة الثانية: 4,964"
+                        >${this.escapeHtml(value)}</textarea>
+                    </td>
+                `;
             } else {
                 fieldsHtml += `
                     <td>
@@ -469,7 +525,7 @@ class BulkPaste {
         if (remainingPrograms.length === 0) {
             const emptyRow = document.createElement('tr');
             emptyRow.className = 'fpm-empty-row';
-            emptyRow.innerHTML = '<td colspan="4" class="fpm-empty-message">لا توجد برامج مضافة</td>';
+            emptyRow.innerHTML = `<td colspan="${this.fields.length + 1}" class="fpm-empty-message">لا توجد برامج مضافة</td>`;
             programsContainer.appendChild(emptyRow);
         }
         

@@ -475,3 +475,31 @@ class MediaFile(TimestampedModel):
     def __str__(self):
         return self.original_filename
 
+
+class ContentLock(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='content_locks'
+    )
+    client_token = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(db_index=True)
+
+    class Meta:
+        verbose_name = 'Content Lock'
+        verbose_name_plural = 'Content Locks'
+        unique_together = ('content_type', 'object_id')
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+            models.Index(fields=['expires_at']),
+        ]
+
+    def __str__(self):
+        return f"Lock on {self.content_type.model} #{self.object_id} by {self.user.username}"
+
+

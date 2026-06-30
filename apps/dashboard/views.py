@@ -2,6 +2,7 @@
 Dashboard views for authentication and dashboard management.
 """
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -23,7 +24,7 @@ from apps.universities.models import University, Faculty, Program
 from apps.institutes.models import Institute, Course
 from apps.majors.models import Major
 from apps.articles.models import Article, Category, Tag
-from apps.core.models import SiteSettings
+from apps.core.models import SiteSettings, ContentLock, UserProfile, UserRole
 from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin
 from apps.dashboard.forms import (
     UserCreateForm, UserUpdateForm, RedirectForm, 
@@ -624,6 +625,16 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         from django.urls import reverse
         
         context = super().get_context_data(**kwargs)
+        
+        # Clean expired and get active locks for universities
+        ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        ct = ContentType.objects.get_for_model(University)
+        active_locks = ContentLock.objects.filter(content_type=ct).select_related('user')
+        context['locked_objects'] = {
+            lock.object_id: lock.user.get_full_name() or lock.user.username 
+            for lock in active_locks
+        }
+
         context['page_title'] = 'إدارة الجامعات'
         context['page_type'] = 'universities'
         context['search_query'] = self.request.GET.get('search', '')
@@ -921,7 +932,33 @@ class UniversityCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
         return super().form_invalid(form)
 
 
-class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, UpdateView):
+class LockValidationMixin:
+    """
+    Mixin to check if content is locked by another user before allowing edit POST requests.
+    If locked, re-renders the form with submitted data so inputs are not lost.
+    """
+    def post(self, request, *args, **kwargs):
+        obj = self.get_object()
+        ct = ContentType.objects.get_for_model(obj)
+        
+        # Clean expired
+        ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        
+        lock = ContentLock.objects.filter(content_type=ct, object_id=obj.id).first()
+        if lock and lock.user != request.user:
+            user_name = lock.user.get_full_name() or lock.user.username
+            messages.error(
+                request, 
+                f'لا يمكن حفظ التغييرات: تم الاستحواذ على قفل تعديل هذا العنصر بواسطة "{user_name}". يرجى نسخ تعديلاتك يدوياً لتجنب فقدانها.'
+            )
+            self.object = obj
+            form = self.get_form()
+            return self.form_invalid(form)
+            
+        return super().post(request, *args, **kwargs)
+
+
+class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, LockValidationMixin, UpdateView):
     """
     Update an existing university with inline FAQ formset and faculty list display.
     تحديث جامعة موجودة مع نموذج الأسئلة الشائعة المدمج وعرض قائمة الكليات
@@ -1534,6 +1571,16 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
         import json
         
         context = super().get_context_data(**kwargs)
+        
+        # Clean expired and get active locks for institutes
+        ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        ct = ContentType.objects.get_for_model(Institute)
+        active_locks = ContentLock.objects.filter(content_type=ct).select_related('user')
+        context['locked_objects'] = {
+            lock.object_id: lock.user.get_full_name() or lock.user.username 
+            for lock in active_locks
+        }
+
         context['page_title'] = 'إدارة المعاهد'
         context['page_type'] = 'institutes'
         context['search_query'] = self.request.GET.get('search', '')
@@ -1734,7 +1781,7 @@ class InstituteCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, C
         return super().form_invalid(form)
 
 
-class InstituteUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, UpdateView):
+class InstituteUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, LockValidationMixin, UpdateView):
     """
     Update an existing institute with inline Course formset.
     تحديث معهد موجود مع نموذج الدورات المدمج
@@ -1987,6 +2034,16 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
         from django.urls import reverse
         
         context = super().get_context_data(**kwargs)
+        
+        # Clean expired and get active locks for majors
+        ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        ct = ContentType.objects.get_for_model(Major)
+        active_locks = ContentLock.objects.filter(content_type=ct).select_related('user')
+        context['locked_objects'] = {
+            lock.object_id: lock.user.get_full_name() or lock.user.username 
+            for lock in active_locks
+        }
+
         context['page_title'] = 'إدارة التخصصات'
         context['page_type'] = 'majors'
         context['search_query'] = self.request.GET.get('search', '')
@@ -2131,7 +2188,7 @@ class MajorCreateView(ContentAdminRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class MajorUpdateView(ContentAdminRequiredMixin, UpdateView):
+class MajorUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateView):
     """
     Update an existing major with all three inline formsets.
     تحديث تخصص موجود مع نماذج الجداول الديناميكية الثلاثة المدمجة
@@ -2770,6 +2827,16 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
         """Add page title, search/filter info, and categories to context."""
         from django.urls import reverse
         context = super().get_context_data(**kwargs)
+        
+        # Clean expired and get active locks for articles
+        ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        ct = ContentType.objects.get_for_model(Article)
+        active_locks = ContentLock.objects.filter(content_type=ct).select_related('user')
+        context['locked_objects'] = {
+            lock.object_id: lock.user.get_full_name() or lock.user.username 
+            for lock in active_locks
+        }
+
         context['page_title'] = 'إدارة المقالات'
         context['page_type'] = 'articles'
         context['search_query'] = self.request.GET.get('search', '')
@@ -2898,7 +2965,7 @@ class ArticleCreateView(ContentAdminRequiredMixin, CreateView):
         return context
 
 
-class ArticleUpdateView(ContentAdminRequiredMixin, UpdateView):
+class ArticleUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateView):
     """
     Update an existing article with Custom HTML Editor.
     تحديث مقالة موجودة مع محرر HTML المخصص
@@ -4282,6 +4349,159 @@ class TagCreateAPIView(ContentAdminRequiredMixin, View):
             })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+class ContentLockAPIView(View):
+    """
+    API View to handle resource lock lifecycle: acquire, refresh, release, and force takeover.
+    """
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=401)
+
+        try:
+            data = json.loads(request.body)
+            action = data.get('action')
+            model_name = data.get('model')
+            object_id = data.get('object_id')
+            client_token = data.get('client_token')
+            force = data.get('force', False)
+
+            if not all([action, model_name, object_id, client_token]):
+                return JsonResponse({'status': 'error', 'message': 'Missing arguments'}, status=400)
+
+            # Resolve content type
+            app_label = self._get_app_label(model_name)
+            try:
+                ct = ContentType.objects.get(app_label=app_label, model=model_name)
+            except ContentType.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Invalid model type'}, status=400)
+
+            # Clean expired locks (older than 2 minutes)
+            ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+
+            # Find active lock
+            lock = ContentLock.objects.filter(content_type=ct, object_id=object_id).first()
+            user_profile = getattr(request.user, 'profile', None)
+
+            if action == 'acquire':
+                if lock:
+                    if lock.client_token == client_token:
+                        # Tab session already owns it, renew lock
+                        lock.expires_at = timezone.now() + timedelta(seconds=90)
+                        lock.save()
+                        return JsonResponse({'status': 'success', 'locked': True, 'owned': True})
+                    
+                    elif force:
+                        # Role priority check before force takeover
+                        owner_profile = getattr(lock.user, 'profile', None)
+                        can_kick = self._check_role_priority(user_profile, owner_profile)
+                        
+                        if can_kick:
+                            lock.delete()
+                            ContentLock.objects.create(
+                                content_type=ct,
+                                object_id=object_id,
+                                user=request.user,
+                                client_token=client_token,
+                                expires_at=timezone.now() + timedelta(seconds=90)
+                            )
+                            return JsonResponse({'status': 'success', 'locked': True, 'owned': True, 'kicked_previous': True})
+                        else:
+                            owner_name = lock.user.get_full_name() or lock.user.username
+                            return JsonResponse({
+                                'status': 'insufficient_privileges',
+                                'message': f'لا يمكنك طرد {owner_name} بسبب هرمية الصلاحيات.'
+                            }, status=403)
+                    
+                    else:
+                        # Locked by someone else
+                        user_name = lock.user.get_full_name() or lock.user.username
+                        is_same_user = (lock.user == request.user)
+                        
+                        # Check if current user is allowed to kick
+                        owner_profile = getattr(lock.user, 'profile', None)
+                        can_kick = self._check_role_priority(user_profile, owner_profile)
+                        
+                        return JsonResponse({
+                            'status': 'locked',
+                            'locked_by': user_name,
+                            'is_same_user': is_same_user,
+                            'can_kick': can_kick,
+                            'expires_in': int((lock.expires_at - timezone.now()).total_seconds())
+                        })
+                else:
+                    # Acquire new lock
+                    ContentLock.objects.create(
+                        content_type=ct,
+                        object_id=object_id,
+                        user=request.user,
+                        client_token=client_token,
+                        expires_at=timezone.now() + timedelta(seconds=90)
+                    )
+                    return JsonResponse({'status': 'success', 'locked': True, 'owned': True})
+
+            elif action == 'refresh':
+                if lock:
+                    if lock.client_token == client_token:
+                        lock.expires_at = timezone.now() + timedelta(seconds=90)
+                        lock.save()
+                        return JsonResponse({'status': 'success', 'refreshed': True})
+                    else:
+                        # Kicked by takeover or tab collision
+                        user_name = lock.user.get_full_name() or lock.user.username
+                        return JsonResponse({
+                            'status': 'kicked', 
+                            'locked_by': user_name
+                        })
+                else:
+                    # Lock expired/deleted, try to re-acquire
+                    ContentLock.objects.create(
+                        content_type=ct,
+                        object_id=object_id,
+                        user=request.user,
+                        client_token=client_token,
+                        expires_at=timezone.now() + timedelta(seconds=90)
+                    )
+                    return JsonResponse({'status': 'success', 'reacquired': True})
+
+            elif action == 'release':
+                if lock and lock.client_token == client_token:
+                    lock.delete()
+                    return JsonResponse({'status': 'success', 'released': True})
+                return JsonResponse({'status': 'success', 'noop': True})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    def _get_app_label(self, model_name):
+        mapping = {
+            'university': 'universities',
+            'institute': 'institutes',
+            'major': 'majors',
+            'article': 'articles'
+        }
+        return mapping.get(model_name, 'core')
+
+    def _check_role_priority(self, user_profile, owner_profile):
+        """
+        Hierarchy: super_admin (3) > content_admin/seo_admin (2)
+        """
+        if not user_profile:
+            return False
+        if not owner_profile:
+            return True
+            
+        def get_role_weight(profile):
+            if profile.role == UserRole.SUPER_ADMIN:
+                return 3
+            return 2
+            
+        return get_role_weight(user_profile) >= get_role_weight(owner_profile)
+
+
+
+
 
 
 

@@ -1,0 +1,319 @@
+class ContentLockManager {
+    constructor(model, objectId, options = {}) {
+        this.model = model;
+        this.objectId = objectId;
+        this.csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        this.clientToken = this.getOrCreateClientToken();
+        this.heartbeatInterval = null;
+        this.lockBanner = null;
+        this.retryCount = 0;
+        this.isKicked = false;
+        this.options = Object.assign({
+            checkInterval: 45000, // 45 seconds heartbeat
+            maxRetries: 2,
+            apiUrl: '/dashboard/api/locks/'
+        }, options);
+    }
+
+    getOrCreateClientToken() {
+        let token = sessionStorage.getItem('lock_client_token');
+        if (!token) {
+            token = 'token_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+            sessionStorage.setItem('lock_client_token', token);
+        }
+        return token;
+    }
+
+    async init() {
+        const result = await this.sendRequest('acquire');
+        if (result.status === 'locked') {
+            this.handleLockedState(result.locked_by, result.is_same_user, result.can_kick);
+        } else if (result.status === 'success') {
+            this.startHeartbeat();
+            this.setupReleaseOnUnload();
+            this.setupBfcacheListener();
+        }
+    }
+
+    async sendRequest(action, extraParams = {}) {
+        try {
+            const body = Object.assign({
+                action: action,
+                model: this.model,
+                object_id: this.objectId,
+                client_token: this.clientToken
+            }, extraParams);
+
+            const response = await fetch(this.options.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(body)
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Lock service communication error:', error);
+            return { status: 'error' };
+        }
+    }
+
+    startHeartbeat() {
+        this.heartbeatInterval = setInterval(async () => {
+            const result = await this.sendRequest('refresh');
+            if (result.status === 'success') {
+                this.retryCount = 0;
+                this.clearNetworkWarning();
+            } else if (result.status === 'kicked' || result.status === 'locked') {
+                this.stopHeartbeat();
+                this.handleKickedState(result.locked_by);
+            } else {
+                this.handleHeartbeatFailure();
+            }
+        }, this.options.checkInterval);
+    }
+
+    stopHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+        }
+    }
+
+    handleHeartbeatFailure() {
+        this.retryCount++;
+        if (this.retryCount > this.options.maxRetries) {
+            this.stopHeartbeat();
+            this.handleLockedState('نظام الاتصال (تجاوز مهلة الاستجابة)', false, false);
+        } else {
+            this.showNetworkWarning();
+        }
+    }
+
+    showNetworkWarning() {
+        let warning = document.getElementById('lock-network-warning');
+        if (!warning) {
+            warning = document.createElement('div');
+            warning.id = 'lock-network-warning';
+            warning.className = 'fixed bottom-4 left-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50 text-sm flex items-center gap-2';
+            warning.innerHTML = '⚠️ مشاكل في الاتصال بالخادم، جاري محاولة تجديد قفل التعديل...';
+            document.body.appendChild(warning);
+        }
+    }
+
+    clearNetworkWarning() {
+        const warning = document.getElementById('lock-network-warning');
+        if (warning) warning.remove();
+    }
+
+    setupReleaseOnUnload() {
+        window.addEventListener('beforeunload', () => {
+            if (!this.isKicked) {
+                fetch(this.options.apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.csrfToken,
+                    },
+                    body: JSON.stringify({
+                        action: 'release',
+                        model: this.model,
+                        object_id: this.objectId,
+                        client_token: this.clientToken
+                    }),
+                    keepalive: true
+                });
+            }
+        });
+    }
+
+    setupBfcacheListener() {
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                this.init();
+            }
+        });
+    }
+
+    handleLockedState(lockedBy, isSameUser = false, canKick = false) {
+        this.showLockOverlay(lockedBy, isSameUser, canKick);
+        this.disableForm();
+    }
+
+    handleKickedState(kickedBy) {
+        this.isKicked = true;
+        this.saveDraftToLocal();
+        this.showKickedOverlay(kickedBy);
+        this.disableForm();
+    }
+
+    showLockOverlay(lockedBy, isSameUser, canKick) {
+        if (this.lockBanner) return;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm';
+        
+        let message = `المستخدم <strong>"${lockedBy}"</strong> يقوم حالياً بتعديل هذا العنصر.`;
+        if (isSameUser) {
+            message = `أنت تقوم بتعديل هذا العنصر في <strong>تبويب آخر</strong> في المتصفح.`;
+        }
+
+        let kickButton = '';
+        if (canKick) {
+            kickButton = `
+                <button id="kick-user-btn" class="bg-red-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-red-700 transition">
+                    طرد واستحواذ على التعديل
+                </button>
+            `;
+        }
+
+        overlay.innerHTML = `
+            <div class="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 text-right border border-gray-100">
+                <div class="flex items-center justify-center text-yellow-500 mb-4">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-950 mb-2">الصفحة مغلقة حالياً للتعديل</h3>
+                <p class="text-gray-600 mb-6 leading-relaxed text-sm">
+                    ${message} لتفادي الكتابة فوق البيانات وفقدان التعديلات، تم تعطيل نموذج التعديل مؤقتاً.
+                </p>
+                <div class="flex flex-row-reverse gap-3 justify-start">
+                    <a href="${document.referrer || '/dashboard/'}" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                        العودة للخلف
+                    </a>
+                    ${kickButton}
+                    <button id="view-only-btn" class="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-200 transition">
+                        معاينة فقط
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        this.lockBanner = overlay;
+
+        document.getElementById('view-only-btn').addEventListener('click', () => {
+            overlay.remove();
+        });
+
+        if (canKick) {
+            document.getElementById('kick-user-btn').addEventListener('click', () => {
+                if (confirm('تنبيه: هل أنت متأكد من رغبتك في طرد المستخدم الآخر والاستحواذ على التعديل؟ قد يفقد الزميل تعديلاته غير المحفوظة.')) {
+                    this.executeTakeover();
+                }
+            });
+        }
+    }
+
+    showKickedOverlay(kickedBy) {
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-gray-900 bg-opacity-65 flex items-center justify-center z-50 p-4 backdrop-blur-sm';
+        overlay.innerHTML = `
+            <div class="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 text-right border border-gray-100">
+                <div class="flex items-center justify-center text-red-500 mb-4">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-red-600 mb-2">⚠️ تم إنهاء جلسة التعديل الخاصة بك!</h3>
+                <p class="text-gray-600 mb-6 leading-relaxed text-sm">
+                    قام المستخدم <strong>"${kickedBy}"</strong> بالاستحواذ على قفل التعديل لهذا العنصر. تم حفظ نسخة احتياطية من التعديلات في متصفحك مؤقتاً لحمايتها من الفقدان.
+                </p>
+                <div class="flex flex-row-reverse gap-3 justify-start">
+                    <a href="${document.referrer || '/dashboard/'}" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                        العودة للخلف
+                    </a>
+                    <button id="view-only-kicked-btn" class="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-200 transition">
+                        معاينة التعديلات الحالية
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        document.getElementById('view-only-kicked-btn').addEventListener('click', () => {
+            overlay.remove();
+        });
+    }
+
+    async executeTakeover() {
+        const result = await this.sendRequest('acquire', { force: true });
+        if (result.status === 'success') {
+            if (this.lockBanner) this.lockBanner.remove();
+            this.lockBanner = null;
+            
+            // Re-enable form fields
+            const form = document.querySelector('form');
+            if (form) {
+                const elements = form.querySelectorAll('input, textarea, select, button[type=submit], button.save-btn');
+                elements.forEach(el => {
+                    el.disabled = false;
+                    el.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+                const warningBanner = form.querySelector('.lock-warning-banner');
+                if (warningBanner) warningBanner.remove();
+                
+                // Re-enable submit event by cloning
+                const newForm = form.cloneNode(true);
+                form.parentNode.replaceChild(newForm, form);
+            }
+            
+            this.startHeartbeat();
+            this.setupReleaseOnUnload();
+            this.clearNetworkWarning();
+            alert('تم الاستحواذ على التعديل بنجاح!');
+        } else {
+            alert('فشل الاستحواذ: ' + (result.message || 'حدث خطأ غير معروف.'));
+        }
+    }
+
+    disableForm() {
+        const form = document.querySelector('form');
+        if (form) {
+            const elements = form.querySelectorAll('input, textarea, select, button[type=submit], button.save-btn');
+            elements.forEach(el => {
+                el.disabled = true;
+                el.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                return false;
+            });
+
+            let banner = form.querySelector('.lock-warning-banner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.className = 'lock-warning-banner bg-yellow-50 border-r-4 border-yellow-500 p-4 mb-6 rounded text-yellow-800 text-sm font-medium flex items-center gap-2';
+                banner.innerHTML = `
+                    <svg class="w-5 h-5 text-yellow-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <span>وضع المعاينة فقط (قراءة فقط): لا يمكن حفظ التعديلات حالياً لتواجد مستخدم آخر.</span>
+                `;
+                form.prepend(banner);
+            }
+        }
+    }
+
+    saveDraftToLocal() {
+        try {
+            const form = document.querySelector('form');
+            if (!form) return;
+            const formData = {};
+            const inputs = form.querySelectorAll('input[type=text], textarea, select');
+            inputs.forEach(input => {
+                if (input.name) {
+                    formData[input.name] = input.value;
+                }
+            });
+            localStorage.setItem(`lock_draft_${this.model}_${this.objectId}`, JSON.stringify({
+                timestamp: Date.now(),
+                data: formData
+            }));
+        } catch (e) {
+            console.error('Failed to save local draft:', e);
+        }
+    }
+}

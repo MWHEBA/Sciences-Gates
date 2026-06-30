@@ -105,6 +105,9 @@ urlpatterns = [
     path('media/<int:pk>/update/', views.MediaFileUpdateView.as_view(), name='media_update'),
     path('media/<int:pk>/delete/', views.MediaFileDeleteView.as_view(), name='media_delete'),
     
+    # Content Locks API
+    path('api/locks/', views.ContentLockAPIView.as_view(), name='api_locks'),
+
     # WordPress Importer
     path('import/', include('apps.importer.urls')),
 ]

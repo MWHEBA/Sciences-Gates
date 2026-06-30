@@ -542,11 +542,62 @@ UniversityFacultyFormSet = inlineformset_factory(
 # Nested Program Formset for Faculty
 # ============================================================================
 
-class ProgramFormSetForm(forms.ModelForm):
+class YearlyFeesFormMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk and self.instance.yearly_fees:
+            # Convert JSON dict to newline-separated string
+            lines = []
+            for year, fee in self.instance.yearly_fees.items():
+                lines.append(f"{year}: {fee}")
+            self.initial['yearly_fees'] = "\n".join(lines)
+
+    def clean_yearly_fees(self):
+        data = self.cleaned_data.get('yearly_fees')
+        if not data:
+            return None
+        
+        # If it's already a dict (e.g. from initial parsing or JSON processing)
+        if isinstance(data, dict):
+            return data
+            
+        yearly_fees_dict = {}
+        # Support both windows and unix newlines
+        lines = [line.strip() for line in data.replace('\r\n', '\n').split('\n') if line.strip()]
+        for line_num, line in enumerate(lines, 1):
+            if ':' not in line:
+                raise forms.ValidationError(
+                    f"تنسيق غير صحيح في السطر {line_num}. يجب أن يكون التنسيق 'السنة: الرسوم' (مثال: السنة الأولى: 5,000)"
+                )
+            parts = line.split(':', 1)
+            key = parts[0].strip()
+            val = parts[1].strip()
+            if not key or not val:
+                raise forms.ValidationError(
+                    f"بيانات ناقصة في السطر {line_num}. يجب تحديد السنة والرسوم."
+                )
+            yearly_fees_dict[key] = val
+            
+        return yearly_fees_dict
+
+
+class ProgramFormSetForm(YearlyFeesFormMixin, forms.ModelForm):
     """Form for Program in nested formset within Faculty"""
+    yearly_fees = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'fpm-program-input fpm-program-input--textarea',
+            'placeholder': 'السنة الاولى: 5,424\nالسنة الثانية: 4,964',
+            'dir': 'rtl',
+            'rows': 2,
+        }),
+        required=False,
+        label='الرسوم السنوية التفصيلية',
+        help_text='رسوم كل سنة دراسية بشكل منفصل (اختياري).'
+    )
+
     class Meta:
         model = Program
-        fields = ['name', 'duration', 'tuition_fees', 'sort_order']
+        fields = ['name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order']
         widgets = {
             'name': forms.Textarea(attrs={
                 'class': 'fpm-program-input fpm-program-input--textarea',
@@ -573,6 +624,7 @@ class ProgramFormSetForm(forms.ModelForm):
             'name': 'اسم البرنامج',
             'duration': 'مدة الدراسة',
             'tuition_fees': 'الرسوم الدراسية',
+            'yearly_fees': 'الرسوم السنوية التفصيلية',
             'sort_order': 'ترتيب العرض',
         }
 
@@ -582,7 +634,7 @@ NestedProgramFormSet = inlineformset_factory(
     Faculty,
     Program,
     form=ProgramFormSetForm,
-    fields=['name', 'duration', 'tuition_fees', 'sort_order'],
+    fields=['name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order'],
     extra=0,
     max_num=50,
     can_delete=True,
@@ -626,15 +678,26 @@ class FacultyForm(forms.ModelForm):
         }
 
 
-class ProgramForm(forms.ModelForm):
+class ProgramForm(YearlyFeesFormMixin, forms.ModelForm):
     """
     Form for creating and editing programs.
     نموذج إنشاء وتعديل البرامج
     """
+    yearly_fees = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': 'السنة الاولى: 5,424\nالسنة الثانية: 4,964',
+            'dir': 'rtl',
+            'rows': 3,
+        }),
+        required=False,
+        label='الرسوم السنوية التفصيلية',
+        help_text='رسوم كل سنة دراسية بشكل منفصل (اختياري).'
+    )
     
     class Meta:
         model = Program
-        fields = ['name', 'duration', 'tuition_fees', 'sort_order']
+        fields = ['name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -665,12 +728,14 @@ class ProgramForm(forms.ModelForm):
             'name': 'اسم البرنامج',
             'duration': 'مدة الدراسة',
             'tuition_fees': 'الرسوم الدراسية',
+            'yearly_fees': 'الرسوم السنوية التفصيلية',
             'sort_order': 'ترتيب العرض',
         }
         help_texts = {
             'name': 'اسم البرنامج (مثال: هندسة البرمجيات)',
             'duration': 'مدة الدراسة (مثال: 4 سنوات)',
             'tuition_fees': 'الرسوم الدراسية (مثال: 20,000 رنجت ماليزي سنوياً)',
+            'yearly_fees': 'رسوم كل سنة دراسية بشكل منفصل (اختياري).',
             'sort_order': 'ترتيب ظهور البرنامج (الأصغر أولاً)',
         }
 
@@ -680,7 +745,7 @@ ProgramFormSet = inlineformset_factory(
     Faculty,
     Program,
     form=ProgramForm,
-    fields=['name', 'duration', 'tuition_fees', 'sort_order'],
+    fields=['name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order'],
     extra=1,
     can_delete=True,
 )

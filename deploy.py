@@ -14,6 +14,15 @@ from pathlib import Path
 import fnmatch
 import time
 
+# Reconfigure stdout/stderr to use UTF-8 on Windows or systems with narrow locales
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 try:
     import paramiko
     PARAMIKO_AVAILABLE = True
@@ -30,6 +39,7 @@ class DeploymentManager:
         self.project_root = Path.cwd()
         self.hash_file = self.project_root / ".deploy_hashes.json"
         self.ignored_patterns = self.load_gitignore_patterns()
+        self.uploaded_files = []
         
         print("🚀 سكريپت النشر المحسن")
         print("=" * 35)
@@ -56,6 +66,11 @@ class DeploymentManager:
         self.private_key = None
         self.ssh_key_passphrase = None
         self.remote_path = "/home/mwhebaco/science_erp"
+        self.site_url = None
+        self.db_name = ''
+        self.db_user = ''
+        self.db_password = ''
+        self.python_version = "3.11"
         
         if env_file.exists():
             try:
@@ -84,6 +99,18 @@ class DeploymentManager:
                                     self.ssh_key_passphrase = value
                             elif key == 'SSH_REMOTE_PATH':
                                 self.remote_path = value
+                            elif key == 'SITE_URL':
+                                if value:
+                                    self.site_url = value
+                            elif key == 'DB_NAME':
+                                self.db_name = value
+                            elif key == 'DB_USER':
+                                self.db_user = value
+                            elif key == 'DB_PASSWORD':
+                                self.db_password = value
+                            elif key == 'PYTHON_VERSION':
+                                if value:
+                                    self.python_version = value
             except Exception as e:
                 print(f"⚠️  تحذير: لا يمكن قراءة ملف .env: {e}")
 
@@ -615,6 +642,7 @@ class DeploymentManager:
                 if skipped > len(skipped_examples):
                     print(f"   ... و {skipped - len(skipped_examples)} ملف آخر")
             
+            self.uploaded_files = uploaded_files
             return True
             
         except Exception as e:
@@ -685,6 +713,7 @@ class DeploymentManager:
                 # حفظ قائمة مفصلة في ملف
                 self._save_upload_log(uploaded_files, "رفع كامل مع استبدال")
             
+            self.uploaded_files = uploaded_files
             return True
             
         except Exception as e:
@@ -828,6 +857,7 @@ class DeploymentManager:
                 # حفظ قائمة مفصلة في ملف
                 self._save_upload_log(uploaded_files, "رفع المعدل فقط")
             
+            self.uploaded_files = uploaded_files
             return True
             
         except Exception as e:
@@ -854,6 +884,7 @@ class DeploymentManager:
         
         if success:
             # حفظ hashes
+            is_first_deploy = not self.hash_file.exists()
             current_hashes = {}
             for file_path in files:
                 relative_path = str(file_path.relative_to(self.project_root))
@@ -861,6 +892,8 @@ class DeploymentManager:
             
             with open(self.hash_file, 'w', encoding='utf-8') as f:
                 json.dump(current_hashes, f, indent=2, ensure_ascii=False)
+            
+            self.run_post_deploy_commands(first_deploy=is_first_deploy)
             
         return success
 
@@ -903,6 +936,7 @@ class DeploymentManager:
         
         if success:
             # حفظ hashes الجديدة
+            is_first_deploy = not self.hash_file.exists()
             current_hashes = {}
             for file_path in all_files:
                 relative_path = str(file_path.relative_to(self.project_root)).replace('\\', '/')
@@ -912,6 +946,7 @@ class DeploymentManager:
                 json.dump(current_hashes, f, indent=2, ensure_ascii=False)
             
             print(f"\n🎉 تم بنجاح! الطريقة المستخدمة: {method_name}")
+            self.run_post_deploy_commands(first_deploy=is_first_deploy)
             
         return success
 
@@ -981,11 +1016,169 @@ class DeploymentManager:
             with open(self.hash_file, 'w', encoding='utf-8') as f:
                 json.dump(previous_hashes, f, indent=2, ensure_ascii=False)
             
+            self.uploaded_files = [filename]
+            self.run_post_deploy_commands(first_deploy=False)
             return True
             
         except Exception as e:
             print(f"❌ خطأ في الرفع: {e}")
             return False
+
+    def run_post_deploy_commands(self, first_deploy=False):
+        """تنفيذ أوامر ما بعد الرفع على السيرفر"""
+        remote_app_name = Path(self.remote_path).name
+        venv = f"/home/{self.username}/virtualenv/{remote_app_name}/{self.python_version}/bin/python"
+        manage = f"{self.remote_path}/manage.py"
+        pip = f"/home/{self.username}/virtualenv/{remote_app_name}/{self.python_version}/bin/pip"
+
+        # أوامر أول deploy فقط
+        setup_commands = [
+            (f"{pip} install -r {self.remote_path}/requirements.txt",
+             "تثبيت متطلبات المشروع لأول مرة (pip install)"),
+        ]
+
+        # تحويل charset لو عندنا credentials
+        if self.db_name and self.db_user and self.db_password:
+            setup_commands.append((
+                f"mysql -u {self.db_user} -p'{self.db_password}' -e \"ALTER DATABASE {self.db_name} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\"",
+                f"ALTER DATABASE {self.db_name} → utf8mb4"
+            ))
+
+        setup_commands += [
+            (f"{venv} {manage} migrate --noinput --settings=config.settings.production",
+             "عمل ميجريشن لقاعدة البيانات (migrate)"),
+            (f"{venv} {manage} collectstatic --noinput --clear --settings=config.settings.production",
+             "تجميع الملفات الثابتة (collectstatic)"),
+            (f"{venv} {manage} loaddata core/fixtures/system_modules.json --settings=config.settings.production",
+             "تحميل موديولات النظام (loaddata system_modules)"),
+            (f"{venv} {manage} loaddata core/fixtures/system_settings_final.json --settings=config.settings.production",
+             "تحميل إعدادات النظام (loaddata system_settings)"),
+        ]
+
+        if first_deploy:
+            try:
+                ssh = self._create_ssh_connection()
+                print("\n🚀 أول deploy - تنفيذ إعداد النظام...")
+                for cmd, label in setup_commands:
+                    print(f"  ⏳ {label}...")
+                    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=300)
+                    exit_code = stdout.channel.recv_exit_status()
+                    out = stdout.read().decode().strip()
+                    err = stderr.read().decode().strip()
+                    if exit_code == 0:
+                        print(f"  ✅ {label}")
+                    else:
+                        print(f"  ❌ {label}")
+                        if err:
+                            print(f"     {err[-200:]}")  # آخر 200 حرف من الخطأ
+
+                # إعادة تشغيل التطبيق بعد الإعداد الأول
+                reload_cmd = f"/usr/sbin/cloudlinux-selector restart --json --interpreter python --app-root {remote_app_name}"
+                stdin, stdout, stderr = ssh.exec_command(reload_cmd, timeout=300)
+                exit_code = stdout.channel.recv_exit_status()
+                if exit_code == 0:
+                    print(f"  ✅ إعادة تشغيل تطبيق الويب (restart)")
+                else:
+                    # محاولة لمس ملف passenger_wsgi.py كبديل
+                    touch_cmd = f"touch {self.remote_path}/passenger_wsgi.py"
+                    ssh.exec_command(touch_cmd)
+                    print(f"  ✅ إعادة تشغيل تطبيق الويب (عبر touch passenger_wsgi.py)")
+
+                print("\n⚠️  لازم تعمل superuser يدوياً:")
+                print(f"  python manage.py createsuperuser")
+                ssh.close()
+            except Exception as e:
+                print(f"  ⚠️  تعذّر تنفيذ إعداد النشر الأول: {e}")
+            return
+
+        # للنشر المتتابع (ليس النشر الأول) - تشغيل التحديث الذكي تلقائياً
+        run_pip = False
+        run_migrate = False
+        run_collectstatic = False
+        run_reload = False
+
+        # ذكي: كشف التغييرات التلقائية
+        has_reqs = False
+        has_migrations = False
+        has_static = False
+        has_py = False
+
+        uploaded_list = getattr(self, 'uploaded_files', []) or []
+        for file_path in uploaded_list:
+            file_name = str(file_path).lower().replace('\\', '/')
+            if 'requirements.txt' in file_name:
+                has_reqs = True
+            if '/migrations/' in file_name and file_name.endswith('.py') and not file_name.endswith('__init__.py'):
+                has_migrations = True
+            if 'static/' in file_name:
+                has_static = True
+            if file_name.endswith('.py'):
+                has_py = True
+
+        run_pip = has_reqs
+        run_migrate = has_migrations
+        run_collectstatic = has_static
+        run_reload = has_py or has_migrations or has_reqs
+
+        print("\n🔍 التحديث الذكي التلقائي اكتشف:")
+        if run_pip:
+            print("   📦 تعديل في requirements.txt → سيتم تثبيت المتطلبات")
+        if run_migrate:
+            print("   🗄️  تعديل في ملفات الميجريشن → سيتم عمل الميجريشن")
+        if run_collectstatic:
+            print("   🎨 تعديل في الملفات الثابتة → سيتم عمل كولكت الستاتيك")
+        if run_reload:
+            print("   💻 تعديل في ملفات الكود (Python) → سيتم إعادة تشغيل التطبيق")
+        
+        if not (run_pip or run_migrate or run_collectstatic or run_reload):
+            print("   ⏭️  لم يتم كشف أي تغييرات تتطلب تثبيت متطلبات أو ميجريشن أو كولكت ستاتيك.")
+            print("   💻 سيتم إعادة تشغيل التطبيق للاحتياط.")
+            run_reload = True
+
+        # تجهيز قائمة الأوامر للتشغيل
+        exec_commands = []
+        if run_pip:
+            exec_commands.append((f"{pip} install -r {self.remote_path}/requirements.txt", "تثبيت متطلبات المشروع (pip install)"))
+        if run_migrate:
+            exec_commands.append((f"{venv} {manage} migrate --noinput --settings=config.settings.production", "عمل ميجريشن لقاعدة البيانات (migrate)"))
+        if run_collectstatic:
+            exec_commands.append((f"{venv} {manage} collectstatic --noinput --clear --settings=config.settings.production", "تجميع الملفات الثابتة (collectstatic)"))
+
+        # تنفيذ الأوامر
+        if exec_commands or run_reload:
+            try:
+                ssh = self._create_ssh_connection()
+                print("\n⚙️  تنفيذ أوامر ما بعد النشر...")
+
+                for cmd, label in exec_commands:
+                    print(f"  ⏳ {label}...")
+                    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=300)
+                    exit_code = stdout.channel.recv_exit_status()
+                    out = stdout.read().decode().strip()
+                    err = stderr.read().decode().strip()
+                    if exit_code == 0:
+                        print(f"  ✅ {label}")
+                    else:
+                        print(f"  ❌ {label}")
+                        if err:
+                            print(f"     {err[-200:]}")
+
+                if run_reload:
+                    print("  ⏳ إعادة تشغيل تطبيق الويب (restart)...")
+                    reload_cmd = f"/usr/sbin/cloudlinux-selector restart --json --interpreter python --app-root {remote_app_name}"
+                    stdin, stdout, stderr = ssh.exec_command(reload_cmd, timeout=120)
+                    exit_code = stdout.channel.recv_exit_status()
+                    if exit_code == 0:
+                        print(f"  ✅ إعادة تشغيل تطبيق الويب (restart)")
+                    else:
+                        # محاولة لمس ملف passenger_wsgi.py كبديل
+                        touch_cmd = f"touch {self.remote_path}/passenger_wsgi.py"
+                        ssh.exec_command(touch_cmd)
+                        print(f"  ✅ إعادة تشغيل تطبيق الويب (عبر touch passenger_wsgi.py)")
+
+                ssh.close()
+            except Exception as e:
+                print(f"  ⚠️  تعذّر تنفيذ أوامر ما بعد النشر: {e}")
 
     def show_status(self):
         """عرض الحالة - بسيط"""

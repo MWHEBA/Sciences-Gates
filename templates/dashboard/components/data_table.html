@@ -66,7 +66,14 @@
                 {% for row in rows %}
                 <tr class="border-b hover:bg-gray-50 transition-colors duration-200{% if edit_url_name %} cursor-pointer{% endif %}"
                     style="border-color: var(--border);"
-                    {% if edit_url_name %}{% if edit_url_name == 'edit' %}data-row-url="#"{% else %}data-row-url="{% url edit_url_name row.id %}{% if request.GET.type %}?type={{ request.GET.type }}{% endif %}"{% endif %}{% endif %}>
+                    {% if edit_url_name %}
+                        {% if locked_objects and locked_objects|get_item:row.id %}
+                            data-row-url="#"
+                            onclick="alert('لا يمكنك تعديل هذا العنصر لأنه مغلق حالياً بواسطة {{ locked_objects|get_item:row.id }}');"
+                        {% else %}
+                            {% if edit_url_name == 'edit' %}data-row-url="#"{% else %}data-row-url="{% url edit_url_name row.id %}{% if request.GET.type %}?type={{ request.GET.type }}{% endif %}"{% endif %}
+                        {% endif %}
+                    {% endif %}>
                     
                     {% if bulk_action_url %}
                     <td class="px-6 py-4 w-10">
@@ -82,11 +89,23 @@
                         {% elif column.type == 'link' %}
                             {# رابط قابل للنقر بلون أساسي #}
                             {% if column.link_url_name and column.link_param %}
-                                <a href="{% url column.link_url_name row|get_item:column.link_param %}{% if request.GET.type %}?type={{ request.GET.type }}{% endif %}"
-                                   class="hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 rounded px-1"
-                                   style="color: var(--primary); --tw-ring-color: var(--primary);">
-                                    {{ row|get_item:column.key }}
-                                </a>
+                                <div style="display: inline-flex; align-items: center; gap: 8px;">
+                                    <a href="{% if locked_objects and locked_objects|get_item:row.id %}#{% else %}{% url column.link_url_name row|get_item:column.link_param %}{% if request.GET.type %}?type={{ request.GET.type }}{% endif %}{% endif %}"
+                                       class="hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 rounded px-1"
+                                       {% if locked_objects and locked_objects|get_item:row.id %}onclick="event.stopPropagation(); alert('لا يمكنك تعديل هذا العنصر لأنه مغلق حالياً بواسطة {{ locked_objects|get_item:row.id }}'); return false;"{% endif %}
+                                       style="color: var(--primary); --tw-ring-color: var(--primary);">
+                                        {{ row|get_item:column.key }}
+                                    </a>
+                                    {% if locked_objects %}
+                                        {% with locker_name=locked_objects|get_item:row.id %}
+                                            {% if locker_name %}
+                                                <span class="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded border" style="color: #b45309; background-color: #fffbeb; border-color: #fde68a;" title="مغلق للتعديل بواسطة {{ locker_name }}">
+                                                    🔒 {{ locker_name }}
+                                                </span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endif %}
+                                </div>
                             {% else %}
                                 {{ row|get_item:column.key }}
                             {% endif %}
@@ -126,16 +145,33 @@
                         <div class="flex items-center gap-2">
                             <!-- زر التحرير - يتم تقديمه فقط إذا كان edit_url_name موجود -->
                             {% if edit_url_name %}
-                            <a href="{% if edit_url_name == 'edit' %}#{% else %}{% url edit_url_name row.id %}{% if request.GET.type %}?type={{ request.GET.type }}{% endif %}{% endif %}"
-                               class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 cursor-pointer
-                                      focus:outline-none focus:ring-2 focus:ring-offset-2"
-                               style="--tw-ring-color: var(--primary);"
-                               aria-label="تحرير">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                            </a>
+                                {% if locked_objects and locked_objects|get_item:row.id %}
+                                    {% with locker_name=locked_objects|get_item:row.id %}
+                                    <a href="#"
+                                       class="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors duration-200 cursor-not-allowed edit-locked-btn"
+                                       style="--tw-ring-color: var(--warning);"
+                                       title="مغلق بواسطة {{ locker_name }}"
+                                       data-locker="{{ locker_name }}"
+                                       onclick="event.stopPropagation(); alert('لا يمكنك تعديل هذا العنصر لأنه مغلق حالياً بواسطة {{ locker_name }}'); return false;"
+                                       aria-label="مغلق بواسطة {{ locker_name }}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                        </svg>
+                                    </a>
+                                    {% endwith %}
+                                {% else %}
+                                    <a href="{% if edit_url_name == 'edit' %}#{% else %}{% url edit_url_name row.id %}{% if request.GET.type %}?type={{ request.GET.type }}{% endif %}{% endif %}"
+                                       class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 cursor-pointer
+                                              focus:outline-none focus:ring-2 focus:ring-offset-2"
+                                       style="--tw-ring-color: var(--primary);"
+                                       aria-label="تحرير">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </a>
+                                {% endif %}
                             {% endif %}
                             
                             <!-- زر الحذف - يتم تقديمه فقط إذا كان delete_url_name موجود -->

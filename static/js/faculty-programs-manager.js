@@ -179,17 +179,18 @@ class FacultyProgramsManager {
                             <th>التخصصات</th>
                             <th>المدة الدراسية</th>
                             <th>الرسوم السنوية</th>
+                            <th>الرسوم التفصيلية بالسنوات (اختياري)</th>
                             <th width="40"></th>
                         </tr>
                     </thead>
                     <tbody class="fpm-programs-tbody" 
                            data-programs-container
                            data-bulk-paste="faculty-${index}-programs"
-                           data-fields="name,duration,tuition_fees"
-                           data-field-labels='{"name": "البرنامج", "duration": "المدة الدراسية", "tuition_fees": "الرسوم السنوية"}'
+                           data-fields="name,duration,tuition_fees,yearly_fees"
+                           data-field-labels='{"name": "البرنامج", "duration": "المدة الدراسية", "tuition_fees": "الرسوم السنوية", "yearly_fees": "الرسوم التفصيلية بالسنوات"}'
                            id="programs-container-${index}">
                         <tr class="fpm-empty-row">
-                            <td colspan="4" class="fpm-empty-message">لا توجد برامج مضافة</td>
+                            <td colspan="5" class="fpm-empty-message">لا توجد برامج مضافة</td>
                         </tr>
                     </tbody>
                 </table>
@@ -295,6 +296,13 @@ class FacultyProgramsManager {
                        dir="rtl"
                        required>
             </td>
+            <td>
+                <textarea name="faculty-${facultyIndex}-programs-${programIndex}-yearly_fees"
+                          class="fpm-program-input fpm-program-input--textarea"
+                          placeholder="السنة الاولى: 5,424\nالسنة الثانية: 4,964"
+                          dir="rtl"
+                          rows="2"></textarea>
+            </td>
             <td class="fpm-program-actions">
                 <button type="button" class="fpm-delete-program-btn" data-delete-program title="حذف البرنامج">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -344,7 +352,7 @@ class FacultyProgramsManager {
             if (remainingPrograms.length === 0) {
                 const emptyRow = document.createElement('tr');
                 emptyRow.className = 'fpm-empty-row';
-                emptyRow.innerHTML = '<td colspan="4" class="fpm-empty-message">لا توجد برامج مضافة</td>';
+                emptyRow.innerHTML = '<td colspan="5" class="fpm-empty-message">لا توجد برامج مضافة</td>';
                 programsContainer.appendChild(emptyRow);
             }
         }
@@ -707,27 +715,51 @@ class FacultyProgramsManager {
                                     return;
                                 }
 
-                                const cells = row.querySelectorAll('td');
-                                if (cells.length < 3) {
+                                const cells = Array.from(row.querySelectorAll('td')).map(cell => cell.textContent.trim().replace(/\s+/g, ' '));
+                                if (cells.length === 0) return;
+
+                                if (cells.length >= 3) {
+                                    const name = cells[0];
+                                    const duration = cells[1];
+                                    const tuitionFees = cells[2];
+
+                                    // تخطي الصفوف الفارغة أو التي تحتوي على &nbsp; فقط
+                                    if (!name || !duration || !tuitionFees || name === '\u00A0' || duration === '\u00A0' || tuitionFees === '\u00A0') {
+                                        return;
+                                    }
+
+                                    const newProgram = {
+                                        name,
+                                        duration,
+                                        tuition_fees: tuitionFees,
+                                        yearly_fees: ''
+                                    };
+
+                                    if (tuitionFees.includes(':') || tuitionFees.includes('السنة') || tuitionFees.includes('year')) {
+                                        newProgram.yearly_fees = tuitionFees;
+                                    }
+
+                                    programs.push(newProgram);
+                                } else if (programs.length > 0) {
+                                    // This is a sub-fee/rowspan row
+                                    const prevProgram = programs[programs.length - 1];
+                                    const feeVal = cells[cells.length - 1];
+
+                                    if (feeVal && feeVal !== '\u00A0') {
+                                        if (!prevProgram.yearly_fees) {
+                                            if (prevProgram.tuition_fees && (prevProgram.tuition_fees.includes(':') || prevProgram.tuition_fees.includes('السنة') || prevProgram.tuition_fees.includes('year'))) {
+                                                prevProgram.yearly_fees = prevProgram.tuition_fees;
+                                            } else {
+                                                prevProgram.yearly_fees = '';
+                                            }
+                                        }
+                                        prevProgram.yearly_fees = prevProgram.yearly_fees 
+                                            ? prevProgram.yearly_fees + '\n' + feeVal 
+                                            : feeVal;
+                                    }
+                                } else {
                                     errors.push(`${facultyName} - الصف ${rowIndex + 1}: عدد الأعمدة غير كافي`);
-                                    return;
                                 }
-
-                                // استخراج البيانات من كل خلية - تنظيف من HTML entities
-                                const name = cells[0].textContent.trim().replace(/\s+/g, ' ');
-                                const duration = cells[1].textContent.trim().replace(/\s+/g, ' ');
-                                const tuitionFees = cells[2].textContent.trim().replace(/\s+/g, ' ');
-
-                                // تخطي الصفوف الفارغة أو التي تحتوي على &nbsp; فقط
-                                if (!name || !duration || !tuitionFees || name === '\u00A0' || duration === '\u00A0' || tuitionFees === '\u00A0') {
-                                    return;
-                                }
-
-                                programs.push({
-                                    name,
-                                    duration,
-                                    tuition_fees: tuitionFees
-                                });
                             });
                         }
                     }
@@ -854,6 +886,7 @@ class FacultyProgramsManager {
             const nameField = newRow.querySelector('textarea[name$="-name"], input[name$="-name"]');
             const durationInput = newRow.querySelector('input[name$="-duration"]');
             const tuitionInput = newRow.querySelector('input[name$="-tuition_fees"]');
+            const yearlyFeesInput = newRow.querySelector('textarea[name$="-yearly_fees"]');
 
             if (nameField) {
                 nameField.value = program.name;
@@ -864,6 +897,12 @@ class FacultyProgramsManager {
             }
             if (durationInput) durationInput.value = program.duration;
             if (tuitionInput) tuitionInput.value = program.tuition_fees;
+            if (yearlyFeesInput) {
+                yearlyFeesInput.value = program.yearly_fees || '';
+                if (typeof this.autoResizeTextarea === 'function') {
+                    this.autoResizeTextarea(yearlyFeesInput);
+                }
+            }
         });
     }
 

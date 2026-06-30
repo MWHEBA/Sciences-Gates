@@ -439,6 +439,12 @@ class Program(models.Model):
         verbose_name='الرسوم الدراسية',
         help_text='مثال: 20,000 رنجت ماليزي سنوياً'
     )
+    yearly_fees = models.JSONField(
+        blank=True,
+        null=True,
+        verbose_name='الرسوم السنوية التفصيلية',
+        help_text='رسوم كل سنة دراسية بشكل منفصل (اختياري). مثال: {"السنة الأولى": "5,424", "السنة الثانية": "4,964"}'
+    )
     sort_order = models.PositiveIntegerField(
         default=0,
         verbose_name='ترتيب العرض',

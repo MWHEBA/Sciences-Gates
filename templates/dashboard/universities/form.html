@@ -368,6 +368,7 @@
                                                     <th>التخصصات</th>
                                                     <th>المدة الدراسية</th>
                                                     <th>الرسوم السنوية</th>
+                                                    <th>الرسوم التفصيلية بالسنوات (اختياري)</th>
                                                     <th width="40"></th>
                                                 </tr>
                                             </thead>
@@ -375,8 +376,8 @@
                                                 class="fpm-programs-tbody" 
                                                 data-programs-container
                                                 data-bulk-paste="programs"
-                                                data-fields="name,duration,tuition_fees"
-                                                data-field-labels='{"name": "البرنامج", "duration": "المدة الدراسية", "tuition_fees": "الرسوم السنوية"}'
+                                                data-fields="name,duration,tuition_fees,yearly_fees"
+                                                data-field-labels='{"name": "البرنامج", "duration": "المدة الدراسية", "tuition_fees": "الرسوم السنوية", "yearly_fees": "الرسوم التفصيلية بالسنوات"}'
                                                 id="programs-container-{{ forloop.counter0 }}"
                                                 data-faculty-index="{{ forloop.counter0 }}"
                                             >
@@ -385,6 +386,7 @@
                                                     <td>{{ program_form.name }}</td>
                                                     <td>{{ program_form.duration }}</td>
                                                     <td>{{ program_form.tuition_fees }}</td>
+                                                    <td>{{ program_form.yearly_fees }}</td>
                                                     <td class="fpm-program-actions">
                                                         <button type="button" class="fpm-delete-program-btn" data-delete-program title="حذف البرنامج" style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 4px; background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.15s ease; padding: 0;">
                                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -400,7 +402,7 @@
                                                 </tr>
                                                 {% empty %}
                                                 <tr class="fpm-empty-row">
-                                                    <td colspan="4" class="fpm-empty-message">لا توجد برامج مضافة</td>
+                                                    <td colspan="5" class="fpm-empty-message">لا توجد برامج مضافة</td>
                                                 </tr>
                                                 {% endfor %}
                                             </tbody>
@@ -924,4 +926,15 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="{% static 'js/tags_input.js' %}"></script>
 <script src="{% static 'js/relations_select.js' %}"></script>
 <script src="{% static 'js/university-attachments.js' %}"></script>
+<script src="{% static 'js/content-lock.js' %}"></script>
+{% if form.instance.pk %}
+{{ form.instance.pk|json_script:"lock-object-id" }}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const objectId = JSON.parse(document.getElementById('lock-object-id').textContent);
+        const lockManager = new ContentLockManager('university', objectId);
+        lockManager.init();
+    });
+</script>
+{% endif %}
 {% endblock %}

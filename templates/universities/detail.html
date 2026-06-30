@@ -334,7 +334,20 @@
                                         <tr>
                                             <td class="detail-table-cell-primary">{{ program.name }}</td>
                                             <td>{{ program.duration }}</td>
-                                            <td class="detail-table-cell-highlight">{{ program.tuition_fees }}</td>
+                                            <td class="detail-table-cell-highlight">
+                                                {% if program.yearly_fees %}
+                                                    <div class="yearly-fees-breakdown" style="display: flex; flex-direction: column; gap: 4px;">
+                                                        {% for year, fee in program.yearly_fees.items %}
+                                                            <div class="yearly-fee-item" style="display: flex; justify-content: space-between; gap: 16px; font-size: 0.9em; padding: 2px 0; border-bottom: 1px dashed var(--border-light);">
+                                                                <span class="yearly-fee-label" style="color: var(--text-secondary);">{{ year }}:</span>
+                                                                <span class="yearly-fee-value" style="font-weight: 600; color: var(--primary);">{{ fee }}</span>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    {{ program.tuition_fees }}
+                                                {% endif %}
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
