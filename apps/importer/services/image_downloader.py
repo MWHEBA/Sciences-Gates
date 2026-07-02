@@ -356,6 +356,7 @@ def delete_unused_media_file(file_path):
     if (University.objects.filter(logo__in=paths_to_check).exists() or
         University.objects.filter(main_image__in=paths_to_check).exists() or
         University.objects.filter(og_image__in=paths_to_check).exists() or
+        Institute.objects.filter(logo__in=paths_to_check).exists() or
         Institute.objects.filter(main_image__in=paths_to_check).exists() or
         Institute.objects.filter(og_image__in=paths_to_check).exists() or
         Major.objects.filter(main_image__in=paths_to_check).exists() or

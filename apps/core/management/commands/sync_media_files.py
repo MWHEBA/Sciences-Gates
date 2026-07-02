@@ -75,7 +75,35 @@ class Command(BaseCommand):
                     uni_img_count += 1
         self.stdout.write(self.style.SUCCESS(f'OK: Synced {uni_img_count} University main images.'))
 
-        # 3. Sync Institute Main Images
+        # 3. Sync Institute Logos
+        self.stdout.write('Syncing Institute logos...')
+        inst_ct = ContentType.objects.get_for_model(Institute)
+        inst_logo_count = 0
+        for inst in Institute.objects.all():
+            if hasattr(inst, 'logo') and inst.logo:
+                exists = MediaFile.objects.filter(
+                    content_type=inst_ct,
+                    object_id=inst.id,
+                    source_type=MediaFile.SourceType.INSTITUTE_LOGO
+                ).exists()
+                if not exists:
+                    file_size, width, height = self._get_image_info(inst.logo)
+                    MediaFile.objects.create(
+                        file=inst.logo,
+                        original_filename=os.path.basename(inst.logo.name),
+                        file_size=file_size,
+                        width=width,
+                        height=height,
+                        alt_text=inst.logo_alt,
+                        title=inst.name,
+                        source_type=MediaFile.SourceType.INSTITUTE_LOGO,
+                        content_type=inst_ct,
+                        object_id=inst.id
+                    )
+                    inst_logo_count += 1
+        self.stdout.write(self.style.SUCCESS(f'OK: Synced {inst_logo_count} Institute logos.'))
+
+        # 4. Sync Institute Main Images
         self.stdout.write('Syncing Institute main images...')
         inst_ct = ContentType.objects.get_for_model(Institute)
         inst_count = 0
@@ -103,7 +131,7 @@ class Command(BaseCommand):
                     inst_count += 1
         self.stdout.write(self.style.SUCCESS(f'OK: Synced {inst_count} Institute main images.'))
 
-        # 4. Sync Major Main Images
+        # 5. Sync Major Main Images
         self.stdout.write('Syncing Major main images...')
         major_ct = ContentType.objects.get_for_model(Major)
         major_count = 0
@@ -131,7 +159,7 @@ class Command(BaseCommand):
                     major_count += 1
         self.stdout.write(self.style.SUCCESS(f'OK: Synced {major_count} Major main images.'))
 
-        # 5. Sync Article Featured Images
+        # 6. Sync Article Featured Images
         self.stdout.write('Syncing Article featured images...')
         art_ct = ContentType.objects.get_for_model(Article)
         art_count = 0
@@ -160,7 +188,7 @@ class Command(BaseCommand):
                     art_count += 1
         self.stdout.write(self.style.SUCCESS(f'OK: Synced {art_count} Article featured images.'))
 
-        # 6. Sync Editor uploads from disk
+        # 7. Sync Editor Uploads from Disk
         self.stdout.write('Syncing editor upload files from disk...')
         editor_count = 0
         editor_dir = os.path.join(settings.MEDIA_ROOT, 'editor')

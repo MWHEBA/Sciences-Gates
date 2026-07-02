@@ -52,6 +52,12 @@ urlpatterns = [
     path('majors/<int:pk>/delete/', views.MajorDeleteView.as_view(), name='major_delete'),
     path('majors/bulk-action/', views.MajorBulkActionView.as_view(), name='major_bulk_action'),
     
+    # Major Category management (Content Admin)
+    path('major-categories/', views.MajorCategoryListView.as_view(), name='major_category_list'),
+    path('major-categories/create/', views.MajorCategoryCreateView.as_view(), name='major_category_create'),
+    path('major-categories/<int:pk>/edit/', views.MajorCategoryUpdateView.as_view(), name='major_category_edit'),
+    path('major-categories/<int:pk>/delete/', views.MajorCategoryDeleteView.as_view(), name='major_category_delete'),
+    
     # Category management (Content Admin)
     path('categories/', views.CategoryListView.as_view(), name='category_list'),
     path('categories/create/', views.CategoryCreateView.as_view(), name='category_create'),

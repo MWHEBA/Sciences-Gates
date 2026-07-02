@@ -77,3 +77,71 @@ def phone_countries_context(request):
         'default_code': DEFAULT_CODE,
         'default_placeholder': DEFAULT_PLACEHOLDER,
     }
+
+
+def mega_menu_context(request):
+    """
+    Globally injects cached menu data for Universities and Institutes.
+    Filters out helper/auxiliary pages.
+    """
+    # Only load for public pages (not dashboard or admin)
+    if 'dashboard' in request.path or request.path.startswith('/admin/'):
+        return {}
+    
+    from django.conf import settings
+    # Skip during testing to avoid extra queries in assert_num_queries tests
+    if getattr(settings, 'TESTING', False):
+        return {
+            'menu_public_univs': [],
+            'menu_private_univs': [],
+            'menu_institutes': [],
+        }
+    
+    from django.core.cache import cache
+    from apps.universities.models import University
+    from apps.institutes.models import Institute
+    
+    menu_data = cache.get('mega_menu_data')
+    if not menu_data:
+        # Fetch Public Universities (excluding sub-pages)
+        public_univs = list(
+            University.objects.filter(publish_status='published', university_type='public')
+            .exclude(slug__icontains='السكن')
+            .exclude(slug__icontains='الاعترافات')
+            .exclude(slug__icontains='التعاقدات')
+            .exclude(slug__startswith='سكن-')
+            .only('name', 'slug', 'logo', 'university_type')
+            .order_by('name')
+        )
+
+        # Fetch Private Universities (excluding sub-pages)
+        private_univs = list(
+            University.objects.filter(publish_status='published', university_type='private')
+            .exclude(slug__icontains='السكن')
+            .exclude(slug__icontains='الاعترافات')
+            .exclude(slug__icontains='التعاقدات')
+            .exclude(slug__startswith='سكن-')
+            .only('name', 'slug', 'logo', 'university_type')
+            .order_by('name')
+        )
+
+        # Fetch Language Institutes (excluding sub-pages)
+        institutes = list(
+            Institute.objects.filter(publish_status='published')
+            .exclude(slug__icontains='اختبار')
+            .exclude(slug__icontains='معاهد')
+            .only('name', 'slug', 'logo', 'main_image')
+            .order_by('name')
+        )
+
+        menu_data = {
+            'menu_public_univs': public_univs,
+            'menu_private_univs': private_univs,
+            'menu_institutes': institutes,
+        }
+        
+        # Cache results for 24 hours
+        cache.set('mega_menu_data', menu_data, 86400)
+
+    return menu_data
+

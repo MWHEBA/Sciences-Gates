@@ -1080,5 +1080,52 @@ class TestUniversityViews:
         assert not UniversityAttachment.objects.filter(id=attachment.id).exists()
 
 
+class TestUniversityFormOneTimeFees:
+    """Test validation of one_time_fees field in UniversityForm."""
+
+    def test_valid_one_time_fees_json(self):
+        from apps.dashboard.forms.university import UniversityForm
+        import json
+
+        data = {
+            'name': 'Test University',
+            'slug': 'test-uni',
+            'university_type': 'private',
+            'state': 'kl',
+            'location': 'Kuala Lumpur',
+            'publish_status': 'unpublished',
+            'one_time_fees': json.dumps([
+                {
+                    'title': 'الرسوم الإدارية',
+                    'headers': ['البيان', 'الرسوم بالدولار'],
+                    'rows': [['رسوم التسجيل', '335$']]
+                }
+            ])
+        }
+        form = UniversityForm(data=data)
+        form.cleaned_data = {'one_time_fees': data['one_time_fees']}
+        cleaned = form.clean_one_time_fees()
+        assert len(cleaned) == 1
+        assert cleaned[0]['title'] == 'الرسوم الإدارية'
+
+    def test_invalid_one_time_fees_json(self):
+        from apps.dashboard.forms.university import UniversityForm
+        from django import forms
+        import pytest
+
+        form = UniversityForm()
+        
+        # Test non-list type
+        form.cleaned_data = {'one_time_fees': '{"not": "a list"}'}
+        with pytest.raises(forms.ValidationError):
+            form.clean_one_time_fees()
+
+        # Test missing keys
+        form.cleaned_data = {'one_time_fees': '[{"title": "Missing headers and rows"}]'}
+        with pytest.raises(forms.ValidationError):
+            form.clean_one_time_fees()
+
+
+
 
 

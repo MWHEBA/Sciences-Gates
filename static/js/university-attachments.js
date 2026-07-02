@@ -45,6 +45,9 @@
             this.container = document.getElementById('attachment-formset-container');
             if (!this.container) return;
 
+            this.dropzoneText = this.container.getAttribute('data-dropzone-text') || 'اسحب الملفات هنا أو انقر لاختيارها';
+            this.emptyText = this.container.getAttribute('data-empty-text') || 'لا توجد ملفات مرفوعة حالياً. يمكنك رفع أول ملف باستخدام مساحة السحب أدناه.';
+
             this.managementForm = document.getElementById(`id_${this.formsetPrefix}-TOTAL_FORMS`);
             this.minFormInput = document.getElementById(`id_${this.formsetPrefix}-MIN_NUM_FORMS`);
             this.maxFormInput = document.getElementById(`id_${this.formsetPrefix}-MAX_NUM_FORMS`);
@@ -127,7 +130,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path>
                     </svg>
                 </div>
-                <div class="attachment-dropzone-text">اسحب ملفات الجامعة هنا أو انقر لاختيارها</div>
+                <div class="attachment-dropzone-text">${this.dropzoneText}</div>
                 <div class="attachment-dropzone-help">يمكنك رفع ملفات PDF، Word أو صور بمساحة قصوى 10MB للملف</div>
                 <input type="file" multiple id="attachment-dropzone-file-input" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip,.rar">
             `;
@@ -403,7 +406,7 @@
                 emptyState.style.borderColor = 'var(--border)';
                 emptyState.style.backgroundColor = 'var(--surface-2)';
                 emptyState.innerHTML = `
-                    <p class="text-sm mb-0" style="color: var(--text-muted);">لا توجد ملفات مرفوعة حالياً للجامعة. يمكنك رفع أول ملف باستخدام مساحة السحب أدناه.</p>
+                    <p class="text-sm mb-0" style="color: var(--text-muted);">${this.emptyText}</p>
                 `;
                 this.listContainer.appendChild(emptyState);
             }

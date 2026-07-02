@@ -384,6 +384,7 @@ class MediaFile(TimestampedModel):
         EDITOR = 'editor', 'محرر المحتوى'
         UNIVERSITY_LOGO = 'university_logo', 'شعار جامعة'
         UNIVERSITY_IMAGE = 'university_image', 'صورة جامعة'
+        INSTITUTE_LOGO = 'institute_logo', 'شعار معهد'
         INSTITUTE_IMAGE = 'institute_image', 'صورة معهد'
         MAJOR_IMAGE = 'major_image', 'صورة تخصص'
         ARTICLE_IMAGE = 'article_image', 'صورة مقالة'

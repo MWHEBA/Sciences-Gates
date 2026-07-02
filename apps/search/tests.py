@@ -75,7 +75,7 @@ class SearchUtilsTestCase(TestCase):
         
         results = build_search_query('ماليزيا')
         self.assertEqual(len(results['universities']), 1)
-        self.assertEqual(results['universities'][0]['name'], 'جامعة ماليزيا')
+        self.assertEqual(results['universities'][0].name, 'جامعة ماليزيا')
     
     def test_search_query_with_institute_name(self):
         """Test searching for institutes by name."""
@@ -83,7 +83,7 @@ class SearchUtilsTestCase(TestCase):
         
         results = build_search_query('التكنولوجيا')
         self.assertEqual(len(results['institutes']), 1)
-        self.assertEqual(results['institutes'][0]['name'], 'معهد التكنولوجيا')
+        self.assertEqual(results['institutes'][0].name, 'معهد التكنولوجيا')
     
     def test_search_query_with_major_name(self):
         """Test searching for majors by name."""
@@ -91,7 +91,7 @@ class SearchUtilsTestCase(TestCase):
         
         results = build_search_query('البرمجيات')
         self.assertEqual(len(results['majors']), 1)
-        self.assertEqual(results['majors'][0]['name'], 'هندسة البرمجيات')
+        self.assertEqual(results['majors'][0].name, 'هندسة البرمجيات')
     
     def test_search_query_with_article_title(self):
         """Test searching for articles by title."""
@@ -99,7 +99,7 @@ class SearchUtilsTestCase(TestCase):
         
         results = build_search_query('التعليم')
         self.assertEqual(len(results['articles']), 1)
-        self.assertEqual(results['articles'][0]['title'], 'مقالة عن التعليم العالي')
+        self.assertEqual(results['articles'][0].title, 'مقالة عن التعليم العالي')
     
     def test_search_query_empty_string(self):
         """Test searching with empty string."""

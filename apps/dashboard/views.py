@@ -22,7 +22,7 @@ from apps.leads.models import Lead, LeadType
 from apps.redirects.models import Redirect
 from apps.universities.models import University, Faculty, Program
 from apps.institutes.models import Institute, Course
-from apps.majors.models import Major
+from apps.majors.models import Major, MajorCategory
 from apps.articles.models import Article, Category, Tag
 from apps.core.models import SiteSettings, ContentLock, UserProfile, UserRole
 from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin
@@ -30,7 +30,7 @@ from apps.dashboard.forms import (
     UserCreateForm, UserUpdateForm, RedirectForm, 
     UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet,
     InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet,
-    MajorForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet,
+    MajorForm, MajorCategoryForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet, MajorFAQFormSet, MajorAttachmentFormSet,
     ArticleForm, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm
 )
 from apps.articles.models import Category, Tag
@@ -627,7 +627,10 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         context = super().get_context_data(**kwargs)
         
         # Clean expired and get active locks for universities
-        ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        try:
+            ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        except Exception:
+            pass
         ct = ContentType.objects.get_for_model(University)
         active_locks = ContentLock.objects.filter(content_type=ct).select_related('user')
         context['locked_objects'] = {
@@ -942,7 +945,10 @@ class LockValidationMixin:
         ct = ContentType.objects.get_for_model(obj)
         
         # Clean expired
-        ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        try:
+            ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        except Exception:
+            pass
         
         lock = ContentLock.objects.filter(content_type=ct, object_id=obj.id).first()
         if lock and lock.user != request.user:
@@ -1573,7 +1579,10 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
         context = super().get_context_data(**kwargs)
         
         # Clean expired and get active locks for institutes
-        ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        try:
+            ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        except Exception:
+            pass
         ct = ContentType.objects.get_for_model(Institute)
         active_locks = ContentLock.objects.filter(content_type=ct).select_related('user')
         context['locked_objects'] = {
@@ -2002,7 +2011,7 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
 
     def get_queryset(self):
         """Get majors with optional search and filtering."""
-        queryset = Major.objects.all().prefetch_related(
+        queryset = Major.objects.all().select_related('category').prefetch_related(
             'subjects_tables', 'salary_tables', 'countries_tables',
             'best_universities', 'cheap_universities', 'related_articles'
         ).order_by('-created_at')
@@ -2022,10 +2031,10 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
         elif status_filter == 'unpublished':
             queryset = queryset.filter(publish_status='unpublished')
         
-        # Filter by major_category
+        # Filter by category slug
         category_filter = self.request.GET.get('category', '').strip()
-        if category_filter in ['medical', 'engineering', 'cs', 'business', 'science', 'other']:
-            queryset = queryset.filter(major_category=category_filter)
+        if category_filter:
+            queryset = queryset.filter(category__slug=category_filter)
         
         return queryset
 
@@ -2036,7 +2045,10 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
         context = super().get_context_data(**kwargs)
         
         # Clean expired and get active locks for majors
-        ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        try:
+            ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        except Exception:
+            pass
         ct = ContentType.objects.get_for_model(Major)
         active_locks = ContentLock.objects.filter(content_type=ct).select_related('user')
         context['locked_objects'] = {
@@ -2060,6 +2072,13 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
         context['bulk_action_url'] = reverse('dashboard:major_bulk_action')
         
         # Filters
+        # Populate category filter options from database
+        from apps.majors.models import MajorCategory
+        category_options = [
+            {'value': cat.slug, 'label': cat.name}
+            for cat in MajorCategory.objects.all().order_by('name')
+        ]
+
         context['filters'] = [
             {
                 'name': 'status',
@@ -2073,14 +2092,7 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
             {
                 'name': 'category',
                 'label': 'تصنيف التخصص',
-                'options': [
-                    {'value': 'medical', 'label': 'التخصصات الطبية'},
-                    {'value': 'engineering', 'label': 'التخصصات الهندسية'},
-                    {'value': 'cs', 'label': 'الحاسوب والتكنولوجيا'},
-                    {'value': 'business', 'label': 'إدارة الأعمال'},
-                    {'value': 'science', 'label': 'العلوم'},
-                    {'value': 'other', 'label': 'تخصصات أخرى'},
-                ],
+                'options': category_options,
                 'selected': context['category_filter'],
             },
         ]
@@ -2093,6 +2105,7 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
             {'label': 'التاريخ', 'key': 'created_at', 'type': 'date'},
         ]
         
+        # Row actions
         context['edit_url_name'] = 'dashboard:major_edit'
         context['delete_url_name'] = 'dashboard:major_delete'
         
@@ -2107,27 +2120,27 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
         
         # Add computed properties to each major
         for major in context['items']:
-            major.major_category_display = major.get_major_category_display()
+            major.major_category_display = major.category.name if major.category else 'غير مصنف'
             
         return context
 
 
-class MajorCreateView(ContentAdminRequiredMixin, CreateView):
+class MajorCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, CreateView):
     """
-    Create a new major with all three inline formsets.
-    إنشاء تخصص جديد مع نماذج الجداول الديناميكية الثلاثة المدمجة
-    
-    Features:
-    - Create major with all fields
-    - Add subjects table entries inline
-    - Add salary table entries inline
-    - Add countries table entries inline
-    - Arabic success message
-    - Redirect to edit page after creation
+    Create a new major with all inline formsets.
+    إنشاء تخصص جديد مع نماذج الجداول والمرفقات والأسئلة الشائعة المدمجة
     """
     model = Major
     form_class = MajorForm
-    template_name = 'dashboard/majors/create.html'
+    template_name = 'dashboard/majors/form.html'
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for major create page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_majors')
+            .current('إضافة تخصص')
+            .build())
 
     def get_context_data(self, **kwargs):
         """Add formsets to context."""
@@ -2136,24 +2149,48 @@ class MajorCreateView(ContentAdminRequiredMixin, CreateView):
             context['subjects_formset'] = SubjectsTableFormSet(self.request.POST, instance=self.object)
             context['salary_formset'] = SalaryTableFormSet(self.request.POST, instance=self.object)
             context['countries_formset'] = CountriesTableFormSet(self.request.POST, instance=self.object)
+            context['faqs_formset'] = MajorFAQFormSet(self.request.POST, instance=self.object)
+            context['attachments_formset'] = MajorAttachmentFormSet(self.request.POST, self.request.FILES, instance=self.object)
         else:
             context['subjects_formset'] = SubjectsTableFormSet(instance=self.object)
             context['salary_formset'] = SalaryTableFormSet(instance=self.object)
             context['countries_formset'] = CountriesTableFormSet(instance=self.object)
+            context['faqs_formset'] = MajorFAQFormSet(instance=self.object)
+            context['attachments_formset'] = MajorAttachmentFormSet(instance=self.object)
         context['page_title'] = 'إنشاء تخصص جديد'
+        
+        # Add recently used relations to context
+        recent_majors_ids = Major.objects.order_by('-updated_at').values_list('id', flat=True)[:10]
+        context['recently_used_universities'] = list(University.objects.filter(
+            Q(best_majors__in=recent_majors_ids) | 
+            Q(cheap_majors__in=recent_majors_ids) |
+            Q(related_majors__in=recent_majors_ids)
+        ).distinct()[:5])
+        if len(context['recently_used_universities']) < 5:
+            current_ids = [u.id for u in context['recently_used_universities']]
+            extra_universities = University.objects.exclude(id__in=current_ids).order_by('-updated_at')[:5 - len(current_ids)]
+            context['recently_used_universities'] = list(context['recently_used_universities']) + list(extra_universities)
+
+        context['recently_used_articles'] = list(Article.objects.filter(majors__in=recent_majors_ids).distinct()[:5])
+        if len(context['recently_used_articles']) < 5:
+            current_ids = [a.id for a in context['recently_used_articles']]
+            extra_articles = Article.objects.exclude(id__in=current_ids).order_by('-updated_at')[:5 - len(current_ids)]
+            context['recently_used_articles'] = list(context['recently_used_articles']) + list(extra_articles)
+
         return context
 
     def form_valid(self, form):
-        """Handle successful form submission with formsets.
-        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
-        """
+        """Handle successful form submission with formsets."""
         context = self.get_context_data()
         subjects_formset = context['subjects_formset']
         salary_formset = context['salary_formset']
         countries_formset = context['countries_formset']
+        faqs_formset = context['faqs_formset']
+        attachments_formset = context['attachments_formset']
         
         if (subjects_formset.is_valid() and salary_formset.is_valid() and 
-            countries_formset.is_valid()):
+            countries_formset.is_valid() and faqs_formset.is_valid() and 
+            attachments_formset.is_valid()):
             try:
                 with transaction.atomic():
                     self.object = form.save()
@@ -2166,6 +2203,12 @@ class MajorCreateView(ContentAdminRequiredMixin, CreateView):
                     
                     countries_formset.instance = self.object
                     countries_formset.save()
+                    
+                    faqs_formset.instance = self.object
+                    faqs_formset.save()
+                    
+                    attachments_formset.instance = self.object
+                    attachments_formset.save()
                 
                 messages.success(
                     self.request,
@@ -2188,24 +2231,23 @@ class MajorCreateView(ContentAdminRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class MajorUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateView):
+class MajorUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, LockValidationMixin, UpdateView):
     """
-    Update an existing major with all three inline formsets.
-    تحديث تخصص موجود مع نماذج الجداول الديناميكية الثلاثة المدمجة
-    
-    Features:
-    - Edit all major fields
-    - Edit subjects table entries inline
-    - Edit salary table entries inline
-    - Edit countries table entries inline
-    - Show slug change warning if slug was modified
-    - Offer to create redirect for old slug
-    - Arabic success message
+    Update an existing major with all inline formsets.
+    تحديث تخصص موجود مع نماذج الجداول والمرفقات والأسئلة الشائعة المدمجة
     """
     model = Major
     form_class = MajorForm
-    template_name = 'dashboard/majors/edit.html'
+    template_name = 'dashboard/majors/form.html'
     success_url = reverse_lazy('dashboard:major_list')
+
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for major edit page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_majors')
+            .current(f'تعديل: {self.object.name}')
+            .build())
 
     def _is_ajax(self):
         return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -2217,12 +2259,34 @@ class MajorUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateView
             context['subjects_formset'] = SubjectsTableFormSet(self.request.POST, instance=self.object)
             context['salary_formset'] = SalaryTableFormSet(self.request.POST, instance=self.object)
             context['countries_formset'] = CountriesTableFormSet(self.request.POST, instance=self.object)
+            context['faqs_formset'] = MajorFAQFormSet(self.request.POST, instance=self.object)
+            context['attachments_formset'] = MajorAttachmentFormSet(self.request.POST, self.request.FILES, instance=self.object)
         else:
             context['subjects_formset'] = SubjectsTableFormSet(instance=self.object)
             context['salary_formset'] = SalaryTableFormSet(instance=self.object)
             context['countries_formset'] = CountriesTableFormSet(instance=self.object)
+            context['faqs_formset'] = MajorFAQFormSet(instance=self.object)
+            context['attachments_formset'] = MajorAttachmentFormSet(instance=self.object)
         
         context['page_title'] = f'تحديث التخصص: {self.object.name}'
+        
+        # Add recently used relations to context
+        recent_majors_ids = Major.objects.order_by('-updated_at').values_list('id', flat=True)[:10]
+        context['recently_used_universities'] = list(University.objects.filter(
+            Q(best_majors__in=recent_majors_ids) | 
+            Q(cheap_majors__in=recent_majors_ids) |
+            Q(related_majors__in=recent_majors_ids)
+        ).distinct()[:5])
+        if len(context['recently_used_universities']) < 5:
+            current_ids = [u.id for u in context['recently_used_universities']]
+            extra_universities = University.objects.exclude(id__in=current_ids).order_by('-updated_at')[:5 - len(current_ids)]
+            context['recently_used_universities'] = list(context['recently_used_universities']) + list(extra_universities)
+
+        context['recently_used_articles'] = list(Article.objects.filter(majors__in=recent_majors_ids).distinct()[:5])
+        if len(context['recently_used_articles']) < 5:
+            current_ids = [a.id for a in context['recently_used_articles']]
+            extra_articles = Article.objects.exclude(id__in=current_ids).order_by('-updated_at')[:5 - len(current_ids)]
+            context['recently_used_articles'] = list(context['recently_used_articles']) + list(extra_articles)
         
         # Check if slug was changed and show warning
         if hasattr(self.object, '_old_slug'):
@@ -2232,16 +2296,17 @@ class MajorUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateView
         return context
 
     def form_valid(self, form):
-        """Handle successful form submission with formsets.
-        كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
-        """
+        """Handle successful form submission with formsets."""
         context = self.get_context_data()
         subjects_formset = context['subjects_formset']
         salary_formset = context['salary_formset']
         countries_formset = context['countries_formset']
+        faqs_formset = context['faqs_formset']
+        attachments_formset = context['attachments_formset']
         
         if (subjects_formset.is_valid() and salary_formset.is_valid() and 
-            countries_formset.is_valid()):
+            countries_formset.is_valid() and faqs_formset.is_valid() and 
+            attachments_formset.is_valid()):
             try:
                 with transaction.atomic():
                     # حفظ الـ slug القديم قبل الحفظ
@@ -2257,6 +2322,12 @@ class MajorUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateView
                     
                     countries_formset.instance = self.object
                     countries_formset.save()
+                    
+                    faqs_formset.instance = self.object
+                    faqs_formset.save()
+                    
+                    attachments_formset.instance = self.object
+                    attachments_formset.save()
                     
                     # إنشاء redirect لو الـ slug اتغير
                     new_slug = form.cleaned_data.get('slug')
@@ -2310,6 +2381,7 @@ class MajorUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateView
         return super().form_invalid(form)
 
 
+
 class MajorDeleteView(ContentAdminRequiredMixin, DeleteView):
     """
     Delete a major with confirmation.
@@ -2339,6 +2411,157 @@ class MajorDeleteView(ContentAdminRequiredMixin, DeleteView):
         """Add page title to context."""
         context = super().get_context_data(**kwargs)
         context['page_title'] = f'حذف التخصص: {self.object.name}'
+        return context
+
+
+# ============================================================================
+# Major Category Management Views
+# ============================================================================
+
+class MajorCategoryListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
+    """
+    List all major categories with search filter.
+    عرض قائمة بجميع تصنيفات التخصصات مع البحث والتصفية
+    """
+    model = MajorCategory
+    template_name = 'dashboard/major_categories/list.html'
+    context_object_name = 'categories'
+    paginate_by = 20
+
+    def get_breadcrumbs(self):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('تصنيفات التخصصات')
+            .build())
+
+    def get_queryset(self):
+        from django.db.models import Count
+        queryset = MajorCategory.objects.all().annotate(majors_count=Count('majors')).order_by('name')
+        
+        # Search by name or slug
+        search_query = self.request.GET.get('search', '').strip()
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) |
+                Q(slug__icontains=search_query)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['items'] = context.get('categories', context.get('object_list', []))
+        context['page_title'] = 'إدارة تصنيفات التخصصات'
+        context['page_description'] = 'إدارة جميع تصنيفات التخصصات'
+        context['search_query'] = self.request.GET.get('search', '')
+        context['base_url'] = reverse_lazy('dashboard:major_category_list')
+        context['search_placeholder'] = 'ابحث عن اسم التصنيف أو الرابط...'
+        context['empty_state_icon'] = '<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>'
+        
+        # Action button for topbar
+        context['action_buttons'] = [
+            {
+                'url': reverse_lazy('dashboard:major_category_create'),
+                'label': 'إضافة تصنيف جديد',
+                'variant': 'primary',
+            }
+        ]
+        
+        # Columns definition
+        context['columns'] = [
+            {'label': 'اسم التصنيف', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:major_category_edit', 'link_param': 'id'},
+            {'label': 'الرابط (Slug)', 'key': 'slug', 'type': 'text'},
+            {'label': 'عدد التخصصات', 'key': 'majors_count', 'type': 'text'},
+        ]
+        
+        # Row action configurations
+        context['edit_url_name'] = 'dashboard:major_category_edit'
+        context['delete_url_name'] = 'dashboard:major_category_delete'
+        
+        return context
+
+
+class MajorCategoryCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, CreateView):
+    """
+    Create a new major category.
+    إنشاء تصنيف تخصص جديد
+    """
+    model = MajorCategory
+    form_class = MajorCategoryForm
+    template_name = 'dashboard/major_categories/form.html'
+    success_url = reverse_lazy('dashboard:major_category_list')
+
+    def get_breadcrumbs(self):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('major_category_list')
+            .current('إضافة تصنيف')
+            .build())
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'تم إنشاء تصنيف التخصص "{self.object.name}" بنجاح')
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'إضافة تصنيف تخصص جديد'
+        context['submit_label'] = 'حفظ التصنيف'
+        context['cancel_url'] = self.success_url
+        return context
+
+
+class MajorCategoryUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, UpdateView):
+    """
+    Update an existing major category.
+    تعديل تصنيف تخصص موجود
+    """
+    model = MajorCategory
+    form_class = MajorCategoryForm
+    template_name = 'dashboard/major_categories/form.html'
+    success_url = reverse_lazy('dashboard:major_category_list')
+
+    def get_breadcrumbs(self):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('major_category_list')
+            .current(f'تعديل: {self.object.name}')
+            .build())
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'تم تحديث تصنيف التخصص "{self.object.name}" بنجاح')
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = f'تعديل تصنيف التخصص: {self.object.name}'
+        context['submit_label'] = 'حفظ التعديلات'
+        context['cancel_url'] = self.success_url
+        return context
+
+
+class MajorCategoryDeleteView(ContentAdminRequiredMixin, DeleteView):
+    """
+    Delete a major category with confirmation.
+    حذف تصنيف تخصص مع تأكيد
+    """
+    model = MajorCategory
+    template_name = 'dashboard/major_categories/delete_confirm.html'
+    success_url = reverse_lazy('dashboard:major_category_list')
+
+    def delete(self, request, *args, **kwargs):
+        category = self.get_object()
+        category_name = category.name
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, f'تم حذف تصنيف التخصص "{category_name}" بنجاح')
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = f'حذف تصنيف التخصص: {self.object.name}'
+        context['item_name'] = self.object.name
+        context['cancel_url'] = self.success_url
+        context['delete_url'] = self.request.path
         return context
 
 
@@ -2829,7 +3052,10 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
         context = super().get_context_data(**kwargs)
         
         # Clean expired and get active locks for articles
-        ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        try:
+            ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+        except Exception:
+            pass
         ct = ContentType.objects.get_for_model(Article)
         active_locks = ContentLock.objects.filter(content_type=ct).select_related('user')
         context['locked_objects'] = {
@@ -4214,6 +4440,7 @@ class MediaFileUpdateView(ContentAdminRequiredMixin, View):
                 mapping = {
                     MediaFile.SourceType.UNIVERSITY_LOGO: 'logo_alt',
                     MediaFile.SourceType.UNIVERSITY_IMAGE: 'main_image_alt',
+                    MediaFile.SourceType.INSTITUTE_LOGO: 'logo_alt',
                     MediaFile.SourceType.INSTITUTE_IMAGE: 'main_image_alt',
                     MediaFile.SourceType.MAJOR_IMAGE: 'main_image_alt',
                     MediaFile.SourceType.ARTICLE_IMAGE: 'featured_image_alt',
@@ -4378,7 +4605,10 @@ class ContentLockAPIView(View):
                 return JsonResponse({'status': 'error', 'message': 'Invalid model type'}, status=400)
 
             # Clean expired locks (older than 2 minutes)
-            ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+            try:
+                ContentLock.objects.filter(expires_at__lt=timezone.now()).delete()
+            except Exception:
+                pass
 
             # Find active lock
             lock = ContentLock.objects.filter(content_type=ct, object_id=object_id).first()

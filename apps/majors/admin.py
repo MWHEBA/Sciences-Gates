@@ -3,7 +3,15 @@ Django Admin registration for Major models.
 Note: Django Admin is for emergency use only. Primary interface is Custom Dashboard.
 """
 from django.contrib import admin
-from .models import Major, SubjectsTable, SalaryTable, CountriesTable
+from .models import Major, MajorCategory, SubjectsTable, SalaryTable, CountriesTable
+
+
+@admin.register(MajorCategory)
+class MajorCategoryAdmin(admin.ModelAdmin):
+    """Admin interface for MajorCategory model."""
+    list_display = ('name', 'slug')
+    search_fields = ('name', 'slug', 'description')
+    prepopulated_fields = {'slug': ('name',)}
 
 
 class SubjectsTableInline(admin.TabularInline):
@@ -38,7 +46,7 @@ class MajorAdmin(admin.ModelAdmin):
     inlines = [SubjectsTableInline, SalaryTableInline, CountriesTableInline]
     fieldsets = (
         ('معلومات أساسية', {
-            'fields': ('name', 'slug', 'main_image')
+            'fields': ('name', 'slug', 'category', 'main_image')
         }),
         ('المحتوى', {
             'fields': ('description', 'study_duration', 'why_study_section', 'how_to_apply_section')

@@ -44,7 +44,7 @@ class UniversityForm(forms.ModelForm):
             'telephone', 'website',
             # Rich Text Sections
             'description',
-            'admission_requirements_bachelor', 'admission_requirements_master', 'admission_requirements_phd',
+            'admission_requirements_bachelor', 'admission_requirements_master', 'admission_requirements_phd', 'one_time_fees',
             # Relationships
             'related_majors', 'related_articles', 'tags',
             # Publishing
@@ -132,6 +132,11 @@ class UniversityForm(forms.ModelForm):
             }),
             'admission_requirements_phd': CustomHTMLEditorWidget(attrs={
                 'data-placeholder': 'شروط القبول لبرنامج الدكتوراه (PhD)...',
+            }),
+            'one_time_fees': forms.Textarea(attrs={
+                'class': 'hidden',
+                'id': 'id_one_time_fees',
+                'style': 'display: none;',
             }),
             
             # Relationships
@@ -324,6 +329,41 @@ class UniversityForm(forms.ModelForm):
             instance.save()
             self.save_m2m()
         return instance
+
+    def clean_one_time_fees(self):
+        data = self.cleaned_data.get('one_time_fees')
+        if not data:
+            return []
+        
+        # If it's already parsed as a list/dict (by Django's JSONField parser)
+        if isinstance(data, list):
+            parsed_data = data
+        elif isinstance(data, str):
+            import json
+            try:
+                parsed_data = json.loads(data)
+            except json.JSONDecodeError:
+                raise forms.ValidationError("فشل في معالجة بيانات الرسوم الإضافية")
+        else:
+            raise forms.ValidationError("صيغة البيانات غير صحيحة")
+            
+        if not isinstance(parsed_data, list):
+            raise forms.ValidationError("يجب أن تكون الرسوم الإضافية عبارة عن قائمة من الجداول")
+            
+        for idx, table in enumerate(parsed_data):
+            if not isinstance(table, dict):
+                raise forms.ValidationError(f"الجدول رقم {idx+1} غير صالح")
+            if 'title' not in table or 'headers' not in table or 'rows' not in table:
+                raise forms.ValidationError(f"الجدول رقم {idx+1} ينقصه حقول أساسية (العنوان أو الأعمدة أو الصفوف)")
+            if not isinstance(table['headers'], list):
+                raise forms.ValidationError(f"أعمدة الجدول رقم {idx+1} غير صالحة")
+            if not isinstance(table['rows'], list):
+                raise forms.ValidationError(f"صفوف الجدول رقم {idx+1} غير صالحة")
+            for r_idx, row in enumerate(table['rows']):
+                if not isinstance(row, list):
+                    raise forms.ValidationError(f"الصف رقم {r_idx+1} في الجدول رقم {idx+1} غير صالح")
+                    
+        return parsed_data
 
 
 # Create inline formset for FAQ entries
@@ -597,8 +637,12 @@ class ProgramFormSetForm(YearlyFeesFormMixin, forms.ModelForm):
 
     class Meta:
         model = Program
-        fields = ['name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order']
+        fields = ['major', 'name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order']
         widgets = {
+            'major': forms.Select(attrs={
+                'class': 'fpm-program-input fpm-program-input--select',
+                'dir': 'rtl',
+            }),
             'name': forms.Textarea(attrs={
                 'class': 'fpm-program-input fpm-program-input--textarea',
                 'placeholder': 'اسم البرنامج',
@@ -621,6 +665,7 @@ class ProgramFormSetForm(YearlyFeesFormMixin, forms.ModelForm):
             'sort_order': forms.HiddenInput(),
         }
         labels = {
+            'major': 'التخصص المرتبط',
             'name': 'اسم البرنامج',
             'duration': 'مدة الدراسة',
             'tuition_fees': 'الرسوم الدراسية',
@@ -634,7 +679,7 @@ NestedProgramFormSet = inlineformset_factory(
     Faculty,
     Program,
     form=ProgramFormSetForm,
-    fields=['name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order'],
+    fields=['major', 'name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order'],
     extra=0,
     max_num=50,
     can_delete=True,
@@ -697,8 +742,12 @@ class ProgramForm(YearlyFeesFormMixin, forms.ModelForm):
     
     class Meta:
         model = Program
-        fields = ['name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order']
+        fields = ['major', 'name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order']
         widgets = {
+            'major': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'dir': 'rtl',
+            }),
             'name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'اسم البرنامج',
@@ -725,6 +774,7 @@ class ProgramForm(YearlyFeesFormMixin, forms.ModelForm):
             }),
         }
         labels = {
+            'major': 'التخصص المرتبط',
             'name': 'اسم البرنامج',
             'duration': 'مدة الدراسة',
             'tuition_fees': 'الرسوم الدراسية',
@@ -732,12 +782,14 @@ class ProgramForm(YearlyFeesFormMixin, forms.ModelForm):
             'sort_order': 'ترتيب العرض',
         }
         help_texts = {
+            'major': 'اختر التخصص العام المرتبط بهذا البرنامج (مثال: الوسائط المتعددة)',
             'name': 'اسم البرنامج (مثال: هندسة البرمجيات)',
             'duration': 'مدة الدراسة (مثال: 4 سنوات)',
             'tuition_fees': 'الرسوم الدراسية (مثال: 20,000 رنجت ماليزي سنوياً)',
             'yearly_fees': 'رسوم كل سنة دراسية بشكل منفصل (اختياري).',
             'sort_order': 'ترتيب ظهور البرنامج (الأصغر أولاً)',
         }
+
 
 
 # Create inline formset for Program entries

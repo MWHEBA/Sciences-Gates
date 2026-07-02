@@ -116,9 +116,36 @@ class AdvancedSearchForm(forms.Form):
     # Major category filter
     major_category = forms.ChoiceField(
         required=False,
-        choices=MAJOR_CATEGORY_CHOICES,
+        choices=[],
         widget=forms.Select(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg',
         }),
         label='تصنيف التخصص'
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.majors.models import MajorCategory
+        
+        choices = [('', 'جميع التصنيفات')]
+        all_cats = list(MajorCategory.objects.all().select_related('parent').order_by('name'))
+        
+        # Build children tree to show hierarchy in choices
+        from collections import defaultdict
+        by_parent = defaultdict(list)
+        top_level = []
+        for cat in all_cats:
+            if cat.parent_id is None:
+                top_level.append(cat)
+            else:
+                by_parent[cat.parent_id].append(cat)
+                
+        def add_choices(cats, level=0):
+            for cat in cats:
+                choices.append((cat.slug, f"{'—' * level} {cat.name}" if level > 0 else cat.name))
+                children = by_parent[cat.id]
+                if children:
+                    add_choices(children, level + 1)
+                    
+        add_choices(top_level)
+        self.fields['major_category'].choices = choices

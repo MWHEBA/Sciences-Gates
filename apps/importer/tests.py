@@ -960,6 +960,36 @@ class ImageDownloaderDuplicateTests(TestCase):
         self.assertEqual(media_file.object_id, uni.pk)
         self.assertEqual(media_file.source_type, MediaFile.SourceType.UNIVERSITY_LOGO)
 
+    def test_institute_logo_signal_sync(self):
+        """Test that sync_media_file signal handler links institute logo to MediaFile."""
+        from apps.institutes.models import Institute
+        from django.contrib.contenttypes.models import ContentType
+
+        # Create a MediaFile (simulating import before institute is saved)
+        media_file = MediaFile.objects.create(
+            original_filename='inst-logo.webp',
+            file='media_library/institute_logo/inst-logo.webp',
+            file_size=1234,
+            source_url='https://example.com/inst-logo.png',
+            source_type=MediaFile.SourceType.INSTITUTE_LOGO
+        )
+
+        # Create institute referencing this file
+        inst = Institute.objects.create(
+            name='Test Institute for Signals',
+            slug='test-inst-signals',
+            logo='media_library/institute_logo/inst-logo.webp'
+        )
+
+        # Count should remain 1 (no duplicate MediaFile created)
+        self.assertEqual(MediaFile.objects.filter(file='media_library/institute_logo/inst-logo.webp').count(), 1)
+        
+        # Verify the existing MediaFile was linked to the Institute
+        media_file.refresh_from_db()
+        self.assertEqual(media_file.content_type, ContentType.objects.get_for_model(Institute))
+        self.assertEqual(media_file.object_id, inst.pk)
+        self.assertEqual(media_file.source_type, MediaFile.SourceType.INSTITUTE_LOGO)
+
 
 class ContentMapperTagsTests(TestCase):
     """
@@ -1459,6 +1489,161 @@ class BulkSaveAPITests(TestCase):
             
             uni.refresh_from_db()
             self.assertEqual(uni.logo, 'new_logo.png')
+
+    @patch('apps.importer.services.wp_client.requests.get')
+    def test_bulk_save_api_institute(self, mock_get):
+        """
+        Test ImportBulkSaveAPIView successfully fetches, maps, and saves an institute
+        with both regular and intensive courses.
+        """
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'content_type': 'institute',
+            'name': 'معهد النخبة للغات',
+            'slug': 'elite-language-center',
+            'images': {},
+            'fields': {
+                'description': {'value': 'وصف لمعهد النخبة المتميز.', 'confidence': 'high'},
+                'publish_status': {'value': 'unpublished', 'confidence': 'high'},
+            },
+            'seo': {},
+            'faculties': [
+                {
+                    'name': 'بالرنقت الماليزي MYR',
+                    'programs': [
+                        {
+                            'name': 'شهر',
+                            'duration': '2,470 MYR',
+                            'tuition_fees': 'بدون تاشيرة',
+                            'section': 'كورس 4 ساعات في اليوم'
+                        },
+                        {
+                            'name': 'شهر',
+                            'duration': '2,960 MYR',
+                            'tuition_fees': 'بدون تاشيرة',
+                            'section': 'كورس مكثف 5 ساعات في اليوم'
+                        }
+                    ]
+                }
+            ],
+            'faqs': []
+        }
+        mock_get.return_value = mock_response
+
+        response = self.client.post('/dashboard/import/bulk-save/', {
+            'url': 'https://old-site.com/institute/elite-language-center/',
+            'content_type_override': 'institute'
+        })
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['content_type'], 'institute')
+        
+        # Verify database entry for Institute
+        from apps.institutes.models import Institute, Course
+        self.assertTrue(Institute.objects.filter(slug='elite-language-center').exists())
+        inst = Institute.objects.get(slug='elite-language-center')
+        self.assertEqual(inst.name, 'معهد النخبة للغات')
+        
+        # Verify courses database entries
+        courses = inst.courses.all().order_by('id')
+        self.assertEqual(courses.count(), 2)
+        
+        c_reg = courses.filter(course_type='regular').first()
+        self.assertIsNotNone(c_reg)
+        self.assertEqual(c_reg.duration, 'شهر')
+        self.assertEqual(c_reg.fees_myr, '2,470')
+        self.assertEqual(c_reg.visa_duration, 'بدون تاشيرة')
+        
+        c_int = courses.filter(course_type='intensive').first()
+        self.assertIsNotNone(c_int)
+        self.assertEqual(c_int.duration, 'شهر')
+        self.assertEqual(c_int.fees_myr, '2,960')
+        self.assertEqual(c_int.visa_duration, 'بدون تاشيرة')
+
+    @patch('apps.importer.services.wp_client.requests.get')
+    def test_bulk_save_api_major_empty_fields(self, mock_get):
+        """
+        Test ImportBulkSaveAPIView successfully fetches, maps, and saves a major
+        with incomplete table rows (empty/missing required fields) by cleaning and
+        applying fallbacks.
+        """
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'content_type': 'major',
+            'name': 'دراسة الطب البشري في ماليزيا',
+            'slug': 'medicine-malaysia',
+            'images': {},
+            'fields': {
+                'description': {'value': 'تفاصيل دراسة الطب البشري في ماليزيا.', 'confidence': 'high'},
+            },
+            'seo': {},
+            'major_category': 'medical',
+            'subjects_tables': [
+                # One valid row (using key/value structure)
+                {'key': 'السنة الأولى', 'value': 'التشريح وعلم وظائف الأعضاء'},
+                # Completely empty row (should be skipped)
+                {'key': '', 'value': ''},
+                # Incomplete row (academic_year missing, subjects present)
+                {'key': '', 'value': 'الكيمياء الحيوية'},
+            ],
+            'salary_tables': [
+                # Incomplete row
+                {'key': 'طبيب مقيم', 'value': ''},
+            ],
+            'countries_tables': [
+                # Incomplete row (study duration & living cost missing)
+                {'key': 'ماليزيا', 'value': '20,000 MYR'},
+            ],
+            'faqs': [
+                # Incomplete FAQ
+                {'question': 'هل دراسة الطب صعبة؟', 'answer': ''}
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        # Ensure MajorCategory exists
+        from apps.majors.models import MajorCategory, Major
+        MajorCategory.objects.get_or_create(slug='medical', defaults={'name': 'الطب و الصحة'})
+
+        response = self.client.post('/dashboard/import/bulk-save/', {
+            'url': 'https://old-site.com/majors/medicine-malaysia/',
+            'content_type_override': 'major'
+        })
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['content_type'], 'major')
+        
+        # Verify database entry for Major
+        self.assertTrue(Major.objects.filter(slug='medicine-malaysia').exists())
+        major = Major.objects.get(slug='medicine-malaysia')
+        
+        # Verify subjects tables (first should be valid, second skipped, third gets fallback)
+        subjects = major.subjects_tables.all().order_by('id')
+        self.assertEqual(subjects.count(), 2)
+        self.assertEqual(subjects[0].academic_year, 'السنة الأولى')
+        self.assertEqual(subjects[0].subjects, 'التشريح وعلم وظائف الأعضاء')
+        self.assertEqual(subjects[1].academic_year, 'غير محدد')
+        self.assertEqual(subjects[1].subjects, 'الكيمياء الحيوية')
+        
+        # Verify salaries
+        salaries = major.salary_tables.all().order_by('id')
+        self.assertEqual(salaries.count(), 1)
+        self.assertEqual(salaries[0].job_title, 'طبيب مقيم')
+        self.assertEqual(salaries[0].average_monthly_salary, 'غير محدد')
+        
+        # Verify countries
+        countries = major.countries_tables.all().order_by('id')
+        self.assertEqual(countries.count(), 1)
+        self.assertEqual(countries[0].destination, 'ماليزيا')
+        self.assertEqual(countries[0].study_duration, 'غير محدد')
+        self.assertEqual(countries[0].annual_fees, '20,000 MYR')
+        self.assertEqual(countries[0].living_cost, 'غير محدد')
 
 
 

@@ -56,7 +56,7 @@
 <div class="body-overlay"></div>
 <!-- it-offcanvus-area-end -->
 
-<div class="it-header-transparent">
+<div class="it-header-transparent" x-data="{ searchOpen: false }">
    <!-- header-top-area-start -->
    {% if has_topbar %}
    <div class="it-header-2-top-area it-header-2-top-height d-none d-lg-block">
@@ -195,11 +195,146 @@
                            <ul>
                               <li><a href="/" class="{% if request.path == '/' %}is-active{% endif %}">الرئيسية</a></li>
                               <li><a href="{% url 'about_us' %}" class="{% if request.path == '/about-us/' %}is-active{% endif %}">عن الشركة</a></li>
-                              <li><a href="{% url 'universities:list' %}"
-                                    class="{% if 'universities' in request.path %}is-active{% endif %}">الجامعات</a>
-                              </li>
-                              <li><a href="{% url 'institutes:list' %}"
-                                    class="{% if 'institutes' in request.path %}is-active{% endif %}">المعاهد</a></li>
+                               <li class="has-dropdown has-mega-menu">
+                                  <a href="{% url 'universities:list' %}" aria-haspopup="true" aria-expanded="false"
+                                        class="{% if 'universities' in request.path %}is-active{% endif %}">الجامعات</a>
+                                  <!-- Desktop Mega Menu Panel -->
+                                  <div class="mega-menu-panel d-none d-xl-block">
+                                     <div class="container container-1380">
+                                        <div class="mega-menu-grid">
+                                           <!-- Column 1: Public -->
+                                           <div class="mega-menu-col">
+                                              <h4 class="mega-menu-title">الجامعات الحكومية</h4>
+                                              <p class="mega-menu-desc">دراسة أكاديمية مرموقة وتكاليف مناسبة في كبرى الجامعات الحكومية بماليزيا.</p>
+                                              <ul class="mega-menu-list">
+                                                 {% for univ in menu_public_univs|slice:":8" %}
+                                                 <li>
+                                                    <a href="{{ univ.get_absolute_url }}">
+                                                       {% if univ.logo %}
+                                                       <img src="{{ univ.logo.url }}" alt="{{ univ.name }}" class="mega-menu-logo">
+                                                       {% else %}
+                                                       <span class="mega-menu-logo-fallback"><i class="fa-solid fa-graduation-cap"></i></span>
+                                                       {% endif %}
+                                                       <span>{{ univ.name }}</span>
+                                                    </a>
+                                                 </li>
+                                                 {% endfor %}
+                                              </ul>
+                                              <a href="{% url 'universities:list' %}?type=public" class="mega-menu-more">تصفح كافة الجامعات الحكومية &larr;</a>
+                                           </div>
+                                           
+                                           <!-- Column 2: Private -->
+                                           <div class="mega-menu-col">
+                                              <h4 class="mega-menu-title">الجامعات الخاصة</h4>
+                                              <p class="mega-menu-desc">جامعات دولية متميزة، تخصصات حديثة، وبنية تحتية متطورة بماليزيا.</p>
+                                              <ul class="mega-menu-list">
+                                                 {% for univ in menu_private_univs|slice:":8" %}
+                                                 <li>
+                                                    <a href="{{ univ.get_absolute_url }}">
+                                                       {% if univ.logo %}
+                                                       <img src="{{ univ.logo.url }}" alt="{{ univ.name }}" class="mega-menu-logo">
+                                                       {% else %}
+                                                       <span class="mega-menu-logo-fallback"><i class="fa-solid fa-graduation-cap"></i></span>
+                                                       {% endif %}
+                                                       <span>{{ univ.name }}</span>
+                                                    </a>
+                                                 </li>
+                                                 {% endfor %}
+                                              </ul>
+                                              <a href="{% url 'universities:list' %}?type=private" class="mega-menu-more">تصفح كافة الجامعات الخاصة &larr;</a>
+                                           </div>
+                                           
+                                           <!-- Column 3: CTA Card -->
+                                           <div class="mega-menu-col mega-menu-cta-col">
+                                              <div class="mega-menu-cta-card">
+                                                 <span class="cta-badge">استشارة مجانية</span>
+                                                 <h4 class="cta-title">احصل على قبولك الجامعي</h4>
+                                                 <p class="cta-desc">مستشارونا الأكاديميون جاهزون لمساعدتك في اختيار التخصص والجامعة المناسبة مجاناً وبأسرع وقت.</p>
+                                                 <a href="{% url 'leads:submit' %}" class="it-btn cta-btn">
+                                                    <span>سجل طلبك الآن</span>
+                                                 </a>
+                                                 <div class="cta-whatsapp">
+                                                    <a href="https://wa.me/{{ site_settings.whatsapp|default:'+60123456789'|cut:' ' }}" target="_blank">
+                                                       <i class="fab fa-whatsapp"></i>
+                                                       <span>تواصل معنا عبر واتساب</span>
+                                                    </a>
+                                                 </div>
+                                              </div>
+                                           </div>
+                                        </div>
+                                     </div>
+                                  </div>
+                                  <!-- Mobile submenu (parsed by JS) -->
+                                  <ul class="it-submenu d-xl-none">
+                                     <li class="has-dropdown">
+                                        <a href="#">الجامعات الحكومية</a>
+                                        <ul class="it-submenu">
+                                           {% for univ in menu_public_univs %}
+                                           <li><a href="{{ univ.get_absolute_url }}">{{ univ.name }}</a></li>
+                                           {% endfor %}
+                                        </ul>
+                                     </li>
+                                     <li class="has-dropdown">
+                                        <a href="#">الجامعات الخاصة</a>
+                                        <ul class="it-submenu">
+                                           {% for univ in menu_private_univs %}
+                                           <li><a href="{{ univ.get_absolute_url }}">{{ univ.name }}</a></li>
+                                           {% endfor %}
+                                        </ul>
+                                     </li>
+                                  </ul>
+                               </li>
+
+                               <li class="has-dropdown has-mega-menu">
+                                  <a href="{% url 'institutes:list' %}" aria-haspopup="true" aria-expanded="false"
+                                        class="{% if 'institutes' in request.path %}is-active{% endif %}">المعاهد</a>
+                                  <!-- Desktop Mega Menu Panel -->
+                                  <div class="mega-menu-panel mega-menu-panel--narrow d-none d-xl-block">
+                                     <div class="container container-1380">
+                                        <div class="mega-menu-grid mega-menu-grid--2cols">
+                                           <!-- Column 1: Language Institutes -->
+                                           <div class="mega-menu-col">
+                                              <h4 class="mega-menu-title">معاهد اللغة الإنجليزية</h4>
+                                              <p class="mega-menu-desc">أفضل معاهد تدريس اللغة الإنجليزية المعتمدة في ماليزيا لتطوير مهاراتك اللغوية.</p>
+                                              <ul class="mega-menu-list">
+                                                 {% for inst in menu_institutes|slice:":8" %}
+                                                 <li>
+                                                    <a href="{{ inst.get_absolute_url }}">
+                                                       {% if inst.logo %}
+                                                       <img src="{{ inst.logo.url }}" alt="{{ inst.name }}" class="mega-menu-logo">
+                                                       {% else %}
+                                                       <span class="mega-menu-logo-fallback"><i class="fa-solid fa-book"></i></span>
+                                                       {% endif %}
+                                                       <span>{{ inst.name }}</span>
+                                                    </a>
+                                                 </li>
+                                                 {% endfor %}
+                                              </ul>
+                                              <a href="{% url 'institutes:list' %}" class="mega-menu-more">تصفح جميع المعاهد اللغوية &larr;</a>
+                                           </div>
+                                           
+                                           <!-- Column 2: CTA Card -->
+                                           <div class="mega-menu-col mega-menu-cta-col">
+                                              <div class="mega-menu-cta-card">
+                                                 <span class="cta-badge">دورات اللغة</span>
+                                                 <h4 class="cta-title">دراسة اللغة الإنجليزية بماليزيا</h4>
+                                                 <p class="cta-desc">نوفر لك قبولات دراسية معتمدة في أفضل المعاهد الأمريكية والبريطانية بأسعار منافسة تبدأ من شهر وحتى سنة.</p>
+                                                 <a href="{% url 'leads:submit' %}?service=english" class="it-btn cta-btn">
+                                                    <span>طلب دراسة لغة</span>
+                                                 </a>
+                                              </div>
+                                           </div>
+                                        </div>
+                                     </div>
+                                  </div>
+                                  <!-- Mobile submenu (parsed by JS) -->
+                                  <ul class="it-submenu d-xl-none">
+                                     {% for inst in menu_institutes %}
+                                     <li><a href="{{ inst.get_absolute_url }}">{{ inst.name }}</a></li>
+                                     {% endfor %}
+                                     <li><a href="{% url 'leads:submit' %}?service=english">طلب دراسة لغة</a></li>
+                                  </ul>
+                               </li>
                               <li><a href="{% url 'majors:list' %}"
                                     class="{% if 'majors' in request.path %}is-active{% endif %}">التخصصات</a></li>
                               <li><a href="{% url 'articles:list' %}"
@@ -213,7 +348,7 @@
                   <div class="col-xl-3 col-6">
                      <div class="it-header-2-right d-flex align-items-center justify-content-end">
                         <div class="it-header-2-icon">
-                           <a href="{% url 'search:results' %}" aria-label="بحث">
+                           <a href="{% url 'search:results' %}" @click.prevent="searchOpen = true" aria-label="بحث">
                               <i class="fa-solid fa-magnifying-glass"></i>
                            </a>
                         </div>
@@ -243,8 +378,112 @@
       </div>
    </div>
    <!-- header-area-end -->
+
+   <!-- Search Popup Modal -->
+   <div class="search-popup-overlay" 
+        x-show="searchOpen" 
+        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-100"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        @keydown.window.escape="searchOpen = false"
+        @click="searchOpen = false"
+        x-effect="document.body.style.overflow = searchOpen ? 'hidden' : ''"
+        x-init="$watch('searchOpen', value => { if (value) { setTimeout(() => $refs.searchInput.focus(), 50); } })"
+        style="display: none;">
+        
+      <div class="search-popup-container" 
+           @click.stop
+           x-show="searchOpen"
+           x-transition:enter="transition ease-out duration-150"
+           x-transition:enter-start="opacity-0 scale-98 translate-y-[-8px]"
+           x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+           x-transition:leave="transition ease-in duration-100"
+           x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+           x-transition:leave-end="opacity-0 scale-98 translate-y-[-8px]">
+           
+         <!-- Close Button -->
+         <button type="button" class="search-popup-close" @click="searchOpen = false" aria-label="إغلاق">
+            <i class="fa-solid fa-xmark"></i>
+         </button>
+         
+         <!-- Search Form -->
+         <form action="{% url 'search:results' %}" method="get" class="search-popup-form">
+            <h3 class="search-popup-title">البحث في الموقع</h3>
+            <div class="search-popup-input-wrapper">
+               <input type="text" 
+                      name="query" 
+                      class="search-popup-input" 
+                      placeholder="ابحث عن جامعات، معاهد، تخصصات..." 
+                      autocomplete="off"
+                      x-ref="searchInput">
+               <button type="submit" class="search-popup-submit-btn" aria-label="بحث">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+               </button>
+            </div>
+            <p class="search-popup-hint">اضغط على Enter للبحث</p>
+         </form>
+      </div>
+   </div>
 </div>
 {% if request.path != '/' %}
 <div class="header-offset{% if not has_topbar %} header-offset--no-topbar{% endif %}"></div>
 {% endif %}
 {% endwith %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        var mobileLinks = document.querySelectorAll('.it-menu-mobile .has-dropdown > a');
+        mobileLinks.forEach(function(link) {
+            var parentLi = link.parentElement;
+            
+            // Set href to # to prevent page navigation on mobile parent links
+            link.setAttribute('href', '#');
+            
+            // Allow clicking the text of the link to expand/collapse the menu
+            link.addEventListener('click', function(e) {
+                if (e.target === link || (e.target.tagName !== 'BUTTON' && !e.target.closest('button'))) {
+                    e.preventDefault();
+                    var toggleBtn = link.querySelector('.dropdown-toggle-btn');
+                    if (toggleBtn) {
+                        toggleBtn.click();
+                    }
+                }
+            });
+            
+            // Accordion behavior: close other open sibling menus when this one is expanded
+            var toggleBtn = link.querySelector('.dropdown-toggle-btn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    setTimeout(function() {
+                        if (parentLi.classList.contains('dropdown-opened')) {
+                            var siblingLis = parentLi.parentElement.children;
+                            for (var i = 0; i < siblingLis.length; i++) {
+                                var sibling = siblingLis[i];
+                                if (sibling !== parentLi && sibling.classList.contains('has-dropdown')) {
+                                    sibling.classList.remove('dropdown-opened');
+                                    var siblingLink = sibling.querySelector(':scope > a');
+                                    if (siblingLink) {
+                                        siblingLink.classList.remove('expanded');
+                                        var siblingBtn = siblingLink.querySelector('.dropdown-toggle-btn');
+                                        if (siblingBtn) {
+                                            siblingBtn.classList.remove('dropdown-opened');
+                                        }
+                                    }
+                                    var siblingSubmenu = sibling.querySelector(':scope > .it-submenu');
+                                    if (siblingSubmenu) {
+                                        siblingSubmenu.style.display = 'none';
+                                    }
+                                }
+                            }
+                        }
+                    }, 0);
+                });
+            }
+        });
+    }, 150);
+});
+</script>

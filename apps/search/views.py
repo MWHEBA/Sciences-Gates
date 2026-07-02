@@ -61,10 +61,10 @@ class SearchView(BreadcrumbMixin, FormView):
                 all_results.append({
                     'type': 'university',
                     'type_label': 'جامعة',
-                    'name': uni['name'],
-                    'slug': uni['slug'],
-                    'excerpt': get_excerpt(uni['description']),
-                    'url': f"/universities/{uni['slug']}/",
+                    'name': uni.name,
+                    'slug': uni.slug,
+                    'excerpt': get_excerpt(uni.description),
+                    'url': f"/universities/{uni.slug}/",
                 })
             
             # Add institutes with type label
@@ -72,10 +72,10 @@ class SearchView(BreadcrumbMixin, FormView):
                 all_results.append({
                     'type': 'institute',
                     'type_label': 'معهد',
-                    'name': inst['name'],
-                    'slug': inst['slug'],
-                    'excerpt': get_excerpt(inst['description']),
-                    'url': f"/institutes/{inst['slug']}/",
+                    'name': inst.name,
+                    'slug': inst.slug,
+                    'excerpt': get_excerpt(inst.description),
+                    'url': f"/institutes/{inst.slug}/",
                 })
             
             # Add majors with type label
@@ -83,10 +83,10 @@ class SearchView(BreadcrumbMixin, FormView):
                 all_results.append({
                     'type': 'major',
                     'type_label': 'تخصص',
-                    'name': major['name'],
-                    'slug': major['slug'],
-                    'excerpt': get_excerpt(major['description']),
-                    'url': f"/majors/{major['slug']}/",
+                    'name': major.name,
+                    'slug': major.slug,
+                    'excerpt': get_excerpt(major.description),
+                    'url': f"/majors/{major.slug}/",
                 })
             
             # Add articles with type label
@@ -94,11 +94,11 @@ class SearchView(BreadcrumbMixin, FormView):
                 all_results.append({
                     'type': 'article',
                     'type_label': 'مقالة',
-                    'name': article['title'],
-                    'slug': article['slug'],
-                    'excerpt': get_excerpt(article['content']),
-                    'category': article['category__name'],
-                    'url': f"/articles/{article['slug']}/",
+                    'name': article.title,
+                    'slug': article.slug,
+                    'excerpt': get_excerpt(article.content),
+                    'category': article.category.name if article.category else '',
+                    'url': f"/articles/{article.slug}/",
                 })
             
             # Paginate results
@@ -114,6 +114,10 @@ class SearchView(BreadcrumbMixin, FormView):
             
             context['query'] = query
             context['results'] = paginated_results
+            context['universities'] = results['universities']
+            context['institutes'] = results['institutes']
+            context['majors'] = results['majors']
+            context['articles'] = results['articles']
             context['total_count'] = results['total_count']
             context['has_results'] = results['total_count'] > 0
             context['filters'] = filters

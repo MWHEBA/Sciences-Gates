@@ -191,8 +191,10 @@ class ImportFetchView(ContentAdminRequiredMixin, View):
         content_type = wp_data.get('content_type', 'university')
         
         main_image_source = MediaFile.SourceType.UNIVERSITY_IMAGE
+        logo_source = MediaFile.SourceType.UNIVERSITY_LOGO
         if content_type == 'institute':
             main_image_source = MediaFile.SourceType.INSTITUTE_IMAGE
+            logo_source = MediaFile.SourceType.INSTITUTE_LOGO
         elif content_type == 'major':
             main_image_source = MediaFile.SourceType.MAJOR_IMAGE
         elif content_type == 'article':
@@ -212,7 +214,7 @@ class ImportFetchView(ContentAdminRequiredMixin, View):
                 caption=logo_data.get('caption', ''),
                 description=logo_data.get('description', ''),
                 title=logo_data.get('title', ''),
-                source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
+                source_type=logo_source,
                 user=request.user
             )
             if media_file:
@@ -312,8 +314,10 @@ class ImportBulkSaveAPIView(ContentAdminRequiredMixin, View):
 
         # 2. Resolve image source types
         main_image_source = MediaFile.SourceType.UNIVERSITY_IMAGE
+        logo_source = MediaFile.SourceType.UNIVERSITY_LOGO
         if content_type == 'institute':
             main_image_source = MediaFile.SourceType.INSTITUTE_IMAGE
+            logo_source = MediaFile.SourceType.INSTITUTE_LOGO
         elif content_type == 'major':
             main_image_source = MediaFile.SourceType.MAJOR_IMAGE
         elif content_type == 'article':
@@ -333,7 +337,7 @@ class ImportBulkSaveAPIView(ContentAdminRequiredMixin, View):
                 caption=logo_data.get('caption', ''),
                 description=logo_data.get('description', ''),
                 title=logo_data.get('title', ''),
-                source_type=MediaFile.SourceType.UNIVERSITY_LOGO,
+                source_type=logo_source,
                 user=request.user
             )
             if media_file:

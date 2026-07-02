@@ -87,7 +87,7 @@ def build_search_query(query_string, filters=None):
     universities = universities.prefetch_related(
         'related_majors',
         'related_articles'
-    ).values('id', 'name', 'slug', 'description')[:20]
+    )[:20]
     
     # Search Institutes
     if use_fts and search_query:
@@ -113,7 +113,7 @@ def build_search_query(query_string, filters=None):
     
     institutes = institutes.prefetch_related(
         'related_articles'
-    ).values('id', 'name', 'slug', 'description')[:20]
+    )[:20]
     
     # Search Majors
     if use_fts and search_query:
@@ -135,7 +135,12 @@ def build_search_query(query_string, filters=None):
     
     # Apply major category filter
     if filters.get('major_category'):
-        majors = majors.filter(major_category=filters['major_category'])
+        from apps.majors.models import MajorCategory
+        try:
+            target_cat = MajorCategory.objects.get(slug=filters['major_category'])
+            majors = majors.filter(category=target_cat)
+        except MajorCategory.DoesNotExist:
+            majors = majors.none()
     
     # Apply language filter
     if filters.get('study_language'):
@@ -151,7 +156,7 @@ def build_search_query(query_string, filters=None):
         'best_universities',
         'cheap_universities',
         'related_articles'
-    ).values('id', 'name', 'slug', 'description')[:20]
+    )[:20]
     
     # Search Articles
     if use_fts and search_query:
@@ -178,7 +183,7 @@ def build_search_query(query_string, filters=None):
         'related_universities',
         'related_institutes',
         'related_majors'
-    ).values('id', 'title', 'slug', 'content', 'category__name')[:20]
+    )[:20]
     
     # Calculate total count
     total_count = len(universities) + len(institutes) + len(majors) + len(articles)

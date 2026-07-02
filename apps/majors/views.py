@@ -4,7 +4,7 @@ Public views for displaying major content to end users.
 from django.views.generic import ListView, DetailView, TemplateView
 from django.db.models import Prefetch, Q
 from django.core.paginator import Paginator
-from .models import Major, SubjectsTable, SalaryTable, CountriesTable
+from .models import Major, SubjectsTable, SalaryTable, CountriesTable, MajorFAQ, MajorAttachment
 from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
 from apps.seo.preview import apply_preview_filter
@@ -110,10 +110,6 @@ class MajorDetailView(BreadcrumbMixin, DetailView):
     def get_queryset(self):
         """
         Return only published majors with optimized queries.
-        
-        Uses:
-        - select_related: for foreign key relationships (none in this case)
-        - prefetch_related: for reverse foreign key relationships and many-to-many
         """
         # Prefetch subjects tables
         subjects_prefetch = Prefetch(
@@ -133,11 +129,32 @@ class MajorDetailView(BreadcrumbMixin, DetailView):
             CountriesTable.objects.all().order_by('sort_order')
         )
         
+        # Prefetch FAQs
+        faqs_prefetch = Prefetch(
+            'faqs',
+            MajorFAQ.objects.all().order_by('sort_order')
+        )
+        
+        # Prefetch Attachments
+        attachments_prefetch = Prefetch(
+            'attachments',
+            MajorAttachment.objects.all().order_by('-created_at')
+        )
+        
+        # Prefetch Programs offering this major
+        from apps.universities.models import Program
+        programs_prefetch = Prefetch(
+            'programs',
+            Program.objects.select_related('faculty__university').all().order_by('sort_order')
+        )
+        
         return apply_preview_filter(self.request, Major.objects).prefetch_related(
             subjects_prefetch,
-            # prefetch_related is still used here
             salary_prefetch,
             countries_prefetch,
+            faqs_prefetch,
+            attachments_prefetch,
+            programs_prefetch,
             'best_universities',
             'cheap_universities',
             'related_articles'
@@ -185,6 +202,19 @@ class MajorDetailView(BreadcrumbMixin, DetailView):
         context['best_universities'] = major.best_universities.all()
         context['cheap_universities'] = major.cheap_universities.all()
         
+        # Add new prefetched relations
+        context['faqs'] = major.faqs.all()
+        context['attachments'] = major.attachments.all()
+        context['programs'] = major.programs.all()
+        
+        # Group subjects by track_name for tabbed rendering
+        from collections import defaultdict
+        subjects_by_track = defaultdict(list)
+        for subject in major.subjects_tables.all():
+            track = subject.track_name or 'عام'
+            subjects_by_track[track].append(subject)
+        context['subjects_by_track'] = dict(subjects_by_track)
+        
         # Add lead form
         from apps.leads.forms import LeadForm
         if 'form' not in context:
@@ -203,32 +233,24 @@ class MajorCategoryListView(BreadcrumbMixin, TemplateView):
     
     def get_breadcrumbs(self):
         """Build breadcrumb trail for major category list page."""
-        category = self.kwargs.get('category', 'other')
-        category_labels = {
-            'medical': 'التخصصات الطبية',
-            'engineering': 'التخصصات الهندسية',
-            'cs': 'الحاسوب والتكنولوجيا',
-            'business': 'إدارة الأعمال',
-            'science': 'العلوم',
-            'other': 'تخصصات أخرى'
-        }
-        category_label = category_labels.get(category, 'التخصصات')
+        from django.shortcuts import get_object_or_404
+        from apps.majors.models import MajorCategory
+        category_slug = self.kwargs.get('category')
+        cat_obj = get_object_or_404(MajorCategory, slug=category_slug)
         
         return (BreadcrumbTrail()
             .add_section('home')
             .add_section('majors')
-            .current(category_label)
+            .current(cat_obj.name)
             .build())
     
     def get_context_data(self, **kwargs):
         """Get majors by category with pagination."""
+        from django.shortcuts import get_object_or_404
+        from apps.majors.models import MajorCategory
         context = super().get_context_data(**kwargs)
-        category = self.kwargs.get('category')
-        
-        # Validate category
-        valid_categories = ['medical', 'engineering', 'cs', 'business', 'science', 'other']
-        if category not in valid_categories:
-            category = 'other'
+        category_slug = self.kwargs.get('category')
+        cat_obj = get_object_or_404(MajorCategory, slug=category_slug)
         
         # Prefetch tables
         subjects_prefetch = Prefetch(
@@ -246,7 +268,7 @@ class MajorCategoryListView(BreadcrumbMixin, TemplateView):
         
         queryset = Major.objects.filter(
             publish_status='published',
-            major_category=category
+            category=cat_obj
         ).prefetch_related(
             subjects_prefetch,
             salary_prefetch,
@@ -261,21 +283,12 @@ class MajorCategoryListView(BreadcrumbMixin, TemplateView):
         page_number = self.request.GET.get('page', 1)
         page_obj = paginator.get_page(page_number)
         
-        # Category labels
-        category_labels = {
-            'medical': 'التخصصات الطبية',
-            'engineering': 'التخصصات الهندسية',
-            'cs': 'الحاسوب والتكنولوجيا',
-            'business': 'إدارة الأعمال',
-            'science': 'العلوم',
-            'other': 'تخصصات أخرى'
-        }
-        
         context['majors'] = page_obj.object_list
         context['page_obj'] = page_obj
         context['paginator'] = paginator
-        context['category'] = category
-        context['category_label'] = category_labels.get(category, 'التخصصات')
-        context['page_title'] = category_labels.get(category, 'التخصصات')
+        context['category'] = category_slug
+        context['category_label'] = cat_obj.name
+        context['page_title'] = cat_obj.name
+        context['category_obj'] = cat_obj
         
         return context

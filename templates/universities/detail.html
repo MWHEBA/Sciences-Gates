@@ -285,6 +285,8 @@
                 {% endif %}
             </section>
 
+
+
             <!-- Faculties and Programs Section -->
             {% if faculties %}
             <section class="detail-section">
@@ -356,6 +358,58 @@
                             {% else %}
                             <p class="detail-empty-state">لا توجد برامج متاحة حالياً في هذه الكلية</p>
                             {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- One-Time Fees Section -->
+            {% if university.one_time_fees %}
+            <section class="detail-section">
+                <div class="detail-section-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    <h2 class="detail-section-title">
+                        رسوم تدفع مرة واحدة فقط
+                    </h2>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 24px; width: 100%;">
+                    {% for table in university.one_time_fees %}
+                    <div style="margin-bottom: 8px;">
+                        {% if table.title %}
+                        <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; border-right: 3px solid var(--secondary); padding-right: 8px; line-height: 1.5;">
+                            {{ table.title }}
+                        </h3>
+                        {% endif %}
+                        <div class="detail-table-wrapper" style="overflow-x: auto; width: 100%; border: 1px solid var(--border); border-radius: 8px;">
+                            <table class="detail-table" style="width: 100%; border-collapse: collapse; text-align: right; border: none;">
+                                <thead>
+                                    <tr style="background-color: var(--primary-light); border-bottom: 1px solid var(--border);">
+                                        {% for header in table.headers %}
+                                        <th style="padding: 12px; font-weight: 600; color: var(--text-primary); border-left: 1px solid var(--border);">
+                                            {{ header }}
+                                        </th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in table.rows %}
+                                    <tr style="border-bottom: 1px solid var(--border); background-color: var(--surface);">
+                                        {% for cell in row %}
+                                        <td style="padding: 12px; color: var(--text-secondary); border-left: 1px solid var(--border);">
+                                            {{ cell }}
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                     {% endfor %}

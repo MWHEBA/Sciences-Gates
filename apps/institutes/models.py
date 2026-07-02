@@ -69,6 +69,19 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='دراسة اللغة الإنجليزية',
         help_text='معلومات وتفاصيل عن دراسة اللغة الإنجليزية في المعهد'
     )
+    logo = models.ImageField(
+        upload_to='institutes/logos/',
+        null=True,
+        blank=True,
+        verbose_name='شعار المعهد',
+        help_text='شعار المعهد (PNG مع خلفية شفافة مفضل)'
+    )
+    logo_alt = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='النص البديل للشعار',
+        help_text='النص البديل لشعار المعهد (SEO)'
+    )
     main_image = models.ImageField(
         upload_to='institutes/images/',
         verbose_name='الصورة الرئيسية'
@@ -88,6 +101,19 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='الوصف',
         help_text='وصف شامل عن المعهد'
     )
+    fees_includes = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='الرسوم تشمل',
+        help_text='ما تشمله الرسوم الموضحة (مثال: تكاليف الدراسة، ورسوم تأشيرة الطالب...)'
+    )
+    fees_excludes = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='الرسوم لا تشمل',
+        help_text='ما لا تشمله الرسوم الموضحة (مثال: المصروف الشخصي، السكن...)'
+    )
+
 
     # Relationships
     related_articles = models.ManyToManyField(
@@ -178,11 +204,24 @@ class InstituteFAQ(models.Model):
 
 class Course(models.Model):
     """Course within an institute (Fee row)."""
+    COURSE_TYPE_CHOICES = [
+        ('regular', '4 ساعات'),
+        ('intensive', '5 ساعات'),
+        ('super_intensive', '6 ساعات'),
+        ('undefined', 'بدون ساعات'),
+    ]
+
     institute = models.ForeignKey(
         Institute,
         on_delete=models.CASCADE,
         related_name='courses',
         verbose_name='المعهد'
+    )
+    course_type = models.CharField(
+        max_length=50,
+        choices=COURSE_TYPE_CHOICES,
+        default='undefined',
+        verbose_name='نوع الكورس'
     )
     duration = models.CharField(
         max_length=100,

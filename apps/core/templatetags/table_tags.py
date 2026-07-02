@@ -27,11 +27,11 @@ def get_item(obj, key):
     Returns:
         Value at the key/attribute, or empty string if not found
     """
-    if not obj or not key:
+    if not obj or key is None or key == '':
         return ''
     
     # Handle dot notation for nested access
-    if '.' in key:
+    if isinstance(key, str) and '.' in key:
         keys = key.split('.')
         value = obj
         for k in keys:
@@ -53,9 +53,16 @@ def get_item(obj, key):
         # Try dictionary access first
         if isinstance(obj, dict):
             return obj.get(key, '')
-        else:
-            # Try object attribute access
-            return getattr(obj, key, '')
+        
+        # Try sequence index access if key is an integer
+        if isinstance(key, int):
+            try:
+                return obj[key]
+            except (IndexError, TypeError):
+                pass
+        
+        # Try object attribute access
+        return getattr(obj, key, '')
     except (KeyError, AttributeError, TypeError):
         return ''
 

@@ -16,6 +16,10 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
 import django
 django.setup()
 
+# Set testing flag to skip heavy context processors/signals during tests
+from django.conf import settings
+settings.TESTING = True
+
 import pytest
 
 

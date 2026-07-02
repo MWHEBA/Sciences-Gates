@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from apps.core.models import UserProfile, UserRole
 from .university import UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet
 from .institute import InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet
-from .major import MajorForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet
+from .major import MajorForm, MajorCategoryForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet, MajorFAQFormSet, MajorAttachmentFormSet
 from .article import ArticleForm, CategoryForm, TagForm
 from .settings import SiteSettingsForm, SiteSEOSettingsForm, SEOSettingsForm
 
@@ -289,6 +289,7 @@ __all__ = [
     'CourseFormSet',
     'InstituteAttachmentFormSet',
     'MajorForm',
+    'MajorCategoryForm',
     'SubjectsTableFormSet',
     'SalaryTableFormSet',
     'CountriesTableFormSet',

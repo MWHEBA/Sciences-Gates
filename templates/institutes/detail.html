@@ -31,6 +31,26 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/tpl-universities_detail-styles.css' %}">
+    <style>
+        .detail-table--institutes th,
+        .detail-table--institutes td {
+            text-align: center !important;
+            width: auto !important;
+        }
+        .detail-table--institutes th:first-child,
+        .detail-table--institutes td:first-child {
+            text-align: right !important;
+            width: 30% !important;
+        }
+        .detail-table--institutes th:nth-child(2),
+        .detail-table--institutes td:nth-child(2) {
+            width: 35% !important;
+        }
+        .detail-table--institutes th:nth-child(3),
+        .detail-table--institutes td:nth-child(3) {
+            width: 35% !important;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -67,6 +87,12 @@
                     </h1>
                     {% include 'components/breadcrumb.html' %}
                 </div>
+                {% if institute.logo %}
+                <div class="detail-header-logo-container">
+                    {% load image_tags %}
+                    {% seo_image institute.logo.url institute.logo_alt "" "" "" "detail-header-logo" "eager" %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -223,98 +249,81 @@
                 <div class="detail-section-content" style="margin-bottom: 20px;">
                     <div style="background-color: var(--primary-light); border-right: 4px solid var(--primary); padding: 16px; border-radius: var(--radius); margin-bottom: 16px;">
                         <p style="margin: 0; font-size: 0.95rem; color: var(--text-primary); line-height: 1.6;">
-                            📌 رسوم {{ institute.name }} الموضحة أدناه تشمل تكاليف الدراسة، ورسوم تأشيرة الطالب، ورسوم التأمين الصحي، واختبار تحديد المستوى، والتوصيل من المطار.
+                            📌 رسوم {{ institute.name }} الموضحة أدناه{% if institute.fees_includes %}: تشمل {{ institute.fees_includes }}{% endif %}.
                         </p>
-                        <p style="margin: 8px 0 0 0; font-size: 0.85rem; color: var(--text-muted); font-weight: bold;">
+                        {% if institute.fees_excludes %}
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color); display: flex; align-items: flex-start; gap: 8px; font-size: 0.9rem; color: var(--text-primary); line-height: 1.6;">
+                            <span style="color: var(--secondary);">⚠️</span>
+                            <div>
+                                <strong style="color: var(--text-primary);">لا تشمل:</strong> {{ institute.fees_excludes }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <p style="margin: 10px 0 0 0; padding-top: 6px; font-size: 0.85rem; color: var(--text-muted); font-weight: bold;">
                             تاريخ آخر تحديث: {{ institute.updated_at|date:"Y/m/d" }}
                         </p>
                     </div>
                 </div>
 
-                <!-- Currency Tabs -->
-                <div x-data="{ activeTab: 'myr' }" class="admission-tabs-container">
-                    <div class="admission-tabs-headers" style="margin-bottom: 16px;">
-                        <button @click="activeTab = 'myr'" :class="activeTab === 'myr' ? 'admission-tab-btn--active' : ''" class="admission-tab-btn" type="button">
-                            بالرنجت الماليزي RM
-                        </button>
-                        <button @click="activeTab = 'usd'" :class="activeTab === 'usd' ? 'admission-tab-btn--active' : ''" class="admission-tab-btn" type="button">
-                            بالدولار الأمريكي USD
-                        </button>
-                        <button @click="activeTab = 'sar'" :class="activeTab === 'sar' ? 'admission-tab-btn--active' : ''" class="admission-tab-btn" type="button">
-                            بالريال السعودي SAR
-                        </button>
-                    </div>
-
-                    <!-- MYR Table -->
-                    <div x-show="activeTab === 'myr'" class="detail-section-content" x-transition>
-                        <div class="detail-table-wrapper">
-                            <table class="detail-table">
-                                <thead>
-                                    <tr>
-                                        <th>مدة الكورس</th>
-                                        <th>تكلفة الدراسة</th>
-                                        <th>مدة تأشيرة الطالب</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for row in courses %}
-                                    <tr>
-                                        <td class="detail-table-cell-primary">{{ row.duration }}</td>
-                                        <td class="detail-table-cell-highlight">{{ row.fees_myr }} MYR</td>
-                                        <td>{{ row.visa_duration|default:"بدون تأشيرة" }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                <!-- Currency Tabs / Dropdown -->
+                <div x-data="{ selectedCurrency: 'usd' }" class="admission-tabs-container">
+                    <div class="detail-section-content">
+                        {% regroup courses by course_type as course_groups %}
+                        {% for group in course_groups %}
+                        <div class="course-group-wrapper" style="margin-bottom: 24px;">
+                            <div class="detail-table-wrapper">
+                                <table class="detail-table detail-table--institutes">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                {% if group.grouper == 'regular' %}
+                                                    مدة الكورس (4 ساعات / يوم)
+                                                {% elif group.grouper == 'intensive' %}
+                                                    مدة الكورس (5 ساعات / يوم)
+                                                {% elif group.grouper == 'super_intensive' %}
+                                                    مدة الكورس (6 ساعات / يوم)
+                                                {% else %}
+                                                    مدة الكورس
+                                                {% endif %}
+                                            </th>
+                                            <th>
+                                                تكلفة الدراسة
+                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 4px; padding: 2px 6px; margin-right: 8px; margin-bottom: 0 !important; vertical-align: middle;">
+                                                    <img :src="selectedCurrency === 'usd' ? 'https://flagcdn.com/16x12/us.png' : (selectedCurrency === 'myr' ? 'https://flagcdn.com/16x12/my.png' : 'https://flagcdn.com/16x12/sa.png')" 
+                                                         width="16" height="12" alt="Flag" style="border-radius: 1px; flex-shrink: 0; display: inline-block;">
+                                                    <select x-model="selectedCurrency" style="background: transparent; color: #ffffff; border: none; padding: 0; font-size: 0.85rem; font-weight: bold; cursor: pointer; outline: none; font-family: inherit;">
+                                                        <option value="usd" style="background: var(--bg-surface); color: var(--text-primary);">دولار أمريكي ($)</option>
+                                                        <option value="myr" style="background: var(--bg-surface); color: var(--text-primary);">رينجت ماليزي (RM)</option>
+                                                        <option value="sar" style="background: var(--bg-surface); color: var(--text-primary);">ريال سعودي (﷼)</option>
+                                                    </select>
+                                                </span>
+                                            </th>
+                                            <th>مدة تأشيرة الطالب</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in group.list %}
+                                        <tr>
+                                            <td class="detail-table-cell-primary">{{ row.duration }}</td>
+                                            <td class="detail-table-cell-highlight">
+                                                <span x-show="selectedCurrency === 'usd'">
+                                                    {{ row.fees_usd|default:"—" }} {% if row.fees_usd %}${% endif %}
+                                                </span>
+                                                <span x-show="selectedCurrency === 'myr'">
+                                                    {{ row.fees_myr|default:"—" }} {% if row.fees_myr %}RM{% endif %}
+                                                </span>
+                                                <span x-show="selectedCurrency === 'sar'">
+                                                    {{ row.fees_sar|default:"—" }} {% if row.fees_sar %}﷼{% endif %}
+                                                </span>
+                                            </td>
+                                            <td>{{ row.visa_duration|default:"بدون تأشيرة" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- USD Table -->
-                    <div x-show="activeTab === 'usd'" class="detail-section-content" x-transition>
-                        <div class="detail-table-wrapper">
-                            <table class="detail-table">
-                                <thead>
-                                    <tr>
-                                        <th>مدة الكورس</th>
-                                        <th>تكلفة الدراسة</th>
-                                        <th>مدة تأشيرة الطالب</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for row in courses %}
-                                    <tr>
-                                        <td class="detail-table-cell-primary">{{ row.duration }}</td>
-                                        <td class="detail-table-cell-highlight">{{ row.fees_usd|default:"—" }} {% if row.fees_usd %}USD{% endif %}</td>
-                                        <td>{{ row.visa_duration|default:"بدون تأشيرة" }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- SAR Table -->
-                    <div x-show="activeTab === 'sar'" class="detail-section-content" x-transition>
-                        <div class="detail-table-wrapper">
-                            <table class="detail-table">
-                                <thead>
-                                    <tr>
-                                        <th>مدة الكورس</th>
-                                        <th>تكلفة الدراسة</th>
-                                        <th>مدة تأشيرة الطالب</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for row in courses %}
-                                    <tr>
-                                        <td class="detail-table-cell-primary">{{ row.duration }}</td>
-                                        <td class="detail-table-cell-highlight">{{ row.fees_sar|default:"—" }} {% if row.fees_sar %}SAR{% endif %}</td>
-                                        <td>{{ row.visa_duration|default:"بدون تأشيرة" }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </section>

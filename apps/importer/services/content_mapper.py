@@ -205,6 +205,7 @@ class ContentMapper:
             form_initial['university_type'] = wp_data.get('sub_type', 'private')
             form_initial['state'] = state_slug
             form_initial['city'] = city_slug
+            form_initial['one_time_fees'] = []
             confidence['university_type'] = 'high'
             confidence['state'] = city_confidence
             confidence['city'] = city_confidence
@@ -430,6 +431,7 @@ class ContentMapper:
                         dur = prog.get('name', '').strip()
                         fee_val = prog.get('duration', '').strip()
                         visa_val = prog.get('tuition_fees', '').strip()
+                        section = prog.get('section', '').strip()
                         
                         if not dur:
                             continue
@@ -439,9 +441,22 @@ class ContentMapper:
                         if not cleaned_fee:
                             cleaned_fee = fee_val
                             
-                        if dur not in courses_by_duration:
-                            courses_by_duration[dur] = {
+                        # Detect course_type based on section name
+                        course_type = 'undefined'
+                        sec_lower = section.lower()
+                        if any(x in sec_lower for x in ['6 ساعات', '6 hours', '٦ ساعات']):
+                            course_type = 'super_intensive'
+                        elif any(x in sec_lower for x in ['مكثف', 'intensive', '5 ساعات', '5 hours', '٥ ساعات']):
+                            course_type = 'intensive'
+                        elif any(x in sec_lower for x in ['عادي', 'regular', '4 ساعات', '4 hours', '٤ ساعات']):
+                            course_type = 'regular'
+                            
+                        # Use a tuple key of (duration, course_type) to support multiple course types
+                        key = (dur, course_type)
+                        if key not in courses_by_duration:
+                            courses_by_duration[key] = {
                                 'duration': dur,
+                                'course_type': course_type,
                                 'fees_myr': '',
                                 'fees_usd': '',
                                 'fees_sar': '',
@@ -449,17 +464,17 @@ class ContentMapper:
                             }
                             
                         if currency == 'myr':
-                            courses_by_duration[dur]['fees_myr'] = cleaned_fee
+                            courses_by_duration[key]['fees_myr'] = cleaned_fee
                         elif currency == 'usd':
-                            courses_by_duration[dur]['fees_usd'] = cleaned_fee
+                            courses_by_duration[key]['fees_usd'] = cleaned_fee
                         elif currency == 'sar':
-                            courses_by_duration[dur]['fees_sar'] = cleaned_fee
+                            courses_by_duration[key]['fees_sar'] = cleaned_fee
                             
                         if visa_val and visa_val != 'غير محدد':
-                            courses_by_duration[dur]['visa_duration'] = visa_val
+                            courses_by_duration[key]['visa_duration'] = visa_val
             
             # Fill missing fees_myr with USD estimation (approx. 1 USD = 4.7 MYR)
-            for dur, c_info in courses_by_duration.items():
+            for key, c_info in courses_by_duration.items():
                 if not c_info['fees_myr'] and c_info['fees_usd']:
                     try:
                         usd_val = float(c_info['fees_usd'].replace(',', ''))

@@ -12,20 +12,75 @@
     <div class="container mx-auto px-4 max-w-7xl">
         <!-- Institutes Grid -->
         {% if institutes %}
-            <div class="grid grid--3">
-                {% for institute in institutes %}
-                    {% include 'partials/institute-card.html' with institute=institute %}
-                {% endfor %}
-            </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for institute in institutes %}
+            {% include 'partials/institute-card.html' with institute=institute %}
+            {% endfor %}
+        </div>
 
-            <!-- Pagination -->
+        <!-- Pagination -->
+        <div class="mt-12 flex justify-center">
             {% include 'components/pagination.html' %}
+        </div>
         {% else %}
-            <!-- Empty State -->
+        <!-- Empty State -->
+        <div class="max-w-md mx-auto my-8">
             {% include 'partials/empty-state.html' with title="لا توجد معاهد" message="لم نجد معاهد تطابق معايير البحث الحالية. حاول تغيير الفلاتر أو البحث عن كلمات مفتاحية مختلفة." clear_url=clear_url %}
+        </div>
         {% endif %}
     </div>
 </section>
+
+<!-- Hub Cross-Linking Section -->
+{% if popular_majors or latest_articles %}
+<section class="hub-section" aria-label="محتوى ذو صلة">
+    <div class="container hub-section__container">
+
+        {% if popular_majors %}
+        <!-- Popular Majors -->
+        <div class="hub-block">
+            <h2 class="hub-block__title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                التخصصات الدراسية الشائعة
+            </h2>
+            <ul class="hub-block__list">
+                {% for major in popular_majors %}
+                <li class="hub-block__item">
+                    <a href="{{ major.get_absolute_url }}" class="hub-block__link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                        {{ major.name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'majors:list' %}" class="hub-block__more">عرض جميع التخصصات</a>
+        </div>
+        {% endif %}
+
+        {% if latest_articles %}
+        <!-- Latest Articles -->
+        <div class="hub-block">
+            <h2 class="hub-block__title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                آخر المقالات والأدلة
+            </h2>
+            <ul class="hub-block__list">
+                {% for article in latest_articles %}
+                <li class="hub-block__item">
+                    <a href="{{ article.get_absolute_url }}" class="hub-block__link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                        {{ article.title }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'articles:list' %}" class="hub-block__more">تصفح المدونة كاملةً</a>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endif %}
 
 <!-- CTA Band -->
 {% include 'partials/cta-band.html' %}

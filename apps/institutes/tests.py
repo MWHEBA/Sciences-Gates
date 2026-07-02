@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from .models import Institute
+from .models import Institute, Course
 
 
 class InstituteListViewTest(TestCase):
@@ -107,6 +107,7 @@ class InstituteDetailViewTest(TestCase):
         # Create courses
         self.course1 = Course.objects.create(
             institute=self.institute,
+            course_type='regular',
             duration='3 أشهر',
             fees_myr='3,400',
             fees_usd='857',
@@ -117,6 +118,7 @@ class InstituteDetailViewTest(TestCase):
         
         self.course2 = Course.objects.create(
             institute=self.institute,
+            course_type='regular',
             duration='4 أشهر',
             fees_myr='6,300',
             fees_usd='1,588',
@@ -163,6 +165,30 @@ class InstituteDetailViewTest(TestCase):
         self.assertIn(self.course2, response.context['courses'])
         self.assertContains(response, self.course1.duration)
         self.assertContains(response, self.course1.fees_myr)
+
+    def test_detail_view_shows_course_type_groups(self):
+        """Test that courses are grouped and sorted by type."""
+        # Create an intensive course
+        intensive_course = Course.objects.create(
+            institute=self.institute,
+            course_type='intensive',
+            duration='شهر واحد مكثف',
+            fees_myr='4,000',
+            fees_usd='1,000',
+            fees_sar='3,750',
+            visa_duration='بدون تأشيرة',
+            sort_order=0
+        )
+        url = reverse('institutes:detail', kwargs={'slug': self.institute.slug})
+        response = self.client.get(url)
+        courses = response.context['courses']
+        # Verification: courses are sorted (regular first, then intensive)
+        self.assertEqual(courses[0], self.course1)
+        self.assertEqual(courses[1], self.course2)
+        self.assertEqual(courses[2], intensive_course)
+        # Check template rendering contains headers
+        self.assertContains(response, 'مدة الكورس (4 ساعات / يوم)')
+        self.assertContains(response, 'مدة الكورس (5 ساعات / يوم)')
     
     def test_detail_view_unpublished_institute_not_found(self):
         """Test that unpublished institutes return 404."""
@@ -253,5 +279,72 @@ class InstituteAttachmentTestCase(TestCase):
 
         # Clean up file
         attachment.delete()
+
+    def test_detail_view_renders_dynamic_fees_info(self):
+        """Test that the detail view renders dynamic fees_includes and fees_excludes."""
+        from .models import Course
+
+        inst = Institute.objects.create(
+            name='معهد اللغات الحديثة',
+            slug='modern-lang-inst',
+            main_image='main.png',
+            description='Test description',
+            fees_includes='الكتب الدراسية، والأنشطة الترفيهية',
+            fees_excludes='التأمين، ورسوم التسجيل المبدئي',
+            publish_status='published'
+        )
+        
+        Course.objects.create(
+            institute=inst,
+            duration='3 أشهر',
+            fees_myr='4,500'
+        )
+
+        response = self.client.get(reverse('institutes:detail', kwargs={'slug': inst.slug}))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        
+        # Verify both fields are rendered in the text
+        self.assertIn('تشمل الكتب الدراسية، والأنشطة الترفيهية', content)
+        self.assertIn('لا تشمل:', content)
+        self.assertIn('التأمين، ورسوم التسجيل المبدئي', content)
+
+
+class InstituteFormTests(TestCase):
+    """Test cases for InstituteForm logo validation."""
+    
+    def test_logo_is_optional_by_default(self):
+        """Test that the logo field is optional in manual form submissions."""
+        from apps.dashboard.forms.institute import InstituteForm
+        
+        # Form without logo
+        form = InstituteForm(data={
+            'name': 'Test Institute',
+            'slug': 'test-institute',
+            'state': 'kl',
+            'city': 'kl',
+            'description': 'Test description',
+            'publish_status': 'published',
+            'imported_main_image_path': '/media/media_library/institute_image/inst-main.png', # bypass main_image validation
+        })
+        self.assertTrue(form.is_valid() or 'logo' not in form.errors)
+
+    def test_logo_is_not_required_with_imported_logo_path(self):
+        """Test that the logo field is optional when imported_logo_path is provided."""
+        from apps.dashboard.forms.institute import InstituteForm
+        
+        # Form without logo file, but with imported_logo_path
+        form = InstituteForm(data={
+            'name': 'Test Institute',
+            'slug': 'test-institute',
+            'state': 'kl',
+            'city': 'kl',
+            'description': 'Test description',
+            'publish_status': 'published',
+            'imported_logo_path': '/media/media_library/institute_logo/inst-logo.png',
+            'imported_main_image_path': '/media/media_library/institute_image/inst-main.png',
+        })
+        self.assertTrue(form.is_valid() or 'logo' not in form.errors)
+
 
 

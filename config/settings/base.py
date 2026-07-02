@@ -87,6 +87,7 @@ TEMPLATES = [
                 'apps.core.context_processors.dashboard_context',
                 'apps.core.context_processors.site_settings_context',
                 'apps.core.context_processors.phone_countries_context',
+                'apps.core.context_processors.mega_menu_context',
             ],
         },
     },

@@ -326,12 +326,6 @@ def process_image_with_webp(image_file, max_width=None, quality=85):
         # Store original dimensions
         result['dimensions'] = img.size
         
-        # Convert RGBA to RGB if necessary
-        if img.mode in ('RGBA', 'LA', 'P'):
-            background = Image.new('RGB', img.size, (255, 255, 255))
-            background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
-            img = background
-        
         # Resize if necessary
         width, height = img.size
         if width > max_width:
@@ -343,20 +337,24 @@ def process_image_with_webp(image_file, max_width=None, quality=85):
         output_original = BytesIO()
         file_name = image_file.name.lower()
         
-        if file_name.endswith('.png'):
-            img.save(output_original, format='PNG', optimize=True)
-        elif file_name.endswith('.gif'):
-            img.save(output_original, format='GIF', optimize=True)
+        if file_name.endswith(('.png', '.gif')):
+            img.save(output_original, format=original_format, optimize=True)
         else:
-            # Default to JPEG for JPG and WebP
-            img.save(output_original, format='JPEG', quality=quality, optimize=True)
+            # Convert RGBA to RGB (with white background) for JPEGs
+            if img.mode in ('RGBA', 'LA', 'P'):
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                jpeg_img = background
+            else:
+                jpeg_img = img
+            jpeg_img.save(output_original, format='JPEG', quality=quality, optimize=True)
         
         output_original.seek(0)
         original_content = ContentFile(output_original.getvalue(), name=image_file.name)
         result['original'] = original_content
         result['original_size'] = len(output_original.getvalue())
         
-        # Generate WebP version
+        # Generate WebP version (WebP supports transparency, so we use original img)
         try:
             output_webp = BytesIO()
             img.save(output_webp, format='WEBP', quality=quality, method=6)

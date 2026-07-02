@@ -186,6 +186,12 @@
     margin-bottom: 6px;
 }
 
+.course-item__field input,
+.course-item__field select {
+    height: 42px !important;
+    box-sizing: border-box !important;
+}
+
 .course-item--dragging {
     opacity: 0.5;
     border-style: dashed;
@@ -341,7 +347,7 @@
 
 .course-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 16px;
 }
 

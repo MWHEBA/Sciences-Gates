@@ -10,7 +10,7 @@
 
     <!-- قائمة التنقل — max-height ديناميكي = ارتفاع الـ aside - الشعار - الملف الشخصي -->
     <nav class="flex-1 px-4 py-2 overflow-y-auto" x-data="{ 
-            activeSection: {% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path or request.GET.type == 'university' %}'universities'{% elif '/dashboard/institutes' in request.path or request.GET.type == 'institute' %}'institutes'{% elif '/dashboard/majors' in request.path %}'majors'{% elif '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}'articles'{% else %}null{% endif %}
+            activeSection: {% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path or request.GET.type == 'university' %}'universities'{% elif '/dashboard/institutes' in request.path or request.GET.type == 'institute' %}'institutes'{% elif '/dashboard/majors' in request.path or '/dashboard/major-categories' in request.path %}'majors'{% elif '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}'articles'{% else %}null{% endif %}
         }" style="max-height: calc(100vh - 8px - var(--sidebar-logo-h) - var(--sidebar-profile-h));
                  margin: 5px 0;
                  scrollbar-width: thin;
@@ -274,19 +274,26 @@
                     <!-- Sub-items التخصصات -->
                     <div x-show="activeSection === 'majors'" x-transition class="mt-1 ml-4 space-y-1 border-r-2"
                         style="border-color: var(--border);">
-                        <a href="{% url 'dashboard:major_list' %}"
-                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="{% if request.path == '/dashboard/majors/' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                            @mouseenter="{% if request.path != '/dashboard/majors/' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                            @mouseleave="{% if request.path != '/dashboard/majors/' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
-                            <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
-                                </path>
-                            </svg>
-                            <span>إدارة التخصصات</span>
-                        </a>
+                        
+                        <!-- إدارة التخصصات -->
+                        <div
+                            :style="'{{ request.path }}' === '/dashboard/majors/' ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                            <a href="{% url 'dashboard:major_list' %}"
+                                class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                                style="{% if request.path == '/dashboard/majors/' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
+                                @mouseenter="{% if request.path != '/dashboard/majors/' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
+                                @mouseleave="{% if request.path != '/dashboard/majors/' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                                <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                                    </path>
+                                </svg>
+                                <span>إدارة التخصصات</span>
+                            </a>
+                        </div>
+
+                        <!-- إضافة تخصص -->
                         <div
                             :style="'{{ request.path }}'.includes('/dashboard/majors/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                             <a href="{% url 'dashboard:major_create' %}"
@@ -299,6 +306,24 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
                                 </svg>
                                 <span>إضافة تخصص</span>
+                            </a>
+                        </div>
+
+                        <!-- تصنيفات التخصصات -->
+                        <div
+                            :style="'{{ request.path }}'.includes('/dashboard/major-categories') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                            <a href="{% url 'dashboard:major_category_list' %}"
+                                class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
+                                style="{% if '/dashboard/major-categories' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
+                                @mouseenter="{% if '/dashboard/major-categories' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
+                                @mouseleave="{% if '/dashboard/major-categories' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                                <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                    </path>
+                                </svg>
+                                <span>تصنيفات التخصصات</span>
                             </a>
                         </div>
                     </div>

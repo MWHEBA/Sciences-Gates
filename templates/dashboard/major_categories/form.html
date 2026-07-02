@@ -1,0 +1,80 @@
+{% extends "dashboard/form_page.html" %}
+
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block form_sections %}
+<div class="space-y-6">
+    <!-- Card Container -->
+    <div style="background-color: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-xl);
+                box-shadow: var(--shadow-sm);
+                padding: 24px;">
+        <section>
+            <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">معلومات التصنيف</h2>
+            <div class="space-y-6">
+                <!-- Name -->
+                <div>
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                        {{ form.name.label }}
+                        <span style="color: var(--danger);">*</span>
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Slug -->
+                <div>
+                    <label for="{{ form.slug.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                        {{ form.slug.label }}
+                        <span style="color: var(--danger);">*</span>
+                    </label>
+                    {{ form.slug }}
+                    {% if form.slug.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.slug.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">{{ form.slug.help_text }}</p>
+                </div>
+
+
+
+                <!-- Description -->
+                <div>
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                        {{ form.description.label }}
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('id_name');
+    const slugInput = document.getElementById('id_slug');
+    const formElement = document.getElementById('main-form');
+    const isEditMode = formElement ? formElement.hasAttribute('data-object-id') : false;
+
+    if (nameInput && slugInput && !isEditMode) {
+        nameInput.addEventListener('input', function() {
+            slugInput.value = this.value.trim()
+                .toLowerCase()
+                .replace(/[^\w\s\u0621-\u064A\u0660-\u0669-]/g, '')
+                .replace(/[\s_]+/g, '-')
+                .replace(/-+/g, '-');
+        });
+    }
+});
+</script>
+{% endblock %}

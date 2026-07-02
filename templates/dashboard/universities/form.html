@@ -291,6 +291,9 @@
 
 
 
+
+
+
                 <!-- الكليات — Floating Card -->
                 <div style="background-color: var(--surface);
                             border: 1px solid var(--border);
@@ -433,6 +436,189 @@
                             </div>
                             <p class="faculty-empty-state__text">لا توجد كليات مضافة</p>
                             <p class="faculty-empty-state__hint">اضغط "إضافة كلية" لإضافة كلية جديدة</p>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- الرسوم الإضافية — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">رسوم تدفع مرة واحدة فقط</h2>
+                        
+                        <!-- Hidden field for Django form processing -->
+                        {{ form.one_time_fees }}
+                        {% if form.one_time_fees.errors %}
+                            <p class="mt-1 text-sm mb-4" style="color: var(--danger);">{{ form.one_time_fees.errors.0 }}</p>
+                        {% endif %}
+
+                        <!-- Alpine.js Table Builder -->
+                        <div x-data="feeTablesManager()" x-init="init()" class="space-y-4">
+                            <!-- Loop through tables -->
+                            <template x-for="(table, tIndex) in tables" :key="tIndex">
+                                <div class="border rounded-lg p-4 bg-gray-50/50 space-y-4" style="border-color: var(--border); background-color: var(--surface-2); border-radius: var(--radius-lg); margin-bottom: 16px;">
+                                    <!-- Table Title and Action Header -->
+                                    <div class="flex justify-between items-center gap-4" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px;">
+                                        <input type="text" x-model="table.title" placeholder="عنوان الجدول (مثال: الرسوم المدفوعة مرة واحدة طوال مدة الدراسة)" 
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                               style="background-color: var(--surface); color: var(--text-primary); border-color: var(--border); flex: 1; border-radius: var(--radius-md); padding: 8px 12px;"
+                                               @input="updateJSON()">
+                                        <button type="button" @click="removeTable(tIndex)" 
+                                                class="px-3 py-2 text-sm font-semibold rounded-lg hover:bg-red-50 text-red-600 transition-colors duration-150"
+                                                style="border: 1px solid var(--danger-light); color: var(--danger); background: transparent; cursor: pointer; border-radius: var(--radius-md); padding: 8px 16px; font-weight: 600;">
+                                            حذف الجدول
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Table Columns and Rows -->
+                                    <div class="overflow-x-auto" style="overflow-x: auto; margin-bottom: 12px;">
+                                        <table class="w-full border-collapse" style="width: 100%; border-collapse: collapse; border: 1px solid var(--border);">
+                                            <thead>
+                                                <tr style="background-color: var(--primary-light);">
+                                                    <!-- Column Headers -->
+                                                    <template x-for="(header, hIndex) in table.headers" :key="hIndex">
+                                                        <th class="border p-2 text-right" style="border: 1px solid var(--border); padding: 10px; min-width: 150px;">
+                                                            <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+                                                                <input type="text" x-model="table.headers[hIndex]" 
+                                                                       class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none"
+                                                                       style="background-color: var(--surface); color: var(--text-primary); border-color: var(--border); padding: 4px 8px; font-size: 13px; border-radius: var(--radius-sm); flex: 1;"
+                                                                       @input="updateJSON()">
+                                                                <button type="button" @click="removeColumn(tIndex, hIndex)" 
+                                                                        class="text-red-500 hover:text-red-700 font-bold px-1" style="background: transparent; border: none; cursor: pointer; color: var(--danger); font-size: 16px;" title="حذف العمود">
+                                                                    &times;
+                                                                </button>
+                                                            </div>
+                                                        </th>
+                                                    </template>
+                                                    <!-- Action Column for Add Column -->
+                                                    <th class="border p-2 text-center w-16" style="border: 1px solid var(--border); padding: 10px; width: 80px; text-align: center;">
+                                                        <button type="button" @click="addColumn(tIndex)" 
+                                                                class="px-2 py-1 text-xs font-semibold bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                                                                style="background: var(--primary); color: #ffffff; border: none; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 11px; cursor: pointer; font-weight: 600;">
+                                                            + عمود
+                                                        </button>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- Rows -->
+                                                <template x-for="(row, rIndex) in table.rows" :key="rIndex">
+                                                    <tr class="hover:bg-gray-50" style="background-color: var(--surface); border-bottom: 1px solid var(--border);">
+                                                        <template x-for="(cell, cIndex) in row" :key="cIndex">
+                                                            <td class="border p-2" style="border: 1px solid var(--border); padding: 8px;">
+                                                                <input type="text" x-model="table.rows[rIndex][cIndex]" 
+                                                                       class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none"
+                                                                       style="background-color: var(--surface); color: var(--text-primary); border-color: var(--border); padding: 4px 8px; font-size: 13px; border-radius: var(--radius-sm);"
+                                                                       @input="updateJSON()">
+                                                            </td>
+                                                        </template>
+                                                        <!-- Action Column for Delete Row -->
+                                                        <td class="border p-2 text-center" style="border: 1px solid var(--border); padding: 8px; text-align: center;">
+                                                            <button type="button" @click="removeRow(tIndex, rIndex)" 
+                                                                    class="text-red-500 hover:text-red-700 font-bold px-2" style="background: transparent; border: none; cursor: pointer; color: var(--danger); font-size: 18px;" title="حذف الصف">
+                                                                &times;
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Add Row Action -->
+                                    <div class="flex gap-2" style="display: flex; gap: 8px;">
+                                        <button type="button" @click="addRow(tIndex)" 
+                                                class="px-3 py-1.5 text-xs font-semibold bg-green-600 text-white rounded hover:bg-green-700 transition"
+                                                style="background: var(--success); color: #ffffff; border: none; padding: 6px 12px; border-radius: var(--radius-sm); font-size: 12px; cursor: pointer; font-weight: 600;">
+                                            + إضافة صف
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                            
+                            <!-- Add Table Action -->
+                            <div class="pt-2" style="padding-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button type="button" @click="addTable()" 
+                                        class="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                        style="background: var(--primary); color: #ffffff; border: none; padding: 10px 20px; border-radius: var(--radius-md); font-size: 13px; cursor: pointer; font-weight: 600;">
+                                    + إضافة جدول رسوم جديد
+                                </button>
+                                <button type="button" @click="openImportModal()" 
+                                        class="px-4 py-2 text-sm font-semibold rounded-lg transition"
+                                        style="background: transparent; border: 1px dashed var(--border-strong); color: var(--text-secondary); padding: 10px 20px; border-radius: var(--radius-md); font-size: 13px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 5v14M5 12h14"/>
+                                    </svg>
+                                    استيراد جداول الرسوم من Elementor
+                                </button>
+                            </div>
+
+                            <!-- Elementor Import Modal -->
+                            <div x-show="showImportModal" 
+                                 class="faq-bulk-import-modal faq-bulk-import-modal--active" 
+                                 style="display: none; position: fixed; inset: 0; z-index: 9999; align-items: center; justify-content: center;"
+                                 x-transition>
+                                <div class="faq-bulk-import-modal__overlay" @click="closeImportModal()"></div>
+                                <div class="faq-bulk-import-modal__content" style="max-height: 90vh; display: flex; flex-direction: column;">
+                                    <div class="faq-bulk-import-modal__header">
+                                        <h3>استيراد جداول الرسوم من Elementor</h3>
+                                        <button type="button" class="faq-bulk-import-modal__close" @click="closeImportModal()">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="faq-bulk-import-modal__body" style="flex: 1; overflow-y: auto;">
+                                        <!-- Step 1: HTML Input -->
+                                        <div x-show="parsedTables.length === 0">
+                                            <p class="faq-bulk-import-instructions" style="margin-bottom: 12px;">الصق كود HTML من Elementor Accordion أو كود الجدول مباشرة:</p>
+                                            <textarea x-model="importHTML" 
+                                                      class="faq-bulk-import-textarea" 
+                                                      placeholder="الصق الكود هنا..." 
+                                                      style="width: 100%; height: 250px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; font-family: monospace; font-size: 13px; background-color: var(--surface); color: var(--text-primary); direction: ltr; text-align: left;"></textarea>
+                                            
+                                            <template x-for="err in importErrors">
+                                                <p style="color: var(--danger); font-size: 13px; margin-top: 8px;" x-text="err"></p>
+                                            </template>
+                                            
+                                            <div class="faq-bulk-import-info" style="margin-top: 16px; background-color: var(--surface-2); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                                                <p>💡 <strong>طريقة الاستخدام:</strong></p>
+                                                <ul style="list-style-type: decimal; padding-right: 20px; margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+                                                    <li>افتح صفحة الموقع القديم التي تحتوي على الرسوم.</li>
+                                                    <li>افتح أدوات المطور (F12) في المتصفح.</li>
+                                                    <li>ابحث عن كود الأكورديون أو الجدول وانسخه كاملاً.</li>
+                                                    <li>الصقه هنا ثم اضغط على زر "تحليل الكود".</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Step 2: Preview -->
+                                        <div x-show="parsedTables.length > 0">
+                                            <h4 style="font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">الجداول المكتشفة جاهزة للاستيراد:</h4>
+                                            <div class="space-y-4" style="max-height: 400px; overflow-y: auto;">
+                                                <template x-for="(table, idx) in parsedTables" :key="idx">
+                                                    <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; background-color: var(--surface-2); margin-bottom: 12px;">
+                                                        <h5 style="font-weight: 600; color: var(--primary); margin-bottom: 8px;" x-text="table.title"></h5>
+                                                        <div style="font-size: 12px; color: var(--text-secondary);">
+                                                            البيانات: <span x-text="table.rows.length"></span> صفوف، <span x-text="table.headers.length"></span> أعمدة.
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="faq-bulk-import-modal__footer" style="padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background-color: var(--surface-2);">
+                                        <button type="button" class="faq-bulk-import-btn-cancel" @click="closeImportModal()" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text-primary); cursor: pointer;">إلغاء</button>
+                                        <button type="button" x-show="parsedTables.length === 0" class="faq-bulk-import-btn-next" @click="parseImport()" style="padding: 8px 16px; border: none; border-radius: 6px; background: var(--primary); color: #ffffff; cursor: pointer; font-weight: 600;">تحليل الكود</button>
+                                        <button type="button" x-show="parsedTables.length > 0" class="faq-bulk-import-btn-next" @click="parsedTables = []" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text-primary); cursor: pointer;">السابق</button>
+                                        <button type="button" x-show="parsedTables.length > 0" class="faq-bulk-import-btn-confirm" @click="confirmImport()" style="padding: 8px 16px; border: none; border-radius: 6px; background: var(--success); color: #ffffff; cursor: pointer; font-weight: 600;">تأكيد الاستيراد</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -937,4 +1123,325 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 </script>
 {% endif %}
+
+<script>
+function feeTablesManager() {
+    return {
+        tables: [],
+        jsonValue: '',
+        init() {
+            let textarea = document.getElementById('id_one_time_fees');
+            if (textarea && textarea.value) {
+                try {
+                    this.tables = JSON.parse(textarea.value);
+                } catch (e) {
+                    console.error("Error parsing one_time_fees JSON:", e);
+                    this.tables = [];
+                }
+            } else {
+                this.tables = [];
+            }
+            this.updateJSON();
+        },
+        addTable() {
+            this.tables.push({
+                title: 'جدول رسوم جديد',
+                headers: ['البيان', 'الرسوم بالدولار'],
+                rows: [['', '']]
+            });
+            this.updateJSON();
+        },
+        removeTable(index) {
+            if (confirm('هل أنت متأكد من حذف هذا الجدول بالكامل؟')) {
+                this.tables.splice(index, 1);
+                this.updateJSON();
+            }
+        },
+        addColumn(tIndex) {
+            this.tables[tIndex].headers.push('عمود جديد');
+            this.tables[tIndex].rows.forEach(row => {
+                row.push('');
+            });
+            this.updateJSON();
+        },
+        removeColumn(tIndex, hIndex) {
+            if (this.tables[tIndex].headers.length <= 1) {
+                alert('يجب أن يحتوي الجدول على عمود واحد على الأقل.');
+                return;
+            }
+            if (confirm('هل أنت متأكد من حذف هذا العمود؟ سيتم حذف جميع البيانات المرتبطة به في هذا الجدول.')) {
+                this.tables[tIndex].headers.splice(hIndex, 1);
+                this.tables[tIndex].rows.forEach(row => {
+                    row.splice(hIndex, 1);
+                });
+                this.updateJSON();
+            }
+        },
+        addRow(tIndex) {
+            let colCount = this.tables[tIndex].headers.length;
+            let newRow = Array(colCount).fill('');
+            this.tables[tIndex].rows.push(newRow);
+            this.updateJSON();
+        },
+        removeRow(tIndex, rIndex) {
+            this.tables[tIndex].rows.splice(rIndex, 1);
+            this.updateJSON();
+        },
+        updateJSON() {
+            let textarea = document.getElementById('id_one_time_fees');
+            if (textarea) {
+                this.jsonValue = JSON.stringify(this.tables);
+                textarea.value = this.jsonValue;
+            }
+        },
+        showImportModal: false,
+        importHTML: '',
+        importErrors: [],
+        parsedTables: [],
+        openImportModal() {
+            this.importHTML = '';
+            this.importErrors = [];
+            this.parsedTables = [];
+            this.showImportModal = true;
+        },
+        closeImportModal() {
+            this.showImportModal = false;
+        },
+        parseImport() {
+            this.importErrors = [];
+            this.parsedTables = [];
+            let inputString = this.importHTML.trim();
+            if (!inputString) {
+                this.importErrors.push('الرجاء لصق الكود أو النص أولاً');
+                return;
+            }
+            
+            try {
+                // Check if it looks like HTML
+                let isHTML = /<[a-z][\s\S]*>/i.test(inputString);
+                
+                if (isHTML) {
+                    let parser = new DOMParser();
+                    let doc = parser.parseFromString(inputString, 'text/html');
+                    
+                    // 1. Try to find Elementor Accordion
+                    let accordion = doc.querySelector('.elementor-accordion');
+                    if (accordion) {
+                        let accItems = accordion.querySelectorAll('.elementor-accordion-item');
+                        accItems.forEach((item, index) => {
+                            let titleEl = item.querySelector('.elementor-accordion-title');
+                            let title = titleEl ? titleEl.textContent.trim() : `جدول رسوم ${index + 1}`;
+                            
+                            let contentEl = item.querySelector('.elementor-tab-content');
+                            if (contentEl) {
+                                // Inside accordion tab content, try to find a <table>
+                                let table = contentEl.querySelector('table');
+                                if (table) {
+                                    let parsed = this.parseHTMLTable(table, title);
+                                    if (parsed) {
+                                        this.parsedTables.push(parsed);
+                                    }
+                                } else {
+                                    // No table inside the accordion content. Try to find listed elements
+                                    let listItems = contentEl.querySelectorAll('li, p, div');
+                                    let rows = [];
+                                    listItems.forEach(li => {
+                                        let text = li.textContent.trim();
+                                        if (text && text.includes(':')) {
+                                            let parts = text.split(':');
+                                            rows.push([parts[0].trim(), parts.slice(1).join(':').trim()]);
+                                        } else if (text && text.includes('-')) {
+                                            let parts = text.split('-');
+                                            rows.push([parts[0].trim(), parts.slice(1).join('-').trim()]);
+                                        }
+                                    });
+                                    if (rows.length > 0) {
+                                        this.parsedTables.push({
+                                            title: title,
+                                            headers: ['البيان', 'الرسوم'],
+                                            rows: rows
+                                        });
+                                    } else {
+                                        // Treat the whole accordion item content as one description row
+                                        let cleanText = contentEl.textContent.replace(/\s+/g, ' ').trim();
+                                        if (cleanText) {
+                                            this.parsedTables.push({
+                                                title: title,
+                                                headers: ['البيان', 'التفاصيل'],
+                                                rows: [['الرسوم الإضافية', cleanText]]
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        // 2. Try to find any direct tables in the pasted HTML
+                        let tables = doc.querySelectorAll('table');
+                        if (tables.length > 0) {
+                            tables.forEach((table, index) => {
+                                let title = `جدول مستورد ${index + 1}`;
+                                // Try to look for a heading directly preceding the table
+                                let prev = table.previousElementSibling;
+                                if (prev && (prev.tagName.startsWith('H') || prev.classList.contains('elementor-heading-title'))) {
+                                    title = prev.textContent.trim();
+                                }
+                                let parsed = this.parseHTMLTable(table, title);
+                                if (parsed) {
+                                    this.parsedTables.push(parsed);
+                                }
+                            });
+                        }
+                    }
+                } else {
+                    // Plain text tab-separated/space-separated parser
+                    let lines = inputString.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    if (lines.length > 0) {
+                        let title = lines[0];
+                        let rows = [];
+                        let maxCols = 0;
+                        for (let i = 1; i < lines.length; i++) {
+                            let line = lines[i];
+                            // Split by tab or 2 or more spaces
+                            let parts = line.split(/\t|\s{2,}/).map(p => p.trim()).filter(p => p.length > 0);
+                            if (parts.length > 0) {
+                                rows.push(parts);
+                                if (parts.length > maxCols) {
+                                    maxCols = parts.length;
+                                }
+                            }
+                        }
+                        if (maxCols === 0) {
+                            maxCols = 2;
+                        }
+                        let headers = Array(maxCols).fill('');
+                        
+                        // Adjust row lengths
+                        rows = rows.map(row => {
+                            while (row.length < maxCols) {
+                                row.push('');
+                            }
+                            return row.slice(0, maxCols);
+                        });
+                        
+                        this.parsedTables.push({
+                            title: title,
+                            headers: headers,
+                            rows: rows
+                        });
+                    }
+                }
+                
+                if (this.parsedTables.length === 0) {
+                    this.importErrors.push('لم يتم العثور على أي جداول أو أكورديون أو نص صالح في المدخلات.');
+                }
+            } catch (err) {
+                this.importErrors.push('حدث خطأ أثناء تحليل المدخلات: ' + err.message);
+            }
+        },
+        parseHTMLTable(tableEl, defaultTitle) {
+            let trs = Array.from(tableEl.querySelectorAll('tr'));
+            if (trs.length === 0) return null;
+            
+            let title = defaultTitle || 'جدول مستورد';
+            let headers = [];
+            let rows = [];
+            let startIndex = 0;
+            
+            // 1. Check if first row is a title row (e.g., single cell spanning multiple columns)
+            let firstRowCells = trs[0].querySelectorAll('th, td');
+            if (firstRowCells.length === 1) {
+                title = firstRowCells[0].textContent.trim();
+                startIndex = 1;
+            } else if (firstRowCells.length > 1) {
+                // Check if the first cell spans all columns (colspan)
+                let firstCell = firstRowCells[0];
+                if (firstCell.hasAttribute('colspan')) {
+                    let colspanVal = parseInt(firstCell.getAttribute('colspan'));
+                    if (colspanVal >= 2 && firstRowCells.length === 1) {
+                        title = firstCell.textContent.trim();
+                        startIndex = 1;
+                    }
+                }
+            }
+            
+            // 2. Identify if there's a column header row
+            let hasHeaders = false;
+            let thead = tableEl.querySelector('thead');
+            let headerRow = null;
+            
+            if (thead) {
+                let theadRows = thead.querySelectorAll('tr');
+                if (theadRows.length > 0) {
+                    headerRow = theadRows[0];
+                    hasHeaders = true;
+                }
+            } else if (trs.length > startIndex) {
+                // If the row at startIndex has only TH elements, it is a header row
+                let candidateCells = trs[startIndex].querySelectorAll('th');
+                if (candidateCells.length > 0 && candidateCells.length === trs[startIndex].querySelectorAll('th, td').length) {
+                    headerRow = trs[startIndex];
+                    startIndex++;
+                    hasHeaders = true;
+                }
+            }
+            
+            // 3. Extract Headers
+            let maxColCount = 0;
+            if (hasHeaders && headerRow) {
+                let ths = headerRow.querySelectorAll('th, td');
+                ths.forEach(th => headers.push(th.textContent.trim()));
+                maxColCount = headers.length;
+            }
+            
+            // 4. Extract Rows
+            for (let i = startIndex; i < trs.length; i++) {
+                let cells = [];
+                let tds = trs[i].querySelectorAll('td, th');
+                tds.forEach(td => cells.push(td.textContent.trim().replace(/\s+/g, ' ')));
+                if (cells.length > 0) {
+                    rows.push(cells);
+                    if (cells.length > maxColCount) {
+                        maxColCount = cells.length;
+                    }
+                }
+            }
+            
+            // 5. If no headers were explicitly found, create empty headers matching the column count
+            if (headers.length === 0 && maxColCount > 0) {
+                for (let i = 0; i < maxColCount; i++) {
+                    headers.push('');
+                }
+            }
+            
+            // Adjust row lengths to match header length
+            rows = rows.map(row => {
+                while (row.length < headers.length) {
+                    row.push('');
+                }
+                if (row.length > headers.length) {
+                    row = row.slice(0, headers.length);
+                }
+                return row;
+            });
+            
+            if (headers.length > 0) {
+                return {
+                    title: title,
+                    headers: headers,
+                    rows: rows
+                };
+            }
+            return null;
+        },
+        confirmImport() {
+            if (this.parsedTables.length > 0) {
+                this.tables = this.tables.concat(this.parsedTables);
+                this.updateJSON();
+                this.closeImportModal();
+            }
+        }
+    };
+}
+</script>
 {% endblock %}

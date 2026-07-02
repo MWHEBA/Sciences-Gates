@@ -39,10 +39,12 @@ class InstituteForm(forms.ModelForm):
         model = Institute
         fields = [
             # Basic Information
-            'name', 'slug', 'is_legacy', 'state', 'city', 'main_image', 'main_image_alt', 'location',
+            'name', 'slug', 'is_legacy', 'state', 'city', 'logo', 'logo_alt', 'main_image', 'main_image_alt', 'location',
             'telephone', 'website',
             # Rich Text Sections
             'introduction', 'description', 'why_choose_us', 'english_study',
+            # Fees Info
+            'fees_includes', 'fees_excludes',
             # Relationships
             'related_articles', 'tags',
             # Publishing
@@ -73,6 +75,15 @@ class InstituteForm(forms.ModelForm):
             'state': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'required': True,
+            }),
+            'logo': forms.FileInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'accept': 'image/*',
+            }),
+            'logo_alt': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'الوصف البديل لشعار المعهد (SEO)',
+                'dir': 'rtl',
             }),
             'main_image': forms.FileInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -110,6 +121,18 @@ class InstituteForm(forms.ModelForm):
             }),
             'english_study': CustomHTMLEditorWidget(attrs={
                 'data-placeholder': 'معلومات وتفاصيل عن دراسة اللغة الإنجليزية في المعهد...',
+            }),
+            'fees_includes': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'مثال: تكاليف الدراسة، ورسوم تأشيرة الطالب، ورسوم التأمين الصحي...',
+                'rows': 2,
+                'dir': 'rtl',
+            }),
+            'fees_excludes': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'مثال: المصروف الشخصي، السكن المساعد، تذاكر الطيران...',
+                'rows': 2,
+                'dir': 'rtl',
             }),
             
             # Relationships
@@ -189,6 +212,8 @@ class InstituteForm(forms.ModelForm):
             'is_legacy': 'رابط قديم',
             'state': 'الولاية',
             'city': 'المدينة',
+            'logo': 'شعار المعهد',
+            'logo_alt': 'النص البديل للشعار',
             'main_image': 'الصورة الرئيسية',
             'main_image_alt': 'النص البديل للصورة الرئيسية',
             'location': 'الموقع',
@@ -200,6 +225,8 @@ class InstituteForm(forms.ModelForm):
             'description': 'وصف المعهد',
             'why_choose_us': 'لماذا يختار الطلاب العرب المعهد',
             'english_study': 'دراسة اللغة الإنجليزية',
+            'fees_includes': 'الرسوم تشمل',
+            'fees_excludes': 'الرسوم لا تشمل',
             
             # Relationships
             'related_articles': 'المقالات المرتبطة',
@@ -227,6 +254,8 @@ class InstituteForm(forms.ModelForm):
             'is_legacy': 'تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /institutes/slug/)',
             'state': 'الولاية التي يقع بها المعهد لتسهيل التصفية والبحث',
             'city': 'المدينة التي يقع بها المعهد لتسهيل التصفية والبحث',
+            'logo': 'شعار المعهد (PNG مع خلفية شفافة مفضل)',
+            'logo_alt': 'نص يصف محتوى شعار المعهد لمحركات البحث ومستعرضات الصور',
             'main_image': 'صورة رئيسية للمعهد',
             'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للمعهد لمحركات البحث ومستعرضات الصور',
             'location': 'موقع المعهد الجغرافي بالتفصيل',
@@ -238,6 +267,8 @@ class InstituteForm(forms.ModelForm):
             'description': 'وصف شامل عن المعهد للزوار والطلاب المهتمين',
             'why_choose_us': 'توضيح المميزات وأسباب تفضيل المعهد عن غيره للطلاب العرب',
             'english_study': 'معلومات عن دورات ومستويات اللغة الإنجليزية المتاحة بالمعهد وكيفية دراستها',
+            'fees_includes': 'ما تشمله الرسوم الموضحة أدناه',
+            'fees_excludes': 'ما لا تشمله الرسوم الموضحة أدناه',
             
             # Relationships
             'related_articles': 'اختر المقالات المرتبطة بهذا المعهد',
@@ -266,6 +297,13 @@ class InstituteForm(forms.ModelForm):
         instance = super().save(commit=False)
         from apps.importer.services.image_downloader import delete_unused_media_file
         
+        imported_logo_path = self.data.get('imported_logo_path') if self.data else None
+        if imported_logo_path and (not self.files or 'logo' not in self.files):
+            relative_path = imported_logo_path.replace('/media/', '', 1)
+            if instance.logo and instance.logo.name != relative_path:
+                delete_unused_media_file(instance.logo.name)
+            instance.logo = relative_path
+            
         imported_main_image_path = self.data.get('imported_main_image_path') if self.data else None
         if imported_main_image_path and (not self.files or 'main_image' not in self.files):
             relative_path = imported_main_image_path.replace('/media/', '', 1)
@@ -290,10 +328,15 @@ class InstituteForm(forms.ModelForm):
 CourseFormSet = inlineformset_factory(
     Institute,
     Course,
-    fields=['duration', 'fees_myr', 'fees_usd', 'fees_sar', 'visa_duration', 'sort_order'],
+    fields=['course_type', 'duration', 'fees_myr', 'fees_usd', 'fees_sar', 'visa_duration', 'sort_order'],
     extra=0,
     can_delete=True,
     widgets={
+        'course_type': forms.Select(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'required': True,
+            'dir': 'rtl',
+        }),
         'duration': forms.TextInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             'placeholder': 'مثال: شهر، شهرين، 3 أشهر',
@@ -327,6 +370,7 @@ CourseFormSet = inlineformset_factory(
         'sort_order': forms.HiddenInput(),
     },
     labels={
+        'course_type': 'نوع الكورس',
         'duration': 'مدة الكورس',
         'fees_myr': 'التكلفة بالرنجت MYR',
         'fees_usd': 'التكلفة بالدولار USD',
@@ -335,6 +379,7 @@ CourseFormSet = inlineformset_factory(
         'sort_order': 'الترتيب',
     },
     help_texts={
+        'course_type': 'اختر نوع الكورس (عادي / مكثف)',
         'duration': 'مثال: شهر، شهرين، 3 أشهر',
         'fees_myr': 'مثال: 3,400',
         'fees_usd': 'مثال: 857',

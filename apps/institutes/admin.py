@@ -24,7 +24,10 @@ class InstituteAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         ('معلومات أساسية', {
-            'fields': ('name', 'slug', 'main_image')
+            'fields': ('name', 'slug')
+        }),
+        ('الصور', {
+            'fields': ('logo', 'logo_alt', 'main_image', 'main_image_alt')
         }),
         ('المحتوى', {
             'fields': ('description',)

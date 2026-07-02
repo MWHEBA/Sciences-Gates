@@ -15,3 +15,6 @@ class InstitutesConfig(AppConfig):
         # Generate WebP versions for institute images
         handler = create_webp_signal_handler(Institute, 'main_image')
         post_save.connect(handler, sender=Institute)
+        
+        handler_logo = create_webp_signal_handler(Institute, 'logo')
+        post_save.connect(handler_logo, sender=Institute)

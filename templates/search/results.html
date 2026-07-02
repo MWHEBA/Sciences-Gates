@@ -5,34 +5,147 @@
 {% block meta_description %}نتائج البحث عن {{ query }} في بوابات العلوم. جامعات، معاهد، تخصصات، ومقالات.{% endblock %}
 
 {% block content %}
-<!-- Search Results Header -->
-<section class="section section-bg-white">
-    <div class="container">
-        <div class="search-results-header">
-            <h1 class="search-results-title">نتائج البحث</h1>
+<section class="py-12 border-b border-border page-header-premium">
+    <!-- Decorative Background Shapes -->
+    <div class="page-header-premium__bg-wrapper">
+        <!-- Static Faint Grid Pattern -->
+        <svg class="page-header-premium__grid-pattern page-header-premium__grid-pattern--static"
+            xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+            <defs>
+                <pattern id="grid-pattern-static-search" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <path d="M 16 0 L 0 0 0 16" fill="none" class="grid-path" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-pattern-static-search)" />
+        </svg>
+        <!-- Interactive Spotlight Highlighted Grid Pattern -->
+        <svg class="page-header-premium__grid-pattern page-header-premium__grid-pattern--spotlight"
+            xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+            <defs>
+                <pattern id="grid-pattern-spotlight-search" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <path d="M 16 0 L 0 0 0 16" fill="none" class="grid-path" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-pattern-spotlight-search)" />
+        </svg>
+        <div class="page-header-premium__shape page-header-premium__shape--circle"></div>
+        <div class="page-header-premium__shape page-header-premium__shape--square"></div>
+        <div class="page-header-premium__shape page-header-premium__shape--triangle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12,3 2,21 22,21" stroke-dasharray="3 3" />
+            </svg>
+        </div>
+        <svg class="page-header-premium__shape page-header-premium__shape--dots" xmlns="http://www.w3.org/2000/svg"
+            width="120" height="120">
+            <defs>
+                <pattern id="dots-pattern-search" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="2" class="dot-circle" />
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dots-pattern-search)" />
+        </svg>
+    </div>
+
+    <div class="container mx-auto px-4 max-w-7xl">
+        <div class="max-w-3xl mb-6">
             {% include 'components/breadcrumb.html' %}
-            <p class="search-results-description">
-                وجدنا <strong class="search-results-count">{{ total_results }}</strong> نتيجة عن "<strong class="search-results-query">{{ query }}</strong>"
+            <h1 class="text-3xl md:text-4xl font-extrabold text-primary mt-3 mb-2">نتائج البحث</h1>
+            <p class="text-text-secondary text-base">
+                وجدنا <strong class="text-secondary font-bold text-lg">{{ total_count }}</strong> نتيجة بحث عن "<strong class="text-primary font-bold">{{ query }}</strong>"
             </p>
         </div>
 
-        <!-- Search Form -->
-        <div class="search-results-form-wrapper">
-            <form method="get" class="search-results-form">
-                <div class="search-results-input">
-                    <input type="text" name="q" class="form-control" placeholder="ابحث مرة أخرى..." value="{{ query }}" aria-label="البحث">
+        <!-- Search Form matching Universities Page Header Form -->
+        <div class="bg-surface-2 border border-border rounded-xl p-6 shadow-lg max-w-4xl">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-semibold text-text-secondary mb-2">البحث</label>
+                    <div class="relative">
+                        <input type="text" name="query" placeholder="ابحث عن جامعات، معاهد، تخصصات، مقالات..."
+                            value="{{ query }}"
+                            class="w-full bg-surface border border-border rounded-lg py-2.5 px-4 pr-10 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
+                            aria-label="البحث">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-muted">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </span>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn--primary" title="بحث">بحــث</button>
+                <div>
+                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2">
+                        <span>بحــث</span>
+                    </button>
+                </div>
             </form>
         </div>
+    </div>
+</section>
 
-        <!-- Results -->
+<!-- Grid & Main Section -->
+<section class="py-16 bg-bg-page min-h-[40vh]" x-data="{ activeTab: 'all' }">
+    <div class="container mx-auto px-4 max-w-7xl">
         {% if has_results %}
+            {% if universities and institutes or universities and majors or universities and articles or institutes and majors or institutes and articles or majors and articles %}
+            <!-- Filter Tabs -->
+            <div class="flex items-center gap-2 mb-10 pb-4 border-b border-border overflow-x-auto scrollbar-none whitespace-nowrap">
+                <span class="text-sm font-semibold text-text-secondary ml-3">تصفية حسب:</span>
+                
+                <!-- All Tab -->
+                <button @click="activeTab = 'all'" 
+                    :class="activeTab === 'all' ? 'bg-primary text-white border-primary' : 'bg-surface text-text-primary border-border hover:bg-surface-2'"
+                    class="px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 cursor-pointer">
+                    الكل ({{ total_count }})
+                </button>
+                
+                <!-- Universities Tab -->
+                {% if universities %}
+                <button @click="activeTab = 'universities'" 
+                    :class="activeTab === 'universities' ? 'bg-primary text-white border-primary' : 'bg-surface text-text-primary border-border hover:bg-surface-2'"
+                    class="px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 cursor-pointer">
+                    الجامعات ({{ universities|length }})
+                </button>
+                {% endif %}
+                
+                <!-- Institutes Tab -->
+                {% if institutes %}
+                <button @click="activeTab = 'institutes'" 
+                    :class="activeTab === 'institutes' ? 'bg-primary text-white border-primary' : 'bg-surface text-text-primary border-border hover:bg-surface-2'"
+                    class="px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 cursor-pointer">
+                    المعاهد ({{ institutes|length }})
+                </button>
+                {% endif %}
+                
+                <!-- Majors Tab -->
+                {% if majors %}
+                <button @click="activeTab = 'majors'" 
+                    :class="activeTab === 'majors' ? 'bg-primary text-white border-primary' : 'bg-surface text-text-primary border-border hover:bg-surface-2'"
+                    class="px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 cursor-pointer">
+                    التخصصات ({{ majors|length }})
+                </button>
+                {% endif %}
+                
+                <!-- Articles Tab -->
+                {% if articles %}
+                <button @click="activeTab = 'articles'" 
+                    :class="activeTab === 'articles' ? 'bg-primary text-white border-primary' : 'bg-surface text-text-primary border-border hover:bg-surface-2'"
+                    class="px-4 py-2 rounded-full border text-sm font-semibold transition-all duration-200 cursor-pointer">
+                    المقالات والأدلة ({{ articles|length }})
+                </button>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <!-- Universities Results -->
             {% if universities %}
-            <div class="inl-s-21b446ce01">
-                <h2 class="section-title">الجامعات</h2>
-                <div class="grid grid--3">
+            <div class="mb-16" style="margin-bottom: 64px;"
+                 x-show="activeTab === 'all' || activeTab === 'universities'"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0">
+                <h2 class="text-2xl font-bold text-text-primary mb-6 border-r-4 border-secondary pr-3">الجامعات ({{ universities|length }})</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {% for university in universities %}
                         {% include 'partials/university-card.html' with university=university %}
                     {% endfor %}
@@ -42,9 +155,13 @@
 
             <!-- Institutes Results -->
             {% if institutes %}
-            <div class="inl-s-21b446ce01">
-                <h2 class="section-title">المعاهد</h2>
-                <div class="grid grid--3">
+            <div class="mb-16" style="margin-bottom: 64px;"
+                 x-show="activeTab === 'all' || activeTab === 'institutes'"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0">
+                <h2 class="text-2xl font-bold text-text-primary mb-6 border-r-4 border-secondary pr-3">المعاهد ({{ institutes|length }})</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {% for institute in institutes %}
                         {% include 'partials/institute-card.html' with institute=institute %}
                     {% endfor %}
@@ -54,9 +171,13 @@
 
             <!-- Majors Results -->
             {% if majors %}
-            <div class="inl-s-21b446ce01">
-                <h2 class="section-title">التخصصات</h2>
-                <div class="grid grid--4">
+            <div class="mb-16" style="margin-bottom: 64px;"
+                 x-show="activeTab === 'all' || activeTab === 'majors'"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0">
+                <h2 class="text-2xl font-bold text-text-primary mb-6 border-r-4 border-secondary pr-3">التخصصات ({{ majors|length }})</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {% for major in majors %}
                         {% include 'partials/major-card.html' with major=major %}
                     {% endfor %}
@@ -66,9 +187,13 @@
 
             <!-- Articles Results -->
             {% if articles %}
-            <div class="inl-s-21b446ce01">
-                <h2 class="section-title">المقالات</h2>
-                <div class="grid grid--3">
+            <div class="mb-16" style="margin-bottom: 64px;"
+                 x-show="activeTab === 'all' || activeTab === 'articles'"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0">
+                <h2 class="text-2xl font-bold text-text-primary mb-6 border-r-4 border-secondary pr-3">المقالات والأدلة ({{ articles|length }})</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {% for article in articles %}
                         {% include 'partials/article-card.html' with article=article %}
                     {% endfor %}
@@ -77,7 +202,9 @@
             {% endif %}
         {% else %}
             <!-- No Results -->
-            {% include 'partials/empty-state.html' with title="لا توجد نتائج" message="لم نجد نتائج تطابق بحثك. حاول استخدام كلمات مفتاحية مختلفة أو تصفح الفئات الرئيسية." clear_url="/" %}
+            <div class="max-w-md mx-auto my-8">
+                {% include 'partials/empty-state.html' with title="لا توجد نتائج" message="لم نجد نتائج تطابق بحثك. حاول استخدام كلمات مفتاحية أخرى أو تصفح الفئات الرئيسية." clear_url="/" %}
+            </div>
         {% endif %}
     </div>
 </section>

@@ -4,8 +4,9 @@ Major forms for the dashboard.
 """
 from django import forms
 from django.forms import inlineformset_factory
-from apps.majors.models import Major, SubjectsTable, SalaryTable, CountriesTable
+from apps.majors.models import Major, MajorCategory, SubjectsTable, SalaryTable, CountriesTable, MajorFAQ, MajorAttachment
 from apps.core.widgets import SimpleRichTextWidget
+from apps.html_editor.widgets import CustomHTMLEditorWidget
 
 
 class MajorForm(forms.ModelForm):
@@ -18,7 +19,7 @@ class MajorForm(forms.ModelForm):
         model = Major
         fields = [
             # Basic Information
-            'name', 'slug', 'is_legacy', 'major_category', 'main_image', 'main_image_alt',
+            'name', 'slug', 'is_legacy', 'category', 'main_image', 'main_image_alt',
             # Quick Information Fields
             'study_duration', 'bachelor_duration', 'master_duration', 'phd_duration',
             'tuition_fees', 'study_language', 'practical_training', 'career_opportunities',
@@ -36,21 +37,22 @@ class MajorForm(forms.ModelForm):
         widgets = {
             # Basic Information Section
             'name': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 paste-trigger',
                 'placeholder': 'اسم التخصص',
                 'required': True,
                 'dir': 'rtl',
             }),
             'slug': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 paste-trigger',
                 'placeholder': 'الرابط (يدعم الأحرف العربية)',
                 'required': True,
                 'dir': 'ltr',
+                'data-paste-clean': 'slug',
             }),
             'is_legacy': forms.CheckboxInput(attrs={
                 'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
             }),
-            'major_category': forms.Select(attrs={
+            'category': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'required': True,
             }),
@@ -110,19 +112,19 @@ class MajorForm(forms.ModelForm):
             }),
             
             # Rich Text Sections
-            'description': SimpleRichTextWidget(attrs={
+            'description': CustomHTMLEditorWidget(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'وصف شامل عن التخصص',
                 'rows': 10,
                 'dir': 'rtl',
             }),
-            'why_study_section': SimpleRichTextWidget(attrs={
+            'why_study_section': CustomHTMLEditorWidget(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'أسباب دراسة هذا التخصص',
                 'rows': 8,
                 'dir': 'rtl',
             }),
-            'how_to_apply_section': SimpleRichTextWidget(attrs={
+            'how_to_apply_section': CustomHTMLEditorWidget(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'خطوات التقديم للتخصص',
                 'rows': 8,
@@ -206,7 +208,7 @@ class MajorForm(forms.ModelForm):
             'name': 'اسم التخصص',
             'slug': 'الرابط',
             'is_legacy': 'رابط قديم',
-            'major_category': 'تصنيف التخصص',
+            'category': 'تصنيف التخصص',
             'main_image': 'الصورة الرئيسية',
             'main_image_alt': 'النص البديل للصورة الرئيسية',
             
@@ -250,7 +252,7 @@ class MajorForm(forms.ModelForm):
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
             'is_legacy': 'تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /majors/slug/)',
-            'major_category': 'تصنيف التخصص حسب المجال',
+            'category': 'التصنيف الهرمي للتخصص',
             'main_image': 'صورة رئيسية للتخصص',
             'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للتخصص لمحركات البحث ومستعرضات الصور',
             
@@ -297,6 +299,12 @@ class MajorForm(forms.ModelForm):
             if self.data.get('imported_main_image_path'):
                 self.fields['main_image'].required = False
 
+        # Populate category choices efficiently (flat list)
+        choices = [('', '---------')]
+        for cat in MajorCategory.objects.all().order_by('name'):
+            choices.append((cat.id, cat.name))
+        self.fields['category'].choices = choices
+
     def save(self, commit=True):
         instance = super().save(commit=False)
         from apps.importer.services.image_downloader import delete_unused_media_file
@@ -329,10 +337,15 @@ class MajorForm(forms.ModelForm):
 SubjectsTableFormSet = inlineformset_factory(
     Major,
     SubjectsTable,
-    fields=['academic_year', 'subjects', 'sort_order'],
+    fields=['track_name', 'academic_year', 'subjects', 'sort_order'],
     extra=1,
     can_delete=True,
     widgets={
+        'track_name': forms.TextInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': 'المسار الفرعي (مثال: الرسوم المتحركة أو المؤثرات البصرية - اتركه فارغاً للعام)',
+            'dir': 'rtl',
+        }),
         'academic_year': forms.TextInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             'placeholder': 'مثال: السنة الأولى',
@@ -354,11 +367,13 @@ SubjectsTableFormSet = inlineformset_factory(
         }),
     },
     labels={
+        'track_name': 'المسار الفرعي',
         'academic_year': 'السنة الدراسية',
         'subjects': 'المواد',
         'sort_order': 'ترتيب العرض',
     },
     help_texts={
+        'track_name': 'المسار أو التخصص الفرعي (مثال: الرسوم المتحركة)',
         'academic_year': 'السنة الدراسية (مثال: السنة الأولى)',
         'subjects': 'المواد الدراسية (يمكن فصلها بفواصل)',
         'sort_order': 'ترتيب ظهور الصف (الأصغر أولاً)',
@@ -370,7 +385,7 @@ SubjectsTableFormSet = inlineformset_factory(
 SalaryTableFormSet = inlineformset_factory(
     Major,
     SalaryTable,
-    fields=['job_title', 'average_monthly_salary', 'sort_order'],
+    fields=['job_title', 'job_description', 'average_monthly_salary', 'sort_order'],
     extra=1,
     can_delete=True,
     widgets={
@@ -378,6 +393,12 @@ SalaryTableFormSet = inlineformset_factory(
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             'placeholder': 'مثال: مهندس برمجيات',
             'required': True,
+            'dir': 'rtl',
+        }),
+        'job_description': forms.Textarea(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': 'مثال: تصميم التطبيقات وتجربة المستخدم',
+            'rows': 3,
             'dir': 'rtl',
         }),
         'average_monthly_salary': forms.TextInput(attrs={
@@ -395,11 +416,13 @@ SalaryTableFormSet = inlineformset_factory(
     },
     labels={
         'job_title': 'المسمى الوظيفي',
+        'job_description': 'طبيعة العمل',
         'average_monthly_salary': 'متوسط الراتب الشهري',
         'sort_order': 'ترتيب العرض',
     },
     help_texts={
         'job_title': 'المسمى الوظيفي (مثال: مهندس برمجيات)',
+        'job_description': 'طبيعة العمل أو الوصف المختصر للوظيفة',
         'average_monthly_salary': 'متوسط الراتب الشهري (مثال: 5,000 - 8,000 رنجت ماليزي)',
         'sort_order': 'ترتيب ظهور الصف (الأصغر أولاً)',
     }
@@ -460,3 +483,99 @@ CountriesTableFormSet = inlineformset_factory(
         'sort_order': 'ترتيب ظهور الصف (الأصغر أولاً)',
     }
 )
+
+
+class MajorCategoryForm(forms.ModelForm):
+    """Form for creating and editing major categories in dashboard."""
+    class Meta:
+        model = MajorCategory
+        fields = ['name', 'slug', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 paste-trigger',
+                'placeholder': 'اسم التصنيف',
+                'dir': 'rtl',
+            }),
+            'slug': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 paste-trigger',
+                'placeholder': 'الرابط (يدعم الأحرف العربية)',
+                'dir': 'ltr',
+                'data-paste-clean': 'slug',
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'وصف التصنيف',
+                'rows': 4,
+                'dir': 'rtl',
+            }),
+        }
+        labels = {
+            'name': 'اسم التصنيف',
+            'slug': 'الرابط',
+            'description': 'الوصف',
+        }
+
+
+# Create inline formsets for MajorFAQ and MajorAttachment
+MajorFAQFormSet = inlineformset_factory(
+    Major,
+    MajorFAQ,
+    fields=['question', 'answer', 'sort_order'],
+    extra=0,
+    can_delete=True,
+    widgets={
+        'question': forms.TextInput(attrs={
+            'class': 'faq-item__question-input',
+            'placeholder': 'السؤال الشائع',
+            'required': True,
+        }),
+        'answer': forms.Textarea(attrs={
+            'class': 'faq-item__answer-input hidden',
+            'placeholder': 'الإجابة بالتفصيل',
+            'required': True,
+        }),
+        'sort_order': forms.NumberInput(attrs={
+            'class': 'faq-item__sort-order-input hidden',
+        }),
+    },
+    labels={
+        'question': 'السؤال',
+        'answer': 'الإجابة',
+        'sort_order': 'ترتيب العرض',
+    },
+    help_texts={
+        'question': 'السؤال الشائع حول التخصص',
+        'answer': 'إجابة السؤال بالتفصيل',
+        'sort_order': 'ترتيب ظهور السؤال (الأصغر أولاً)',
+    }
+)
+
+
+MajorAttachmentFormSet = inlineformset_factory(
+    Major,
+    MajorAttachment,
+    fields=['title', 'file'],
+    extra=1,
+    can_delete=True,
+    widgets={
+        'title': forms.TextInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': 'عنوان الملف (مثال: الخطة الدراسية للتخصص)',
+            'required': True,
+            'dir': 'rtl',
+        }),
+        'file': forms.FileInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+        }),
+    },
+    labels={
+        'title': 'عنوان الملف',
+        'file': 'الملف المرفق',
+    },
+    help_texts={
+        'title': 'اسم أو وصف الملف المرفق (مثال: دليل التخصص)',
+        'file': 'الملف المراد إرفاقه (PDF، Word، إلخ)',
+    }
+)
+
+

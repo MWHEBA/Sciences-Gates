@@ -27,7 +27,7 @@ def generate_webp_for_image_field(sender, instance, created, field_name, **kwarg
         **kwargs: Additional signal arguments
     """
     # Only process on creation or update
-    if not created and not kwargs.get('update_fields'):
+    if not created and kwargs.get('update_fields') is not None and field_name not in kwargs.get('update_fields'):
         return
     
     try:
@@ -184,6 +184,7 @@ def sync_university_media(sender, instance, **kwargs):
 
 def sync_institute_media(sender, instance, **kwargs):
     from apps.core.models import MediaFile
+    sync_media_file(instance, 'logo', 'logo_alt', MediaFile.SourceType.INSTITUTE_LOGO)
     sync_media_file(instance, 'main_image', 'main_image_alt', MediaFile.SourceType.INSTITUTE_IMAGE)
 
 
@@ -197,12 +198,25 @@ def sync_article_media(sender, instance, **kwargs):
     sync_media_file(instance, 'featured_image', 'featured_image_alt', MediaFile.SourceType.ARTICLE_IMAGE)
 
 
+def invalidate_mega_menu_cache(sender, instance, **kwargs):
+    """Clear the mega menu cache when universities or institutes change."""
+    from django.core.cache import cache
+    try:
+        cache.delete('mega_menu_data')
+        logger.info('Mega menu cache invalidated due to save/delete of university/institute.')
+    except OSError as e:
+        # Gracefully handle Windows file locks (PermissionError/WinError 32) during test runs
+        logger.warning(f'Could not delete mega menu cache file due to OS lock: {e}')
+    except Exception as e:
+        logger.error(f'Error invalidating mega menu cache: {e}')
+
 def connect_media_signals():
-    """Connect all media synchronization signals."""
+    """Connect all media synchronization signals and cache invalidations."""
     from django.db.models.signals import post_save, post_delete
     from apps.universities.models import University
     from apps.institutes.models import Institute
     from apps.majors.models import Major
+    from apps.majors.models import MajorCategory
     from apps.articles.models import Article
 
     post_save.connect(sync_university_media, sender=University)
@@ -216,6 +230,14 @@ def connect_media_signals():
 
     post_save.connect(sync_article_media, sender=Article)
     post_delete.connect(delete_entity_media_files, sender=Article)
+
+    # Invalidate Mega Menu Cache
+    post_save.connect(invalidate_mega_menu_cache, sender=University)
+    post_delete.connect(invalidate_mega_menu_cache, sender=University)
+    post_save.connect(invalidate_mega_menu_cache, sender=Institute)
+    post_delete.connect(invalidate_mega_menu_cache, sender=Institute)
+    post_save.connect(invalidate_mega_menu_cache, sender=MajorCategory)
+    post_delete.connect(invalidate_mega_menu_cache, sender=MajorCategory)
 
 
 # Connect signals automatically on import

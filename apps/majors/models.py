@@ -6,6 +6,46 @@ from django.urls import reverse
 from apps.core.models import TimestampedModel, PublishableModel, SEOMixin
 
 
+from django.core.exceptions import ValidationError
+
+
+class MajorCategory(TimestampedModel):
+    """Category model for majors."""
+    name = models.CharField(
+        max_length=200,
+        verbose_name='اسم التصنيف',
+        db_index=True
+    )
+    slug = models.SlugField(
+        max_length=200,
+        unique=True,
+        verbose_name='الرابط',
+        help_text='رابط التصنيف (يدعم الأحرف العربية)',
+        allow_unicode=True
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name='الوصف',
+        help_text='وصف التصنيف'
+    )
+
+    class Meta:
+        verbose_name = 'تصنيف تخصص'
+        verbose_name_plural = 'تصنيفات التخصصات'
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['slug']),
+        ]
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        """Return the absolute URL for this major category."""
+        return reverse('majors:category_list', kwargs={'category': self.slug})
+
+
 class Major(TimestampedModel, PublishableModel, SEOMixin):
     """Major/Specialization content model."""
     MAJOR_CATEGORY_CHOICES = [
@@ -38,9 +78,18 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
         max_length=20,
         choices=MAJOR_CATEGORY_CHOICES,
         default='other',
-        verbose_name='تصنيف التخصص',
-        help_text='تصنيف التخصص حسب المجال',
+        verbose_name='تصنيف التخصص (القديم)',
+        help_text='تصنيف التخصص حسب المجال (قيمة قديمة لتوافق البيانات)',
         db_index=True
+    )
+    category = models.ForeignKey(
+        'MajorCategory',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='majors',
+        verbose_name='التصنيف الجديد',
+        help_text='التصنيف الهرمي للتخصص'
     )
     main_image = models.ImageField(
         upload_to='majors/images/',
@@ -176,6 +225,13 @@ class SubjectsTable(models.Model):
         related_name='subjects_tables',
         verbose_name='التخصص'
     )
+    track_name = models.CharField(
+        max_length=200,
+        blank=True,
+        default='',
+        verbose_name='المسار/التخصص الفرعي',
+        help_text='مثال: الرسوم المتحركة أو المؤثرات البصرية (اتركه فارغاً للتخصص العام)'
+    )
     academic_year = models.CharField(
         max_length=100,
         verbose_name='السنة الدراسية',
@@ -197,7 +253,8 @@ class SubjectsTable(models.Model):
         ordering = ['sort_order', 'academic_year']
 
     def __str__(self):
-        return f'{self.academic_year} - {self.major.name}'
+        track_suffix = f' ({self.track_name})' if self.track_name else ''
+        return f'{self.academic_year}{track_suffix} - {self.major.name}'
 
 
 class SalaryTable(models.Model):
@@ -212,6 +269,12 @@ class SalaryTable(models.Model):
         max_length=200,
         verbose_name='المسمى الوظيفي',
         help_text='مثال: مهندس برمجيات'
+    )
+    job_description = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='طبيعة العمل',
+        help_text='مثال: تصميم التطبيقات وتجربة المستخدم'
     )
     average_monthly_salary = models.CharField(
         max_length=100,
@@ -274,3 +337,70 @@ class CountriesTable(models.Model):
 
     def __str__(self):
         return f'{self.destination} - {self.major.name}'
+
+
+class MajorFAQ(models.Model):
+    """FAQs for a major."""
+    major = models.ForeignKey(
+        Major,
+        on_delete=models.CASCADE,
+        related_name='faqs',
+        verbose_name='التخصص'
+    )
+    question = models.CharField(
+        max_length=300,
+        verbose_name='السؤال'
+    )
+    answer = models.TextField(
+        verbose_name='الإجابة'
+    )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='ترتيب العرض',
+        help_text='ترتيب ظهور السؤال (الأصغر أولاً)'
+    )
+
+    class Meta:
+        verbose_name = 'سؤال شائع للتخصص'
+        verbose_name_plural = 'الأسئلة الشائعة للتخصص'
+        ordering = ['sort_order']
+
+    def __str__(self):
+        return f'{self.question} - {self.major.name}'
+
+
+class MajorAttachment(TimestampedModel):
+    """Attachments/Files for a major."""
+    major = models.ForeignKey(
+        Major,
+        on_delete=models.CASCADE,
+        related_name='attachments',
+        verbose_name='التخصص'
+    )
+    title = models.CharField(
+        max_length=200,
+        verbose_name='عنوان الملف'
+    )
+    file = models.FileField(
+        upload_to='majors/attachments/',
+        verbose_name='الملف'
+    )
+    file_size = models.PositiveIntegerField(
+        default=0,
+        verbose_name='حجم الملف (بايت)'
+    )
+
+    class Meta:
+        verbose_name = 'ملف التخصص'
+        verbose_name_plural = 'ملفات التخصص'
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if self.file and hasattr(self.file, 'size'):
+            self.file_size = self.file.size
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.title} - {self.major.name}'
+
+

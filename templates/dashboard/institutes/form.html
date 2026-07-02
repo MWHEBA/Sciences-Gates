@@ -142,6 +142,19 @@
                                     {% endif %}
                                 </div>
 
+                                <!-- الشعار -->
+                                <div>
+                                    {% if form.instance.logo %}
+                                        {% include "dashboard/components/image_upload.html" with field=form.logo required=False current_image=form.instance.logo.url %}
+                                    {% else %}
+                                        {% include "dashboard/components/image_upload.html" with field=form.logo required=False %}
+                                    {% endif %}
+                                    
+                                    <div style="display: none;">
+                                        {{ form.logo_alt }}
+                                    </div>
+                                </div>
+
                                 <!-- الصورة الرئيسية -->
                                 <div>
                                     {% if form.instance.main_image %}
@@ -235,18 +248,53 @@
                             box-shadow: var(--shadow-sm);
                             padding: 24px;">
                     <section>
-                        <div class="course-section__header">
+                        <div class="course-section__header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                             <div class="course-section__title">
                                 <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin: 0;">جدول رسوم المعهد</h2>
                                 <span class="course-counter" id="courses-counter">0</span>
                             </div>
-                            <button type="button" class="course-add-btn" id="course-add-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 6px; background: var(--primary); color: #ffffff; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-family: inherit; font-weight: 600;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="12" y1="5" x2="12" y2="19"/>
-                                    <line x1="5" y1="12" x2="19" y2="12"/>
-                                </svg>
-                                إضافة سطر رسوم
-                            </button>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="course-add-btn" id="course-add-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 6px; background: var(--primary); color: #ffffff; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-family: inherit; font-weight: 600;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                    إضافة سطر رسوم
+                                </button>
+                                <button type="button" class="course-add-btn" id="course-bulk-import-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px dashed var(--border-strong); border-radius: 6px; background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 5v14M5 12h14"/>
+                                    </svg>
+                                    استيراد الرسوم من Elementor
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- تفاصيل الرسوم (تشمل / لا تشمل) -->
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 mb-6" style="border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 20px;">
+                            <!-- الرسوم تشمل -->
+                            <div>
+                                <label for="{{ form.fees_includes.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.fees_includes.label }}
+                                </label>
+                                {{ form.fees_includes }}
+                                {% if form.fees_includes.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.fees_includes.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.fees_includes.help_text }}</p>
+                            </div>
+
+                            <!-- الرسوم لا تشمل -->
+                            <div>
+                                <label for="{{ form.fees_excludes.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.fees_excludes.label }}
+                                </label>
+                                {{ form.fees_excludes }}
+                                {% if form.fees_excludes.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.fees_excludes.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.fees_excludes.help_text }}</p>
+                            </div>
                         </div>
 
                         {{ course_formset.management_form }}
@@ -283,6 +331,13 @@
                                 </div>
                                 <div class="course-item__content">
                                     <div class="course-grid">
+                                        <div class="course-item__field">
+                                            <label for="{{ c_form.course_type.id_for_label }}">نوع الكورس</label>
+                                            {{ c_form.course_type }}
+                                            {% if c_form.course_type.errors %}
+                                                <p class="mt-1 text-xs" style="color: var(--danger);">{{ c_form.course_type.errors.0 }}</p>
+                                            {% endif %}
+                                        </div>
                                         <div class="course-item__field">
                                             <label for="{{ c_form.duration.id_for_label }}">مدة الكورس</label>
                                             {{ c_form.duration }}

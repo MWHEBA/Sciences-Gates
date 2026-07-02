@@ -130,27 +130,35 @@
                 </section>
             {% endif %}
 
-            <!-- Subjects Table Section -->
-            {% if subjects_tables %}
+            <!-- Universities & Programs Offering This Major -->
+            {% if programs %}
                 <section class="detail-section">
                     <div class="detail-section-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                        <h2 class="detail-section-title">المواد الدراسية والمناهج</h2>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg>
+                        <h2 class="detail-section-title">الجامعات الماليزية التي توفر تخصص {{ major.name }}</h2>
                     </div>
                     
                     <div class="detail-table-wrapper">
                         <table class="detail-table">
                             <thead>
                                 <tr>
-                                    <th>السنة الدراسية</th>
-                                    <th>المواد الأكاديمية والمقررات الدراسية</th>
+                                    <th>الجامعة</th>
+                                    <th>البرنامج الأكاديمي</th>
+                                    <th>مدة الدراسة</th>
+                                    <th>الرسوم السنوية</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for row in subjects_tables %}
+                                {% for prog in programs %}
                                     <tr>
-                                        <td class="detail-table-cell-primary">{{ row.academic_year }}</td>
-                                        <td>{{ row.subjects }}</td>
+                                        <td class="detail-table-cell-primary">
+                                            <a href="{{ prog.faculty.university.get_absolute_url }}" class="text-primary hover:underline">
+                                                {{ prog.faculty.university.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ prog.name }}</td>
+                                        <td>{{ prog.duration }}</td>
+                                        <td class="detail-table-cell-highlight">{{ prog.tuition_fees }}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
@@ -159,7 +167,56 @@
                 </section>
             {% endif %}
 
-            <!-- Salary Table Section (Career Opportunities & Salary Guide) -->
+            <!-- Subjects Table Section Grouped by Tracks -->
+            {% if subjects_by_track %}
+                <section class="detail-section">
+                    <div class="detail-section-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        <h2 class="detail-section-title">المواد الدراسية والمناهج</h2>
+                    </div>
+                    
+                    {% if subjects_by_track|length > 1 %}
+                        <!-- Track selector tabs -->
+                        <div class="track-tabs-container flex flex-wrap gap-2 mb-6 border-b pb-2" style="border-color: var(--border);">
+                            {% for track_name in subjects_by_track.keys %}
+                                <button 
+                                    type="button" 
+                                    class="track-tab-btn px-4 py-2 text-sm font-medium rounded-lg transition-colors border"
+                                    style="{% if forloop.first %}background-color: var(--primary); color: white; border-color: var(--primary);{% else %}background-color: var(--surface-2); color: var(--text-muted); border-color: transparent;{% endif %}"
+                                    data-track="{{ forloop.counter }}"
+                                >
+                                    {{ track_name }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    {% for track_name, rows in subjects_by_track.items %}
+                        <div class="track-tab-content {% if not forloop.first %}hidden{% endif %}" id="track-content-{{ forloop.counter }}">
+                            <div class="detail-table-wrapper">
+                                <table class="detail-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 25%;">السنة الدراسية</th>
+                                            <th>المواد الأكاديمية والمقررات الدراسية</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in rows %}
+                                            <tr>
+                                                <td class="detail-table-cell-primary">{{ row.academic_year }}</td>
+                                                <td>{{ row.subjects }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </section>
+            {% endif %}
+
+            <!-- Salary Table Section (Career Opportunities & Salary Guide - 3 Column Layout) -->
             {% if salary_tables %}
                 <section class="detail-section">
                     <div class="detail-section-header">
@@ -172,6 +229,7 @@
                             <thead>
                                 <tr>
                                     <th>المسمى الوظيفي</th>
+                                    <th>طبيعة العمل</th>
                                     <th>متوسط الراتب الشهري التقريبي</th>
                                 </tr>
                             </thead>
@@ -179,6 +237,7 @@
                                 {% for row in salary_tables %}
                                     <tr>
                                         <td class="detail-table-cell-primary">{{ row.job_title }}</td>
+                                        <td>{{ row.job_description|default:"—" }}</td>
                                         <td class="detail-table-cell-highlight">{{ row.average_monthly_salary }}</td>
                                     </tr>
                                 {% endfor %}
@@ -210,9 +269,9 @@
                                 {% for row in countries_tables %}
                                     <tr>
                                         <td class="detail-table-cell-primary">{{ row.destination }}</td>
-                                        <td>{{ row.study_duration }}</td>
+                                        <td>{{ row.study_duration|default:"—" }}</td>
                                         <td class="detail-table-cell-highlight">{{ row.annual_fees }}</td>
-                                        <td>{{ row.living_cost }}</td>
+                                        <td>{{ row.living_cost|default:"—" }}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
@@ -220,6 +279,59 @@
                     </div>
                 </section>
             {% endif %}
+
+            <!-- FAQs Accordion Section -->
+            {% if faqs %}
+                <section class="detail-section" data-seo-ignore>
+                    <div class="detail-section-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <h2 class="detail-section-title">الأسئلة الشائعة حول تخصص {{ major.name }}</h2>
+                    </div>
+                    
+                    <div class="faq-accordion-container space-y-4">
+                        {% for faq in faqs %}
+                            <div class="faq-item border rounded-lg overflow-hidden" style="border-color: var(--border);">
+                                <button type="button" class="faq-trigger w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 text-right font-medium text-gray-900 transition-colors" style="background-color: var(--surface-2);">
+                                    <span style="color: var(--text-main);">{{ faq.question }}</span>
+                                    <svg class="faq-icon transform transition-transform duration-150" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                <div class="faq-content hidden p-4 border-t bg-white text-gray-700 leading-relaxed text-right" style="border-color: var(--border); color: var(--text-main);">
+                                    {{ faq.answer|linebreaksbr }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            <!-- Attachments Download List Section -->
+            {% if attachments %}
+                <section class="detail-section" data-seo-ignore>
+                    <div class="detail-section-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <h2 class="detail-section-title">ملفات ومرفقات للتنزيل</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for att in attachments %}
+                            <div class="flex justify-between items-center p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow" style="border-color: var(--border);">
+                                <div class="flex items-center gap-3">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 text-right" style="color: var(--text-main);">{{ att.title }}</h4>
+                                        <span class="text-xs text-gray-500 block text-right">الحجم: {{ att.file_size|filesizeformat }}</span>
+                                    </div>
+                                </div>
+                                <a href="{{ att.file.url }}" class="btn btn--secondary btn--sm flex items-center gap-1" download>
+                                    <span>تنزيل</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
 
             <!-- Career Opportunities Text Section -->
             {% if major.career_opportunities %}
@@ -373,4 +485,59 @@
     </div>
 
 </div>
+
+<style>
+.faq-icon.active {
+    transform: rotate(180deg);
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // FAQ accordion toggle logic
+    const faqTriggers = document.querySelectorAll('.faq-trigger');
+    faqTriggers.forEach(trigger => {
+        trigger.addEventListener('click', function() {
+            const content = this.nextElementSibling;
+            const icon = this.querySelector('.faq-icon');
+            if (content) {
+                content.classList.toggle('hidden');
+            }
+            if (icon) {
+                icon.classList.toggle('active');
+            }
+        });
+    });
+
+    // Track tabs selector logic
+    const tabButtons = document.querySelectorAll('.track-tab-btn');
+    const tabContents = document.querySelectorAll('.track-tab-content');
+    
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const trackId = this.getAttribute('data-track');
+            
+            // Reset all tab button styles to inactive
+            tabButtons.forEach(b => {
+                b.style.backgroundColor = 'var(--surface-2)';
+                b.style.color = 'var(--text-muted)';
+                b.style.borderColor = 'transparent';
+            });
+            
+            // Set active styles on clicked tab button
+            this.style.backgroundColor = 'var(--primary)';
+            this.style.color = 'white';
+            this.style.borderColor = 'var(--primary)';
+            
+            // Hide all tab contents
+            tabContents.forEach(c => c.classList.add('hidden'));
+            
+            // Show corresponding tab content
+            const activeContent = document.getElementById('track-content-' + trackId);
+            if (activeContent) {
+                activeContent.classList.remove('hidden');
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

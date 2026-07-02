@@ -29,7 +29,8 @@ class InstituteListView(BreadcrumbMixin, ListView):
         queryset = Institute.objects.filter(
             publish_status='published'
         ).prefetch_related(
-            'related_articles'
+            'related_articles',
+            'courses'
         ).order_by('name')
         
         # Apply search filter (q)
@@ -59,16 +60,29 @@ class InstituteListView(BreadcrumbMixin, ListView):
         return queryset
     
     def get_context_data(self, **kwargs):
-        """Add clear_url and city choices to context for resetting filters."""
+        """Add clear_url, city choices, and hub cross-linking data to context."""
         context = super().get_context_data(**kwargs)
         from django.urls import reverse
         from apps.universities.models import University
+        from apps.majors.models import Major
+        from apps.articles.models import Article
         import json
+        
         context['clear_url'] = reverse('institutes:list')
         context['state_choices'] = University.STATE_CHOICES
         context['state_cities_json'] = json.dumps(University.STATE_CITIES)
         context['selected_state'] = self.request.GET.get('state', '')
         context['selected_city'] = self.request.GET.get('city', '')
+        
+        # Hub Pages SEO: cross-link to popular majors and latest articles
+        context['popular_majors'] = Major.objects.filter(
+            publish_status='published'
+        ).order_by('name')[:8]
+
+        context['latest_articles'] = Article.objects.filter(
+            publish_status='published'
+        ).select_related('category').order_by('-publish_date')[:5]
+        
         return context
 
     def get_breadcrumbs(self):
@@ -164,9 +178,12 @@ class InstituteDetailView(BreadcrumbMixin, DetailView):
         """Add additional context for the template."""
         context = super().get_context_data(**kwargs)
         
-        # Get courses (already prefetched)
+        # Get courses (already prefetched) and sort by type (regular first, then intensive) and sort_order
         institute = self.object
-        context['courses'] = institute.courses.all()
+        type_weights = {'regular': 1, 'intensive': 2, 'super_intensive': 3, 'undefined': 4}
+        courses = list(institute.courses.all())
+        courses.sort(key=lambda x: (type_weights.get(x.course_type, 99), x.sort_order))
+        context['courses'] = courses
         context['faqs'] = institute.faqs.all()
         
         # Add lead form

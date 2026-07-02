@@ -742,15 +742,20 @@ function sg_parse_accordion_faculties($accordion_blocks) {
             if ($tables->length > 0) {
                 $table = $tables->item(0);
                 $rows = $table->getElementsByTagName('tr');
-                $is_first_row = true;
+                $current_section = '';
                 
                 foreach ($rows as $row) {
-                    // تخطي صف الهيدر إذا كان يحتوي على th
-                    if ($is_first_row && $row->getElementsByTagName('th')->length > 0) {
-                        $is_first_row = false;
+                    // التحقق من وجود صف يحتوي على عنوان القسم (مثل كورس 4 ساعات في اليوم)
+                    $th_cells = $row->getElementsByTagName('th');
+                    if ($th_cells->length === 1) {
+                        $current_section = trim($th_cells->item(0)->nodeValue);
                         continue;
                     }
-                    $is_first_row = false;
+                    
+                    // تخطي صف الهيدر العام للجدول (مثل مدة الكورس، تكلفة الدراسة)
+                    if ($row->getElementsByTagName('th')->length > 0) {
+                        continue;
+                    }
                     
                     $cells = $row->getElementsByTagName('td');
                     if ($cells->length >= 3) {
@@ -763,6 +768,7 @@ function sg_parse_accordion_faculties($accordion_blocks) {
                                 'name'         => $p_name,
                                 'duration'     => $p_duration,
                                 'tuition_fees' => $p_fees,
+                                'section'      => $current_section,
                             );
                         }
                     }
@@ -1252,10 +1258,20 @@ function sg_parse_html_table($html) {
             $col1 = trim($tds->item(0)->nodeValue);
             $col2 = $tds->length > 1 ? trim($tds->item(1)->nodeValue) : '';
             
-            if (!empty($col1)) {
+            $cells = array();
+            foreach ($tds as $td) {
+                $innerHTML = "";
+                foreach ($td->childNodes as $child) {
+                    $innerHTML .= $td->ownerDocument->saveHTML($child);
+                }
+                $cells[] = trim($innerHTML);
+            }
+
+            if (!empty($col1) || !empty($cells)) {
                 $rows[] = array(
                     'key'   => $col1,
                     'value' => $col2,
+                    'cells' => $cells,
                 );
             }
         }

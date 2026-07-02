@@ -315,8 +315,8 @@ class MajorPublicViewsTest(TestCase):
         url = reverse('majors:detail', kwargs={'slug': self.major.slug})
         
         # This test verifies the view uses prefetch_related for optimization
-        # Expected queries: 1 redirect check + 1 major + 3 dynamic tables + 3 relationships + 1 site settings = 9
-        with self.assertNumQueries(9):
+        # Expected queries: 1 redirect check + 1 major + 3 dynamic tables + 3 relationships + 1 site settings + 3 new prefetches (faqs, attachments, programs) = 12
+        with self.assertNumQueries(12):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 

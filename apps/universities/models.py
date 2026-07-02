@@ -324,6 +324,13 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='شروط القبول للدكتوراه (PhD)',
         help_text='شروط القبول الخاصة ببرنامج الدكتوراه'
     )
+    one_time_fees = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='رسوم تدفع مرة واحدة',
+        help_text='جداول الرسوم الإضافية التي تدفع مرة واحدة بصيغة JSON'
+    )
+
 
     # Relationships
     related_majors = models.ManyToManyField(
@@ -425,6 +432,15 @@ class Program(models.Model):
         related_name='programs',
         verbose_name='الكلية'
     )
+    major = models.ForeignKey(
+        'majors.Major',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='programs',
+        verbose_name='التخصص المرتبط',
+        help_text='اختر التخصص العام المرتبط بهذا البرنامج (مثال: الوسائط المتعددة)'
+    )
     name = models.CharField(
         max_length=200,
         verbose_name='اسم البرنامج'
@@ -450,6 +466,7 @@ class Program(models.Model):
         verbose_name='ترتيب العرض',
         help_text='ترتيب ظهور البرنامج (الأصغر أولاً)'
     )
+
 
     class Meta:
         verbose_name = 'برنامج'
