@@ -26,7 +26,7 @@ class MajorForm(forms.ModelForm):
             # Rich Text Sections
             'description', 'why_study_section', 'how_to_apply_section',
             # Relationships
-            'best_universities', 'cheap_universities', 'related_articles',
+            'best_universities', 'cheap_universities', 'related_articles', 'tags',
             # Publishing
             'publish_status',
             # SEO Fields
@@ -67,9 +67,8 @@ class MajorForm(forms.ModelForm):
                 'dir': 'rtl',
             }),
             
-            # Quick Information Fields
             'study_duration': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 paste-trigger',
                 'placeholder': 'مثال: 4 سنوات (عام)',
                 'required': True,
                 'dir': 'rtl',
@@ -89,10 +88,9 @@ class MajorForm(forms.ModelForm):
                 'placeholder': 'مثال: 3-4 سنوات',
                 'dir': 'rtl',
             }),
-            'tuition_fees': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'مثال: 15,000 - 25,000 رنجت سنوياً',
-                'dir': 'rtl',
+            'tuition_fees': forms.Textarea(attrs={
+                'class': 'hidden',
+                'id': 'id_tuition_fees',
             }),
             'study_language': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -139,6 +137,9 @@ class MajorForm(forms.ModelForm):
                 'class': 'space-y-2',
             }),
             'related_articles': forms.CheckboxSelectMultiple(attrs={
+                'class': 'space-y-2',
+            }),
+            'tags': forms.CheckboxSelectMultiple(attrs={
                 'class': 'space-y-2',
             }),
             
@@ -231,6 +232,7 @@ class MajorForm(forms.ModelForm):
             'best_universities': 'أفضل الجامعات',
             'cheap_universities': 'الجامعات الاقتصادية',
             'related_articles': 'المقالات المرتبطة',
+            'tags': 'الوسوم',
             
             # Publishing
             'publish_status': 'حالة النشر',
@@ -275,6 +277,7 @@ class MajorForm(forms.ModelForm):
             'best_universities': 'اختر أفضل الجامعات لهذا التخصص',
             'cheap_universities': 'اختر الجامعات الاقتصادية لهذا التخصص',
             'related_articles': 'اختر المقالات المرتبطة بهذا التخصص',
+            'tags': 'اختر الوسوم المرتبطة بهذا التخصص',
             
             # Publishing
             'publish_status': 'المحتوى المنشور فقط يظهر للزوار',
@@ -328,6 +331,43 @@ class MajorForm(forms.ModelForm):
             self.save_m2m()
         return instance
 
+    def clean_tuition_fees(self):
+        data = self.cleaned_data.get('tuition_fees')
+        if not data:
+            return []
+        
+        if isinstance(data, list):
+            parsed_data = data
+        elif isinstance(data, str):
+            import json
+            try:
+                # If it is empty or whitespace, return empty list
+                if not data.strip():
+                    return []
+                parsed_data = json.loads(data)
+            except json.JSONDecodeError:
+                raise forms.ValidationError("فشل في معالجة بيانات الرسوم الدراسية")
+        else:
+            raise forms.ValidationError("صيغة البيانات غير صحيحة")
+            
+        if not isinstance(parsed_data, list):
+            raise forms.ValidationError("يجب أن تكون الرسوم الدراسية عبارة عن قائمة من الجداول")
+            
+        for idx, table in enumerate(parsed_data):
+            if not isinstance(table, dict):
+                raise forms.ValidationError(f"الجدول رقم {idx+1} غير صالح")
+            if 'title' not in table or 'headers' not in table or 'rows' not in table:
+                raise forms.ValidationError(f"الجدول رقم {idx+1} ينقصه حقول أساسية (العنوان أو الأعمدة أو الصفوف)")
+            if not isinstance(table['headers'], list):
+                raise forms.ValidationError(f"أعمدة الجدول رقم {idx+1} غير صالحة")
+            if not isinstance(table['rows'], list):
+                raise forms.ValidationError(f"صفوف الجدول رقم {idx+1} غير صالحة")
+            for r_idx, row in enumerate(table['rows']):
+                if not isinstance(row, list):
+                    raise forms.ValidationError(f"الصف رقم {r_idx+1} في الجدول رقم {idx+1} غير صالح")
+                    
+        return parsed_data
+
 
 # ============================================================================
 # Dynamic Table Formsets
@@ -338,7 +378,7 @@ SubjectsTableFormSet = inlineformset_factory(
     Major,
     SubjectsTable,
     fields=['track_name', 'academic_year', 'subjects', 'sort_order'],
-    extra=1,
+    extra=0,
     can_delete=True,
     widgets={
         'track_name': forms.TextInput(attrs={
@@ -386,7 +426,7 @@ SalaryTableFormSet = inlineformset_factory(
     Major,
     SalaryTable,
     fields=['job_title', 'job_description', 'average_monthly_salary', 'sort_order'],
-    extra=1,
+    extra=0,
     can_delete=True,
     widgets={
         'job_title': forms.TextInput(attrs={
@@ -434,7 +474,7 @@ CountriesTableFormSet = inlineformset_factory(
     Major,
     CountriesTable,
     fields=['destination', 'study_duration', 'annual_fees', 'living_cost', 'sort_order'],
-    extra=1,
+    extra=0,
     can_delete=True,
     widgets={
         'destination': forms.TextInput(attrs={

@@ -105,47 +105,46 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='الوصف',
         help_text='وصف شامل عن التخصص'
     )
-    study_duration = models.CharField(
-        max_length=100,
+    study_duration = models.TextField(
         verbose_name='مدة الدراسة (عام)',
         help_text='مثال: 4 سنوات (سيتم استبدالها بالحقول المفصلة أدناه)'
     )
     
     # Detailed study duration by degree
     bachelor_duration = models.CharField(
-        max_length=100,
+        max_length=500,
         blank=True,
         verbose_name='مدة البكالوريوس',
         help_text='مثال: 4 سنوات'
     )
     master_duration = models.CharField(
-        max_length=100,
+        max_length=500,
         blank=True,
         verbose_name='مدة الماجستير',
         help_text='مثال: سنتان'
     )
     phd_duration = models.CharField(
-        max_length=100,
+        max_length=500,
         blank=True,
         verbose_name='مدة الدكتوراه',
         help_text='مثال: 3-4 سنوات'
     )
 
     # Quick Information Fields
-    tuition_fees = models.CharField(
-        max_length=100,
+    tuition_fees = models.JSONField(
         blank=True,
+        default=list,
         verbose_name='الرسوم الدراسية',
-        help_text='مثال: 15,000 - 25,000 رنجت سنوياً'
+        help_text='جداول الرسوم الدراسية للجامعات بصيغة JSON'
     )
-    study_language = models.CharField(
-        max_length=100,
+    study_language = models.TextField(
         blank=True,
+        default='',
         verbose_name='لغة الدراسة',
         help_text='مثال: الإنجليزية'
     )
     practical_training = models.CharField(
-        max_length=200,
+        max_length=500,
         blank=True,
         verbose_name='التدريب العملي',
         help_text='مثال: متاح في السنة الأخيرة'
@@ -187,6 +186,13 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
         related_name='majors',
         verbose_name='المقالات المرتبطة'
     )
+    tags = models.ManyToManyField(
+        'articles.Tag',
+        blank=True,
+        related_name='majors',
+        verbose_name='الوسوم'
+    )
+
 
     class Meta:
         verbose_name = 'تخصص'
@@ -208,6 +214,11 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
             return f'/{self.slug}/'
         return reverse('majors:detail', kwargs={'slug': self.slug})
 
+    @property
+    def is_tuition_fees_json(self):
+        """Check if the tuition fees are stored in the new JSON table format."""
+        return isinstance(self.tuition_fees, list)
+
     def save(self, *args, **kwargs):
         """Store old slug for redirect creation if slug changes."""
         if self.pk:
@@ -226,14 +237,14 @@ class SubjectsTable(models.Model):
         verbose_name='التخصص'
     )
     track_name = models.CharField(
-        max_length=200,
+        max_length=500,
         blank=True,
         default='',
         verbose_name='المسار/التخصص الفرعي',
         help_text='مثال: الرسوم المتحركة أو المؤثرات البصرية (اتركه فارغاً للتخصص العام)'
     )
     academic_year = models.CharField(
-        max_length=100,
+        max_length=500,
         verbose_name='السنة الدراسية',
         help_text='مثال: السنة الأولى'
     )
@@ -266,7 +277,7 @@ class SalaryTable(models.Model):
         verbose_name='التخصص'
     )
     job_title = models.CharField(
-        max_length=200,
+        max_length=500,
         verbose_name='المسمى الوظيفي',
         help_text='مثال: مهندس برمجيات'
     )
@@ -277,7 +288,7 @@ class SalaryTable(models.Model):
         help_text='مثال: تصميم التطبيقات وتجربة المستخدم'
     )
     average_monthly_salary = models.CharField(
-        max_length=100,
+        max_length=500,
         verbose_name='متوسط الراتب الشهري',
         help_text='مثال: 5,000 - 8,000 رنجت ماليزي'
     )
@@ -305,22 +316,22 @@ class CountriesTable(models.Model):
         verbose_name='التخصص'
     )
     destination = models.CharField(
-        max_length=200,
+        max_length=500,
         verbose_name='الوجهة',
         help_text='مثال: ماليزيا'
     )
     study_duration = models.CharField(
-        max_length=100,
+        max_length=500,
         verbose_name='مدة الدراسة',
         help_text='مثال: 4 سنوات'
     )
     annual_fees = models.CharField(
-        max_length=100,
+        max_length=500,
         verbose_name='الرسوم السنوية',
         help_text='مثال: 20,000 - 30,000 رنجت ماليزي'
     )
     living_cost = models.CharField(
-        max_length=100,
+        max_length=500,
         verbose_name='تكلفة المعيشة',
         help_text='مثال: 1,500 - 2,500 رنجت ماليزي شهرياً'
     )

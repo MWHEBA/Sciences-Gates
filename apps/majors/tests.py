@@ -89,6 +89,27 @@ class MajorModelTest(TestCase):
         self.assertEqual(self.major.practical_training, 'متاح في السنة الأخيرة')
         self.assertIn('فرص عمل', self.major.career_opportunities)
 
+    def test_major_tuition_fees_json(self):
+        """Test tuition fees stored in JSON format."""
+        # By default, setup created it as a legacy string
+        self.assertFalse(self.major.is_tuition_fees_json)
+        
+        # Change to valid JSON table list
+        json_tables = [{
+            "title": "رسوم البكالوريوس",
+            "headers": ["الجامعة", "الرسوم السنوية"],
+            "rows": [["جامعة مالايا", "20,000 رنجت"]]
+        }]
+        self.major.tuition_fees = json_tables
+        self.major.save()
+        
+        # Retrieve and verify
+        major_refreshed = Major.objects.get(pk=self.major.pk)
+        self.assertTrue(major_refreshed.is_tuition_fees_json)
+        self.assertEqual(major_refreshed.tuition_fees[0]['title'], "رسوم البكالوريوس")
+        self.assertEqual(major_refreshed.tuition_fees[0]['headers'], ["الجامعة", "الرسوم السنوية"])
+        self.assertEqual(major_refreshed.tuition_fees[0]['rows'], [["جامعة مالايا", "20,000 رنجت"]])
+
     def test_major_content_sections(self):
         """Test content section fields."""
         self.assertIn('مهارات عملية', self.major.why_study_section)
@@ -100,6 +121,14 @@ class MajorModelTest(TestCase):
         self.assertEqual(self.major.best_universities.count(), 0)
         self.assertEqual(self.major.cheap_universities.count(), 0)
         self.assertEqual(self.major.related_articles.count(), 0)
+        self.assertEqual(self.major.tags.count(), 0)
+
+        # Test adding a tag
+        from apps.articles.models import Tag
+        tag = Tag.objects.create(name='دراسة', slug='study')
+        self.major.tags.add(tag)
+        self.assertEqual(self.major.tags.count(), 1)
+        self.assertEqual(self.major.tags.first().name, 'دراسة')
 
     def test_major_get_meta_title(self):
         """Test get_meta_title method."""

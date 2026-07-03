@@ -1,0 +1,254 @@
+/**
+ * Subjects Manager Styles
+ * تصميم بطاقات جداول المواد الدراسية والمناهج
+ */
+
+/* ─── Subjects Items Container ─── */
+#subjects_tables-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 48px;
+}
+
+/* ─── Subject Item ─── */
+.subject-item {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface);
+    transition: all 0.2s ease;
+    opacity: 0;
+    transform: translateY(-8px);
+    overflow: hidden;
+}
+
+.subject-item--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.subject-item--existing {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.subject-item:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-card);
+}
+
+/* ─── Subject Item Header ─── */
+.subject-item__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.subject-item__header:hover {
+    background-color: var(--surface);
+}
+
+/* ─── Subject Drag Handle ─── */
+.subject-item__drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: grab;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+
+.subject-item__drag-handle:hover {
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+}
+
+.subject-item__drag-handle:active {
+    cursor: grabbing;
+}
+
+/* ─── Subject Item Number ─── */
+.subject-item__number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    border: 1px solid var(--primary-muted);
+    min-width: 28px;
+}
+
+/* ─── Subject Title Preview ─── */
+.subject-item__title-preview {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.15s ease;
+}
+
+.subject-item:hover .subject-item__title-preview {
+    color: var(--primary);
+}
+
+/* ─── Subject Toggle Button ─── */
+.subject-item__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.subject-item__toggle:hover {
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+}
+
+.subject-item__toggle svg {
+    transition: transform 0.2s ease;
+}
+
+.subject-item__toggle svg.rotated {
+    transform: rotate(180deg);
+}
+
+/* ─── Subject Delete Button ─── */
+.subject-item__delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.subject-item__delete:hover {
+    background-color: var(--danger-light);
+    color: var(--danger);
+}
+
+/* ─── Subject Item Content (Collapsible) ─── */
+.subject-item__content {
+    padding: 16px;
+    display: none;
+    animation: slideDown 0.2s ease;
+}
+
+.subject-item__content.expanded {
+    display: block;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ─── Deleted State ─── */
+.subject-item--deleted {
+    opacity: 0.4;
+    pointer-events: none;
+    border-color: var(--danger);
+    background-color: var(--danger-light);
+}
+
+/* ─── Dragging State ─── */
+.subject-item--dragging {
+    opacity: 0.5;
+    border-style: dashed;
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+}
+
+.subject-item--drag-over {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* ─── Empty State ─── */
+.subject-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    background-color: var(--surface);
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.subject-empty-state__icon {
+    width: 48px;
+    height: 48px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.subject-empty-state__text {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.subject-empty-state__hint {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ─── Subject Counter ─── */
+.subjects-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    margin-right: 8px;
+}

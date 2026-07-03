@@ -24,6 +24,21 @@
 </script>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+.track-tab-btn {
+    background-color: var(--surface-2);
+    color: var(--text-muted);
+    border-color: transparent;
+}
+.track-tab-btn.active {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+    border-color: var(--primary) !important;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="detail-page-container">
     
@@ -167,6 +182,57 @@
                 </section>
             {% endif %}
 
+            <!-- Tuition Fees Table Section -->
+            {% if major.tuition_fees %}
+                {% if major.is_tuition_fees_json %}
+                    <section class="detail-section" id="tuition-section">
+                        <div class="detail-section-header">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            <h2 class="detail-section-title">تكاليف دراسة تخصص {{ major.name }} في ماليزيا</h2>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 24px; width: 100%;">
+                            {% for table in major.tuition_fees %}
+                            <div style="margin-bottom: 8px;">
+                                {% if table.title %}
+                                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; border-right: 3px solid var(--secondary); padding-right: 8px; line-height: 1.5;">
+                                    {{ table.title }}
+                                </h3>
+                                {% endif %}
+                                <div class="detail-table-wrapper" style="overflow-x: auto; width: 100%; border: 1px solid var(--border); border-radius: 8px;">
+                                    <table class="detail-table" style="width: 100%; border-collapse: collapse; text-align: right; border: none;">
+                                        <thead>
+                                            <tr style="background-color: var(--primary-light); border-bottom: 1px solid var(--border);">
+                                                {% for header in table.headers %}
+                                                <th style="padding: 12px; font-weight: 600; color: var(--text-primary); border-left: 1px solid var(--border);">
+                                                    {{ header }}
+                                                </th>
+                                                {% endfor %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in table.rows %}
+                                            <tr style="border-bottom: 1px solid var(--border); background-color: var(--surface);">
+                                                {% for cell in row %}
+                                                <td style="padding: 12px; color: var(--text-secondary); border-left: 1px solid var(--border);">
+                                                    {{ cell }}
+                                                </td>
+                                                {% endfor %}
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+            {% endif %}
+
             <!-- Subjects Table Section Grouped by Tracks -->
             {% if subjects_by_track %}
                 <section class="detail-section">
@@ -181,8 +247,7 @@
                             {% for track_name in subjects_by_track.keys %}
                                 <button 
                                     type="button" 
-                                    class="track-tab-btn px-4 py-2 text-sm font-medium rounded-lg transition-colors border"
-                                    style="{% if forloop.first %}background-color: var(--primary); color: white; border-color: var(--primary);{% else %}background-color: var(--surface-2); color: var(--text-muted); border-color: transparent;{% endif %}"
+                                    class="track-tab-btn px-4 py-2 text-sm font-medium rounded-lg transition-colors border {% if forloop.first %}active{% endif %}"
                                     data-track="{{ forloop.counter }}"
                                 >
                                     {{ track_name }}
@@ -452,7 +517,13 @@
                     {% if major.tuition_fees %}
                     <div class="detail-sidebar-item">
                         <dt class="detail-sidebar-label">الرسوم الدراسية:</dt>
-                        <dd class="detail-sidebar-value">{{ major.tuition_fees }}</dd>
+                        <dd class="detail-sidebar-value">
+                            {% if major.is_tuition_fees_json %}
+                                <a href="#tuition-section" class="text-primary hover:underline">عرض جداول الرسوم</a>
+                            {% else %}
+                                {{ major.tuition_fees }}
+                            {% endif %}
+                        </dd>
                     </div>
                     {% endif %}
                     {% if major.study_language %}
@@ -517,16 +588,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const trackId = this.getAttribute('data-track');
             
             // Reset all tab button styles to inactive
-            tabButtons.forEach(b => {
-                b.style.backgroundColor = 'var(--surface-2)';
-                b.style.color = 'var(--text-muted)';
-                b.style.borderColor = 'transparent';
-            });
+            tabButtons.forEach(b => b.classList.remove('active'));
             
             // Set active styles on clicked tab button
-            this.style.backgroundColor = 'var(--primary)';
-            this.style.color = 'white';
-            this.style.borderColor = 'var(--primary)';
+            this.classList.add('active');
             
             // Hide all tab contents
             tabContents.forEach(c => c.classList.add('hidden'));

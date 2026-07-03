@@ -50,6 +50,22 @@
         .detail-table--institutes td:nth-child(3) {
             width: 35% !important;
         }
+        .tuition-header-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        @media (max-width: 768px) {
+            .tuition-header-wrapper {
+                flex-direction: column;
+                gap: 6px;
+            }
+            .tuition-header-wrapper .currency-selector-span {
+                margin-right: 0 !important;
+                margin-left: 0 !important;
+            }
+        }
     </style>
 {% endblock %}
 
@@ -102,6 +118,34 @@
         
         <!-- Right Column: Detail Content (2/3 width) -->
         <div class="detail-main" data-seo-content>
+
+            <!-- Quick Facts Card (Mobile Only) -->
+            <div class="detail-sidebar-card d-lg-none" style="margin-bottom: 2rem;">
+                <h3 class="detail-sidebar-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    معلومات سريعة
+                </h3>
+                <dl class="detail-sidebar-list">
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">المدينة:</dt>
+                        <dd class="detail-sidebar-value">{{ institute.get_location_display }}</dd>
+                    </div>
+                    {% if courses %}
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">عدد الدورات المتاحة:</dt>
+                        <dd class="detail-sidebar-value">{{ courses|length }} دورات</dd>
+                    </div>
+                    {% endif %}
+                    {% if institute.website %}
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">الموقع الإلكتروني:</dt>
+                        <dd class="detail-sidebar-value">
+                            <a href="{{ institute.website }}" target="_blank" rel="noopener noreferrer" class="underline" style="color: var(--primary);">زيارة الموقع</a>
+                        </dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
             
             <!-- Introduction Section -->
             {% if institute.introduction %}
@@ -287,16 +331,18 @@
                                                 {% endif %}
                                             </th>
                                             <th>
-                                                تكلفة الدراسة
-                                                <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 4px; padding: 2px 6px; margin-right: 8px; margin-bottom: 0 !important; vertical-align: middle;">
-                                                    <img :src="selectedCurrency === 'usd' ? 'https://flagcdn.com/16x12/us.png' : (selectedCurrency === 'myr' ? 'https://flagcdn.com/16x12/my.png' : 'https://flagcdn.com/16x12/sa.png')" 
-                                                         width="16" height="12" alt="Flag" style="border-radius: 1px; flex-shrink: 0; display: inline-block;">
-                                                    <select x-model="selectedCurrency" style="background: transparent; color: #ffffff; border: none; padding: 0; font-size: 0.85rem; font-weight: bold; cursor: pointer; outline: none; font-family: inherit;">
-                                                        <option value="usd" style="background: var(--bg-surface); color: var(--text-primary);">دولار أمريكي ($)</option>
-                                                        <option value="myr" style="background: var(--bg-surface); color: var(--text-primary);">رينجت ماليزي (RM)</option>
-                                                        <option value="sar" style="background: var(--bg-surface); color: var(--text-primary);">ريال سعودي (﷼)</option>
-                                                    </select>
-                                                </span>
+                                                <div class="tuition-header-wrapper">
+                                                    <span>تكلفة الدراسة</span>
+                                                    <span class="currency-selector-span" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 4px; padding: 2px 6px; margin-right: 8px; margin-bottom: 0 !important; vertical-align: middle;">
+                                                        <img :src="selectedCurrency === 'usd' ? 'https://flagcdn.com/16x12/us.png' : (selectedCurrency === 'myr' ? 'https://flagcdn.com/16x12/my.png' : 'https://flagcdn.com/16x12/sa.png')" 
+                                                             width="16" height="12" alt="Flag" style="border-radius: 1px; flex-shrink: 0; display: inline-block;">
+                                                        <select x-model="selectedCurrency" style="background: transparent; color: #ffffff; border: none; padding: 0; font-size: 0.85rem; font-weight: bold; cursor: pointer; outline: none; font-family: inherit;">
+                                                            <option value="usd" style="background: var(--bg-surface); color: var(--text-primary);">دولار أمريكي ($)</option>
+                                                            <option value="myr" style="background: var(--bg-surface); color: var(--text-primary);">رينجت ماليزي (RM)</option>
+                                                            <option value="sar" style="background: var(--bg-surface); color: var(--text-primary);">ريال سعودي (﷼)</option>
+                                                        </select>
+                                                    </span>
+                                                </div>
                                             </th>
                                             <th>مدة تأشيرة الطالب</th>
                                         </tr>
@@ -401,7 +447,7 @@
         <div class="detail-sidebar" data-seo-ignore>
             
             <!-- Quick Facts Sidebar Card -->
-            <div class="detail-sidebar-card">
+            <div class="detail-sidebar-card d-none d-lg-block">
                 <h3 class="detail-sidebar-title">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     معلومات سريعة

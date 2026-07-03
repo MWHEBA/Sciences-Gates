@@ -162,6 +162,41 @@
         <!-- Right Column: Detail Content (2/3 width) -->
         <div class="detail-main">
 
+            <!-- Quick Facts Card (Mobile Only) -->
+            <div class="detail-sidebar-card d-lg-none" style="margin-bottom: 2rem;">
+                <h3 class="detail-sidebar-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        <line x1="9" y1="10" x2="15" y2="10"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                        <line x1="9" y1="18" x2="13" y2="18"></line>
+                    </svg>
+                    معلومات سريعة
+                </h3>
+                <dl class="detail-sidebar-list">
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">النوع:</dt>
+                        <dd class="detail-sidebar-value">{{ university.get_university_type_display }}</dd>
+                    </div>
+                    {% if faculties %}
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">عدد الكليات:</dt>
+                        <dd class="detail-sidebar-value">{{ faculties|length }} كليات</dd>
+                    </div>
+                    {% endif %}
+                    {% if university.telephone %}
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">الهاتف:</dt>
+                        <dd class="detail-sidebar-value">
+                            <a href="tel:{{ university.telephone }}" style="color: var(--primary); text-decoration: none; direction: ltr; unicode-bidi: embed; display: inline-block;" dir="ltr" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{ university.telephone }}</a>
+                        </dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+
             <!-- About Section -->
             <section class="detail-section">
                 <div class="detail-section-header">
@@ -487,7 +522,7 @@
         <div class="detail-sidebar" data-seo-ignore>
 
             <!-- Quick Facts Sidebar Card -->
-            <div class="detail-sidebar-card">
+            <div class="detail-sidebar-card d-none d-lg-block">
                 <h3 class="detail-sidebar-title">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
