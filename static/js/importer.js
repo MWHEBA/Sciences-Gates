@@ -7,6 +7,37 @@ function sg_init_importer() {
     // -------------------------------------------------------------------------
     // 1. IMPORT PAGE LOGIC (URL INPUT)
     // -------------------------------------------------------------------------
+
+
+    const pollJobStatus = (jobId, onProgress, onSuccess, onFailure) => {
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(`/dashboard/import/status/${jobId}/`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const resData = await res.json();
+                if (res.ok && resData.success) {
+                    if (resData.status === 'SUCCESS') {
+                        clearInterval(interval);
+                        onSuccess(resData);
+                    } else if (resData.status === 'FAILED') {
+                        clearInterval(interval);
+                        onFailure(resData.error_message || 'فشلت العملية.');
+                    } else {
+                        onProgress(resData.progress, resData.status_message);
+                    }
+                } else {
+                    clearInterval(interval);
+                    onFailure(resData.error || 'فشل الاتصال بالخادم لمتابعة الحالة.');
+                }
+            } catch (err) {
+                clearInterval(interval);
+                onFailure('خطأ في الاتصال بالشبكة أثناء متابعة الحالة.');
+            }
+        }, 1500);
+        return interval;
+    };
+
     const importForm = document.getElementById('import-fetch-form');
     if (importForm) {
         importForm.addEventListener('submit', async (e) => {
@@ -21,66 +52,179 @@ function sg_init_importer() {
 
             // Reset UI states
             loadingState.style.display = 'block';
+            document.getElementById('import-loading-text').textContent = 'جاري بدء الاتصال بالموقع القديم...';
             successState.style.display = 'none';
             errorState.style.display = 'none';
             submitBtn.disabled = true;
 
             const formData = new FormData(importForm);
             
-            try {
-                const response = await fetch('/dashboard/import/fetch/', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+            const fetchAndPoll = async (fd) => {
+                try {
+                    const response = await fetch('/dashboard/import/fetch/', {
+                        method: 'POST',
+                        body: fd,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const text = await response.text();
+                        let errMsg = `خطأ في الخادم (${response.status})`;
+                        try {
+                            const errData = JSON.parse(text);
+                            errMsg = errData.error || errMsg;
+                        } catch(e) {}
+                        throw new Error(errMsg);
                     }
-                });
 
-                const data = await response.json();
+                    const data = await response.json();
 
-                if (response.ok && data.success) {
-                    // Save mapped data to sessionStorage
-                    sessionStorage.setItem('sg_import_data', JSON.stringify(data.mapped_data));
+                    if (data.success) {
+                        const jobId = data.job_id;
+                        pollJobStatus(
+                            jobId,
+                            (progress, message) => {
+                                document.getElementById('import-loading-text').textContent = `${message} (${progress}%)`;
+                            },
+                            (resData) => {
+                                const finalData = resData.result_data;
+                                sessionStorage.setItem('sg_import_data', JSON.stringify(finalData.mapped_data));
 
-                    // Show success state
-                    loadingState.style.display = 'none';
-                    successState.style.display = 'block';
+                                loadingState.style.display = 'none';
+                                successState.style.display = 'block';
 
-                    const warningsContainer = document.getElementById('import-success-warnings');
-                    warningsContainer.innerHTML = '';
-                    
-                    const warnings = data.mapped_data.image_warnings || [];
-                    if (warnings.length > 0) {
-                        warnings.forEach(warn => {
-                            const li = document.createElement('div');
-                            li.className = 'text-amber-600 font-semibold';
-                            li.textContent = `⚠️ ${warn}`;
-                            warningsContainer.appendChild(li);
-                        });
-                        // Show proceed button to allow users to click manually if there are warnings
-                        proceedBtn.style.display = 'inline-block';
-                        proceedBtn.onclick = () => {
-                            window.location.href = data.redirect_url;
-                        };
+                                const warningsContainer = document.getElementById('import-success-warnings');
+                                if (warningsContainer) {
+                                    warningsContainer.innerHTML = '';
+                                    const warnings = finalData.mapped_data.image_warnings || [];
+                                    warnings.forEach(warn => {
+                                        const li = document.createElement('div');
+                                        li.className = 'text-amber-600 font-semibold';
+                                        li.textContent = `⚠️ ${warn}`;
+                                        warningsContainer.appendChild(li);
+                                    });
+                                }
+                                
+                                const compiledPrompt = finalData.mapped_data.compiled_prompt;
+                                if (compiledPrompt) {
+                                    document.getElementById('import-success-message').textContent = 'تم تجهيز البيانات والبرومبت بنجاح. يمكنك نسخ البرومبت وتطبيق استجابة الـ JSON أدناه أو الانتقال مباشرة.';
+                                    
+                                    const promptSection = document.getElementById('import-success-prompt-section');
+                                    if (promptSection) {
+                                        promptSection.style.display = 'flex';
+                                        document.getElementById('sg-success-prompt-text').value = compiledPrompt;
+                                        
+                                        document.getElementById('sg-success-copy-prompt-btn').onclick = () => {
+                                            const textarea = document.getElementById('sg-success-prompt-text');
+                                            textarea.select();
+                                            document.execCommand('copy');
+                                            const btn = document.getElementById('sg-success-copy-prompt-btn');
+                                            btn.textContent = 'تم النسخ! ✓';
+                                            setTimeout(() => {
+                                                btn.textContent = 'نسخ البرومبت 📋';
+                                            }, 2000);
+                                        };
+
+                                        document.getElementById('sg-success-apply-json-btn').onclick = () => {
+                                            const pasteArea = document.getElementById('sg-success-json-paste');
+                                            const errorDiv = document.getElementById('sg-success-json-error');
+                                            errorDiv.style.display = 'none';
+                                            errorDiv.textContent = '';
+
+                                            let rawVal = pasteArea.value.trim();
+                                            if (!rawVal) {
+                                                errorDiv.textContent = '⚠️ يرجى لصق كود JSON أولاً أو النقر على الزر الآخر للمتابعة مباشرة.';
+                                                errorDiv.style.display = 'block';
+                                                return;
+                                            }
+
+                                            if (rawVal.includes('```')) {
+                                                const match = rawVal.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+                                                if (match && match[1]) {
+                                                    rawVal = match[1].trim();
+                                                }
+                                            }
+
+                                            try {
+                                                const parsed = JSON.parse(rawVal);
+                                                
+                                                // Merge parsed fields into finalData.mapped_data
+                                                if (!finalData.mapped_data.form_initial) {
+                                                    finalData.mapped_data.form_initial = {};
+                                                }
+                                                // Copy all flat fields dynamically
+                                                for (const [key, val] of Object.entries(parsed)) {
+                                                    if (val !== null && typeof val !== 'object') {
+                                                        finalData.mapped_data.form_initial[key] = val;
+                                                    }
+                                                }
+                                                // Copy all formsets dynamically
+                                                const arrayFields = [
+                                                    'subjects_tables', 'salary_tables', 'countries_tables',
+                                                    'faqs_data', 'faculties_data', 'courses_data', 'tuition_fees',
+                                                    'best_universities', 'cheap_universities'
+                                                ];
+                                                arrayFields.forEach(arr => {
+                                                    if (parsed[arr] !== undefined) {
+                                                        finalData.mapped_data[arr] = parsed[arr];
+                                                    }
+                                                });
+
+                                                // Update sessionStorage with updated data
+                                                sessionStorage.setItem('sg_import_data', JSON.stringify(finalData.mapped_data));
+
+                                                // Redirect immediately
+                                                window.location.href = finalData.redirect_url;
+                                            } catch (err) {
+                                                console.error(err);
+                                                errorDiv.textContent = `❌ فشل تحليل الـ JSON: ${err.message}`;
+                                                errorDiv.style.display = 'block';
+                                            }
+                                        };
+
+                                        document.getElementById('sg-success-skip-json-btn').onclick = () => {
+                                            window.location.href = finalData.redirect_url;
+                                        };
+                                    }
+                                } else {
+                                    // Default behavior with auto redirect or warnings
+                                    const warnings = finalData.mapped_data.image_warnings || [];
+                                    if (warnings.length > 0) {
+                                        proceedBtn.style.display = 'inline-block';
+                                        proceedBtn.onclick = () => {
+                                            window.location.href = finalData.redirect_url;
+                                        };
+                                    } else {
+                                        setTimeout(() => {
+                                            window.location.href = finalData.redirect_url;
+                                        }, 1500);
+                                    }
+                                }
+                            },
+                            (errorMsg) => {
+                                loadingState.style.display = 'none';
+                                errorState.style.display = 'block';
+                                document.getElementById('import-error-message').textContent = errorMsg;
+                                submitBtn.disabled = false;
+                            }
+                        );
                     } else {
-                        // Auto-redirect if no warnings
-                        setTimeout(() => {
-                            window.location.href = data.redirect_url;
-                        }, 1500);
+                        loadingState.style.display = 'none';
+                        errorState.style.display = 'block';
+                        document.getElementById('import-error-message').textContent = data.error || 'حدث خطأ غير متوقع أثناء جلب البيانات.';
+                        submitBtn.disabled = false;
                     }
-                } else {
-                    // Show error state
+                } catch (err) {
                     loadingState.style.display = 'none';
                     errorState.style.display = 'block';
-                    document.getElementById('import-error-message').textContent = data.error || 'حدث خطأ غير متوقع أثناء جلب البيانات.';
+                    document.getElementById('import-error-message').textContent = err.message || 'تعذر الاتصال بخادم الاستيراد. يرجى التحقق من الشبكة.';
                     submitBtn.disabled = false;
                 }
-            } catch (err) {
-                loadingState.style.display = 'none';
-                errorState.style.display = 'block';
-                document.getElementById('import-error-message').textContent = 'تعذر الاتصال بخادم الاستيراد. يرجى التحقق من الشبكة.';
-                submitBtn.disabled = false;
-            }
+            };
+
+            fetchAndPoll(formData);
         });
     }
 
@@ -88,7 +232,7 @@ function sg_init_importer() {
     // 2. CREATE PAGE AUTOFILL LOGIC
     // -------------------------------------------------------------------------
     const importDataStr = sessionStorage.getItem('sg_import_data');
-    if (importDataStr) {
+    if (importDataStr && importDataStr !== 'undefined' && importDataStr !== 'null') {
         try {
             const importData = JSON.parse(importDataStr);
             
@@ -111,7 +255,7 @@ function sg_init_importer() {
                 } catch (err) { console.error('Error in sg_fill_formsets', err); }
                 
                 try {
-                    sg_show_import_banner(importData.image_warnings);
+                    sg_show_import_banner(importData.image_warnings, importData.compiled_prompt);
                 } catch (err) { console.error('Error in sg_show_import_banner', err); }
                 
                 // Scroll back to the top of the page after autofilling completes
@@ -133,11 +277,8 @@ function sg_init_importer() {
     // -------------------------------------------------------------------------
     // 3. BULK IMPORT ALL QUEUE LOGIC
     // -------------------------------------------------------------------------
-    console.log("[Importer] sg_init_importer is running.");
     const bulkImportBtns = document.querySelectorAll('.bulk-import-all-btn');
     const modal = document.getElementById('bulk-progress-modal');
-    console.log("[Importer] Found bulk buttons count:", bulkImportBtns.length);
-    console.log("[Importer] Found modal:", !!modal);
     const modalTitle = document.getElementById('bulk-modal-title');
     const modalClose = document.getElementById('bulk-modal-close');
     const progressStatus = document.getElementById('bulk-progress-status');
@@ -152,11 +293,8 @@ function sg_init_importer() {
     let cancelBulkImport = false;
 
     if (bulkImportBtns.length > 0 && modal) {
-        console.log("[Importer] Registering click listeners on bulk buttons");
         bulkImportBtns.forEach(btn => {
-            console.log("[Importer] Binding button for category:", btn.getAttribute('data-category'));
             btn.addEventListener('click', async () => {
-                console.log("[Importer] Bulk import button clicked for:", btn.getAttribute('data-category'));
                 if (bulkImportActive) {
                     alert('هناك عملية استيراد جماعي جارية بالفعل. يرجى الانتظار أو إلغاؤها أولاً.');
                     return;
@@ -239,6 +377,7 @@ function sg_init_importer() {
                 let successCount = 0;
                 let failCount = 0;
 
+
                 try {
                     for (let i = 0; i < queue.length; i++) {
                     if (cancelBulkImport) {
@@ -264,6 +403,12 @@ function sg_init_importer() {
                         const formData = new FormData();
                         formData.append('url', item.url);
                         formData.append('content_type_override', item.type);
+                        
+                        const competitorUrl = item.btn.getAttribute('data-competitor-url') || '';
+                        if (competitorUrl) {
+                            formData.append('competitor_url', competitorUrl);
+                        }
+
 
                         const response = await fetch('/dashboard/import/bulk-save/', {
                             method: 'POST',
@@ -274,14 +419,42 @@ function sg_init_importer() {
                             }
                         });
 
+                        if (!response.ok) {
+                            const text = await response.text();
+                            let errMsg = `خطأ في الخادم (${response.status})`;
+                            try {
+                                const errData = JSON.parse(text);
+                                errMsg = errData.error || errMsg;
+                            } catch(e) {}
+                            throw new Error(errMsg);
+                        }
+
                         const data = await response.json();
 
-                        if (response.ok && data.success) {
+                        if (data.success) {
+                            const jobId = data.job_id;
+                            
+                            // Wait for the background job to finish
+                            const jobResult = await new Promise((resolve, reject) => {
+                                pollJobStatus(
+                                    jobId,
+                                    (progress, message) => {
+                                        progressStatus.textContent = `جاري استيراد: ${item.title} (${i + 1} من ${queue.length}) - ${message} (${progress}%)`;
+                                    },
+                                    (resData) => {
+                                        resolve(resData.result_data);
+                                    },
+                                    (errorMsg) => {
+                                        reject(new Error(errorMsg));
+                                    }
+                                );
+                            });
+
                             successCount++;
                             let actionText = 'استيراد';
-                            if (data.action === 'created') {
+                            if (jobResult.action === 'created') {
                                 actionText = 'استيراد عنصر جديد';
-                            } else if (data.action === 'updated') {
+                            } else if (jobResult.action === 'updated') {
                                 actionText = 'تحديث البيانات';
                             }
                             logMessage(`✅ نجح ${actionText}: ${item.title}`, false, true);
@@ -289,7 +462,7 @@ function sg_init_importer() {
                             // Update badge to success
                             if (badge) {
                                 badge.className = 'import-badge import-badge-success';
-                                badge.textContent = data.action === 'created' ? 'مستورد (جديد)' : 'مستورد (تحديث)';
+                                badge.textContent = jobResult.action === 'created' ? 'مستورد (جديد)' : 'مستورد (تحديث)';
                                 badge.style.backgroundColor = '';
                                 badge.style.color = '';
                                 badge.style.border = '';
@@ -314,7 +487,7 @@ function sg_init_importer() {
                         }
                     } catch (err) {
                         failCount++;
-                        logMessage(`❌ فشل استيراد: ${item.title} (خطأ في الاتصال بالشبكة)`, true, false);
+                        logMessage(`❌ فشل استيراد: ${item.title} (${err.message || 'خطأ في الاتصال بالشبكة'})`, true, false);
                         
                         if (badge) {
                             badge.className = 'import-badge';
@@ -377,7 +550,620 @@ function sg_init_importer() {
             cancelBtn.disabled = false;
             cancelBtn.textContent = 'إلغاء العملية';
         });
+
+        // Initialize Interactive Wizard
+        sg_init_wizard();
     }
+}
+
+// Global variables for wizard state
+let wizardQueue = [];
+let wizardCurrentIndex = 0;
+let wizardFetchedData = {}; // slug -> { status: 'PENDING'|'FETCHING'|'READY'|'FAILED', data, prompt, error }
+let currentParsedJSON = null;
+
+function sg_init_wizard() {
+    const startWizardBtn = document.getElementById('start-wizard-btn');
+    const selectAllMajors = document.getElementById('select-all-majors');
+    const wizardModal = document.getElementById('wizard-import-modal');
+    
+    if (!startWizardBtn || !wizardModal) return;
+
+    // 1. Checkboxes interaction
+    const checkboxes = document.querySelectorAll('.select-major-checkbox');
+    
+    function updateWizardButtonState() {
+        const checked = document.querySelectorAll('.select-major-checkbox:checked');
+        const count = checked.length;
+        const countSpan = document.getElementById('selected-wizard-count');
+        if (countSpan) countSpan.textContent = count;
+        
+        if (count > 0) {
+            startWizardBtn.style.display = 'inline-flex';
+        } else {
+            startWizardBtn.style.display = 'none';
+        }
+    }
+
+    if (selectAllMajors) {
+        selectAllMajors.addEventListener('change', function() {
+            checkboxes.forEach(cb => {
+                if (!cb.disabled) {
+                    cb.checked = selectAllMajors.checked;
+                }
+            });
+            updateWizardButtonState();
+        });
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateWizardButtonState);
+    });
+
+    // 2. Start Wizard
+    startWizardBtn.addEventListener('click', function() {
+        const checked = document.querySelectorAll('.select-major-checkbox:checked');
+        wizardQueue = [];
+        checked.forEach(cb => {
+            wizardQueue.push({
+                url: cb.getAttribute('data-url'),
+                slug: cb.getAttribute('data-slug'),
+                title: cb.getAttribute('data-title'),
+                competitorUrl: cb.getAttribute('data-competitor-url') || ''
+            });
+        });
+
+        if (wizardQueue.length === 0) return;
+
+        wizardCurrentIndex = 0;
+        wizardFetchedData = {};
+        
+        // Initialize cache
+        wizardQueue.forEach(item => {
+            wizardFetchedData[item.slug] = {
+                status: 'PENDING',
+                data: null,
+                prompt: null,
+                error: null
+            };
+        });
+
+        // Show Modal
+        wizardModal.style.display = 'flex';
+        
+        // Disable page scroll
+        document.body.style.overflow = 'hidden';
+
+        // Load first item
+        loadWizardItem(wizardCurrentIndex);
+    });
+
+    // 3. Tab switching inside wizard
+    const tabPasteBtn = document.getElementById('wizard-tab-paste-btn');
+    const tabStagingBtn = document.getElementById('wizard-tab-staging-btn');
+    const panelPaste = document.getElementById('wizard-panel-paste');
+    const panelStaging = document.getElementById('wizard-panel-staging');
+
+    if (tabPasteBtn && tabStagingBtn && panelPaste && panelStaging) {
+        tabPasteBtn.addEventListener('click', () => {
+            tabPasteBtn.style.borderBottomColor = 'var(--primary)';
+            tabPasteBtn.style.color = 'var(--primary)';
+            tabStagingBtn.style.borderBottomColor = 'transparent';
+            tabStagingBtn.style.color = 'var(--text-muted)';
+            panelPaste.style.display = 'flex';
+            panelStaging.style.display = 'none';
+        });
+
+        tabStagingBtn.addEventListener('click', () => {
+            tabStagingBtn.style.borderBottomColor = 'var(--primary)';
+            tabStagingBtn.style.color = 'var(--primary)';
+            tabPasteBtn.style.borderBottomColor = 'transparent';
+            tabPasteBtn.style.color = 'var(--text-muted)';
+            panelPaste.style.display = 'none';
+            panelStaging.style.display = 'flex';
+        });
+    }
+
+    // 4. Wizard actions
+    const skipBtn = document.getElementById('wizard-skip-btn');
+    const saveBtn = document.getElementById('wizard-save-btn');
+    const copyBtn = document.getElementById('wizard-copy-prompt-btn');
+    const retryBtn = document.getElementById('prefetch-retry-btn');
+
+    if (skipBtn) {
+        skipBtn.addEventListener('click', () => {
+            advanceWizard();
+        });
+    }
+
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            const promptText = document.getElementById('wizard-prompt-text');
+            if (promptText) {
+                promptText.select();
+                document.execCommand('copy');
+                copyBtn.textContent = 'تم النسخ! ✓';
+                setTimeout(() => {
+                    copyBtn.textContent = 'نسخ البرومبت 📋';
+                }, 1500);
+            }
+        });
+    }
+
+    if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+            if (wizardCurrentIndex + 1 < wizardQueue.length) {
+                const nextItem = wizardQueue[wizardCurrentIndex + 1];
+                prefetchNextItem(wizardCurrentIndex); // Re-triggers fetch
+            }
+        });
+    }
+
+    // JSON paste validation and staging filling
+    const jsonPaste = document.getElementById('wizard-json-paste');
+    const jsonError = document.getElementById('wizard-json-error');
+
+    if (jsonPaste) {
+        jsonPaste.addEventListener('input', function() {
+            const val = this.value.trim();
+            if (jsonError) {
+                jsonError.style.display = 'none';
+                jsonError.textContent = '';
+            }
+            if (saveBtn) saveBtn.disabled = true;
+            currentParsedJSON = null;
+
+            if (!val) return;
+
+            let rawVal = val;
+            // Strip markdown code block wrappers if pasted
+            if (rawVal.includes('```')) {
+                const match = rawVal.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+                if (match && match[1]) {
+                    rawVal = match[1].trim();
+                }
+            }
+
+            try {
+                const parsed = JSON.parse(rawVal);
+                if (!parsed.name) {
+                    throw new Error("يجب تضمين اسم التخصص في حقل 'name'");
+                }
+                currentParsedJSON = parsed;
+                if (saveBtn) saveBtn.disabled = false;
+
+                // Fill staging fields
+                const nameF = document.getElementById('staging-field-name');
+                const bachF = document.getElementById('staging-field-bachelor_duration');
+                const mastF = document.getElementById('staging-field-master_duration');
+                const phdF = document.getElementById('staging-field-phd_duration');
+                const langF = document.getElementById('staging-field-study_language');
+                const pracF = document.getElementById('staging-field-practical_training');
+
+                if (nameF) nameF.value = parsed.name || '';
+                if (bachF) bachF.value = parsed.bachelor_duration || '';
+                if (mastF) mastF.value = parsed.master_duration || '';
+                if (phdF) phdF.value = parsed.phd_duration || '';
+                if (langF) langF.value = parsed.study_language || '';
+                if (pracF) pracF.value = parsed.practical_training || '';
+
+            } catch (e) {
+                if (jsonError) {
+                    jsonError.textContent = `❌ خطأ في الـ JSON: ${e.message}`;
+                    jsonError.style.display = 'block';
+                }
+            }
+        });
+    }
+
+    // Listen to changes in staging fields to update currentParsedJSON on the fly
+    const stagingInputs = [
+        { id: 'staging-field-name', key: 'name' },
+        { id: 'staging-field-bachelor_duration', key: 'bachelor_duration' },
+        { id: 'staging-field-master_duration', key: 'master_duration' },
+        { id: 'staging-field-phd_duration', key: 'phd_duration' },
+        { id: 'staging-field-study_language', key: 'study_language' },
+        { id: 'staging-field-practical_training', key: 'practical_training' }
+    ];
+
+    stagingInputs.forEach(item => {
+        const input = document.getElementById(item.id);
+        if (input) {
+            input.addEventListener('input', function() {
+                if (currentParsedJSON) {
+                    currentParsedJSON[item.key] = this.value;
+                }
+            });
+        }
+    });
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            if (!currentParsedJSON) return;
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'جاري الحفظ والتحميل... ⏳';
+
+            const currentItem = wizardQueue[wizardCurrentIndex];
+            const cacheEntry = wizardFetchedData[currentItem.slug];
+
+            // Merge currentParsedJSON into cacheEntry.data.mapped_data
+            const finalMappedData = cacheEntry.data.mapped_data;
+            if (!finalMappedData.form_initial) {
+                finalMappedData.form_initial = {};
+            }
+
+            // Copy flat fields
+            for (const [key, val] of Object.entries(currentParsedJSON)) {
+                if (val !== null && typeof val !== 'object') {
+                    finalMappedData.form_initial[key] = val;
+                }
+            }
+
+            // Copy formsets
+            const arrayFields = [
+                'subjects_tables', 'salary_tables', 'countries_tables',
+                'faqs_data', 'faculties_data', 'courses_data', 'tuition_fees',
+                'best_universities', 'cheap_universities'
+            ];
+            arrayFields.forEach(arr => {
+                if (currentParsedJSON[arr] !== undefined) {
+                    finalMappedData[arr] = currentParsedJSON[arr];
+                }
+            });
+
+            // Get CSRF Token
+            const csrfTokenEl = document.querySelector('[name="csrfmiddlewaretoken"]');
+            const csrfToken = csrfTokenEl ? csrfTokenEl.value : '';
+
+            try {
+                const response = await fetch('/dashboard/import/save-draft/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        content_type: 'major',
+                        mapped_data: finalMappedData
+                    })
+                });
+
+                const resData = await response.json();
+                if (response.ok && resData.success) {
+                    sg_show_toast(`✅ تم حفظ التخصص كمسودة بنجاح: ${resData.name}`, 'success');
+                    advanceWizard();
+                } else {
+                    sg_show_toast(`❌ فشل الحفظ: ${resData.error || 'خطأ غير معروف في السيرفر.'}`, 'danger');
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'حفظ كمسودة وتالي 💾';
+                }
+            } catch (e) {
+                sg_show_toast(`❌ فشل الحفظ: تعذر الاتصال بالشبكة.`, 'danger');
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'حفظ كمسودة وتالي 💾';
+            }
+        });
+    }
+}
+
+function loadWizardItem(index) {
+    if (index >= wizardQueue.length) {
+        alert("🎉 اكتمل استيراد جميع التخصصات المحددة بنجاح!");
+        document.getElementById('wizard-import-modal').style.display = 'none';
+        document.body.style.overflow = '';
+        window.location.reload();
+        return;
+    }
+
+    const item = wizardQueue[index];
+    const cacheEntry = wizardFetchedData[item.slug];
+
+    // Reset UI Panel/Form states
+    const jsonPasteInput = document.getElementById('wizard-json-paste');
+    if (jsonPasteInput) jsonPasteInput.value = '';
+    
+    const jsonErrorDiv = document.getElementById('wizard-json-error');
+    if (jsonErrorDiv) jsonErrorDiv.style.display = 'none';
+    
+    const saveBtn = document.getElementById('wizard-save-btn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'حفظ كمسودة وتالي 💾';
+    }
+    
+    // Clear staging inputs
+    const fields = [
+        'staging-field-name', 'staging-field-bachelor_duration',
+        'staging-field-master_duration', 'staging-field-phd_duration',
+        'staging-field-study_language', 'staging-field-practical_training'
+    ];
+    fields.forEach(f => {
+        const input = document.getElementById(f);
+        if (input) input.value = '';
+    });
+
+    // Switch back to Paste Tab
+    const tabPasteBtn = document.getElementById('wizard-tab-paste-btn');
+    if (tabPasteBtn) tabPasteBtn.click();
+
+    // Update progress bar
+    const currentMajorNameSpan = document.getElementById('wizard-current-major-name');
+    if (currentMajorNameSpan) currentMajorNameSpan.textContent = item.title;
+    
+    const progressText = document.getElementById('wizard-progress-text');
+    if (progressText) progressText.textContent = `${index + 1} / ${wizardQueue.length}`;
+    
+    const percent = Math.round(((index + 1) / wizardQueue.length) * 100);
+    const progressBar = document.getElementById('wizard-progress-bar-inner');
+    if (progressBar) progressBar.style.width = `${percent}%`;
+
+    // Update URLs previews
+    const oldUrlLink = document.getElementById('wizard-old-url');
+    if (oldUrlLink) {
+        oldUrlLink.href = item.url;
+    }
+    
+    const compUrlRow = document.getElementById('wizard-comp-url-row');
+    const compUrlLink = document.getElementById('wizard-comp-url');
+    if (compUrlRow && compUrlLink) {
+        if (item.competitorUrl) {
+            compUrlRow.style.display = 'block';
+            compUrlLink.href = item.competitorUrl;
+        } else {
+            compUrlRow.style.display = 'none';
+        }
+    }
+
+    const promptTextarea = document.getElementById('wizard-prompt-text');
+
+    // Process depending on cache state
+    if (cacheEntry.status === 'READY') {
+        if (promptTextarea) promptTextarea.value = cacheEntry.prompt;
+        prefetchNextItem(index);
+    } else if (cacheEntry.status === 'FETCHING') {
+        if (promptTextarea) promptTextarea.value = "جاري جلب البيانات وتجهيز البرومبت في الخلفية... يرجى الانتظار.";
+        pollFetchStatusForCurrent(item.slug);
+    } else if (cacheEntry.status === 'FAILED') {
+        if (promptTextarea) promptTextarea.value = `❌ فشل تحضير البيانات: ${cacheEntry.error}\nسيتم المحاولة مجدداً تلقائياً.`;
+        triggerFetchAndPoll(item.slug, () => {
+            loadWizardItem(index);
+        });
+    } else {
+        // PENDING
+        if (promptTextarea) promptTextarea.value = "جاري بدء جلب البيانات وتجهيز البرومبت...";
+        triggerFetchAndPoll(item.slug, () => {
+            loadWizardItem(index);
+        });
+    }
+}
+
+function triggerFetchAndPoll(slug, callback) {
+    const item = wizardQueue.find(q => q.slug === slug);
+    if (!item) return;
+
+    const cacheEntry = wizardFetchedData[slug];
+    cacheEntry.status = 'FETCHING';
+
+    const csrfTokenEl = document.querySelector('[name="csrfmiddlewaretoken"]');
+    const csrfToken = csrfTokenEl ? csrfTokenEl.value : '';
+
+    const formData = new FormData();
+    formData.append('url', item.url);
+    formData.append('content_type_override', 'major');
+    formData.append('lazy_images', 'true');
+    if (item.competitorUrl) {
+        formData.append('competitor_url', item.competitorUrl);
+    }
+
+    fetch('/dashboard/import/fetch/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const jobId = data.job_id;
+            
+            // Poll status
+            const pollInterval = setInterval(() => {
+                fetch(`/dashboard/import/status/${jobId}/`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.json())
+                .then(resData => {
+                    if (resData.success) {
+                        if (resData.status === 'SUCCESS') {
+                            clearInterval(pollInterval);
+                            cacheEntry.status = 'READY';
+                            cacheEntry.data = resData.result_data;
+                            cacheEntry.prompt = resData.result_data.mapped_data.compiled_prompt;
+                            if (callback) callback();
+                        } else if (resData.status === 'FAILED') {
+                            clearInterval(pollInterval);
+                            cacheEntry.status = 'FAILED';
+                            cacheEntry.error = resData.error_message || 'فشلت العملية.';
+                            if (callback) callback();
+                        }
+                    } else {
+                        clearInterval(pollInterval);
+                        cacheEntry.status = 'FAILED';
+                        cacheEntry.error = resData.error || 'فشل المتابعة.';
+                        if (callback) callback();
+                    }
+                })
+                .catch(err => {
+                    clearInterval(pollInterval);
+                    cacheEntry.status = 'FAILED';
+                    cacheEntry.error = 'خطأ في الاتصال بالشبكة.';
+                    if (callback) callback();
+                });
+            }, 1500);
+        } else {
+            cacheEntry.status = 'FAILED';
+            cacheEntry.error = data.error || 'فشل جلب البيانات.';
+            if (callback) callback();
+        }
+    })
+    .catch(err => {
+        cacheEntry.status = 'FAILED';
+        cacheEntry.error = 'تعذر بدء عملية الاستيراد.';
+        if (callback) callback();
+    });
+}
+
+function pollFetchStatusForCurrent(slug) {
+    const interval = setInterval(() => {
+        const cacheEntry = wizardFetchedData[slug];
+        if (cacheEntry.status === 'READY') {
+            clearInterval(interval);
+            const promptTextarea = document.getElementById('wizard-prompt-text');
+            if (promptTextarea) promptTextarea.value = cacheEntry.prompt;
+            prefetchNextItem(wizardCurrentIndex);
+        } else if (cacheEntry.status === 'FAILED') {
+            clearInterval(interval);
+            const promptTextarea = document.getElementById('wizard-prompt-text');
+            if (promptTextarea) promptTextarea.value = `❌ فشل تحضير البيانات: ${cacheEntry.error}`;
+        }
+    }, 1000);
+}
+
+function prefetchNextItem(currentIndex) {
+    const nextIndex = currentIndex + 1;
+    const prefetchSpinner = document.getElementById('prefetch-spinner');
+    const prefetchStatusText = document.getElementById('prefetch-status-text');
+    const prefetchRetryBtn = document.getElementById('prefetch-retry-btn');
+
+    if (nextIndex >= wizardQueue.length) {
+        if (prefetchStatusText) prefetchStatusText.textContent = "المعالج: هذا هو العنصر الأخير.";
+        if (prefetchSpinner) prefetchSpinner.style.display = 'none';
+        if (prefetchRetryBtn) prefetchRetryBtn.style.display = 'none';
+        return;
+    }
+
+    const nextItem = wizardQueue[nextIndex];
+    const cacheEntry = wizardFetchedData[nextItem.slug];
+
+    if (prefetchRetryBtn) prefetchRetryBtn.style.display = 'none';
+
+    if (cacheEntry.status === 'READY') {
+        if (prefetchStatusText) prefetchStatusText.textContent = `التالي جاهز: ${nextItem.title} ✓`;
+        if (prefetchSpinner) prefetchSpinner.style.display = 'none';
+    } else if (cacheEntry.status === 'FETCHING') {
+        if (prefetchStatusText) prefetchStatusText.textContent = `جاري تحضير التالي: ${nextItem.title}...`;
+        if (prefetchSpinner) prefetchSpinner.style.display = 'inline-block';
+        
+        const waitInterval = setInterval(() => {
+            if (cacheEntry.status === 'READY') {
+                clearInterval(waitInterval);
+                if (wizardCurrentIndex === currentIndex) {
+                    if (prefetchStatusText) prefetchStatusText.textContent = `التالي جاهز: ${nextItem.title} ✓`;
+                    if (prefetchSpinner) prefetchSpinner.style.display = 'none';
+                }
+            } else if (cacheEntry.status === 'FAILED') {
+                clearInterval(waitInterval);
+                if (wizardCurrentIndex === currentIndex) {
+                    if (prefetchStatusText) prefetchStatusText.textContent = `فشل تحضير التالي: ${nextItem.title}`;
+                    if (prefetchSpinner) prefetchSpinner.style.display = 'none';
+                    if (prefetchRetryBtn) prefetchRetryBtn.style.display = 'inline-block';
+                }
+            }
+        }, 1000);
+    } else {
+        if (prefetchStatusText) prefetchStatusText.textContent = `جاري تحضير التالي: ${nextItem.title}...`;
+        if (prefetchSpinner) prefetchSpinner.style.display = 'inline-block';
+        
+        triggerFetchAndPoll(nextItem.slug, () => {
+            if (wizardCurrentIndex === currentIndex) {
+                if (cacheEntry.status === 'READY') {
+                    if (prefetchStatusText) prefetchStatusText.textContent = `التالي جاهز: ${nextItem.title} ✓`;
+                } else {
+                    if (prefetchStatusText) prefetchStatusText.textContent = `فشل تحضير التالي: ${nextItem.title}`;
+                    if (prefetchRetryBtn) prefetchRetryBtn.style.display = 'inline-block';
+                }
+                if (prefetchSpinner) prefetchSpinner.style.display = 'none';
+            }
+        });
+    }
+}
+
+function advanceWizard() {
+    wizardCurrentIndex++;
+    loadWizardItem(wizardCurrentIndex);
+}
+
+window.sg_cancel_wizard_prompt = function() {
+    if (confirm("هل أنت متأكد من رغبتك في إلغاء معالج الاستيراد؟ سيتم فقدان التقدم الحالي غير المحفوظ.")) {
+        const modal = document.getElementById('wizard-import-modal');
+        if (modal) modal.style.display = 'none';
+        document.body.style.overflow = '';
+        window.location.reload();
+    }
+};
+
+function sg_show_toast(message, type = 'success') {
+    let container = document.getElementById('sg-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'sg-toast-container';
+        container.style.cssText = `
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            direction: rtl;
+        `;
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'var(--success)' : 'var(--danger)';
+    const textColor = 'var(--white)';
+    
+    toast.style.cssText = `
+        background-color: ${bgColor};
+        color: ${textColor};
+        padding: 12px 24px;
+        border-radius: var(--radius-sm);
+        box-shadow: var(--shadow-sm);
+        font-size: 14px;
+        font-weight: 500;
+        min-width: 250px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+    `;
+
+    const icon = type === 'success' ? '✓' : '❌';
+    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    }, 10);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            toast.remove();
+            if (container.children.length === 0) {
+                container.remove();
+            }
+        }, 300);
+    }, 3000);
 }
 
 if (document.readyState === 'loading') {
@@ -675,9 +1461,6 @@ function sg_fill_formsets(importData) {
             }
         });
 
-        console.log("Existing faculties Map keys:", Object.keys(existingMap));
-        console.log("Faculties to import (normalized):", facultiesToImport.map(f => normalizeArabic(f.name)));
-
         // Set of reused items to keep track of what not to delete
         const reusedItems = new Set();
 
@@ -687,7 +1470,6 @@ function sg_fill_formsets(importData) {
                 const existingItem = existingMap[importedName];
                 
                 if (existingItem) {
-                    console.log(`Reusing faculty: ${faculty.name}`);
                     // Reuse existing item
                     reusedItems.add(existingItem);
                     
@@ -705,7 +1487,6 @@ function sg_fill_formsets(importData) {
                     // Import programs
                     sg_import_faculty_programs(existingItem, faculty.programs);
                 } else {
-                    console.log(`Creating new faculty: ${faculty.name}`);
                     // Add new faculty
                     window.facultyProgramsManager.addFaculty();
                     const allItems = window.facultyProgramsManager.container.querySelectorAll('.faculty-item');
@@ -905,8 +1686,9 @@ function sg_fill_formsets(importData) {
     if (importData.subjects_tables && importData.subjects_tables.length > 0) {
         sg_clear_django_formset('subjects_tables');
         sg_fill_django_formset('subjects_tables', importData.subjects_tables, {
-            'key': 'academic_year',
-            'value': 'subjects'
+            'academic_year': 'academic_year',
+            'subjects': 'subjects',
+            'track_name': 'track_name'
         });
     }
 
@@ -914,8 +1696,9 @@ function sg_fill_formsets(importData) {
     if (importData.salary_tables && importData.salary_tables.length > 0) {
         sg_clear_django_formset('salary_tables');
         sg_fill_django_formset('salary_tables', importData.salary_tables, {
-            'key': 'job_title',
-            'value': 'average_monthly_salary'
+            'job_title': 'job_title',
+            'job_description': 'job_description',
+            'average_monthly_salary': 'average_monthly_salary'
         });
     }
 
@@ -923,9 +1706,83 @@ function sg_fill_formsets(importData) {
     if (importData.countries_tables && importData.countries_tables.length > 0) {
         sg_clear_django_formset('countries_tables');
         sg_fill_django_formset('countries_tables', importData.countries_tables, {
-            'key': 'destination',
-            'value': 'annual_fees'
+            'destination': 'destination',
+            'study_duration': 'study_duration',
+            'annual_fees': 'annual_fees',
+            'living_cost': 'living_cost'
         });
+    }
+
+    // 6. Tuition Fees JSON Table (Majors)
+    if (importData.tuition_fees) {
+        const textarea = document.getElementById('id_tuition_fees');
+        if (textarea) {
+            try {
+                const tablesData = typeof importData.tuition_fees === 'string' ? JSON.parse(importData.tuition_fees) : importData.tuition_fees;
+                textarea.value = JSON.stringify(tablesData);
+                
+                const alpineEl = document.querySelector('[x-data^="tuitionFeesManager"]');
+                if (alpineEl && window.Alpine) {
+                    window.Alpine.$data(alpineEl).tables = tablesData;
+                    window.Alpine.$data(alpineEl).updateJSON();
+                }
+            } catch (e) {
+                console.error('Error applying tuition_fees to Alpine.js', e);
+            }
+        }
+    }
+
+    // 7. Best & Cheap Universities Many-to-Many relations
+    if (importData.best_universities && Array.isArray(importData.best_universities)) {
+        const alpineEl = document.querySelector('[x-data*="relationsSelectComponent"][x-data*="best_universities"]');
+        if (alpineEl && window.Alpine) {
+            try {
+                const data = window.Alpine.$data(alpineEl);
+                // Clear existing selection first
+                data.selectedItems = [];
+                // Uncheck all Django checkboxes
+                const checkboxes = alpineEl.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    cb.checked = false;
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                // Select matching items
+                importData.best_universities.forEach(univName => {
+                    const match = data.allItems.find(item => normalizeArabic(item.name) === normalizeArabic(univName));
+                    if (match) {
+                        data.selectItem(match);
+                    }
+                });
+            } catch (err) {
+                console.error('Error populating best_universities relation select', err);
+            }
+        }
+    }
+
+    if (importData.cheap_universities && Array.isArray(importData.cheap_universities)) {
+        const alpineEl = document.querySelector('[x-data*="relationsSelectComponent"][x-data*="cheap_universities"]');
+        if (alpineEl && window.Alpine) {
+            try {
+                const data = window.Alpine.$data(alpineEl);
+                // Clear existing selection first
+                data.selectedItems = [];
+                // Uncheck all Django checkboxes
+                const checkboxes = alpineEl.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    cb.checked = false;
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                // Select matching items
+                importData.cheap_universities.forEach(univName => {
+                    const match = data.allItems.find(item => normalizeArabic(item.name) === normalizeArabic(univName));
+                    if (match) {
+                        data.selectItem(match);
+                    }
+                });
+            } catch (err) {
+                console.error('Error populating cheap_universities relation select', err);
+            }
+        }
     }
 }
 
@@ -933,48 +1790,191 @@ function sg_fill_formsets(importData) {
  * Clears standard Django formsets (marking existing saved forms for deletion)
  */
 function sg_clear_django_formset(prefix) {
-    if (!window.formsetManagers) return;
-    const manager = window.formsetManagers[prefix];
-    if (!manager) return;
+    let manager = null;
+    let container = null;
+    let itemClass = 'form-item';
+    let reindexMethod = null;
 
-    const deleteCheckboxes = manager.formsetContainer.querySelectorAll('input[name$="-DELETE"]');
-    deleteCheckboxes.forEach(cb => {
-        cb.checked = true;
-        cb.dispatchEvent(new Event('change', { bubbles: true }));
+    if (window.formsetManagers && window.formsetManagers[prefix]) {
+        manager = window.formsetManagers[prefix];
+        container = manager.formsetContainer;
+    } else if (prefix === 'subjects_tables' && window.subjectsManager) {
+        manager = window.subjectsManager;
+        container = manager.container;
+        itemClass = 'subject-item';
+        reindexMethod = () => manager.reindexForms();
+    } else if (prefix === 'salary_tables' && window.salariesManager) {
+        manager = window.salariesManager;
+        container = manager.container;
+        itemClass = 'salary-item';
+        reindexMethod = () => manager.reindexForms();
+    } else if (prefix === 'countries_tables' && window.countriesManager) {
+        manager = window.countriesManager;
+        container = manager.container;
+        itemClass = 'country-item';
+        reindexMethod = () => manager.reindexForms();
+    }
+
+    if (!container) return;
+
+    // Get all existing rows (both saved and unsaved)
+    const forms = Array.from(container.querySelectorAll('[data-row-index], [data-form-index]'));
+    
+    forms.forEach(formEl => {
+        const deleteCb = formEl.querySelector('input[name$="-DELETE"]');
+        const idInput = formEl.querySelector('input[name$="-id"]');
+        
+        if (idInput && idInput.value) {
+            // Existing DB record: mark as deleted, check DELETE input, hide
+            if (deleteCb) {
+                deleteCb.checked = true;
+                deleteCb.value = 'on';
+                deleteCb.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            formEl.style.opacity = '0.5';
+            formEl.style.pointerEvents = 'none';
+            formEl.classList.add(`${itemClass}--deleted`);
+            formEl.style.display = 'none';
+        } else {
+            // Unsaved row: remove completely
+            formEl.remove();
+        }
     });
+
+    // Update state and reindex if custom manager
+    if (manager) {
+        if (typeof manager.updateState === 'function') {
+            try { manager.updateState(); } catch (e) {}
+        }
+        if (reindexMethod) {
+            try { reindexMethod(); } catch (e) {}
+        }
+    }
 }
 
 
-/**
- * Generic helper to fill standard Django formsets using FormsetManager API
- */
 function sg_fill_django_formset(prefix, dataArray, fieldMap) {
-    if (!window.formsetManagers) return;
-    const manager = window.formsetManagers[prefix];
-    if (!manager) return;
+    let manager = null;
+    let addMethod = null;
+    let container = null;
+    let managementForm = null;
+    let updateIndicesMethod = null;
+    let itemClass = 'form-item';
 
+    if (window.formsetManagers && window.formsetManagers[prefix]) {
+        manager = window.formsetManagers[prefix];
+        addMethod = () => manager.addForm();
+        container = manager.formsetContainer;
+        managementForm = manager.managementForm;
+        updateIndicesMethod = () => manager.updateFormIndices();
+    } else if (prefix === 'subjects_tables' && window.subjectsManager) {
+        manager = window.subjectsManager;
+        addMethod = () => manager.addSubject();
+        container = manager.container;
+        managementForm = manager.totalFormsInput;
+        updateIndicesMethod = () => manager.reindexForms();
+        itemClass = 'subject-item';
+    } else if (prefix === 'salary_tables' && window.salariesManager) {
+        manager = window.salariesManager;
+        addMethod = () => manager.addSalary();
+        container = manager.container;
+        managementForm = manager.totalFormsInput;
+        updateIndicesMethod = () => manager.reindexForms();
+        itemClass = 'salary-item';
+    } else if (prefix === 'countries_tables' && window.countriesManager) {
+        manager = window.countriesManager;
+        addMethod = () => manager.addCountry();
+        container = manager.container;
+        managementForm = manager.totalFormsInput;
+        updateIndicesMethod = () => manager.reindexForms();
+        itemClass = 'country-item';
+    }
+
+    if (!manager || !container || !managementForm) {
+        console.warn(`No manager found for formset prefix: ${prefix}`);
+        return;
+    }
+
+    // Get all existing form rows in the container (excluding deleted ones)
+    const existingForms = Array.from(container.querySelectorAll('[data-row-index]:not([class*="deleted"]), [data-form-index]:not([class*="deleted"])'));
+    
+    // We will reuse as many existing forms as needed, and add new ones if we need more.
     dataArray.forEach((item, index) => {
-        // If it's not the first row, add a new form row
-        if (index > 0) {
-            manager.addForm();
+        let formEl;
+        
+        if (index < existingForms.length) {
+            // Reuse existing form row
+            formEl = existingForms[index];
+        } else {
+            // Add a new form row
+            addMethod();
+            const updatedForms = container.querySelectorAll('[data-row-index], [data-form-index]');
+            formEl = updatedForms[updatedForms.length - 1];
         }
+        
+        // Ensure the form is visible and not marked for deletion
+        const deleteCb = formEl.querySelector('input[name$="-DELETE"]');
+        if (deleteCb) {
+            deleteCb.checked = false;
+            deleteCb.value = '';
+            // Trigger change event to restore opacity/pointerEvents via formset-management handlers
+            deleteCb.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        formEl.style.opacity = '1';
+        formEl.style.pointerEvents = 'auto';
+        formEl.classList.remove(`${itemClass}--deleted`);
+        formEl.style.display = '';
 
-        // Fill values
+        // Fill values according to the mapping
         for (const [wpKey, djangoField] of Object.entries(fieldMap)) {
-            const inputName = `${prefix}-${index}-${djangoField}`;
-            const input = manager.formsetContainer.querySelector(`[name="${inputName}"]`);
+            const input = formEl.querySelector(`[name$="-${djangoField}"]`);
             if (input) {
                 input.value = item[wpKey] || '';
                 input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
             }
         }
+        
+        // If there's a title preview helper, run it
+        if (prefix === 'subjects_tables' && window.subjectsManager) {
+            window.subjectsManager.updateSubjectPreview(formEl);
+        } else if (prefix === 'salary_tables' && window.salariesManager) {
+            window.salariesManager.updateSalaryPreview(formEl);
+        } else if (prefix === 'countries_tables' && window.countriesManager) {
+            window.countriesManager.updateDestinationPreview(formEl);
+        }
     });
+
+    // For any remaining existing forms that were not filled (reused), mark them for deletion
+    if (existingForms.length > dataArray.length) {
+        for (let i = dataArray.length; i < existingForms.length; i++) {
+            const formEl = existingForms[i];
+            const deleteCb = formEl.querySelector('input[name$="-DELETE"]');
+            const idInput = formEl.querySelector('input[name$="-id"]');
+            
+            if (idInput && idInput.value) {
+                // If it is a saved database record, mark it as deleted
+                if (deleteCb) {
+                    deleteCb.checked = true;
+                    deleteCb.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            } else {
+                // If it's a new unsaved form, we can just remove it
+                formEl.remove();
+            }
+        }
+        // Update TOTAL_FORMS count
+        const allForms = container.querySelectorAll('[data-row-index], [data-form-index]');
+        managementForm.value = allForms.length;
+        // Reindex form indices to keep them continuous
+        updateIndicesMethod();
+    }
 }
 
 /**
  * Shows the imported content warning banner
  */
-function sg_show_import_banner(warnings) {
+function sg_show_import_banner(warnings, compiledPrompt) {
     // Check if import banner template exists
     let banner = document.getElementById('import-banner');
     if (!banner) {
@@ -1027,4 +2027,38 @@ function sg_show_import_banner(warnings) {
         `;
         banner.querySelector('div').appendChild(legend);
     }
+
+}
+
+/**
+ * Parses and maps manually pasted AI JSON response to form fields and formsets.
+ */
+function sg_apply_ai_response(aiResponse) {
+    if (!aiResponse) return;
+    
+    // Parse form_initial fields dynamically
+    const formInitial = {};
+    for (const [key, val] of Object.entries(aiResponse)) {
+        if (val !== null && typeof val !== 'object') {
+            formInitial[key] = val;
+        }
+    }
+
+    // Apply flat fields
+    sg_fill_form(formInitial);
+
+    // Apply formsets dynamically
+    const importData = {};
+    const arrayFields = [
+        'subjects_tables', 'salary_tables', 'countries_tables',
+        'faqs_data', 'faculties_data', 'courses_data', 'tuition_fees',
+        'best_universities', 'cheap_universities'
+    ];
+    arrayFields.forEach(arr => {
+        if (aiResponse[arr] !== undefined) {
+            importData[arr] = aiResponse[arr];
+        }
+    });
+    
+    sg_fill_formsets(importData);
 }

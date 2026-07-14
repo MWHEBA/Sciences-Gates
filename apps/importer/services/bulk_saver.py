@@ -12,6 +12,36 @@ def normalize_arabic(text):
     text = re.sub(r'\s+', ' ', text)
     return text.lower()
 
+def _make_valid_json_string(val):
+    import json
+    if val is None:
+        return '[]'
+    if isinstance(val, (list, dict)):
+        return json.dumps(val)
+    if isinstance(val, str):
+        val_stripped = val.strip()
+        if not val_stripped or val_stripped in ['غير محدد', 'لا يوجد', 'null', 'NULL', '-']:
+            return '[]'
+        try:
+            parsed = json.loads(val_stripped)
+            if isinstance(parsed, (list, dict)):
+                return val_stripped
+            else:
+                table = {
+                    'title': 'الرسوم الدراسية',
+                    'headers': ['الرسوم'],
+                    'rows': [[str(parsed)]]
+                }
+                return json.dumps([table])
+        except json.JSONDecodeError:
+            table = {
+                'title': 'الرسوم الدراسية',
+                'headers': ['الرسوم'],
+                'rows': [[val_stripped]]
+            }
+            return json.dumps([table])
+    return '[]'
+
 def save_imported_content(content_type, mapped_data, user=None):
     """
     Validates and saves the imported content to the database using Django Forms and Formsets.
@@ -42,6 +72,10 @@ def _save_university(mapped_data, user):
     existing_obj = University.objects.filter(slug=slug).first()
     action_type = 'updated' if existing_obj else 'created'
     form_data = {**form_initial}
+    
+    # Ensure one_time_fees is serialized to a valid JSON string
+    form_data['one_time_fees'] = _make_valid_json_string(form_data.get('one_time_fees'))
+
     if 'publish_status' not in form_data or not form_data['publish_status']:
         form_data['publish_status'] = 'published'
     if user:
@@ -406,6 +440,9 @@ def _save_major(mapped_data, user):
     existing_obj = Major.objects.filter(slug=slug).first()
     action_type = 'updated' if existing_obj else 'created'
     form_data = {**form_initial}
+    
+    # Ensure tuition_fees is serialized to a valid JSON string
+    form_data['tuition_fees'] = _make_valid_json_string(form_data.get('tuition_fees'))
     
     # Resolve category ForeignKey
     from apps.majors.models import MajorCategory

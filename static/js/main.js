@@ -4,8 +4,6 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Science Gates - Study in Malaysia');
-    
     // Initialize formset management for dynamic forms
     initializeFormsets();
     

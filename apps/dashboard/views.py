@@ -2239,7 +2239,9 @@ class MajorUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, LockV
     model = Major
     form_class = MajorForm
     template_name = 'dashboard/majors/form.html'
-    success_url = reverse_lazy('dashboard:major_list')
+
+    def get_success_url(self):
+        return reverse('dashboard:major_edit', kwargs={'pk': self.object.pk})
 
     def get_breadcrumbs(self):
         """Build breadcrumb trail for major edit page."""
@@ -2364,7 +2366,7 @@ class MajorUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, LockV
                 
                 if self._is_ajax():
                     return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
-                return redirect(self.success_url)
+                return redirect(self.get_success_url())
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).error(f"Error updating major: {e}")

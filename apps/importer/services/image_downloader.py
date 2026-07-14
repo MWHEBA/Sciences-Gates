@@ -98,7 +98,7 @@ def find_existing_media_by_content(file_data):
     return None
 
 
-def download_and_optimize_image(url, alt_text, caption='', description='', title='', source_type=None, user=None):
+def download_and_optimize_image(url, alt_text, caption='', description='', title='', source_type=None, user=None, skip_if_exists=False):
     """
     Downloads an image from a URL, validates it, optimizes/converts it to WebP
     (if PNG or JPEG), creates a MediaFile instance, and saves it.
@@ -137,6 +137,28 @@ def download_and_optimize_image(url, alt_text, caption='', description='', title
         except Exception:
             pass
         existing_media = None
+
+    # إذا كانت الصورة موجودة مسبقاً وسليمة، نقوم بتحديث النصوص الوصفية فقط ونرجعها دون إعادة التحميل
+    if existing_media and skip_if_exists and is_media_file_valid(existing_media):
+        try:
+            updated = False
+            if alt_text and alt_text.strip() and alt_text.strip() != existing_media.alt_text:
+                existing_media.alt_text = alt_text.strip()
+                updated = True
+            if caption and caption.strip() and caption.strip() != existing_media.caption:
+                existing_media.caption = caption.strip()
+                updated = True
+            if title and title.strip() and title.strip() != existing_media.title:
+                existing_media.title = title.strip()
+                updated = True
+            if description and description.strip() and description.strip() != existing_media.description:
+                existing_media.description = description.strip()
+                updated = True
+            if updated:
+                existing_media.save()
+            return existing_media, None
+        except Exception as e:
+            pass
 
     try:
         # 2. محاولة تحميل الصورة الجديدة من الرابط

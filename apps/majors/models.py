@@ -106,6 +106,7 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
         help_text='وصف شامل عن التخصص'
     )
     study_duration = models.TextField(
+        blank=True,
         verbose_name='مدة الدراسة (عام)',
         help_text='مثال: 4 سنوات (سيتم استبدالها بالحقول المفصلة أدناه)'
     )
@@ -153,6 +154,12 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
         blank=True,
         verbose_name='فرص العمل',
         help_text='فرص العمل المتاحة بعد التخرج'
+    )
+    competitor_url = models.URLField(
+        blank=True,
+        max_length=500,
+        verbose_name='رابط التخصص عند المنافس',
+        help_text='رابط صفحة التخصص المستخدمة لدمج البيانات من موقع المنافس'
     )
 
     # Content Sections

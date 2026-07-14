@@ -6,17 +6,41 @@ import bleach
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
+try:
+    from bleach.css_sanitizer import CSSSanitizer
+except (ImportError, ModuleNotFoundError):
+    CSSSanitizer = None
 
-# Allowed HTML tags for rich text content
+
+# Allowed HTML tags for rich text content (includes tables, styling spans/fonts, divs)
 ALLOWED_TAGS = [
-    'p', 'br', 'strong', 'em', 'h2', 'h3', 'h4',
-    'ul', 'ol', 'li', 'a'
+    'p', 'br', 'strong', 'em', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'ul', 'ol', 'li', 'a', 'img', 'table', 'thead', 'tbody',
+    'tfoot', 'tr', 'th', 'td', 'colgroup', 'col', 'div', 'span', 'font'
 ]
 
 # Allowed attributes for each tag
 ALLOWED_ATTRIBUTES = {
-    'a': ['href', 'title', 'target'],
+    'a': ['href', 'title', 'target', 'style', 'class'],
+    'img': ['src', 'alt', 'title', 'width', 'height', 'style', 'class'],
+    'table': ['class', 'data-pro-table', 'style'],
+    'th': ['colspan', 'rowspan', 'class', 'style'],
+    'td': ['colspan', 'rowspan', 'class', 'style'],
+    'tr': ['class', 'style'],
+    'col': ['style'],
+    'div': ['class', 'style'],
+    'span': ['class', 'style'],
+    'font': ['color', 'size', 'face', 'style', 'class'],
 }
+
+# Allowed CSS properties for style attributes
+ALLOWED_STYLES = [
+    'text-align', 'background-color', 'color', 'font-size', 'width', 'height',
+    'line-height', 'border-radius', 'margin-top', 'margin-bottom', 'max-width',
+    'vertical-align'
+]
+
+CSS_SANITIZER = CSSSanitizer(allowed_css_properties=ALLOWED_STYLES) if CSSSanitizer else None
 
 # Allowed protocols for URLs
 ALLOWED_PROTOCOLS = ['http', 'https', 'mailto']
@@ -40,14 +64,17 @@ def sanitize_html(html_content):
         return ''
     
     # Use bleach to sanitize
-    cleaned = bleach.clean(
-        html_content,
-        tags=ALLOWED_TAGS,
-        attributes=ALLOWED_ATTRIBUTES,
-        protocols=ALLOWED_PROTOCOLS,
-        strip=True,
-        strip_comments=True
-    )
+    clean_kwargs = {
+        'tags': ALLOWED_TAGS,
+        'attributes': ALLOWED_ATTRIBUTES,
+        'protocols': ALLOWED_PROTOCOLS,
+        'strip': True,
+        'strip_comments': True
+    }
+    if CSS_SANITIZER:
+        clean_kwargs['css_sanitizer'] = CSS_SANITIZER
+        
+    cleaned = bleach.clean(html_content, **clean_kwargs)
     
     # Additional validation for links
     cleaned = _validate_links(cleaned)

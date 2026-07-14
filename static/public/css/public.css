@@ -2144,7 +2144,8 @@ img#intlPhoneFlag {
   margin-top: 0.5rem;
 }
 
-.detail-table-wrapper {
+.detail-table-wrapper,
+.pro-table-wrapper {
   width: 100%;
   overflow-x: auto;
   border: 1px solid var(--border-color);
@@ -2152,25 +2153,29 @@ img#intlPhoneFlag {
   background: var(--bg-white);
 }
 
-.detail-table {
+.detail-table,
+.pro-editor-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.95rem;
 }
 
-.detail-table thead {
+.detail-table thead,
+.pro-editor-table thead {
   background: var(--primary);
   color: var(--bg-white);
 }
 
-.detail-table th {
+.detail-table th,
+.pro-editor-table th {
   padding: 1rem;
   text-align: right;
   font-weight: 700;
   border-bottom: 2px solid var(--border-color);
 }
 
-.detail-table td {
+.detail-table td,
+.pro-editor-table td {
   padding: 1rem;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-body);
@@ -2186,7 +2191,8 @@ img#intlPhoneFlag {
   text-align: center;
 }
 
-.detail-table tbody tr:hover {
+.detail-table tbody tr:hover,
+.pro-editor-table tbody tr:hover {
   background: var(--primary-light);
 }
 

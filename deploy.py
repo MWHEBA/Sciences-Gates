@@ -138,7 +138,8 @@ class DeploymentManager:
         important_files = [
             '.htaccess',
             '.env.production',
-            'passenger_wsgi.py'
+            'passenger_wsgi.py',
+            'imported_links_summary.md'
         ]
         
         if relative_path in important_files:

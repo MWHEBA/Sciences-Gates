@@ -20,11 +20,9 @@ class LazyLoadingManager {
         // Check if browser supports native lazy loading
         if ('loading' in HTMLImageElement.prototype) {
             // Native lazy loading is supported, no need for intersection observer
-            console.log('Native lazy loading supported');
             this.setupNativeLazyLoading();
         } else {
             // Use intersection observer as fallback
-            console.log('Using intersection observer for lazy loading');
             this.setupIntersectionObserver();
         }
     }

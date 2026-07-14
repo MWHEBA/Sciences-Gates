@@ -21,6 +21,7 @@ Pillow==10.2.0
 # ============================================================================
 # HTML sanitization for Custom HTML Editor (prevents XSS attacks)
 bleach==6.1.0
+tinycss2==1.1.1
 
 # ============================================================================
 # FORM HANDLING AND VALIDATION

@@ -126,23 +126,20 @@
                 </svg>
             </div>
             <h2 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">استيراد محتوى ووردبريس</h2>
-            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; max-width: 420px; margin: 0 auto;">
-                قم باستيراد البيانات تلقائياً وتوزيع محتوياتها وتجهيز حقول الـ SEO والصور من الموقع القديم.
-            </p>
         </div>
 
         <!-- Tabs Navigation -->
         <div style="display: flex; gap: 8px; border-bottom: 2px solid var(--border); margin-bottom: 24px; padding-bottom: 0;">
-            <button type="button" id="tab-single-btn" class="import-tab-btn" style="padding: 10px 20px; font-size: 14px; font-weight: 600; background: none; border: none; border-bottom: 3px solid var(--primary); color: var(--primary); cursor: pointer; transition: all 0.2s ease; outline: none;">
+            <button type="button" id="tab-single-btn" class="import-tab-btn" style="padding: 10px 20px; font-size: 14px; font-weight: 600; background: none; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; outline: none;">
                 استيراد فردي (رابط مباشر)
             </button>
-            <button type="button" id="tab-bulk-btn" class="import-tab-btn" style="padding: 10px 20px; font-size: 14px; font-weight: 600; background: none; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; outline: none;">
+            <button type="button" id="tab-bulk-btn" class="import-tab-btn" style="padding: 10px 20px; font-size: 14px; font-weight: 600; background: none; border: none; border-bottom: 3px solid var(--primary); color: var(--primary); cursor: pointer; transition: all 0.2s ease; outline: none;">
                 استيراد جماعي (قائمة إكسل)
             </button>
         </div>
 
         <!-- Tab 1: Single Import Section -->
-        <div id="single-import-section">
+        <div id="single-import-section" style="display: none;">
             <!-- Import Form -->
             <form id="import-fetch-form" method="POST" style="margin-bottom: 0;">
                 {% csrf_token %}
@@ -192,12 +189,38 @@
                                 onfocus="this.style.borderColor='var(--primary)';"
                                 onblur="this.style.borderColor='var(--border)';">
                             <option value="auto">🔎 كشف تلقائي ذكي (مستحسن)</option>
-                            <option value="university">🏫 جامعة</option>
-                            <option value="institute">🎓 معهد</option>
                             <option value="major">📚 تخصص</option>
                             <option value="article">📰 مقالة</option>
                         </select>
                     </div>
+
+                    <!-- Competitor URL Field (Majors only) -->
+                    <div id="competitor-url-wrapper" style="display: flex; flex-direction: column; gap: 8px;">
+                        <label for="competitor-url" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">
+                            رابط التخصص عند المنافس (اختياري)
+                        </label>
+                        <input type="url" 
+                               id="competitor-url" 
+                               name="competitor_url" 
+                               placeholder="https://your-uni.com/%d9%87%d9%86%d8%af%d8%b3%d8%a9-..." 
+                               dir="ltr"
+                               style="width: 100%;
+                                      padding: 10px 16px;
+                                      font-size: 14px;
+                                      border: 2px solid var(--border);
+                                      border-radius: var(--radius-sm);
+                                      background-color: var(--surface);
+                                      color: var(--text-primary);
+                                      outline: none;
+                                      transition: all 0.2s ease;"
+                               onfocus="this.style.borderColor='var(--primary)';"
+                               onblur="this.style.borderColor='var(--border)';">
+                        <span style="font-size: 11px; color: var(--text-muted);">
+                            إذا تركته فارغاً، سيبحث النظام تلقائياً عن التخصص المقابل عند المنافس ويدمج محتوياته.
+                        </span>
+                    </div>
+
+
 
                     <!-- Submit Button -->
                     <div style="margin-top: 8px;">
@@ -228,7 +251,7 @@
         </div>
 
         <!-- Tab 2: Bulk Import Section -->
-        <div id="bulk-import-section" style="display: none;">
+        <div id="bulk-import-section">
             <!-- Category Filter Buttons & Search -->
             <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
                 
@@ -255,13 +278,7 @@
 
                 <!-- Sub-tabs Buttons -->
                 <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
-                    <button type="button" class="import-category-btn active" data-category="universities">
-                        🏫 الجامعات ({{ counts.universities }})
-                    </button>
-                    <button type="button" class="import-category-btn" data-category="institutes">
-                        🎓 المعاهد ({{ counts.institutes }})
-                    </button>
-                    <button type="button" class="import-category-btn" data-category="majors">
+                    <button type="button" class="import-category-btn active" data-category="majors">
                         📚 التخصصات ({{ counts.majors }})
                     </button>
                     <button type="button" class="import-category-btn" data-category="articles">
@@ -270,120 +287,27 @@
                 </div>
             </div>
 
-            <!-- Universities Table -->
-            <div id="bulk-universities-section" class="bulk-category-section" style="overflow-x: auto;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 12px; padding: 0 4px;">
-                    <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0;">الجامعات المتاحة للاستيراد</h3>
-                    <button type="button" class="bulk-import-all-btn import-action-btn import-action-btn-primary" data-category="universities">
-                        📥 استيراد كل الجامعات
-                    </button>
-                </div>
-                <table class="import-table" style="margin-top: 0;">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;">#</th>
-                            <th>العنوان</th>
-                            <th>التصنيف</th>
-                            <th>الرمز التعريفي (Slug)</th>
-                            <th style="width: 120px;">الحالة</th>
-                            <th style="width: 130px;">الإجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in sections.universities %}
-                        <tr>
-                            <td>{{ item.number }}</td>
-                            <td class="item-title" style="font-weight: 600;">{{ item.title }}</td>
-                            <td>{{ item.category }}</td>
-                            <td class="item-slug" dir="ltr" style="text-align: right; font-family: monospace; font-size: 12px; color: var(--text-secondary);">{{ item.slug }}</td>
-                            <td>
-                                {% if item.imported %}
-                                <span class="import-badge import-badge-success">مستورد بالفعل</span>
-                                {% else %}
-                                <span class="import-badge import-badge-ready">جاهز للاستيراد</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button type="button" 
-                                        class="trigger-import-btn import-action-btn {% if item.imported %}import-action-btn-secondary{% else %}import-action-btn-primary{% endif %}"
-                                        data-url="{{ item.url }}"
-                                        data-type="university">
-                                    {% if item.imported %}استيراد مجدداً{% else %}ابدأ الاستيراد{% endif %}
-                                </button>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">لا توجد عناصر في هذا القسم</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Institutes Table -->
-            <div id="bulk-institutes-section" class="bulk-category-section" style="overflow-x: auto; display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 12px; padding: 0 4px;">
-                    <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0;">المعاهد المتاحة للاستيراد</h3>
-                    <button type="button" class="bulk-import-all-btn import-action-btn import-action-btn-primary" data-category="institutes">
-                        📥 استيراد كل المعاهد
-                    </button>
-                </div>
-                <table class="import-table" style="margin-top: 0;">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;">#</th>
-                            <th>العنوان</th>
-                            <th>الرمز التعريفي (Slug)</th>
-                            <th style="width: 120px;">الحالة</th>
-                            <th style="width: 130px;">الإجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in sections.institutes %}
-                        <tr>
-                            <td>{{ item.number }}</td>
-                            <td class="item-title" style="font-weight: 600;">{{ item.title }}</td>
-                            <td class="item-slug" dir="ltr" style="text-align: right; font-family: monospace; font-size: 12px; color: var(--text-secondary);">{{ item.slug }}</td>
-                            <td>
-                                {% if item.imported %}
-                                <span class="import-badge import-badge-success">مستورد بالفعل</span>
-                                {% else %}
-                                <span class="import-badge import-badge-ready">جاهز للاستيراد</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button type="button" 
-                                        class="trigger-import-btn import-action-btn {% if item.imported %}import-action-btn-secondary{% else %}import-action-btn-primary{% endif %}"
-                                        data-url="{{ item.url }}"
-                                        data-type="institute">
-                                    {% if item.imported %}استيراد مجدداً{% else %}ابدأ الاستيراد{% endif %}
-                                </button>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">لا توجد عناصر في هذا القسم</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
             <!-- Majors Table -->
-            <div id="bulk-majors-section" class="bulk-category-section" style="overflow-x: auto; display: none;">
+            <div id="bulk-majors-section" class="bulk-category-section" style="overflow-x: auto;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 12px; padding: 0 4px;">
                     <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0;">التخصصات المتاحة للاستيراد</h3>
-                    <button type="button" class="bulk-import-all-btn import-action-btn import-action-btn-primary" data-category="majors">
-                        📥 استيراد كل التخصصات
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" id="start-wizard-btn" class="import-action-btn import-action-btn-primary" style="background-color: var(--info); display: none;">
+                            🪄 بدء الاستيراد التفاعلي المجمع (<span id="selected-wizard-count">0</span>)
+                        </button>
+                        <button type="button" class="bulk-import-all-btn import-action-btn import-action-btn-primary" data-category="majors">
+                            📥 استيراد كل التخصصات
+                        </button>
+                    </div>
                 </div>
                 <table class="import-table" style="margin-top: 0;">
                     <thead>
                         <tr>
+                            <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-majors"></th>
                             <th style="width: 50px;">#</th>
                             <th>العنوان</th>
-                            <th>الرمز التعريفي (Slug)</th>
+                            <th>رابط الموقع القديم</th>
+                            <th>رابط المنافس</th>
                             <th style="width: 120px;">الحالة</th>
                             <th style="width: 130px;">الإجراء</th>
                         </tr>
@@ -391,9 +315,28 @@
                     <tbody>
                         {% for item in sections.majors %}
                         <tr>
+                            <td style="text-align: center; vertical-align: middle;">
+                                <input type="checkbox" class="select-major-checkbox" data-url="{{ item.url }}" data-slug="{{ item.slug }}" data-title="{{ item.title }}" data-competitor-url="{{ item.competitor_url|default_if_none:'' }}" {% if item.imported %}disabled style="opacity: 0.5; cursor: not-allowed;"{% endif %}>
+                            </td>
                             <td>{{ item.number }}</td>
-                            <td class="item-title" style="font-weight: 600;">{{ item.title }}</td>
-                            <td class="item-slug" dir="ltr" style="text-align: right; font-family: monospace; font-size: 12px; color: var(--text-secondary);">{{ item.slug }}</td>
+                            <td class="item-title" style="font-weight: 600;">
+                                {{ item.title }}
+                                <span class="item-slug" style="display: none;">{{ item.slug }}</span>
+                            </td>
+                            <td>
+                                {% if item.url %}
+                                <a href="{{ item.url }}" target="_blank" style="color: var(--primary); text-decoration: underline; font-weight: 500;">اضغط هنا</a>
+                                {% else %}
+                                <span style="color: var(--text-muted);">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.competitor_url %}
+                                <a href="{{ item.competitor_url }}" target="_blank" style="color: var(--primary); text-decoration: underline; font-weight: 500;">اضغط هنا</a>
+                                {% else %}
+                                <span style="color: var(--text-muted);">-</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if item.imported %}
                                 <span class="import-badge import-badge-success">مستورد بالفعل</span>
@@ -405,14 +348,15 @@
                                 <button type="button" 
                                         class="trigger-import-btn import-action-btn {% if item.imported %}import-action-btn-secondary{% else %}import-action-btn-primary{% endif %}"
                                         data-url="{{ item.url }}"
-                                        data-type="major">
+                                        data-type="major"
+                                        data-competitor-url="{{ item.competitor_url|default_if_none:'' }}">
                                     {% if item.imported %}استيراد مجدداً{% else %}ابدأ الاستيراد{% endif %}
                                 </button>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">لا توجد عناصر في هذا القسم</td>
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">لا توجد عناصر في هذا القسم</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -498,9 +442,32 @@
                     <p id="import-success-message" style="font-size: 12px; color: var(--text-secondary); margin: 0;">
                         جاري الانتقال لصفحة الإنشاء تلقائياً...
                     </p>
-                    <div id="import-success-warnings" style="margin-top: 10px; font-size: 11px; display: flex; flex-direction: column; gap: 4px;">
-                        <!-- warnings about image downloads -->
+                    <div id="import-success-prompt-section" style="display: none; margin-top: 16px; padding: 16px; border: 1px solid rgba(0, 115, 230, 0.2); border-radius: var(--radius-sm); background-color: var(--white); flex-direction: column; gap: 10px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <strong style="color: var(--primary); font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                                🤖 مساعد الذكاء الاصطناعي اليدوي (Manual AI Assistant)
+                            </strong>
+                            <button type="button" id="sg-success-copy-prompt-btn" style="background-color: var(--primary); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">
+                                نسخ البرومبت 📋
+                            </button>
+                        </div>
+                        <textarea readonly id="sg-success-prompt-text" style="width: 100%; height: 80px; font-family: monospace; font-size: 11px; padding: 6px; border: 1px solid var(--border); border-radius: 4px; resize: vertical; direction: ltr; text-align: left; background-color: #fafafa;"></textarea>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+                            <strong style="font-size: 12px; color: var(--text-primary);">📥 الصق استجابة الـ JSON الناتجة لتطبيقها قبل الانتقال:</strong>
+                            <textarea id="sg-success-json-paste" placeholder='{ "name": "...", "description": "...", "subjects_tables": [...] }' style="width: 100%; height: 80px; font-family: monospace; font-size: 11px; padding: 6px; border: 1px solid var(--border); border-radius: 4px; resize: vertical; direction: ltr; text-align: left; background-color: #ffffff; outline: none;"></textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
+                                <button type="button" id="sg-success-apply-json-btn" style="background-color: var(--success); color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;">
+                                    تطبيق وتعبئة البيانات والانتقال فوراً 🚀
+                                </button>
+                                <button type="button" id="sg-success-skip-json-btn" style="background-color: var(--border); color: var(--text-primary); border: none; padding: 8px 16px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;">
+                                    متابعة الانتقال بالبيانات الأصلية ➔
+                                </button>
+                            </div>
+                            <div id="sg-success-json-error" style="color: var(--danger); font-size: 11px; display: none;"></div>
+                        </div>
                     </div>
+
                     <div style="margin-top: 12px;">
                         <button id="import-proceed-btn" style="display: none; padding: 6px 12px; background-color: var(--success); color: var(--white); font-size: 12px; font-weight: 600; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease;">
                             متابعة الانتقال
@@ -528,6 +495,146 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Wizard Modal for Interactive Import Queue -->
+    <div id="wizard-import-modal" style="display: none; position: fixed; inset: 0; z-index: 1000; align-items: center; justify-content: center; background-color: rgba(17, 36, 58, 0.6); padding: 16px;">
+        <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); max-width: 1000px; width: 100%; height: 90vh; display: flex; flex-direction: column; direction: rtl; text-align: right;">
+            
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <h3 id="wizard-modal-title" style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0;">
+                        🪄 معالج الاستيراد التفاعلي المتتالي
+                    </h3>
+                    <div style="font-size: 12px; color: var(--text-muted);">
+                        التخصص الحالي: <span id="wizard-current-major-name" style="font-weight: 600; color: var(--primary);">---</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                        <span>التقدم:</span>
+                        <strong id="wizard-progress-text">0 / 0</strong>
+                    </div>
+                    <!-- Close button -->
+                    <span id="wizard-modal-close" style="cursor: pointer; color: var(--text-muted); font-size: 20px;" onclick="sg_cancel_wizard_prompt()">✕</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar Outer -->
+            <div style="width: 100%; height: 4px; background-color: var(--primary-light);">
+                <div id="wizard-progress-bar-inner" style="width: 0%; height: 100%; background-color: var(--primary); transition: width 0.3s ease;"></div>
+            </div>
+
+            <!-- Main Content Area (Split into 2 Columns) -->
+            <div style="flex: 1; display: flex; overflow: hidden; min-height: 0;">
+                
+                <!-- Right Column: Scrape Content & Prompt -->
+                <div style="flex: 1; border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 6px;">
+                            <span>📋 البرومبت المولد (Prompt)</span>
+                        </h4>
+                        <button type="button" id="wizard-copy-prompt-btn" style="background-color: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: var(--radius-sm); font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <span>نسخ البرومبت 📋</span>
+                        </button>
+                    </div>
+                    
+                    <textarea readonly id="wizard-prompt-text" placeholder="جاري تجهيز البرومبت..." style="flex: 1; width: 100%; min-height: 200px; font-family: monospace; font-size: 11px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); resize: none; direction: ltr; text-align: left; background-color: var(--surface-2); outline: none; line-height: 1.5; color: var(--text-secondary);"></textarea>
+                    
+                    <!-- Previews of URLs being imported -->
+                    <div style="margin-top: 16px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background-color: var(--bg-light); display: flex; flex-direction: column; gap: 8px;">
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            🔗 رابط الموقع القديم: <a id="wizard-old-url" href="#" target="_blank" style="color: var(--primary); font-weight: 500; text-decoration: underline;">فتح الصفحة ➔</a>
+                        </div>
+                        <div id="wizard-comp-url-row" style="font-size: 12px; color: var(--text-secondary);">
+                            🔍 رابط المنافس: <a id="wizard-comp-url" href="#" target="_blank" style="color: var(--primary); font-weight: 500; text-decoration: underline;">فتح الصفحة ➔</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Left Column: Paste JSON & Edit Staging Form -->
+                <div style="flex: 1; display: flex; flex-direction: column; padding: 20px; min-height: 0;">
+                    
+                    <!-- Tabs for Paste vs Edit View -->
+                    <div style="display: flex; gap: 8px; border-bottom: 2px solid var(--border); margin-bottom: 16px;">
+                        <button type="button" id="wizard-tab-paste-btn" style="padding: 8px 16px; font-size: 13px; font-weight: 600; background: none; border: none; border-bottom: 3px solid var(--primary); color: var(--primary); cursor: pointer; transition: all 0.2s ease; outline: none;">
+                            📥 لصق الـ JSON
+                        </button>
+                        <button type="button" id="wizard-tab-staging-btn" style="padding: 8px 16px; font-size: 13px; font-weight: 600; background: none; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; outline: none;">
+                            🛠️ مراجعة وتعديل الحقول
+                        </button>
+                    </div>
+
+                    <!-- Panel 1: Paste Area (shown by default) -->
+                    <div id="wizard-panel-paste" style="flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 0;">
+                        <strong style="font-size: 12px; color: var(--text-primary);">الصق استجابة الـ JSON الناتجة من الذكاء الاصطناعي:</strong>
+                        <textarea id="wizard-json-paste" placeholder='{ "name": "...", "description": "...", "subjects_tables": [...] }' style="flex: 1; width: 100%; min-height: 150px; font-family: monospace; font-size: 11px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); resize: none; direction: ltr; text-align: left; background-color: #ffffff; outline: none; line-height: 1.5; color: var(--text-primary);"></textarea>
+                        <div id="wizard-json-error" style="color: var(--danger); font-size: 11px; font-weight: 600; display: none; padding: 8px; border: 1px solid rgba(214, 69, 69, 0.2); border-radius: var(--radius-sm); background-color: var(--danger-light);"></div>
+                    </div>
+
+                    <!-- Panel 2: Staging Form (hidden by default) -->
+                    <div id="wizard-panel-staging" style="flex: 1; display: none; flex-direction: column; gap: 12px; overflow-y: auto; min-height: 0;">
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Name field -->
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">اسم التخصص (عربي):</label>
+                                <input type="text" id="staging-field-name" style="width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none;">
+                            </div>
+                            <!-- Durations -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">مدة البكالوريوس:</label>
+                                    <input type="text" id="staging-field-bachelor_duration" style="width: 100%; padding: 8px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none;">
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">مدة الماجستير:</label>
+                                    <input type="text" id="staging-field-master_duration" style="width: 100%; padding: 8px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none;">
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">مدة الدكتوراه:</label>
+                                    <input type="text" id="staging-field-phd_duration" style="width: 100%; padding: 8px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none;">
+                                </div>
+                            </div>
+                            <!-- Study Language -->
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">لغة الدراسة في ماليزيا:</label>
+                                <input type="text" id="staging-field-study_language" style="width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none;">
+                            </div>
+                            <!-- Practical Training -->
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">التدريب العملي (الامتياز):</label>
+                                <input type="text" id="staging-field-practical_training" style="width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-top: 1px solid var(--border); background-color: var(--surface-2);">
+                <!-- Pre-fetch state indicator -->
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary);">
+                    <div id="prefetch-spinner" class="animate-spin" style="height: 12px; width: 12px; border-radius: 50%; border: 2px solid var(--primary-light); border-top-color: var(--primary); display: none;"></div>
+                    <span id="prefetch-status-text">التالي: غير محدّد</span>
+                    <button type="button" id="prefetch-retry-btn" style="display: none; background: none; border: none; color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline; padding: 0;">إعادة المحاولة 🔄</button>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" id="wizard-cancel-btn" class="import-action-btn import-action-btn-secondary" style="border: 1px solid var(--danger); color: var(--danger); background: none;" onclick="sg_cancel_wizard_prompt()">
+                        إلغاء المعالج
+                    </button>
+                    <button type="button" id="wizard-skip-btn" class="import-action-btn import-action-btn-secondary">
+                        تخطي ➔
+                    </button>
+                    <button type="button" id="wizard-save-btn" class="import-action-btn import-action-btn-primary" style="background-color: var(--success);" disabled>
+                        حفظ كمسودة وتالي 💾
+                    </button>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <!-- Progress Modal for Bulk Import -->
@@ -589,9 +696,28 @@
         return false;
     };
 </script>
-<script src="{% static 'js/importer.js' %}?v=5"></script>
+<script src="{% static 'js/importer.js' %}?v=1.0.3"></script>
 <script>
     function sg_init_import_tabs() {
+        // Competitor URL field toggle
+        const typeSelect = document.getElementById('content-type-override');
+        const competitorWrapper = document.getElementById('competitor-url-wrapper');
+        
+        function toggleCompetitorField() {
+            if (!typeSelect || !competitorWrapper) return;
+            const val = typeSelect.value;
+            if (val === 'major' || val === 'auto') {
+                competitorWrapper.style.display = 'flex';
+            } else {
+                competitorWrapper.style.display = 'none';
+            }
+        }
+        
+        if (typeSelect && competitorWrapper) {
+            typeSelect.addEventListener('change', toggleCompetitorField);
+            toggleCompetitorField(); // Initial trigger
+        }
+
         // Tab switching
         const tabSingleBtn = document.getElementById('tab-single-btn');
         const tabBulkBtn = document.getElementById('tab-bulk-btn');
@@ -675,10 +801,16 @@
             btn.addEventListener('click', function() {
                 const url = this.getAttribute('data-url');
                 const type = this.getAttribute('data-type');
+                const competitorUrl = this.getAttribute('data-competitor-url') || '';
                 
                 // Set values
                 document.getElementById('import-url').value = url;
                 document.getElementById('content-type-override').value = type;
+                
+                const competitorInput = document.getElementById('competitor-url');
+                if (competitorInput) {
+                    competitorInput.value = competitorUrl;
+                }
                 
                 // Switch back to Single Import tab to show progress
                 tabSingleBtn.click();

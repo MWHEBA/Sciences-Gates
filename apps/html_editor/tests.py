@@ -141,10 +141,12 @@ class SanitizeArticleHTMLTests(TestCase):
         result = sanitize_article_html(html)
         self.assertNotIn('<video>', result)
         
-        # Test table tag (not allowed in V1)
+        # Test table tag (allowed)
         html = '<table><tr><td>Cell</td></tr></table>'
         result = sanitize_article_html(html)
-        self.assertNotIn('<table>', result)
+        self.assertIn('<table>', result)
+        self.assertIn('<tr>', result)
+        self.assertIn('<td>Cell</td>', result)
     
     def test_dangerous_attributes_removed(self):
         """Test that dangerous attributes are removed."""

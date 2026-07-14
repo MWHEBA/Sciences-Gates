@@ -21,8 +21,8 @@ class MajorForm(forms.ModelForm):
             # Basic Information
             'name', 'slug', 'is_legacy', 'category', 'main_image', 'main_image_alt',
             # Quick Information Fields
-            'study_duration', 'bachelor_duration', 'master_duration', 'phd_duration',
-            'tuition_fees', 'study_language', 'practical_training', 'career_opportunities',
+            'bachelor_duration', 'master_duration', 'phd_duration',
+            'tuition_fees', 'study_language', 'practical_training', 'career_opportunities', 'competitor_url',
             # Rich Text Sections
             'description', 'why_study_section', 'how_to_apply_section',
             # Relationships
@@ -102,10 +102,10 @@ class MajorForm(forms.ModelForm):
                 'placeholder': 'مثال: متاح في السنة الأخيرة',
                 'dir': 'rtl',
             }),
-            'career_opportunities': forms.Textarea(attrs={
+            'career_opportunities': CustomHTMLEditorWidget(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'فرص العمل المتاحة بعد التخرج',
-                'rows': 4,
+                'rows': 6,
                 'dir': 'rtl',
             }),
             
@@ -222,6 +222,7 @@ class MajorForm(forms.ModelForm):
             'study_language': 'لغة الدراسة',
             'practical_training': 'التدريب العملي',
             'career_opportunities': 'فرص العمل',
+            'competitor_url': 'رابط التخصص عند المنافس',
             
             # Rich Text Sections
             'description': 'وصف التخصص',
@@ -267,6 +268,7 @@ class MajorForm(forms.ModelForm):
             'study_language': 'لغة الدراسة (مثال: الإنجليزية)',
             'practical_training': 'معلومات التدريب العملي (مثال: متاح في السنة الأخيرة)',
             'career_opportunities': 'فرص العمل المتاحة بعد التخرج',
+            'competitor_url': 'رابط صفحة التخصص على موقع المنافس المستخدمة في دمج المحتوى',
             
             # Rich Text Sections
             'description': 'وصف شامل عن التخصص',
@@ -340,18 +342,28 @@ class MajorForm(forms.ModelForm):
             parsed_data = data
         elif isinstance(data, str):
             import json
+            val_stripped = data.strip()
+            if not val_stripped or val_stripped in ['غير محدد', 'لا يوجد', 'null', 'NULL', '-']:
+                return []
             try:
-                # If it is empty or whitespace, return empty list
-                if not data.strip():
-                    return []
-                parsed_data = json.loads(data)
+                parsed_data = json.loads(val_stripped)
             except json.JSONDecodeError:
-                raise forms.ValidationError("فشل في معالجة بيانات الرسوم الدراسية")
+                # Wrap plain text in a single default table structure
+                parsed_data = [{
+                    'title': 'الرسوم الدراسية',
+                    'headers': ['الرسوم'],
+                    'rows': [[val_stripped]]
+                }]
         else:
             raise forms.ValidationError("صيغة البيانات غير صحيحة")
             
         if not isinstance(parsed_data, list):
-            raise forms.ValidationError("يجب أن تكون الرسوم الدراسية عبارة عن قائمة من الجداول")
+            # Wrap non-list values (like string/number) in a single default table structure
+            parsed_data = [{
+                'title': 'الرسوم الدراسية',
+                'headers': ['الرسوم'],
+                'rows': [[str(parsed_data)]]
+            }]
             
         for idx, table in enumerate(parsed_data):
             if not isinstance(table, dict):
@@ -601,7 +613,6 @@ MajorAttachmentFormSet = inlineformset_factory(
         'title': forms.TextInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             'placeholder': 'عنوان الملف (مثال: الخطة الدراسية للتخصص)',
-            'required': True,
             'dir': 'rtl',
         }),
         'file': forms.FileInput(attrs={

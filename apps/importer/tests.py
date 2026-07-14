@@ -1194,6 +1194,25 @@ class BulkSaveAPITests(TestCase):
             uploaded_by=self.user
         )
 
+    def post_bulk_save(self, url, content_type_override, competitor_url=None):
+        payload = {
+            'url': url,
+            'content_type_override': content_type_override
+        }
+        if competitor_url:
+            payload['competitor_url'] = competitor_url
+            
+        with patch('apps.importer.views.run_in_background', lambda f, *a, **k: f(*a, **k)):
+            response = self.client.post('/dashboard/import/bulk-save/', payload)
+            self.assertEqual(response.status_code, 200)
+            job_id = response.json()['job_id']
+            
+            status_response = self.client.get(f'/dashboard/import/status/{job_id}/')
+            self.assertEqual(status_response.status_code, 200)
+            status_data = status_response.json()
+            self.assertEqual(status_data['status'], 'SUCCESS')
+            return status_data['result_data']
+
     @patch('apps.importer.services.wp_client.requests.get')
     def test_bulk_save_api_university(self, mock_get):
         """
@@ -1227,13 +1246,10 @@ class BulkSaveAPITests(TestCase):
 
         # Mock download_and_optimize_image to return our mock image
         with patch('apps.importer.views.download_and_optimize_image', return_value=(self.mock_image, None)):
-            response = self.client.post('/dashboard/import/bulk-save/', {
-                'url': 'https://old-site.com/university/dubai-tech-university/',
-                'content_type_override': 'university'
-            })
-            
-            self.assertEqual(response.status_code, 200)
-            data = response.json()
+            data = self.post_bulk_save(
+                'https://old-site.com/university/dubai-tech-university/',
+                'university'
+            )
             self.assertTrue(data['success'])
             self.assertEqual(data['content_type'], 'university')
             self.assertEqual(data['name'], 'جامعة دبي التكنولوجية')
@@ -1273,13 +1289,10 @@ class BulkSaveAPITests(TestCase):
 
         # Mock download_and_optimize_image to return our mock image
         with patch('apps.importer.views.download_and_optimize_image', return_value=(self.mock_image, None)):
-            response = self.client.post('/dashboard/import/bulk-save/', {
-                'url': 'https://old-site.com/new-programming-article/',
-                'content_type_override': 'article'
-            })
-            
-            self.assertEqual(response.status_code, 200)
-            data = response.json()
+            data = self.post_bulk_save(
+                'https://old-site.com/new-programming-article/',
+                'article'
+            )
             self.assertTrue(data['success'])
             self.assertEqual(data['content_type'], 'article')
             
@@ -1311,13 +1324,10 @@ class BulkSaveAPITests(TestCase):
         }
         mock_get.return_value = mock_response
 
-        response = self.client.post('/dashboard/import/bulk-save/', {
-            'url': 'https://old-site.com/سكن-جامعة-MMU-في-ملاكا/',
-            'content_type_override': 'article'
-        })
-        
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = self.post_bulk_save(
+            'https://old-site.com/سكن-جامعة-MMU-في-ملاكا/',
+            'article'
+        )
         self.assertTrue(data['success'])
         
         from apps.articles.models import Article
@@ -1361,13 +1371,10 @@ class BulkSaveAPITests(TestCase):
         }
         mock_get.return_value = mock_response
 
-        response = self.client.post('/dashboard/import/bulk-save/', {
-            'url': 'https://old-site.com/university/sharjah-university/',
-            'content_type_override': 'university'
-        })
-        
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = self.post_bulk_save(
+            'https://old-site.com/university/sharjah-university/',
+            'university'
+        )
         self.assertTrue(data['success'])
         
         from apps.universities.models import Program
@@ -1417,13 +1424,10 @@ class BulkSaveAPITests(TestCase):
         }
         mock_get.return_value = mock_response
 
-        response = self.client.post('/dashboard/import/bulk-save/', {
-            'url': 'https://old-site.com/university/ajman-university/',
-            'content_type_override': 'university'
-        })
-        
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = self.post_bulk_save(
+            'https://old-site.com/university/ajman-university/',
+            'university'
+        )
         self.assertTrue(data['success'])
         
         from apps.universities.models import Program
@@ -1478,13 +1482,10 @@ class BulkSaveAPITests(TestCase):
         )
 
         with patch('apps.importer.views.download_and_optimize_image', return_value=(new_media, None)):
-            response = self.client.post('/dashboard/import/bulk-save/', {
-                'url': 'https://old-site.com/university/ajman-uni-image-test/',
-                'content_type_override': 'university'
-            })
-            
-            self.assertEqual(response.status_code, 200)
-            data = response.json()
+            data = self.post_bulk_save(
+                'https://old-site.com/university/ajman-uni-image-test/',
+                'university'
+            )
             self.assertTrue(data['success'])
             
             uni.refresh_from_db()
@@ -1531,13 +1532,10 @@ class BulkSaveAPITests(TestCase):
         }
         mock_get.return_value = mock_response
 
-        response = self.client.post('/dashboard/import/bulk-save/', {
-            'url': 'https://old-site.com/institute/elite-language-center/',
-            'content_type_override': 'institute'
-        })
-        
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = self.post_bulk_save(
+            'https://old-site.com/institute/elite-language-center/',
+            'institute'
+        )
         self.assertTrue(data['success'])
         self.assertEqual(data['content_type'], 'institute')
         
@@ -1564,7 +1562,8 @@ class BulkSaveAPITests(TestCase):
         self.assertEqual(c_int.visa_duration, 'بدون تاشيرة')
 
     @patch('apps.importer.services.wp_client.requests.get')
-    def test_bulk_save_api_major_empty_fields(self, mock_get):
+    @patch('apps.importer.services.gemini_service.GeminiService.is_configured', return_value=False)
+    def test_bulk_save_api_major_empty_fields(self, mock_is_configured, mock_get):
         """
         Test ImportBulkSaveAPIView successfully fetches, maps, and saves a major
         with incomplete table rows (empty/missing required fields) by cleaning and
@@ -1609,13 +1608,10 @@ class BulkSaveAPITests(TestCase):
         from apps.majors.models import MajorCategory, Major
         MajorCategory.objects.get_or_create(slug='medical', defaults={'name': 'الطب و الصحة'})
 
-        response = self.client.post('/dashboard/import/bulk-save/', {
-            'url': 'https://old-site.com/majors/medicine-malaysia/',
-            'content_type_override': 'major'
-        })
-        
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = self.post_bulk_save(
+            'https://old-site.com/majors/medicine-malaysia/',
+            'major'
+        )
         self.assertTrue(data['success'])
         self.assertEqual(data['content_type'], 'major')
         
@@ -1644,6 +1640,92 @@ class BulkSaveAPITests(TestCase):
         self.assertEqual(countries[0].study_duration, 'غير محدد')
         self.assertEqual(countries[0].annual_fees, '20,000 MYR')
         self.assertEqual(countries[0].living_cost, 'غير محدد')
+
+
+class ImportSaveDraftViewTests(TestCase):
+    """
+    Tests for ImportSaveDraftView endpoint.
+    اختبارات مسار حفظ المسودات من المودال التفاعلي
+    """
+    def setUp(self):
+        self.user = User.objects.create_superuser(username='admin', password='password')
+        # Create a mock MediaFile in DB
+        self.mock_image = MediaFile.objects.create(
+            original_filename='mock.png',
+            file='mock.png',
+            file_size=1024,
+            width=200,
+            height=200,
+            uploaded_by=self.user
+        )
+
+    def test_save_draft_requires_authentication(self):
+        """
+        Verify that an unauthenticated user cannot save a draft.
+        """
+        payload = {
+            'content_type': 'major',
+            'mapped_data': {'form_initial': {'name': 'تخصص مالي', 'slug': 'finance-major'}}
+        }
+        response = self.client.post('/dashboard/import/save-draft/', payload, content_type='application/json')
+        # Should redirect to login or return forbidden since it uses ContentAdminRequiredMixin
+        self.assertIn(response.status_code, [302, 403])
+
+    @patch('apps.importer.views.download_and_optimize_image')
+    def test_save_draft_success_for_major(self, mock_download):
+        """
+        Verify that an authenticated content admin can save a major draft with images successfully.
+        """
+        self.client.force_login(self.user)
+        mock_download.return_value = (self.mock_image, None)
+
+        # Create MajorCategory
+        from apps.majors.models import MajorCategory, Major
+        MajorCategory.objects.get_or_create(slug='cs', defaults={'name': 'علوم الحاسوب'})
+
+        mapped_data = {
+            'form_initial': {
+                'name': 'هندسة البرمجيات المحسنة',
+                'slug': 'software-engineering-advanced',
+                'major_category': 'cs',
+                'study_duration': '4 سنوات',
+                'study_language': 'الإنجليزية',
+                'description': '<p>وصف كامل</p>',
+            },
+            'images_to_download': {
+                'main_image': {'url': 'https://example.com/software-main.jpg'},
+            },
+            'subjects_tables': [
+                {'academic_year': 'السنة الأولى', 'subjects': 'مقدمة في البرمجة, Introduction to CS'}
+            ],
+            'faqs_data': [
+                {'question': 'سؤال؟', 'answer': 'إجابة.'}
+            ]
+        }
+
+        payload = {
+            'content_type': 'major',
+            'mapped_data': mapped_data
+        }
+
+        response = self.client.post('/dashboard/import/save-draft/', payload, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+
+        # Verify DB entry
+        self.assertTrue(Major.objects.filter(slug='software-engineering-advanced').exists())
+        major = Major.objects.get(slug='software-engineering-advanced')
+        self.assertEqual(major.name, 'هندسة البرمجيات المحسنة')
+        self.assertEqual(major.publish_status, 'unpublished') # Must be forced to draft
+        self.assertEqual(major.main_image, 'mock.png')
+
+        # Verify subjects
+        subjects = major.subjects_tables.all()
+        self.assertEqual(subjects.count(), 1)
+        self.assertEqual(subjects[0].academic_year, 'السنة الأولى')
+        self.assertEqual(subjects[0].subjects, 'مقدمة في البرمجة, Introduction to CS')
+
 
 
 

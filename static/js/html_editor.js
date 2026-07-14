@@ -1305,6 +1305,7 @@ class ProfessionalHTMLEditor {
                 items: [
                     { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="7" rx="1"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="12" y1="14" x2="12" y2="21"/><line x1="7" y1="17" x2="17" y2="17"/></svg>`, title: 'إضافة صف فوق',   action: 'addRowAbove' },
                     { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="14" width="18" height="7" rx="1"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="3" x2="12" y2="10"/><line x1="7" y1="6" x2="17" y2="6"/></svg>`, title: 'إضافة صف تحت',   action: 'addRowBelow' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16" stroke-linecap="round"/><rect x="3" y="3" width="18" height="18" rx="1" stroke-dasharray="3 3"/><rect x="3" y="3" width="18" height="6" fill="currentColor" opacity="0.3"/></svg>`, title: 'تحويل الصف لرأس/عادي', action: 'toggleRowHeader' },
                     { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>`, title: 'حذف الصف',        action: 'deleteRow',  danger: true },
                 ],
             },
@@ -1313,6 +1314,7 @@ class ProfessionalHTMLEditor {
                 items: [
                     { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><line x1="14" y1="3" x2="14" y2="21"/><line x1="14" y1="12" x2="21" y2="12"/><line x1="17" y1="7" x2="17" y2="17"/></svg>`, title: 'إضافة عمود يمين', action: 'addColRight' },
                     { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="14" y="3" width="7" height="18" rx="1"/><line x1="10" y1="3" x2="10" y2="21"/><line x1="3" y1="12" x2="10" y2="12"/><line x1="6" y1="7" x2="6" y2="17"/></svg>`, title: 'إضافة عمود يسار', action: 'addColLeft' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v16M10 4v16" stroke-linecap="round"/><rect x="3" y="3" width="18" height="18" rx="1" stroke-dasharray="3 3"/><rect x="3" y="3" width="6" height="18" fill="currentColor" opacity="0.3"/></svg>`, title: 'تحويل العمود لرأس/عادي', action: 'toggleColHeader' },
                     { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>`, title: 'حذف العمود',      action: 'deleteCol',  danger: true },
                 ],
             },
@@ -1423,15 +1425,23 @@ class ProfessionalHTMLEditor {
 
     // ─── Table Actions ─────────────────────────────────────────────────────────
     _handleTableAction(action, cell, table, btn) {
+        // Resolve cell if it is detached from DOM
+        if (!cell || !cell.isConnected) {
+            cell = table.querySelector('td.is-selected, th.is-selected') || table.querySelector('td, th');
+        }
+        if (!cell) return;
+
+        const row = cell.closest('tr');
+        if (!row) return;
+
         // Save state before any table modification
-        if (['addRowAbove', 'addRowBelow', 'deleteRow', 'addColRight', 'addColLeft', 'deleteCol', 'mergeCells', 'splitCell', 'deleteTable'].includes(action)) {
+        if (['addRowAbove', 'addRowBelow', 'deleteRow', 'addColRight', 'addColLeft', 'deleteCol', 'mergeCells', 'splitCell', 'deleteTable', 'toggleRowHeader', 'toggleColHeader'].includes(action)) {
             this._saveState(`جدول: ${action}`);
         }
 
         const selectedCells = Array.from(table.querySelectorAll('td.is-selected, th.is-selected'));
         const activeCells = selectedCells.length > 0 ? selectedCells : [cell];
         
-        const row = cell.closest('tr');
         const tbody = table.querySelector('tbody');
         const thead = table.querySelector('thead');
         const allRows = Array.from(table.querySelectorAll('tr'));
@@ -1440,6 +1450,61 @@ class ProfessionalHTMLEditor {
         const colCount = row.cells.length;
 
         switch (action) {
+
+            case 'toggleRowHeader': {
+                const tr = cell.closest('tr');
+                const cells = Array.from(tr.cells);
+                const hasTd = cells.some(c => c.tagName === 'TD');
+                
+                cells.forEach(c => {
+                    const newTagName = hasTd ? 'th' : 'td';
+                    const newCell = document.createElement(newTagName);
+                    newCell.contentEditable = 'true';
+                    newCell.innerHTML = c.innerHTML;
+                    Array.from(c.attributes).forEach(attr => {
+                        newCell.setAttribute(attr.name, attr.value);
+                    });
+                    c.parentNode.replaceChild(newCell, c);
+                });
+                
+                if (hasTd) {
+                    let thead = table.querySelector('thead');
+                    if (!thead) {
+                        thead = document.createElement('thead');
+                        table.prepend(thead);
+                    }
+                    thead.appendChild(tr);
+                } else {
+                    let tbody = table.querySelector('tbody');
+                    if (!tbody) {
+                        tbody = document.createElement('tbody');
+                        table.appendChild(tbody);
+                    }
+                    if (tr.parentNode.tagName === 'THEAD') {
+                        tbody.prepend(tr);
+                    }
+                }
+                break;
+            }
+
+            case 'toggleColHeader': {
+                const cellIndex = Array.from(row.cells).indexOf(cell);
+                const allRows = Array.from(table.querySelectorAll('tr'));
+                const columnCells = allRows.map(r => r.cells[cellIndex]).filter(c => c !== undefined);
+                const hasTd = columnCells.some(c => c.tagName === 'TD');
+                
+                columnCells.forEach(c => {
+                    const newTagName = hasTd ? 'th' : 'td';
+                    const newCell = document.createElement(newTagName);
+                    newCell.contentEditable = 'true';
+                    newCell.innerHTML = c.innerHTML;
+                    Array.from(c.attributes).forEach(attr => {
+                        newCell.setAttribute(attr.name, attr.value);
+                    });
+                    c.parentNode.replaceChild(newCell, c);
+                });
+                break;
+            }
 
             case 'addRowAbove': {
                 const newRow = this._createRow(colCount, false);
@@ -1565,6 +1630,12 @@ class ProfessionalHTMLEditor {
         // Re-bind events after DOM changes
         this._bindTableEvents(table);
         this._syncToTextarea();
+
+        // Re-show toolbar to update position and cell references
+        const currentActive = table.querySelector('td.is-selected, th.is-selected') || cell;
+        if (currentActive && currentActive.isConnected && action !== 'deleteTable') {
+            this._showTableToolbar(currentActive, table);
+        }
     }
 
     _createRow(colCount, isHeader = false) {
@@ -2035,12 +2106,12 @@ class ProfessionalHTMLEditor {
             'b', 'strong', 'em', 'i', 'u', 's', 'del', 'strike',
             'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'blockquote',
             'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
-            'colgroup', 'col', 'div', 'br', 'p',
+            'colgroup', 'col', 'div', 'br', 'p', 'span', 'font'
         ]);
 
         // التاجات اللي نشيلها ونحافظ على محتواها (unwrap)
         const UNWRAP_TAGS = new Set([
-            'span', 'font', 'section', 'article', 'header', 'footer',
+            'section', 'article', 'header', 'footer',
             'main', 'aside', 'nav', 'figure', 'figcaption', 'mark',
             'small', 'big', 'center', 'abbr', 'cite', 'code', 'pre',
             'sub', 'sup', 'details', 'summary', 'label',
@@ -2048,19 +2119,21 @@ class ProfessionalHTMLEditor {
 
         const ALLOWED_ATTRS = {
             'a':     ['href', 'title', 'target'],
-            'img':   ['src', 'alt', 'width', 'height'],
-            'table': ['class', 'data-pro-table'],
-            'th':    ['colspan', 'rowspan', 'class'],
-            'td':    ['colspan', 'rowspan', 'class'],
-            'tr':    ['class'],
+            'img':   ['src', 'alt', 'width', 'height', 'style', 'class'],
+            'table': ['class', 'data-pro-table', 'style'],
+            'th':    ['colspan', 'rowspan', 'class', 'style'],
+            'td':    ['colspan', 'rowspan', 'class', 'style'],
+            'tr':    ['class', 'style'],
             'col':   ['style'],
-            'div':   [],
+            'div':   ['class', 'style'],
+            'span':  ['class', 'style'],
+            'font':  ['color', 'size', 'face', 'style', 'class'],
         };
 
         const temp = document.createElement('div');
         temp.innerHTML = html;
 
-        // الخطوة 4: unwrap كل التاجات الزائدة (span, font, إلخ) بشكل آمن
+        // الخطوة 4: unwrap كل التاجات الزائدة بشكل آمن
         let unwrapFound = true;
         let safetyCounter = 0;
         while (unwrapFound && safetyCounter < 100) {
@@ -2094,8 +2167,13 @@ class ProfessionalHTMLEditor {
                     const tag = child.tagName.toLowerCase();
 
                     if (!ALLOWED_TAGS.has(tag)) {
-                        const text = document.createTextNode(child.textContent);
-                        node.replaceChild(text, child);
+                        // تنظيف العناصر الفرعية أولاً قبل عملية الـ unwrap
+                        clean(child);
+                        // نقل العناصر النظيفة إلى الأب
+                        while (child.firstChild) {
+                            node.insertBefore(child.firstChild, child);
+                        }
+                        node.removeChild(child);
                         return;
                     }
 
@@ -2135,8 +2213,29 @@ class ProfessionalHTMLEditor {
 
         clean(temp);
 
+        // تنسيق وترتيب الجداول المضافة يدوياً
+        temp.querySelectorAll('table').forEach(table => {
+            if (!table.classList.contains('pro-editor-table')) {
+                table.classList.add('pro-editor-table');
+            }
+            table.setAttribute('data-pro-table', '1');
+            
+            // تغليف الجدول بـ wrapper التمرير الأفقي
+            const parent = table.parentElement;
+            if (!parent || !parent.classList.contains('pro-table-wrapper')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'pro-table-wrapper';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            }
+        });
+
         // إزالة الـ divs الفارغة
-        temp.querySelectorAll('div:empty, p:empty').forEach(el => el.remove());
+        temp.querySelectorAll('div:empty, p:empty').forEach(el => {
+            if (!el.classList.contains('pro-table-wrapper')) {
+                el.remove();
+            }
+        });
 
         return temp.innerHTML;
     }

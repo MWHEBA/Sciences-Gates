@@ -20,8 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Find all editor mounts on this form
             const editors = form.querySelectorAll('.pro-editor-mount');
             
-            console.log(`[Form Sync] Found ${editors.length} editors on form`);
-            
             editors.forEach((editorMount, index) => {
                 // Find the hidden textarea that carries the value
                 const hiddenTextarea = editorMount.querySelector('textarea[style*="display: none"]');
@@ -38,12 +36,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         const fieldName = hiddenTextarea.getAttribute('data-name') || 
                                         editorMount.getAttribute('data-field-name');
                         
-                        console.log(`[Form Sync] Editor ${index}: field="${fieldName}", content_length=${content.length}`);
-                        
                         // Verify the textarea has a name attribute
                         if (!hiddenTextarea.name) {
                             hiddenTextarea.name = fieldName;
-                            console.log(`[Form Sync] Set name attribute to: ${fieldName}`);
                         }
                     } else {
                         console.warn(`[Form Sync] No editor area found for editor ${index}`);
@@ -63,7 +58,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const hiddenTextarea = editorMount.querySelector('textarea[style*="display: none"]');
                 if (hiddenTextarea) {
                     hiddenTextarea.value = e.target.innerHTML;
-                    console.log(`[Form Sync] Synced on blur: ${hiddenTextarea.name}`);
                 }
             }
         }
