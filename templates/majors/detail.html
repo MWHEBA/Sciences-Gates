@@ -698,29 +698,6 @@
                 </section>
             {% endif %}
 
-            <!-- FAQs Accordion Section -->
-            {% if faqs %}
-                <section class="detail-section" data-seo-ignore>
-                    <div class="detail-section-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        <h2 class="detail-section-title">الأسئلة الشائعة حول تخصص {{ major.name }}</h2>
-                    </div>
-                    
-                    <div class="faq-accordion-container space-y-4">
-                        {% for faq in faqs %}
-                            <div class="faq-item border rounded-lg overflow-hidden" style="border-color: var(--border);">
-                                <button type="button" class="faq-trigger w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 text-right font-medium text-gray-900 transition-colors" style="background-color: var(--surface-2);">
-                                    <span style="color: var(--text-main);">{{ faq.question }}</span>
-                                    <svg class="faq-icon transform transition-transform duration-150" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                </button>
-                                <div class="faq-content hidden p-4 border-t bg-white text-gray-700 leading-relaxed text-right" style="border-color: var(--border); color: var(--text-main);">
-                                    {{ faq.answer|safe }}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </section>
-            {% endif %}
 
             <!-- Best Universities for This Major -->
             {% if best_universities %}
@@ -786,6 +763,30 @@
                                 >
                                     عرض التفاصيل
                                 </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            <!-- FAQs Accordion Section -->
+            {% if faqs %}
+                <section class="detail-section" data-seo-ignore>
+                    <div class="detail-section-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <h2 class="detail-section-title">الأسئلة الشائعة حول تخصص {{ major.name }}</h2>
+                    </div>
+                    
+                    <div class="faq-accordion-container space-y-4">
+                        {% for faq in faqs %}
+                            <div class="faq-item border rounded-lg overflow-hidden" style="border-color: var(--border);">
+                                <button type="button" class="faq-trigger w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 text-right font-medium text-gray-900 transition-colors" style="background-color: var(--surface-2);">
+                                    <span style="color: var(--text-main);">{{ faq.question }}</span>
+                                    <svg class="faq-icon transform transition-transform duration-150" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                <div class="faq-content hidden p-4 border-t bg-white text-gray-700 leading-relaxed text-right" style="border-color: var(--border); color: var(--text-main);">
+                                    {{ faq.answer|safe }}
+                                </div>
                             </div>
                         {% endfor %}
                     </div>
