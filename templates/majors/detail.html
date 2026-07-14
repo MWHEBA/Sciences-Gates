@@ -791,6 +791,26 @@
                 </section>
             {% endif %}
 
+            <!-- Tags Section -->
+            {% if major.tags.all %}
+            <section class="detail-section">
+                <div class="detail-section-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                    </svg>
+                    <h2 class="detail-section-title">الوسوم المرتبطة</h2>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    {% for tag in major.tags.all %}
+                    <a href="{% url 'universities:tag' tag.slug %}" class="bg-surface-2 border border-border px-3 py-1.5 rounded-lg text-text-secondary text-xs hover:border-secondary hover:text-secondary transition-all no-underline" title="عرض جامعات بوسم {{ tag.name }}">
+                        #{{ tag.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
         </div>
 
         <!-- Left Column: Sidebar / Meta Info & Inquiry Form (1/3 width) -->

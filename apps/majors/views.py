@@ -161,7 +161,8 @@ class MajorDetailView(BreadcrumbMixin, DetailView):
             programs_prefetch,
             'best_universities',
             'cheap_universities',
-            'related_articles'
+            'related_articles',
+            'tags'
         )
     
     def get_breadcrumbs(self):
