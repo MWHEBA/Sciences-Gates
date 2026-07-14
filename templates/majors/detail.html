@@ -236,6 +236,66 @@
                 </section>
             {% endif %}
 
+            <!-- Subjects Table Section Grouped by Tracks -->
+            {% if subjects_by_track %}
+                <section class="detail-section">
+                    <div class="detail-section-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        <h2 class="detail-section-title">المواد الدراسية والمناهج في تخصص {{ major.name }}</h2>
+                    </div>
+                    
+                    {% if subjects_by_track|length > 1 %}
+                        <!-- Track selector tabs -->
+                        <div class="track-tabs-container flex flex-wrap gap-2 mb-6 border-b pb-2" style="border-color: var(--border);">
+                            {% for track_name in subjects_by_track.keys %}
+                                <button 
+                                    type="button" 
+                                    class="track-tab-btn px-4 py-2 text-sm font-medium rounded-lg transition-colors border {% if forloop.first %}active{% endif %}"
+                                    data-track="{{ forloop.counter }}"
+                                >
+                                    {{ track_name }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    {% for track_name, rows in subjects_by_track.items %}
+                        <div class="track-tab-content {% if not forloop.first %}hidden{% endif %}" id="track-content-{{ forloop.counter }}">
+                            <div class="detail-table-wrapper">
+                                <table class="detail-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 25%;">السنة الدراسية</th>
+                                            <th>المواد الأكاديمية والمقررات الدراسية</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in rows %}
+                                            <tr>
+                                                <td class="detail-table-cell-primary">{{ row.academic_year }}</td>
+                                                <td>
+                                                     {% with subs=row.subjects|split_subjects %}
+                                                         {% if subs|length > 1 %}
+                                                             <ul class="program-list">
+                                                                 {% for s in subs %}
+                                                                     <li>{{ s }}</li>
+                                                                 {% endfor %}
+                                                             </ul>
+                                                         {% else %}
+                                                             {{ row.subjects }}
+                                                         {% endif %}
+                                                     {% endwith %}
+                                                 </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </section>
+            {% endif %}
+
             <!-- Universities & Programs Offering This Major -->
             {% if programs %}
                 <section class="detail-section">
@@ -531,65 +591,6 @@
                 {% endif %}
             {% endif %}
 
-            <!-- Subjects Table Section Grouped by Tracks -->
-            {% if subjects_by_track %}
-                <section class="detail-section">
-                    <div class="detail-section-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                        <h2 class="detail-section-title">المواد الدراسية والمناهج في تخصص {{ major.name }}</h2>
-                    </div>
-                    
-                    {% if subjects_by_track|length > 1 %}
-                        <!-- Track selector tabs -->
-                        <div class="track-tabs-container flex flex-wrap gap-2 mb-6 border-b pb-2" style="border-color: var(--border);">
-                            {% for track_name in subjects_by_track.keys %}
-                                <button 
-                                    type="button" 
-                                    class="track-tab-btn px-4 py-2 text-sm font-medium rounded-lg transition-colors border {% if forloop.first %}active{% endif %}"
-                                    data-track="{{ forloop.counter }}"
-                                >
-                                    {{ track_name }}
-                                </button>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                    
-                    {% for track_name, rows in subjects_by_track.items %}
-                        <div class="track-tab-content {% if not forloop.first %}hidden{% endif %}" id="track-content-{{ forloop.counter }}">
-                            <div class="detail-table-wrapper">
-                                <table class="detail-table">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 25%;">السنة الدراسية</th>
-                                            <th>المواد الأكاديمية والمقررات الدراسية</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for row in rows %}
-                                            <tr>
-                                                <td class="detail-table-cell-primary">{{ row.academic_year }}</td>
-                                                <td>
-                                                     {% with subs=row.subjects|split_subjects %}
-                                                         {% if subs|length > 1 %}
-                                                             <ul class="program-list">
-                                                                 {% for s in subs %}
-                                                                     <li>{{ s }}</li>
-                                                                 {% endfor %}
-                                                             </ul>
-                                                         {% else %}
-                                                             {{ row.subjects }}
-                                                         {% endif %}
-                                                     {% endwith %}
-                                                 </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </section>
-            {% endif %}
 
             <!-- Salary Table Section (Career Opportunities & Salary Guide - 3 Column Layout) -->
             {% if salary_tables %}
