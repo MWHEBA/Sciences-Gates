@@ -19,3 +19,26 @@ class AboutViewTestCase(TestCase):
         self.assertContains(response, 'Sciences Gates')
         self.assertContains(response, 'محمد كيالي')
         self.assertContains(response, 'دكتوراه علوم الحاسوب')
+
+
+class MegaMenuContextTestCase(TestCase):
+    """
+    Test cases for mega_menu_context context processor.
+    """
+    
+    def test_mega_menu_context_returns_expected_keys(self):
+        """Test that mega_menu_context returns the correct context keys."""
+        from django.test import RequestFactory
+        from apps.core.context_processors import mega_menu_context
+        from django.test import override_settings
+        
+        factory = RequestFactory()
+        request = factory.get('/')
+        
+        # Override TESTING to False to let it execute queries
+        with override_settings(TESTING=False):
+            context = mega_menu_context(request)
+            self.assertIn('menu_public_univs', context)
+            self.assertIn('menu_private_univs', context)
+            self.assertIn('menu_institutes', context)
+            self.assertIn('menu_major_categories', context)

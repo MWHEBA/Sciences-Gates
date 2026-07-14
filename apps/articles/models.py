@@ -177,8 +177,6 @@ class Article(TimestampedModel, PublishableModel, SEOMixin):
 
     def get_absolute_url(self):
         """Return the absolute URL for this article."""
-        if self.is_legacy:
-            return f'/{self.slug}/'
         return reverse('articles:detail', kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):

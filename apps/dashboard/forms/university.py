@@ -40,7 +40,7 @@ class UniversityForm(forms.ModelForm):
         model = University
         fields = [
             # Basic Information
-            'name', 'slug', 'is_legacy', 'university_type', 'state', 'city', 'logo', 'logo_alt', 'main_image', 'main_image_alt', 'location', 'video_url',
+            'name', 'slug', 'university_type', 'state', 'city', 'logo', 'logo_alt', 'main_image', 'main_image_alt', 'location', 'video_url',
             'telephone', 'website',
             # Rich Text Sections
             'description',
@@ -68,9 +68,6 @@ class UniversityForm(forms.ModelForm):
                 'required': True,
                 'dir': 'ltr',
                 'data-paste-clean': 'slug',
-            }),
-            'is_legacy': forms.CheckboxInput(attrs={
-                'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
             }),
             'university_type': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -216,7 +213,6 @@ class UniversityForm(forms.ModelForm):
             # Basic Information
             'name': 'اسم الجامعة',
             'slug': 'الرابط (Slug)',
-            'is_legacy': 'رابط قديم',
             'university_type': 'نوع الجامعة',
             'state': 'الولاية',
             'city': 'المدينة',
@@ -259,7 +255,6 @@ class UniversityForm(forms.ModelForm):
         help_texts = {
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
-            'is_legacy': 'تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /universities/slug/)',
             'university_type': 'تصنيف الجامعة (حكومية أو خاصة)',
             'state': 'الولاية التي تقع بها الجامعة لتسهيل التصفية والبحث',
             'city': 'المدينة التي تقع بها الجامعة لتسهيل التصفية والبحث',
@@ -797,7 +792,7 @@ ProgramFormSet = inlineformset_factory(
     Faculty,
     Program,
     form=ProgramForm,
-    fields=['name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order'],
+    fields=['major', 'name', 'duration', 'tuition_fees', 'yearly_fees', 'sort_order'],
     extra=1,
     can_delete=True,
 )

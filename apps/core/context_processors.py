@@ -95,11 +95,14 @@ def mega_menu_context(request):
             'menu_public_univs': [],
             'menu_private_univs': [],
             'menu_institutes': [],
+            'menu_major_categories': [],
         }
     
     from django.core.cache import cache
+    from django.db.models import Count, Q
     from apps.universities.models import University
     from apps.institutes.models import Institute
+    from apps.majors.models import MajorCategory
     
     menu_data = cache.get('mega_menu_data')
     if not menu_data:
@@ -134,10 +137,20 @@ def mega_menu_context(request):
             .order_by('name')
         )
 
+        # Fetch Major Categories with at least one published major
+        major_categories = list(
+            MajorCategory.objects.annotate(
+                num_majors=Count('majors', filter=Q(majors__publish_status='published'))
+            )
+            .filter(num_majors__gt=0)
+            .order_by('sort_order', 'name')
+        )
+
         menu_data = {
             'menu_public_univs': public_univs,
             'menu_private_univs': private_univs,
             'menu_institutes': institutes,
+            'menu_major_categories': major_categories,
         }
         
         # Cache results for 24 hours

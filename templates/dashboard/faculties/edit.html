@@ -90,6 +90,17 @@
                             {% endif %}
                         </div>
 
+                        <!-- Associated Major -->
+                        <div>
+                            <label for="{{ form.major.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                                التخصص المرتبط
+                            </label>
+                            {{ form.major }}
+                            {% if form.major.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.major.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
                         <!-- Program Details -->
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <!-- Duration -->

@@ -30,6 +30,8 @@ SECTION_URLS = {
     'dash_majors':       ('التخصصات', 'dashboard:major_list'),
     'dash_articles':     ('المقالات', 'dashboard:article_list'),
     'dash_faculties':    ('الكليات',  'dashboard:faculty_list'),
+    'major_category_list': ('تصنيفات التخصصات', 'dashboard:major_category_list'),
+    'dash_major_categories': ('تصنيفات التخصصات', 'dashboard:major_category_list'),
 }
 
 

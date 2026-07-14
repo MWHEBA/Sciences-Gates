@@ -267,6 +267,18 @@ class FacultyProgramsManager {
         const emptyRow = programsContainer.querySelector('.fpm-empty-row');
         if (emptyRow) emptyRow.remove();
         
+        // جلب قالب اختيار التخصص وتخصيصه للسطر الجديد
+        const majorSelectContainer = document.getElementById('major-select-template-container');
+        let majorSelectHTML = '';
+        if (majorSelectContainer) {
+            const selectEl = majorSelectContainer.querySelector('select').cloneNode(true);
+            selectEl.name = `faculty-${facultyIndex}-programs-${programIndex}-major`;
+            selectEl.id = `id_faculty-${facultyIndex}-programs-${programIndex}-major`;
+            majorSelectHTML = selectEl.outerHTML;
+        } else {
+            majorSelectHTML = `<select name="faculty-${facultyIndex}-programs-${programIndex}-major" class="fpm-program-input fpm-program-input--select" dir="rtl"><option value="">---------</option></select>`;
+        }
+        
         // إنشاء صف جديد
         const row = document.createElement('tr');
         row.className = 'fpm-program-row';
@@ -279,6 +291,10 @@ class FacultyProgramsManager {
                           dir="rtl"
                           rows="1"
                           required></textarea>
+                <div class="mt-2 text-xs text-gray-500" style="margin-top: 6px;">
+                    <span style="color: var(--text-muted); display: block; margin-bottom: 2px;">التخصص المرتبط:</span>
+                    ${majorSelectHTML}
+                </div>
             </td>
             <td>
                 <input type="text" 

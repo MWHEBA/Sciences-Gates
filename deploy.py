@@ -1103,6 +1103,7 @@ class DeploymentManager:
         has_migrations = False
         has_static = False
         has_py = False
+        has_html = False
 
         uploaded_list = getattr(self, 'uploaded_files', []) or []
         for file_path in uploaded_list:
@@ -1115,11 +1116,14 @@ class DeploymentManager:
                 has_static = True
             if file_name.endswith('.py'):
                 has_py = True
+            if file_name.endswith('.html') or 'templates/' in file_name:
+                has_html = True
 
         run_pip = has_reqs
         run_migrate = has_migrations
         run_collectstatic = has_static
         run_reload = has_py or has_migrations or has_reqs
+        run_clear_cache = has_static or has_html or has_py or has_migrations
 
         print("\n🔍 التحديث الذكي التلقائي اكتشف:")
         if run_pip:
@@ -1128,6 +1132,8 @@ class DeploymentManager:
             print("   🗄️  تعديل في ملفات الميجريشن → سيتم عمل الميجريشن")
         if run_collectstatic:
             print("   🎨 تعديل في الملفات الثابتة → سيتم عمل كولكت الستاتيك")
+        if run_clear_cache:
+            print("   🧹 تعديل في الأصول الثابتة أو القوالب أو الكود → سيتم مسح الكاش")
         if run_reload:
             print("   💻 تعديل في ملفات الكود (Python) → سيتم إعادة تشغيل التطبيق")
         
@@ -1144,6 +1150,8 @@ class DeploymentManager:
             exec_commands.append((f"{venv} {manage} migrate --noinput --settings=config.settings.production", "عمل ميجريشن لقاعدة البيانات (migrate)"))
         if run_collectstatic:
             exec_commands.append((f"{venv} {manage} collectstatic --noinput --clear --settings=config.settings.production", "تجميع الملفات الثابتة (collectstatic)"))
+        if run_clear_cache:
+            exec_commands.append((f'{venv} {manage} shell -c "from django.core.cache import cache; cache.clear()"', "مسح كاش تطبيق الويب (clear django cache)"))
 
         # تنفيذ الأوامر
         if exec_commands or run_reload:

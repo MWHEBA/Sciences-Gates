@@ -335,8 +335,58 @@
                                      <li><a href="{% url 'leads:submit' %}?service=english">طلب دراسة لغة</a></li>
                                   </ul>
                                </li>
-                              <li><a href="{% url 'majors:list' %}"
-                                    class="{% if 'majors' in request.path %}is-active{% endif %}">التخصصات</a></li>
+                               <li class="has-dropdown has-mega-menu">
+                                  <a href="{% url 'majors:list' %}" aria-haspopup="true" aria-expanded="false"
+                                        class="{% if 'majors' in request.path %}is-active{% endif %}">التخصصات</a>
+                                  <!-- Desktop Mega Menu Panel -->
+                                  <div class="mega-menu-panel mega-menu-panel--medium d-none d-xl-block">
+                                     <div class="container container-1380">
+                                        <div class="mega-menu-grid mega-menu-grid--2cols">
+                                           <!-- Column 1: Major Categories -->
+                                           <div class="mega-menu-col">
+                                              <h4 class="mega-menu-title">مجالات الدراسة</h4>
+                                              <p class="mega-menu-desc">استكشف التخصصات المتاحة مصنفة حسب المجالات الأكاديمية المختلفة.</p>
+                                              <ul class="mega-menu-list">
+                                                 {% for category in menu_major_categories %}
+                                                 <li>
+                                                    <a href="{{ category.get_absolute_url }}" style="white-space: nowrap;">
+                                                       <span class="mega-menu-logo-fallback"><i class="fa-solid fa-graduation-cap"></i></span>
+                                                       <span>{{ category.name }} <span style="font-size: 0.75rem; color: var(--text-body); font-weight: normal; opacity: 0.8;">({{ category.num_majors }} تخصص)</span></span>
+                                                    </a>
+                                                 </li>
+                                                 {% endfor %}
+                                              </ul>
+                                              <a href="{% url 'majors:list' %}" class="mega-menu-more">تصفح كافة المجالات الدراسية &larr;</a>
+                                           </div>
+                                           
+                                           <!-- Column 2: CTA Card -->
+                                           <div class="mega-menu-col mega-menu-cta-col">
+                                              <div class="mega-menu-cta-card">
+                                                 <span class="cta-badge">دليل التخصصات</span>
+                                                 <h4 class="cta-title">اختر تخصصك الجامعي بدقة</h4>
+                                                 <p class="cta-desc">مستشارونا يساعدونك في تحليل ميولك واختيار التخصص الدراسي الأكثر طلباً في سوق العمل مجاناً.</p>
+                                                 <a href="{% url 'leads:submit' %}" class="it-btn cta-btn">
+                                                    <span>استشر خبيراً أكاديمياً</span>
+                                                 </a>
+                                                 <div class="cta-whatsapp">
+                                                    <a href="https://wa.me/{{ site_settings.whatsapp|default:'+60123456789'|cut:' ' }}" target="_blank">
+                                                       <i class="fab fa-whatsapp"></i>
+                                                       <span>تواصل معنا عبر واتساب</span>
+                                                    </a>
+                                                 </div>
+                                              </div>
+                                           </div>
+                                        </div>
+                                     </div>
+                                  </div>
+                                  <!-- Mobile submenu (parsed by JS) -->
+                                  <ul class="it-submenu d-xl-none">
+                                     {% for category in menu_major_categories %}
+                                     <li><a href="{{ category.get_absolute_url }}">{{ category.name }} ({{ category.num_majors }} تخصص)</a></li>
+                                     {% endfor %}
+                                     <li><a href="{% url 'majors:list' %}">كل التخصصات</a></li>
+                                  </ul>
+                               </li>
                               <li><a href="{% url 'articles:list' %}"
                                     class="{% if 'articles' in request.path %}is-active{% endif %}">المقالات</a></li>
                               <li><a href="{% url 'leads:submit' %}"

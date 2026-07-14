@@ -2438,7 +2438,7 @@ class MajorCategoryListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin,
 
     def get_queryset(self):
         from django.db.models import Count
-        queryset = MajorCategory.objects.all().annotate(majors_count=Count('majors')).order_by('name')
+        queryset = MajorCategory.objects.all().annotate(majors_count=Count('majors')).order_by('sort_order', 'name')
         
         # Search by name or slug
         search_query = self.request.GET.get('search', '').strip()
@@ -2473,6 +2473,7 @@ class MajorCategoryListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin,
             {'label': 'اسم التصنيف', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:major_category_edit', 'link_param': 'id'},
             {'label': 'الرابط (Slug)', 'key': 'slug', 'type': 'text'},
             {'label': 'عدد التخصصات', 'key': 'majors_count', 'type': 'text'},
+            {'label': 'ترتيب العرض', 'key': 'sort_order', 'type': 'text'},
         ]
         
         # Row action configurations

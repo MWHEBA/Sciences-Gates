@@ -70,6 +70,14 @@ def _save_university(mapped_data, user):
     form_initial['slug'] = slug
     
     existing_obj = University.objects.filter(slug=slug).first()
+    if not existing_obj:
+        name_val = form_initial.get('name', '').strip()
+        if name_val:
+            existing_obj = University.objects.filter(name__iexact=name_val).first()
+            if existing_obj:
+                slug = existing_obj.slug
+                form_initial['slug'] = slug
+                
     action_type = 'updated' if existing_obj else 'created'
     form_data = {**form_initial}
     
@@ -264,6 +272,14 @@ def _save_institute(mapped_data, user):
     form_initial['slug'] = slug
     
     existing_obj = Institute.objects.filter(slug=slug).first()
+    if not existing_obj:
+        name_val = form_initial.get('name', '').strip()
+        if name_val:
+            existing_obj = Institute.objects.filter(name__iexact=name_val).first()
+            if existing_obj:
+                slug = existing_obj.slug
+                form_initial['slug'] = slug
+                
     action_type = 'updated' if existing_obj else 'created'
     form_data = {**form_initial}
     if 'publish_status' not in form_data or not form_data['publish_status']:
@@ -438,6 +454,14 @@ def _save_major(mapped_data, user):
     form_initial['slug'] = slug
     
     existing_obj = Major.objects.filter(slug=slug).first()
+    if not existing_obj:
+        name_val = form_initial.get('name', '').strip()
+        if name_val:
+            existing_obj = Major.objects.filter(name__iexact=name_val).first()
+            if existing_obj:
+                slug = existing_obj.slug
+                form_initial['slug'] = slug
+                
     action_type = 'updated' if existing_obj else 'created'
     form_data = {**form_initial}
     

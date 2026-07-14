@@ -19,7 +19,7 @@ class MajorForm(forms.ModelForm):
         model = Major
         fields = [
             # Basic Information
-            'name', 'slug', 'is_legacy', 'category', 'main_image', 'main_image_alt',
+            'name', 'slug', 'category', 'main_image', 'main_image_alt',
             # Quick Information Fields
             'bachelor_duration', 'master_duration', 'phd_duration',
             'tuition_fees', 'study_language', 'practical_training', 'career_opportunities', 'competitor_url',
@@ -48,9 +48,6 @@ class MajorForm(forms.ModelForm):
                 'required': True,
                 'dir': 'ltr',
                 'data-paste-clean': 'slug',
-            }),
-            'is_legacy': forms.CheckboxInput(attrs={
-                'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
             }),
             'category': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -208,7 +205,6 @@ class MajorForm(forms.ModelForm):
             # Basic Information
             'name': 'اسم التخصص',
             'slug': 'الرابط',
-            'is_legacy': 'رابط قديم',
             'category': 'تصنيف التخصص',
             'main_image': 'الصورة الرئيسية',
             'main_image_alt': 'النص البديل للصورة الرئيسية',
@@ -254,7 +250,6 @@ class MajorForm(forms.ModelForm):
         help_texts = {
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
-            'is_legacy': 'تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /majors/slug/)',
             'category': 'التصنيف الهرمي للتخصص',
             'main_image': 'صورة رئيسية للتخصص',
             'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للتخصص لمحركات البحث ومستعرضات الصور',
@@ -541,7 +536,7 @@ class MajorCategoryForm(forms.ModelForm):
     """Form for creating and editing major categories in dashboard."""
     class Meta:
         model = MajorCategory
-        fields = ['name', 'slug', 'description']
+        fields = ['name', 'slug', 'description', 'sort_order']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 paste-trigger',
@@ -560,11 +555,17 @@ class MajorCategoryForm(forms.ModelForm):
                 'rows': 4,
                 'dir': 'rtl',
             }),
+            'sort_order': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'ترتيب العرض (مثال: 1)',
+                'min': 0,
+            }),
         }
         labels = {
             'name': 'اسم التصنيف',
             'slug': 'الرابط',
             'description': 'الوصف',
+            'sort_order': 'ترتيب العرض',
         }
 
 
@@ -581,14 +582,11 @@ MajorFAQFormSet = inlineformset_factory(
             'placeholder': 'السؤال الشائع',
             'required': True,
         }),
-        'answer': forms.Textarea(attrs={
-            'class': 'faq-item__answer-input hidden',
-            'placeholder': 'الإجابة بالتفصيل',
+        'answer': CustomHTMLEditorWidget(attrs={
+            'data-placeholder': 'الإجابة بالتفصيل...',
             'required': True,
         }),
-        'sort_order': forms.NumberInput(attrs={
-            'class': 'faq-item__sort-order-input hidden',
-        }),
+        'sort_order': forms.HiddenInput(),
     },
     labels={
         'question': 'السؤال',

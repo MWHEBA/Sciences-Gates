@@ -149,38 +149,22 @@ class LegacyUrlDetailView(View):
         # Check University
         university = University.objects.filter(slug=slug).first()
         if university:
-            if university.is_legacy:
-                from apps.universities.views import UniversityDetailView
-                return UniversityDetailView.as_view()(request, *args, **kwargs)
-            else:
-                return redirect(university.get_absolute_url(), permanent=True)
+            return redirect(university.get_absolute_url(), permanent=True)
                 
         # Check Institute
         institute = Institute.objects.filter(slug=slug).first()
         if institute:
-            if institute.is_legacy:
-                from apps.institutes.views import InstituteDetailView
-                return InstituteDetailView.as_view()(request, *args, **kwargs)
-            else:
-                return redirect(institute.get_absolute_url(), permanent=True)
+            return redirect(institute.get_absolute_url(), permanent=True)
                 
         # Check Major
         major = Major.objects.filter(slug=slug).first()
         if major:
-            if major.is_legacy:
-                from apps.majors.views import MajorDetailView
-                return MajorDetailView.as_view()(request, *args, **kwargs)
-            else:
-                return redirect(major.get_absolute_url(), permanent=True)
+            return redirect(major.get_absolute_url(), permanent=True)
                 
         # Check Article
         article = Article.objects.filter(slug=slug).first()
         if article:
-            if article.is_legacy:
-                from apps.articles.views import ArticleDetailView
-                return ArticleDetailView.as_view()(request, *args, **kwargs)
-            else:
-                return redirect(article.get_absolute_url(), permanent=True)
+            return redirect(article.get_absolute_url(), permanent=True)
                 
         raise Http404("الصفحة غير موجودة")
 

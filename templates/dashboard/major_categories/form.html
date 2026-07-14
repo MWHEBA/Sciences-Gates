@@ -40,7 +40,16 @@
                     <p class="mt-1 text-xs text-gray-500">{{ form.slug.help_text }}</p>
                 </div>
 
-
+                <!-- Sort Order -->
+                <div>
+                    <label for="{{ form.sort_order.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                        {{ form.sort_order.label }}
+                    </label>
+                    {{ form.sort_order }}
+                    {% if form.sort_order.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.sort_order.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
                 <!-- Description -->
                 <div>

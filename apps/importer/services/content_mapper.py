@@ -186,7 +186,7 @@ class ContentMapper:
             'name': self._clean_importer_name(wp_data.get('name', '')),
             'slug': urllib.parse.unquote(wp_data.get('slug', '')),
             'video_url': wp_data.get('video_url', ''),
-            'is_legacy': True,
+            'is_legacy': False,
         }
         
         confidence = {

@@ -188,7 +188,7 @@ def run_in_background(target, *args, **kwargs):
     thread.daemon = True
     thread.start()
 
-def import_fetch_worker(job_id, url, competitor_url, content_type_override, user_id, lazy_images=False):
+def import_fetch_worker(job_id, url, competitor_url, content_type_override, user_id, lazy_images=False, auto_search_competitor=False):
     try:
         user = User.objects.get(pk=user_id) if user_id else None
         job = ImportJob.objects.get(id=job_id)
@@ -333,9 +333,10 @@ def import_fetch_worker(job_id, url, competitor_url, content_type_override, user
                 local_comp_url = comp_url
                 local_warnings = []
                 if not local_comp_url:
-                    local_comp_url = gemini.search_competitor(cleaned_name)
-                    if local_comp_url:
-                        local_warnings.append(f"تم العثور على التخصص المطابق عند المنافس ودمجه تلقائياً: {local_comp_url}")
+                    if auto_search_competitor:
+                        local_comp_url = gemini.search_competitor(cleaned_name)
+                        if local_comp_url:
+                            local_warnings.append(f"تم العثور على التخصص المطابق عند المنافس ودمجه تلقائياً: {local_comp_url}")
                 else:
                     local_warnings.append(f"تم دمج محتوى المنافس من الرابط المدخل: {local_comp_url}")
                 
@@ -431,7 +432,7 @@ def import_fetch_worker(job_id, url, competitor_url, content_type_override, user
     finally:
         close_old_connections()
 
-def import_bulk_save_worker(job_id, url, competitor_url, content_type_override, user_id):
+def import_bulk_save_worker(job_id, url, competitor_url, content_type_override, user_id, auto_search_competitor=False):
     from .services.bulk_saver import save_imported_content
     try:
         user = User.objects.get(pk=user_id) if user_id else None
@@ -577,9 +578,10 @@ def import_bulk_save_worker(job_id, url, competitor_url, content_type_override, 
                 local_comp_url = comp_url
                 local_warnings = []
                 if not local_comp_url:
-                    local_comp_url = gemini.search_competitor(cleaned_name)
-                    if local_comp_url:
-                        local_warnings.append(f"تم العثور على التخصص المطابق عند المنافس ودمجه تلقائياً: {local_comp_url}")
+                    if auto_search_competitor:
+                        local_comp_url = gemini.search_competitor(cleaned_name)
+                        if local_comp_url:
+                            local_warnings.append(f"تم العثور على التخصص المطابق عند المنافس ودمجه تلقائياً: {local_comp_url}")
                 else:
                     local_warnings.append(f"تم دمج محتوى المنافس من الرابط المدخل: {local_comp_url}")
                 
@@ -714,6 +716,7 @@ class ImportFetchView(ContentAdminRequiredMixin, View):
         )
 
         lazy_images = request.POST.get('lazy_images', '').lower() == 'true'
+        auto_search_competitor = request.POST.get('auto_search_competitor', '').lower() == 'true'
 
         run_in_background(
             import_fetch_worker,
@@ -722,7 +725,8 @@ class ImportFetchView(ContentAdminRequiredMixin, View):
             competitor_url=competitor_url,
             content_type_override=content_type_override,
             user_id=request.user.id if request.user else None,
-            lazy_images=lazy_images
+            lazy_images=lazy_images,
+            auto_search_competitor=auto_search_competitor
         )
 
         return JsonResponse({
@@ -754,6 +758,7 @@ class ImportBulkSaveAPIView(ContentAdminRequiredMixin, View):
             return JsonResponse({'success': False, 'error': 'الرابط المدخل غير صالح.'}, status=400)
 
         content_type_override = request.POST.get('content_type_override', 'auto').strip()
+        auto_search_competitor = request.POST.get('auto_search_competitor', '').lower() == 'true'
 
         # Create job tracker
         job = ImportJob.objects.create(
@@ -770,7 +775,8 @@ class ImportBulkSaveAPIView(ContentAdminRequiredMixin, View):
             url=url,
             competitor_url=competitor_url,
             content_type_override=content_type_override,
-            user_id=request.user.id if request.user else None
+            user_id=request.user.id if request.user else None,
+            auto_search_competitor=auto_search_competitor
         )
 
         return JsonResponse({

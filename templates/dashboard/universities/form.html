@@ -16,6 +16,17 @@
 {% endblock %}
 
 {% block content_wrapper %}
+<!-- Template for Major Select Dropdown (used by JS to copy options) -->
+<div style="display: none;" id="major-select-template-container">
+    <select class="fpm-program-input fpm-program-input--select" dir="rtl">
+        <option value="">---------</option>
+        {% for choice_val, choice_label in form.fields.related_majors.choices %}
+            {% if choice_val %}
+                <option value="{{ choice_val.value }}">{{ choice_label }}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+</div>
 <form method="post" enctype="multipart/form-data" id="main-form" {% if form.instance.pk %}data-object-id="{{ form.instance.pk }}"{% endif %}>
     {% csrf_token %}
 
@@ -58,17 +69,11 @@
 
                             <!-- الرابط — Full Width -->
                             <div>
-                                <div class="flex justify-between items-center mb-2">
+                                <div class="mb-2">
                                     <label for="{{ form.slug.id_for_label }}" class="block text-sm font-normal" style="color: var(--text-secondary);">
                                         {{ form.slug.label }}
                                         <span style="color: var(--danger);">*</span>
                                     </label>
-                                    <div class="flex items-center gap-2">
-                                        {{ form.is_legacy }}
-                                        <label for="{{ form.is_legacy.id_for_label }}" class="text-sm font-normal cursor-pointer select-none" style="color: var(--text-secondary);">
-                                            {{ form.is_legacy.label }}
-                                        </label>
-                                    </div>
                                 </div>
                                 {{ form.slug }}
                                 {% if form.slug.errors %}
@@ -386,7 +391,13 @@
                                             >
                                                 {% for program_form in faculty_form.program_formset %}
                                                 <tr class="fpm-program-row" data-program-index="{{ forloop.counter0 }}">
-                                                    <td>{{ program_form.name }}</td>
+                                                    <td>
+                                                        {{ program_form.name }}
+                                                        <div class="mt-2 text-xs text-gray-500" style="margin-top: 6px;">
+                                                            <span style="color: var(--text-muted); display: block; margin-bottom: 2px;">التخصص المرتبط:</span>
+                                                            {{ program_form.major }}
+                                                        </div>
+                                                    </td>
                                                     <td>{{ program_form.duration }}</td>
                                                     <td>{{ program_form.tuition_fees }}</td>
                                                     <td>{{ program_form.yearly_fees }}</td>

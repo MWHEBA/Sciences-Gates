@@ -156,7 +156,7 @@
                         <div class="border border-border rounded-xl p-4 text-center bg-surface hover:shadow-md transition-shadow flex flex-col justify-between items-center">
                             <div class="w-full flex flex-col items-center">
                                 <h3 class="text-base font-bold mb-1 text-text-primary text-center">{{ major.name }}</h3>
-                                <p class="text-xs text-text-secondary mb-3 text-center">{{ major.get_major_category_display }}</p>
+                                <p class="text-xs text-text-secondary mb-3 text-center">{% if major.category %}{{ major.category.name }}{% else %}{{ major.get_major_category_display }}{% endif %}</p>
                             </div>
                             <a href="{{ major.get_absolute_url }}" class="w-full text-center bg-primary hover:bg-primary-hover text-white py-2 rounded-lg text-xs font-semibold transition-colors no-underline" title="عرض تفاصيل التخصص">
                                 عرض التفاصيل

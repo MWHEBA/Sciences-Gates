@@ -39,7 +39,7 @@ class InstituteForm(forms.ModelForm):
         model = Institute
         fields = [
             # Basic Information
-            'name', 'slug', 'is_legacy', 'state', 'city', 'logo', 'logo_alt', 'main_image', 'main_image_alt', 'location',
+            'name', 'slug', 'state', 'city', 'logo', 'logo_alt', 'main_image', 'main_image_alt', 'location',
             'telephone', 'website',
             # Rich Text Sections
             'introduction', 'description', 'why_choose_us', 'english_study',
@@ -68,9 +68,6 @@ class InstituteForm(forms.ModelForm):
                 'required': True,
                 'dir': 'ltr',
                 'data-paste-clean': 'slug',
-            }),
-            'is_legacy': forms.CheckboxInput(attrs={
-                'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
             }),
             'state': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -209,7 +206,6 @@ class InstituteForm(forms.ModelForm):
             # Basic Information
             'name': 'اسم المعهد',
             'slug': 'الرابط',
-            'is_legacy': 'رابط قديم',
             'state': 'الولاية',
             'city': 'المدينة',
             'logo': 'شعار المعهد',
@@ -251,7 +247,6 @@ class InstituteForm(forms.ModelForm):
         help_texts = {
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
-            'is_legacy': 'تفعيل هذا الخيار سيجعل الرابط مباشراً بدون بادئة الفئة (مثال: /slug/ بدلاً من /institutes/slug/)',
             'state': 'الولاية التي يقع بها المعهد لتسهيل التصفية والبحث',
             'city': 'المدينة التي يقع بها المعهد لتسهيل التصفية والبحث',
             'logo': 'شعار المعهد (PNG مع خلفية شفافة مفضل)',

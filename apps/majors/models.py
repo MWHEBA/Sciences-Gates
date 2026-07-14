@@ -28,14 +28,21 @@ class MajorCategory(TimestampedModel):
         verbose_name='الوصف',
         help_text='وصف التصنيف'
     )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='ترتيب العرض',
+        help_text='ترتيب ظهور التصنيف (الأصغر أولاً)',
+        db_index=True
+    )
 
     class Meta:
         verbose_name = 'تصنيف تخصص'
         verbose_name_plural = 'تصنيفات التخصصات'
-        ordering = ['name']
+        ordering = ['sort_order', 'name']
         indexes = [
             models.Index(fields=['name']),
             models.Index(fields=['slug']),
+            models.Index(fields=['sort_order']),
         ]
 
     def __str__(self):
@@ -217,8 +224,6 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
 
     def get_absolute_url(self):
         """Return the absolute URL for this major."""
-        if self.is_legacy:
-            return f'/{self.slug}/'
         return reverse('majors:detail', kwargs={'slug': self.slug})
 
     @property

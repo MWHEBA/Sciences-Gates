@@ -1727,6 +1727,84 @@ class ImportSaveDraftViewTests(TestCase):
         self.assertEqual(subjects[0].subjects, 'مقدمة في البرمجة, Introduction to CS')
 
 
+class ImportAutoSearchCompetitorTests(TestCase):
+    """
+    Tests for the auto_search_competitor parameter.
+    """
+    def setUp(self):
+        self.user = User.objects.create_superuser(username='admin', password='password')
+        self.client.force_login(self.user)
+
+    @patch('apps.importer.services.wp_client.requests.get')
+    @patch('apps.importer.services.gemini_service.GeminiService.search_competitor')
+    @patch('apps.importer.services.gemini_service.GeminiService.fetch_competitor_content')
+    @patch('apps.importer.views.download_and_optimize_image')
+    def test_fetch_with_auto_search_competitor_true(self, mock_download, mock_fetch_content, mock_search, mock_get):
+        """
+        Verify that when auto_search_competitor=true, gemini.search_competitor is called.
+        """
+        # Mock WordPress API response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'content_type': 'major',
+            'name': 'دراسة تخصص هندسة البيئة',
+            'slug': 'study-environmental-engineering',
+            'images': {},
+            'fields': {},
+            'seo': {}
+        }
+        mock_get.return_value = mock_response
+        mock_search.return_value = 'https://competitor.com/environmental-engineering/'
+        mock_fetch_content.return_value = '<h1>Competitor Content</h1>'
+        mock_download.return_value = (None, None)
+
+        payload = {
+            'url': 'https://old-site.com/majors/study-environmental-engineering/',
+            'content_type_override': 'major',
+            'auto_search_competitor': 'true'
+        }
+
+        # Mock run_in_background to run synchronously
+        with patch('apps.importer.views.run_in_background', lambda f, *a, **k: f(*a, **k)):
+            response = self.client.post('/dashboard/import/fetch/', payload)
+            self.assertEqual(response.status_code, 200)
+            mock_search.assert_called_once()
+
+    @patch('apps.importer.services.wp_client.requests.get')
+    @patch('apps.importer.services.gemini_service.GeminiService.search_competitor')
+    @patch('apps.importer.views.download_and_optimize_image')
+    def test_fetch_with_auto_search_competitor_false(self, mock_download, mock_search, mock_get):
+        """
+        Verify that when auto_search_competitor=false or missing, gemini.search_competitor is NOT called.
+        """
+        # Mock WordPress API response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'content_type': 'major',
+            'name': 'دراسة تخصص هندسة البيئة',
+            'slug': 'study-environmental-engineering',
+            'images': {},
+            'fields': {},
+            'seo': {}
+        }
+        mock_get.return_value = mock_response
+        mock_download.return_value = (None, None)
+
+        payload = {
+            'url': 'https://old-site.com/majors/study-environmental-engineering/',
+            'content_type_override': 'major'
+            # auto_search_competitor is missing / false by default
+        }
+
+        # Mock run_in_background to run synchronously
+        with patch('apps.importer.views.run_in_background', lambda f, *a, **k: f(*a, **k)):
+            response = self.client.post('/dashboard/import/fetch/', payload)
+            self.assertEqual(response.status_code, 200)
+            mock_search.assert_not_called()
+
+
 
 
 

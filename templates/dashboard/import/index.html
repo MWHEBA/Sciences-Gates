@@ -215,8 +215,18 @@
                                       transition: all 0.2s ease;"
                                onfocus="this.style.borderColor='var(--primary)';"
                                onblur="this.style.borderColor='var(--border)';">
-                        <span style="font-size: 11px; color: var(--text-muted);">
-                            إذا تركته فارغاً، سيبحث النظام تلقائياً عن التخصص المقابل عند المنافس ويدمج محتوياته.
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                            <input type="checkbox" 
+                                   id="auto-search-competitor" 
+                                   name="auto_search_competitor" 
+                                   value="true"
+                                   style="cursor: pointer; accent-color: var(--primary);">
+                            <label for="auto-search-competitor" style="font-size: 12px; color: var(--text-secondary); cursor: pointer; user-select: none;">
+                                البحث تلقائياً عن التخصص لدى المنافس في حال عدم إدخال رابط
+                            </label>
+                        </div>
+                        <span style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                            إذا تركت الحقل فارغاً ولم تقم بتفعيل البحث التلقائي، سيتم الاستيراد بدون دمج محتوى المنافس.
                         </span>
                     </div>
 

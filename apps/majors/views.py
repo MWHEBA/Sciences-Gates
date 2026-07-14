@@ -24,14 +24,15 @@ class MajorListView(BreadcrumbMixin, ListView):
     
     def get_queryset(self):
         """
-        Return only published majors, ordered by name, filtered by search query if provided.
+        Return only published majors, ordered by name, filtered by search query or category if provided.
         
         Query Optimization:
+        - Uses select_related for category to avoid N+1 queries
         - Uses prefetch_related for many-to-many relationships
         """
         queryset = Major.objects.filter(
             publish_status='published'
-        ).prefetch_related(
+        ).select_related('category').prefetch_related(
             'best_universities',
             'cheap_universities',
             'related_articles'
@@ -45,16 +46,24 @@ class MajorListView(BreadcrumbMixin, ListView):
                 Q(description__icontains=q)
             )
 
+        # Apply category filter
+        category_slug = self.request.GET.get('category', '').strip()
+        if category_slug:
+            queryset = queryset.filter(category__slug=category_slug)
+
         return queryset
     
     def get_context_data(self, **kwargs):
-        """Add clear_url and hub cross-linking data to context."""
+        """Add clear_url, categories, and hub cross-linking data to context."""
         context = super().get_context_data(**kwargs)
         from django.urls import reverse
         from apps.universities.models import University
         from apps.articles.models import Article
+        from apps.majors.models import MajorCategory
 
         context['clear_url'] = reverse('majors:list')
+        context['categories'] = MajorCategory.objects.all().order_by('sort_order', 'name')
+        context['selected_category'] = self.request.GET.get('category', '').strip()
 
         # Hub Pages SEO: cross-link to popular universities and latest articles
         context['popular_universities'] = University.objects.filter(
@@ -100,12 +109,7 @@ class MajorDetailView(BreadcrumbMixin, DetailView):
             self.object = super().get_object(queryset)
         return self.object
 
-    def dispatch(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if obj.is_legacy and request.resolver_match and request.resolver_match.view_name != 'legacy_detail':
-            from django.shortcuts import redirect
-            return redirect(obj.get_absolute_url(), permanent=True)
-        return super().dispatch(request, *args, **kwargs)
+
     
     def get_queryset(self):
         """

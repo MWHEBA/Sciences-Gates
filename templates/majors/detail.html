@@ -36,6 +36,78 @@
     color: #ffffff !important;
     border-color: var(--primary) !important;
 }
+.university-programs-table th:first-child,
+.university-programs-table td:first-child {
+    width: 25% !important;
+}
+.university-programs-table th:last-child,
+.university-programs-table td:last-child {
+    width: 20% !important;
+}
+.university-programs-table th:nth-child(2),
+.university-programs-table td:nth-child(2) {
+    white-space: normal !important;
+    width: auto !important;
+    text-align: right !important;
+}
+.program-list {
+    list-style-type: disc !important;
+    margin: 0;
+    padding: 0;
+    padding-right: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: right;
+}
+.program-list li {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--text-body);
+}
+.yearly-fees-breakdown,
+.yearly-fee-item {
+    margin-bottom: 0 !important;
+}
+.yearly-fee-item:not(:last-child) {
+    border-bottom: 1px dashed var(--border) !important;
+}
+.load-more-btn {
+    cursor: pointer;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    font-family: inherit;
+    background-color: var(--primary);
+    color: var(--white) !important;
+    border: 1px solid var(--primary);
+    transition: all 0.2s ease;
+}
+.load-more-btn:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+.programs-controls-container {
+    margin-bottom: 24px;
+    width: 100%;
+}
+.programs-search-input,
+.programs-control-select {
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    outline: none;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+.programs-search-input:focus,
+.programs-control-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-muted);
+}
 </style>
 {% endblock %}
 
@@ -43,36 +115,42 @@
 <div class="detail-page-container">
     
     <!-- Major Hero Header Section -->
-    <div class="detail-header">
-        
-        <!-- Header Banner Image -->
-        <div class="detail-header-banner">
-            {% if major.main_image %}
-                <img src="{{ major.main_image.url }}" alt="{{ major.main_image_alt|default:major.name }}" class="detail-header-image">
-            {% else %}
-                <div class="detail-header-placeholder">
-                    <span>{{ major.name }}</span>
+    <div class="major-detail-header">
+        <div class="major-detail-header-container">
+            <!-- Right Column: Title, Breadcrumbs, Subtitle -->
+            <div class="major-detail-header-right">
+                <!-- Category badge -->
+                <div class="major-detail-header-badge">
+                    <span class="badge badge--secondary">
+                        {% if major.category %}{{ major.category.name }}{% else %}{{ major.get_major_category_display }}{% endif %}
+                    </span>
                 </div>
-            {% endif %}
-            <div class="detail-header-overlay"></div>
-            
-            <!-- Category badge overlay -->
-            <div class="detail-header-badge">
-                <span class="badge badge--secondary">
-                    {{ major.get_major_category_display }}
-                </span>
+                
+                <h1 class="major-detail-header-title">
+                    دراسة تخصص {{ major.name }}
+                </h1>
+                
+                <div class="major-detail-header-breadcrumbs">
+                    {% include 'components/breadcrumb.html' %}
+                </div>
+                
+                <p class="major-detail-header-subtitle">
+                    تخصص أكاديمي متميز ومطلوب في سوق العمل
+                </p>
             </div>
-        </div>
-
-        <!-- Identity and Title Row -->
-        <div class="detail-header-content">
-            <h1 class="detail-header-title">
-                {{ major.name }}
-            </h1>
-            {% include 'components/breadcrumb.html' %}
-            <p class="detail-header-subtitle">
-                تخصص أكاديمي متميز ومطلوب في سوق العمل
-            </p>
+            
+            <!-- Left Column: Image in a chic frame -->
+            <div class="major-detail-header-left">
+                <div class="major-detail-header-frame">
+                    {% if major.main_image %}
+                        <img src="{{ major.main_image.url }}" alt="{{ major.main_image_alt|default:major.name }}" class="major-detail-header-frame-image">
+                    {% else %}
+                        <div class="major-detail-header-frame-placeholder">
+                            <span>{{ major.name }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 
@@ -86,7 +164,7 @@
             <section class="detail-section">
                 <div class="detail-section-header">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                    <h2 class="detail-section-title">نبذة عن {{ major.name }}</h2>
+                    <h2 class="detail-section-title">نبذة عن دراسة {{ major.name }} في ماليزيا</h2>
                 </div>
                 <div class="detail-section-content">
                     {{ major.description|safe }}
@@ -123,7 +201,7 @@
                         <!-- PhD -->
                         {% if major.phd_duration %}
                             <div class="detail-duration-card">
-                                <span class="detail-duration-label">الدراسات العليا الدقيقة</span>
+                                <span class="detail-duration-label">الدراسات العليا</span>
                                 <span class="detail-duration-name">الدكتوراه</span>
                                 <span class="detail-duration-value">{{ major.phd_duration }}</span>
                             </div>
@@ -137,10 +215,23 @@
                 <section class="detail-section">
                     <div class="detail-section-header">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        <h2 class="detail-section-title">لماذا تدرس هذا التخصص؟</h2>
+                        <h2 class="detail-section-title">لماذا تدرس تخصص {{ major.name }} في ماليزيا؟</h2>
                     </div>
                     <div class="detail-section-highlight">
                         {{ major.why_study_section|safe }}
+                    </div>
+                </section>
+            {% endif %}
+
+            <!-- How to Apply Section -->
+            {% if major.how_to_apply_section %}
+                <section class="detail-section">
+                    <div class="detail-section-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        <h2 class="detail-section-title">شروط القبول لدراسة تخصص {{ major.name }} في ماليزيا</h2>
+                    </div>
+                    <div class="detail-section-highlight">
+                        {{ major.how_to_apply_section|safe }}
                     </div>
                 </section>
             {% endif %}
@@ -152,9 +243,34 @@
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg>
                         <h2 class="detail-section-title">الجامعات الماليزية التي توفر تخصص {{ major.name }}</h2>
                     </div>
-                    
+                    <!-- Instant Search, Filter and Sort Controls -->
+                    <div class="programs-controls-container" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center;">
+                        <!-- Search Box -->
+                        <div class="programs-search-wrapper" style="flex: 1; min-width: 250px;">
+                            <input type="text" id="programs-search-input" class="programs-search-input" placeholder="ابحث عن اسم الجامعة أو البرنامج الأكاديمي..." style="width: 100%; max-width: 100%; padding: 10px 16px 10px 16px;">
+                        </div>
+                        
+                        <!-- Filter Select -->
+                        <div class="programs-control-item" style="min-width: 150px;">
+                            <select id="programs-type-select" class="programs-control-select" style="width: 100%; padding: 10px 16px; font-size: 14px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; outline: none; background-color: var(--surface); color: var(--text-primary); cursor: pointer; transition: all 0.2s ease;">
+                                <option value="all">كل الجامعات</option>
+                                <option value="public">جامعات حكومية</option>
+                                <option value="private">جامعات خاصة</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Sort Select -->
+                        <div class="programs-control-item" style="min-width: 180px;">
+                            <select id="programs-sort-select" class="programs-control-select" style="width: 100%; padding: 10px 16px; font-size: 14px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; outline: none; background-color: var(--surface); color: var(--text-primary); cursor: pointer; transition: all 0.2s ease;">
+                                <option value="default">الترتيب الافتراضي</option>
+                                <option value="fee-asc">الرسوم السنوية: من الأقل للأعلى</option>
+                                <option value="fee-desc">الرسوم السنوية: من الأعلى للأقل</option>
+                                <option value="name-az">الاسم: أ-ي</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="detail-table-wrapper">
-                        <table class="detail-table">
+                        <table class="detail-table university-programs-table">
                             <thead>
                                 <tr>
                                     <th>الجامعة</th>
@@ -165,20 +281,202 @@
                             </thead>
                             <tbody>
                                 {% for prog in programs %}
-                                    <tr>
+                                    <tr data-type="{{ prog.faculty.university.university_type }}" {% if forloop.counter0 >= 10 %}class="hidden-program-row" style="display: none;"{% endif %}>
                                         <td class="detail-table-cell-primary">
                                             <a href="{{ prog.faculty.university.get_absolute_url }}" class="text-primary hover:underline">
                                                 {{ prog.faculty.university.name }}
                                             </a>
                                         </td>
-                                        <td>{{ prog.name }}</td>
+                                        <td>
+                                            {% with progs=prog.name|split_prog_names %}
+                                                {% if progs|length > 1 %}
+                                                    <ul class="program-list">
+                                                        {% for p in progs %}
+                                                            <li>{{ p }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                {% else %}
+                                                    {{ prog.name }}
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
                                         <td>{{ prog.duration }}</td>
-                                        <td class="detail-table-cell-highlight">{{ prog.tuition_fees }}</td>
+                                        <td class="detail-table-cell-highlight">
+                                            {% if prog.yearly_fees %}
+                                                <div class="yearly-fees-breakdown" style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; min-width: 140px; text-align: right;">
+                                                    {% for year, fee in prog.yearly_fees.items %}
+                                                        <div class="yearly-fee-item" style="display: flex; align-items: center; gap: 8px; padding: 2px 0;">
+                                                            <span class="yearly-fee-label" style="font-size: 13px;">{{ year }}:</span>
+                                                            <span class="yearly-fee-value" style="font-weight: 600;">{{ fee }}</span>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                {{ prog.tuition_fees }}
+                                            {% endif %}
+                                        </td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
+                    {% if programs|length > 10 %}
+                        <div class="load-more-container" style="text-align: center; margin-top: 24px;">
+                            <button id="load-more-programs-btn" class="load-more-btn">
+                                تحميل المزيد من الجامعات
+                            </button>
+                        </div>
+                    {% endif %}
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', () => {
+                            const btn = document.getElementById('load-more-programs-btn');
+                            const searchInput = document.getElementById('programs-search-input');
+                            const sortSelect = document.getElementById('programs-sort-select');
+                            const typeSelect = document.getElementById('programs-type-select');
+                            const loadMoreContainer = document.querySelector('.load-more-container');
+                            const tableBody = document.querySelector('.university-programs-table tbody');
+                            
+                            if (!tableBody) return;
+                            
+                            const originalRows = Array.from(tableBody.querySelectorAll('tr'));
+                            let currentLimit = 10;
+                            
+                            function parseFee(row) {
+                                const feeItems = row.querySelectorAll('.yearly-fee-value');
+                                if (feeItems.length > 0) {
+                                    const text = feeItems[0].textContent;
+                                    return parseFloat(text.replace(/[^0-9.]/g, '')) || 0;
+                                }
+                                const lastCell = row.querySelector('td:last-child');
+                                if (lastCell) {
+                                    return parseFloat(lastCell.textContent.replace(/[^0-9.]/g, '')) || 0;
+                                }
+                                return 0;
+                            }
+                            
+                            function updateTable() {
+                                const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                                const sortVal = sortSelect ? sortSelect.value : 'default';
+                                const typeVal = typeSelect ? typeSelect.value : 'all';
+                                
+                                // 1. Copy rows
+                                let rows = [...originalRows];
+                                
+                                // 2. Sort rows
+                                if (query !== '') {
+                                    rows.sort((a, b) => {
+                                        const uniCellA = a.querySelector('.detail-table-cell-primary');
+                                        const progCellA = a.querySelector('td:nth-child(2)');
+                                        const uniNameA = uniCellA ? uniCellA.textContent.toLowerCase() : '';
+                                        const progNameA = progCellA ? progCellA.textContent.toLowerCase() : '';
+                                        
+                                        const uniCellB = b.querySelector('.detail-table-cell-primary');
+                                        const progCellB = b.querySelector('td:nth-child(2)');
+                                        const uniNameB = uniCellB ? uniCellB.textContent.toLowerCase() : '';
+                                        const progNameB = progCellB ? progCellB.textContent.toLowerCase() : '';
+                                        
+                                        let scoreA = 0;
+                                        if (uniNameA.includes(query)) scoreA = 2;
+                                        else if (progNameA.includes(query)) scoreA = 1;
+                                        
+                                        let scoreB = 0;
+                                        if (uniNameB.includes(query)) scoreB = 2;
+                                        else if (progNameB.includes(query)) scoreB = 1;
+                                        
+                                        if (scoreA !== scoreB) {
+                                            return scoreB - scoreA;
+                                        }
+                                        
+                                        if (sortVal === 'fee-asc') {
+                                            return parseFee(a) - parseFee(b);
+                                        } else if (sortVal === 'fee-desc') {
+                                            return parseFee(b) - parseFee(a);
+                                        } else if (sortVal === 'name-az') {
+                                            return uniNameA.localeCompare(uniNameB, 'ar');
+                                        }
+                                        
+                                        return originalRows.indexOf(a) - originalRows.indexOf(b);
+                                    });
+                                } else {
+                                    if (sortVal === 'fee-asc') {
+                                        rows.sort((a, b) => parseFee(a) - parseFee(b));
+                                    } else if (sortVal === 'fee-desc') {
+                                        rows.sort((a, b) => parseFee(b) - parseFee(a));
+                                    } else if (sortVal === 'name-az') {
+                                        rows.sort((a, b) => {
+                                            const nameA = a.querySelector('.detail-table-cell-primary').textContent.trim();
+                                            const nameB = b.querySelector('.detail-table-cell-primary').textContent.trim();
+                                            return nameA.localeCompare(nameB, 'ar');
+                                        });
+                                    }
+                                }
+                                
+                                // Re-append in sorted order to the DOM
+                                rows.forEach(row => tableBody.appendChild(row));
+                                
+                                // 3. Filter rows & apply pagination limit
+                                let visibleCount = 0;
+                                let totalMatching = 0;
+                                
+                                rows.forEach(row => {
+                                    const uniCell = row.querySelector('.detail-table-cell-primary');
+                                    const progCell = row.querySelector('td:nth-child(2)');
+                                    const uniName = uniCell ? uniCell.textContent.toLowerCase() : '';
+                                    const progName = progCell ? progCell.textContent.toLowerCase() : '';
+                                    const uniType = row.getAttribute('data-type') || '';
+                                    
+                                    const matchesSearch = query === '' || uniName.includes(query) || progName.includes(query);
+                                    const matchesType = typeVal === 'all' || uniType === typeVal;
+                                    
+                                    if (matchesSearch && matchesType) {
+                                        totalMatching++;
+                                        if (visibleCount < currentLimit) {
+                                            row.style.display = '';
+                                            row.classList.remove('hidden-program-row');
+                                            visibleCount++;
+                                        } else {
+                                            row.style.display = 'none';
+                                            row.classList.add('hidden-program-row');
+                                        }
+                                    } else {
+                                        row.style.display = 'none';
+                                        row.classList.remove('hidden-program-row'); // Not matching, shouldn't count towards hidden pagination rows
+                                    }
+                                });
+                                
+                                // 4. Update load more container
+                                if (loadMoreContainer) {
+                                    if (totalMatching > currentLimit) {
+                                        loadMoreContainer.style.display = '';
+                                    } else {
+                                        loadMoreContainer.style.display = 'none';
+                                    }
+                                }
+                            }
+                            
+                            // Listeners
+                            if (searchInput) searchInput.addEventListener('input', () => {
+                                currentLimit = 10;
+                                updateTable();
+                            });
+                            if (sortSelect) sortSelect.addEventListener('change', updateTable);
+                            if (typeSelect) typeSelect.addEventListener('change', () => {
+                                currentLimit = 10;
+                                updateTable();
+                            });
+                            
+                            if (btn) {
+                                btn.addEventListener('click', () => {
+                                    currentLimit += 10;
+                                    updateTable();
+                                });
+                            }
+                            
+                            // Initial run
+                            updateTable();
+                        });
+                    </script>
                 </section>
             {% endif %}
 
@@ -238,7 +536,7 @@
                 <section class="detail-section">
                     <div class="detail-section-header">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                        <h2 class="detail-section-title">المواد الدراسية والمناهج</h2>
+                        <h2 class="detail-section-title">المواد الدراسية والمناهج في تخصص {{ major.name }}</h2>
                     </div>
                     
                     {% if subjects_by_track|length > 1 %}
@@ -270,7 +568,19 @@
                                         {% for row in rows %}
                                             <tr>
                                                 <td class="detail-table-cell-primary">{{ row.academic_year }}</td>
-                                                <td>{{ row.subjects }}</td>
+                                                <td>
+                                                     {% with subs=row.subjects|split_subjects %}
+                                                         {% if subs|length > 1 %}
+                                                             <ul class="program-list">
+                                                                 {% for s in subs %}
+                                                                     <li>{{ s }}</li>
+                                                                 {% endfor %}
+                                                             </ul>
+                                                         {% else %}
+                                                             {{ row.subjects }}
+                                                         {% endif %}
+                                                     {% endwith %}
+                                                 </td>
                                             </tr>
                                         {% endfor %}
                                     </tbody>
@@ -361,7 +671,7 @@
                                     <svg class="faq-icon transform transition-transform duration-150" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </button>
                                 <div class="faq-content hidden p-4 border-t bg-white text-gray-700 leading-relaxed text-right" style="border-color: var(--border); color: var(--text-main);">
-                                    {{ faq.answer|linebreaksbr }}
+                                    {{ faq.answer|safe }}
                                 </div>
                             </div>
                         {% endfor %}
@@ -407,19 +717,6 @@
                     </div>
                     <div class="detail-section-highlight">
                         {{ major.career_opportunities|safe }}
-                    </div>
-                </section>
-            {% endif %}
-
-            <!-- How to Apply Section -->
-            {% if major.how_to_apply_section %}
-                <section class="detail-section">
-                    <div class="detail-section-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                        <h2 class="detail-section-title">طريقة التقديم والتسجيل</h2>
-                    </div>
-                    <div class="detail-section-highlight">
-                        {{ major.how_to_apply_section|safe }}
                     </div>
                 </section>
             {% endif %}
@@ -508,12 +805,14 @@
                 <dl class="detail-sidebar-list">
                     <div class="detail-sidebar-item">
                         <dt class="detail-sidebar-label">التصنيف:</dt>
-                        <dd class="detail-sidebar-value">{{ major.get_major_category_display }}</dd>
+                        <dd class="detail-sidebar-value">{% if major.category %}{{ major.category.name }}{% else %}{{ major.get_major_category_display }}{% endif %}</dd>
                     </div>
+                    {% if major.study_duration %}
                     <div class="detail-sidebar-item">
                         <dt class="detail-sidebar-label">المدة الإجمالية:</dt>
                         <dd class="detail-sidebar-value">{{ major.study_duration }}</dd>
                     </div>
+                    {% endif %}
                     {% if major.tuition_fees %}
                     <div class="detail-sidebar-item">
                         <dt class="detail-sidebar-label">الرسوم الدراسية:</dt>
@@ -556,6 +855,18 @@
     </div>
 
 </div>
+
+{% if user.is_authenticated and user.profile.is_content_admin or user.is_authenticated and user.profile.is_super_admin %}
+<!-- زر تعديل التخصص -->
+<a href="{% url 'dashboard:major_edit' major.pk %}" class="admin-edit-float" aria-label="تعديل التخصص">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+    </svg>
+    <span class="admin-edit-float__tooltip">تعديل التخصص</span>
+</a>
+{% endif %}
 
 <style>
 .faq-icon.active {

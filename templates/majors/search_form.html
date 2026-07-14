@@ -1,22 +1,36 @@
 <!-- Search and Filters Form -->
 <div class="bg-surface-2 border border-border rounded-xl p-6 shadow-lg">
-    <form method="get" class="w-full">
+    <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         <!-- Search Box -->
-        <div class="w-full">
+        <div class="md:col-span-2">
             <label class="block text-xs font-semibold text-text-secondary mb-2">البحث عن تخصص</label>
+            <div class="relative">
+                <input type="text" name="q" placeholder="ابحث عن تخصص..."
+                    value="{{ request.GET.q|default:'' }}"
+                    class="w-full bg-surface border border-border rounded-lg py-2.5 px-4 pr-10 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all">
+                <span
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-muted">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </span>
+            </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div>
+            <label class="block text-xs font-semibold text-text-secondary mb-2">تصنيف التخصص</label>
             <div class="flex gap-2">
-                <div class="relative flex-1">
-                    <input type="text" name="q" placeholder="ابحث عن تخصص..."
-                        value="{{ request.GET.q|default:'' }}"
-                        class="w-full bg-surface border border-border rounded-lg py-2.5 px-4 pr-10 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all">
-                    <span
-                        class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-muted">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </span>
-                </div>
+                <select name="category"
+                    class="flex-1 bg-surface border border-border rounded-lg py-2.5 px-4 text-sm text-text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all appearance-none cursor-pointer"
+                    style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: left 12px center; padding-left: 36px;">
+                    <option value="">كل التصنيفات</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+
                 <button type="submit"
                     class="bg-primary hover:bg-primary-hover text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2">
                     <span>بحث</span>

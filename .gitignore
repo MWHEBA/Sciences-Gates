@@ -64,3 +64,8 @@ id_rsa
 scratch/
 check_all_cities.py
 imported_links_summary.md
+
+# Cache & Temporary files
+cache/
+majors_scraped.json
+steps_found.json

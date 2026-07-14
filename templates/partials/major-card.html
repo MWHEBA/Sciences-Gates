@@ -1,32 +1,44 @@
-{% load major_tags %}
-<article class="card card--horizontal" onclick="window.location.href='{{ major.get_absolute_url }}'">
+{% load static major_tags %}
+<article class="it-course-item cursor-pointer" onclick="window.location.href='{{ major.get_absolute_url }}'">
     <!-- صورة التخصص -->
-    <div class="card__image">
-        <img 
-            src="{% if major.image %}{{ major.image.url }}{% else %}https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800{% endif %}" 
-            alt="{{ major.name }}"
-            loading="lazy"
-        >
+    <div class="it-course-thumb mb-4 p-relative">
+        <a href="{{ major.get_absolute_url }}" onclick="event.stopPropagation();">
+            <img src="{% if major.main_image %}{{ major.main_image.url }}{% else %}https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800{% endif %}" alt="{{ major.main_image_alt|default:major.name }}" loading="lazy">
+        </a>
+        <div class="it-course-thumb-text">
+            <span>{% if major.category %}{{ major.category.name }}{% else %}تخصص{% endif %}</span>
+        </div>
     </div>
     
     <!-- محتوى الكرت -->
-    <div class="card__content">
+    <div class="it-course-content">
         <!-- اسم التخصص -->
-        <h3 class="card__title">
+        <h4 class="it-course-title">
             <a href="{{ major.get_absolute_url }}" onclick="event.stopPropagation();">{{ major.name }}</a>
-        </h3>
+        </h4>
         
-        <!-- الوصف -->
-        <p class="card__desc">{{ major.description|clean_desc|truncatewords:15 }}</p>
+        <!-- وصف مختصر -->
+        <p class="card__desc text-text-secondary text-sm leading-relaxed mb-15 flex-grow" style="font-size: 0.875rem; color: var(--text-body); line-height: 1.6; margin-bottom: 15px;">
+            {{ major.description|clean_desc|truncatewords:15 }}
+        </p>
         
-        <!-- زر التفاصيل -->
-        <div class="card__actions">
-            <a 
-                href="{{ major.get_absolute_url }}" 
-                class="btn btn--outline btn--sm"
-                onclick="event.stopPropagation();"
-            >
-                التفاصيل والجامعات
+        <!-- معلومات التخصص -->
+        <div class="it-course-info">
+            <span>
+                <i class="fa-solid fa-clock ml-2 text-secondary"></i>
+                {{ major.study_duration|default:major.bachelor_duration|default:"3-4 سنوات" }}
+            </span>
+            <span>
+                <i class="fa-solid fa-language ml-2 text-secondary"></i>
+                {{ major.study_language|default:"الإنجليزية" }}
+            </span>
+        </div>
+        
+        <!-- رابط التفاصيل -->
+        <div class="it-course-price-box justify-end">
+            <a href="{{ major.get_absolute_url }}" onclick="event.stopPropagation();">
+                <span>التفاصيل والجامعات</span>
+                <i class="fa-solid fa-arrow-left mr-2"></i>
             </a>
         </div>
     </div>

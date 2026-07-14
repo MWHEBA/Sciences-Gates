@@ -238,6 +238,8 @@ def connect_media_signals():
     post_delete.connect(invalidate_mega_menu_cache, sender=Institute)
     post_save.connect(invalidate_mega_menu_cache, sender=MajorCategory)
     post_delete.connect(invalidate_mega_menu_cache, sender=MajorCategory)
+    post_save.connect(invalidate_mega_menu_cache, sender=Major)
+    post_delete.connect(invalidate_mega_menu_cache, sender=Major)
 
 
 # Connect signals automatically on import

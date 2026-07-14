@@ -12,14 +12,16 @@
     <div class="container mx-auto px-4 max-w-7xl">
         <!-- Majors Grid -->
         {% if majors %}
-            <div class="grid grid--4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {% for major in majors %}
                     {% include 'partials/major-card.html' with major=major %}
                 {% endfor %}
             </div>
 
             <!-- Pagination -->
-            {% include 'components/pagination.html' %}
+            <div class="mt-12 flex justify-center">
+                {% include 'components/pagination.html' %}
+            </div>
         {% else %}
             <!-- Empty State -->
             {% include 'partials/empty-state.html' with title="لا توجد تخصصات" message="لم نجد تخصصات تطابق معايير البحث الحالية. حاول استخدام كلمات مفتاحية مختلفة." clear_url=clear_url %}
