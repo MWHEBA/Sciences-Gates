@@ -360,6 +360,27 @@ class SiteSettings(models.Model):
         return settings
 
     @property
+    def whatsapp_list(self):
+        """Get a list of WhatsApp numbers from the setting."""
+        if not self.whatsapp:
+            return []
+        import re
+        raw_list = re.split(r'[,;\s]+', self.whatsapp)
+        clean_list = []
+        for num in raw_list:
+            cleaned = num.strip()
+            if cleaned:
+                clean_list.append(cleaned)
+        return clean_list
+
+    @property
+    def whatsapp_primary(self):
+        """Get the primary (first) WhatsApp number from the setting."""
+        numbers = self.whatsapp_list
+        return numbers[0] if numbers else None
+
+
+    @property
     def facebook(self):
         """Placeholder for facebook link since the field doesn't exist in the database."""
         return None

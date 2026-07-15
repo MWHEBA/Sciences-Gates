@@ -422,24 +422,28 @@
                             {{ table.title }}
                         </h3>
                         {% endif %}
-                        <div class="detail-table-wrapper" style="overflow-x: auto; width: 100%; border: 1px solid var(--border); border-radius: 8px;">
-                            <table class="detail-table" style="width: 100%; border-collapse: collapse; text-align: right; border: none;">
+                        <div class="detail-table-wrapper">
+                            <table class="detail-table fees-table">
+                                {% if table.headers and table.headers.0 %}
                                 <thead>
-                                    <tr style="background-color: var(--primary-light); border-bottom: 1px solid var(--border);">
+                                    <tr>
                                         {% for header in table.headers %}
-                                        <th style="padding: 12px; font-weight: 600; color: var(--text-primary); border-left: 1px solid var(--border);">
-                                            {{ header }}
-                                        </th>
+                                        <th>{{ header }}</th>
                                         {% endfor %}
                                     </tr>
                                 </thead>
+                                {% endif %}
                                 <tbody>
                                     {% for row in table.rows %}
-                                    <tr style="border-bottom: 1px solid var(--border); background-color: var(--surface);">
+                                    <tr>
                                         {% for cell in row %}
-                                        <td style="padding: 12px; color: var(--text-secondary); border-left: 1px solid var(--border);">
-                                            {{ cell }}
-                                        </td>
+                                            {% if forloop.first %}
+                                                <td class="detail-table-cell-primary">{{ cell }}</td>
+                                            {% elif forloop.last and row|length > 1 %}
+                                                <td class="detail-table-cell-highlight">{{ cell }}</td>
+                                            {% else %}
+                                                <td>{{ cell }}</td>
+                                            {% endif %}
                                         {% endfor %}
                                     </tr>
                                     {% endfor %}
@@ -581,14 +585,14 @@
                     <li>
                         <a href="{{ attachment.file.url }}" download style="display: block; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background-color: var(--surface-2); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--border-strong)'; this.style.backgroundColor='var(--primary-light)'; var w=this.querySelector('.download-icon-wrapper'); if(w){w.style.backgroundColor='var(--primary)'; w.style.color='#ffffff';}" onmouseout="this.style.borderColor='var(--border)'; this.style.backgroundColor='var(--surface-2)'; var w=this.querySelector('.download-icon-wrapper'); if(w){w.style.backgroundColor='var(--surface)'; w.style.color='var(--primary)';}">
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                                <div style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-w: 0;">
+                                <div style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0;">
                                     <div style="color: var(--text-muted); margin-top: 2px; flex-shrink: 0;">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                             <polyline points="14 2 14 8 20 8"></polyline>
                                         </svg>
                                     </div>
-                                    <div style="flex: 1; min-w: 0; text-align: right;" dir="rtl">
+                                    <div style="flex: 1; min-width: 0; text-align: right;" dir="rtl">
                                         <span style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); word-break: break-word; line-height: 1.4;">
                                             {{ attachment.title }}
                                         </span>
@@ -725,7 +729,7 @@
                         <button type="button" @click="openRegModal = true; regStep = 1" class="reg-card__cta-btn reg-card__cta-btn--primary">
                             سجل الآن
                         </button>
-                        <a href="https://wa.me/60182638888" target="_blank" rel="noopener noreferrer" class="reg-card__cta-btn reg-card__cta-btn--secondary">
+                        <a href="https://wa.me/{{ site_settings.whatsapp_primary|default:'60182638888'|cut:'+'|cut:' ' }}" target="_blank" rel="noopener noreferrer" class="reg-card__cta-btn reg-card__cta-btn--secondary">
                             تواصل مع مستشار
                         </a>
                     </div>

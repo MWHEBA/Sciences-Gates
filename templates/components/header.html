@@ -143,8 +143,8 @@
                               aria-label="فيسبوك"><i class="fab fa-facebook-f"></i></a>
                            <a href="{{ site_settings.instagram|default:'#' }}" target="_blank" rel="noopener"
                               aria-label="انستغرام"><i class="fab fa-instagram"></i></a>
-                           <a href="https://wa.me/{{ site_settings.whatsapp|default:'+60 123 456 789'|cut:' ' }}"
-                              target="_blank" rel="noopener" aria-label="واتساب"><i class="fab fa-whatsapp"></i></a>
+                            <a href="https://wa.me/{{ site_settings.whatsapp_primary|default:'60123456789'|cut:'+'|cut:' ' }}"
+                               target="_blank" rel="noopener" aria-label="واتساب"><i class="fab fa-whatsapp"></i></a>
                         </div>
                      </li>
                      <li class="topbar-separator-item">|</li>
@@ -254,7 +254,7 @@
                                                     <span>سجل طلبك الآن</span>
                                                  </a>
                                                  <div class="cta-whatsapp">
-                                                    <a href="https://wa.me/{{ site_settings.whatsapp|default:'+60123456789'|cut:' ' }}" target="_blank">
+                                                    <a href="https://wa.me/{{ site_settings.whatsapp_primary|default:'60123456789'|cut:'+'|cut:' ' }}" target="_blank">
                                                        <i class="fab fa-whatsapp"></i>
                                                        <span>تواصل معنا عبر واتساب</span>
                                                     </a>
@@ -369,7 +369,7 @@
                                                     <span>استشر خبيراً أكاديمياً</span>
                                                  </a>
                                                  <div class="cta-whatsapp">
-                                                    <a href="https://wa.me/{{ site_settings.whatsapp|default:'+60123456789'|cut:' ' }}" target="_blank">
+                                                     <a href="https://wa.me/{{ site_settings.whatsapp_primary|default:'60123456789'|cut:'+'|cut:' ' }}" target="_blank">
                                                        <i class="fab fa-whatsapp"></i>
                                                        <span>تواصل معنا عبر واتساب</span>
                                                     </a>

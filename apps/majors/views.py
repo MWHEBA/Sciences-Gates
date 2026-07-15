@@ -57,7 +57,6 @@ class MajorListView(BreadcrumbMixin, ListView):
         """Add clear_url, categories, and hub cross-linking data to context."""
         context = super().get_context_data(**kwargs)
         from django.urls import reverse
-        from apps.universities.models import University
         from apps.articles.models import Article
         from apps.majors.models import MajorCategory
 
@@ -65,11 +64,7 @@ class MajorListView(BreadcrumbMixin, ListView):
         context['categories'] = MajorCategory.objects.all().order_by('sort_order', 'name')
         context['selected_category'] = self.request.GET.get('category', '').strip()
 
-        # Hub Pages SEO: cross-link to popular universities and latest articles
-        context['popular_universities'] = University.objects.filter(
-            publish_status='published'
-        ).order_by('name')[:6]
-
+        # Hub Pages SEO: cross-link to latest articles
         context['latest_articles'] = Article.objects.filter(
             publish_status='published'
         ).select_related('category').order_by('-publish_date')[:5]

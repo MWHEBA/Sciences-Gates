@@ -5,14 +5,10 @@
 {% block meta_description %}قدم استفسارك أو طلب التسجيل في أفضل الجامعات والمعاهد في ماليزيا{% endblock %}
 
 {% block content %}
-<section class="section section-bg-white">
-    <div class="container inl-s-4a2ad69204">
-        <!-- Page Title -->
-        <div class="section-header">
-            <h1 class="section-title">تقديم استفسار</h1>
-            <p class="section-subtitle">يرجى ملء النموذج أدناه وسيتم التواصل معك قريباً</p>
-        </div>
+{% include "components/page_hero.html" with title="تقديم استفسار" subtitle="يرجى ملء النموذج أدناه وسيتم التواصل معك قريباً" %}
 
+<section class="section section-bg-gray">
+    <div class="container">
         <!-- Messages -->
         {% if messages %}
             <div class="messages-container">
@@ -25,8 +21,8 @@
         {% endif %}
 
         <!-- Lead Form Card -->
-        <div class="card card--lg">
-            <form method="post" class="form" novalidate>
+        <div class="card card--lg lead-submit-card">
+            <form method="post" class="form" data-validate="true" novalidate>
                 {% csrf_token %}
                 
                 <!-- Hidden fields -->
@@ -45,7 +41,7 @@
                     </label>
                     {{ form.name }}
                     {% if form.name.errors %}
-                        <p class="form-error" role="alert">{{ form.name.errors.0 }}</p>
+                        <p class="form-error show" role="alert" style="display: block;">{{ form.name.errors.0 }}</p>
                     {% endif %}
                 </div>
 
@@ -75,9 +71,9 @@
                         <input type="tel" name="phone_number" id="id_phone" class="intl-phone-input" placeholder="{{ default_placeholder }}" dir="ltr" required>
                     </div>
                     <input type="hidden" name="country_code" id="id_country_code" value="{{ default_code }}">
-                    <input type="hidden" name="phone" id="id_phone_combined">
+                    <input type="hidden" name="phone" id="id_phone_combined" value="{{ form.phone.value|default:'' }}">
                     {% if form.phone.errors %}
-                        <p class="form-error" role="alert">{{ form.phone.errors.0 }}</p>
+                        <p class="form-error show" role="alert" style="display: block;">{{ form.phone.errors.0 }}</p>
                     {% endif %}
                 </div>
 
@@ -88,7 +84,7 @@
                     </label>
                     {{ form.email }}
                     {% if form.email.errors %}
-                        <p class="form-error" role="alert">{{ form.email.errors.0 }}</p>
+                        <p class="form-error show" role="alert" style="display: block;">{{ form.email.errors.0 }}</p>
                     {% endif %}
                 </div>
 
@@ -99,7 +95,7 @@
                     </label>
                     {{ form.message }}
                     {% if form.message.errors %}
-                        <p class="form-error" role="alert">{{ form.message.errors.0 }}</p>
+                        <p class="form-error show" role="alert" style="display: block;">{{ form.message.errors.0 }}</p>
                     {% endif %}
                 </div>
 
@@ -123,12 +119,7 @@
     </div>
 </section>
 
-<!-- Phone field script -->
-
-
 <!-- CTA Band -->
 {% include 'partials/cta-band.html' %}
 
 {% endblock %}
-
-<script src="{% static 'js/tpl-leads_submit-scripts.js' %}"></script>

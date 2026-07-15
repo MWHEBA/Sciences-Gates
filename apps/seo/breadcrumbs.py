@@ -22,6 +22,7 @@ SECTION_URLS = {
     'institutes':   ('المعاهد',    'institutes:list'),
     'majors':       ('التخصصات',   'majors:list'),
     'articles':     ('المقالات',   'articles:list'),
+    'leads_submit': ('تقديم استفسار', 'leads:submit'),
     
     # Dashboard sections
     'dashboard':    ('لوحة التحكم', 'dashboard:home'),

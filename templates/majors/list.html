@@ -12,15 +12,19 @@
     <div class="container mx-auto px-4 max-w-7xl">
         <!-- Majors Grid -->
         {% if majors %}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div id="majors-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {% for major in majors %}
                     {% include 'partials/major-card.html' with major=major %}
                 {% endfor %}
             </div>
 
-            <!-- Pagination -->
-            <div class="mt-12 flex justify-center">
-                {% include 'components/pagination.html' %}
+            <!-- Load More Container -->
+            <div id="load-more-container" class="mt-12 flex justify-center">
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" id="load-more-btn" class="btn btn--primary" data-next-page="{{ page_obj.next_page_number }}">
+                        تحميل المزيد
+                    </a>
+                {% endif %}
             </div>
         {% else %}
             <!-- Empty State -->
@@ -30,32 +34,10 @@
 </section>
 
 <!-- Hub Cross-Linking Section -->
-{% if popular_universities or latest_articles %}
+{% if latest_articles %}
 <section class="hub-section" aria-label="محتوى ذو صلة">
-    <div class="container hub-section__container">
+    <div class="container hub-section__container" style="grid-template-columns: 1fr; max-width: 800px; margin: 0 auto;">
 
-        {% if popular_universities %}
-        <!-- Popular Universities -->
-        <div class="hub-block">
-            <h2 class="hub-block__title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-                الجامعات الشريكة
-            </h2>
-            <ul class="hub-block__list">
-                {% for university in popular_universities %}
-                <li class="hub-block__item">
-                    <a href="{{ university.get_absolute_url }}" class="hub-block__link">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-                        {{ university.name }}
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
-            <a href="{% url 'universities:list' %}" class="hub-block__more">عرض جميع الجامعات</a>
-        </div>
-        {% endif %}
-
-        {% if latest_articles %}
         <!-- Latest Articles -->
         <div class="hub-block">
             <h2 class="hub-block__title">
@@ -74,7 +56,6 @@
             </ul>
             <a href="{% url 'articles:list' %}" class="hub-block__more">تصفح المدونة كاملةً</a>
         </div>
-        {% endif %}
 
     </div>
 </section>
@@ -83,4 +64,80 @@
 <!-- CTA Band -->
 {% include 'partials/cta-band.html' %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const majorsGrid = document.getElementById('majors-grid');
+    const loadMoreContainer = document.getElementById('load-more-container');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    
+    if (!majorsGrid || !loadMoreBtn || !loadMoreContainer) return;
+
+    // Update href to preserve existing query parameters for SEO fallback
+    function updateBtnHref() {
+        const nextPage = loadMoreBtn.getAttribute('data-next-page');
+        if (nextPage) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('page', nextPage);
+            loadMoreBtn.href = url.pathname + url.search;
+        }
+    }
+    updateBtnHref();
+    
+    loadMoreBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const nextPage = loadMoreBtn.getAttribute('data-next-page');
+        if (!nextPage) return;
+        
+        // Disable button & show loading state
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.classList.add('is-loading');
+        const originalText = loadMoreBtn.textContent;
+        loadMoreBtn.textContent = 'جاري التحميل...';
+        
+        // Build url with current parameters and next page
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('page', nextPage);
+        
+        fetch(currentUrl.toString())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Extract new items
+                const newItems = doc.querySelectorAll('#majors-grid > article');
+                newItems.forEach(item => {
+                    majorsGrid.appendChild(item);
+                });
+                
+                // Check if next page exists in the returned document
+                const newLoadMoreBtn = doc.getElementById('load-more-btn');
+                if (newLoadMoreBtn) {
+                    const newNextPage = newLoadMoreBtn.getAttribute('data-next-page');
+                    loadMoreBtn.setAttribute('data-next-page', newNextPage);
+                    loadMoreBtn.textContent = originalText;
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.classList.remove('is-loading');
+                    updateBtnHref();
+                } else {
+                    // No more pages
+                    loadMoreContainer.remove();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading more majors:', error);
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.classList.remove('is-loading');
+                loadMoreBtn.textContent = originalText;
+            });
+    });
+});
+</script>
 {% endblock %}

@@ -65,7 +65,7 @@
         </div>
         <!-- Hidden fields -->
         <input type="hidden" name="country_code" id="id_country_code" value="{{ default_code }}">
-        <input type="hidden" name="phone" id="id_phone_combined">
+        <input type="hidden" name="phone" id="id_phone_combined" value="{{ form.phone.value|default:'' }}">
         {% if form.phone.errors %}
             <div class="text-xs font-medium inl-s-973ad1998f">{{ form.phone.errors.0 }}</div>
         {% endif %}
@@ -104,7 +104,3 @@
     </p>
 </form>
 
-<!-- Phone field script -->
-
-
-<script src="{% static 'js/tpl-components_lead_form-scripts.js' %}"></script>

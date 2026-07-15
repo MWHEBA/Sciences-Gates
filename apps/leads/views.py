@@ -9,11 +9,13 @@ from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 from django.middleware.csrf import get_token
+from apps.seo.mixins import BreadcrumbMixin
+from apps.seo.breadcrumbs import BreadcrumbTrail
 from .models import Lead
 from .forms import LeadForm
 
 
-class LeadSubmitView(FormView):
+class LeadSubmitView(BreadcrumbMixin, FormView):
     """
     Handle lead form submissions from public site.
     
@@ -33,6 +35,13 @@ class LeadSubmitView(FormView):
     template_name = 'leads/submit.html'
     success_url = reverse_lazy('leads:thank_you')
     
+    def get_breadcrumbs(self):
+        """Define breadcrumbs for lead submit page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .current('تقديم استفسار')
+            .build())
+            
     def get_context_data(self, **kwargs):
         """Add source page to context for form."""
         context = super().get_context_data(**kwargs)

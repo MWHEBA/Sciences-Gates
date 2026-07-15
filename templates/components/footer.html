@@ -135,7 +135,7 @@
                             </span>
                             <div class="site-footer__contact-text">
                                 <span class="site-footer__contact-label">هاتف</span>
-                                <a href="tel:+60123456789" class="site-footer__contact-value" dir="ltr">+60 12 345 6789</a>
+                                <a href="tel:{{ site_settings.phone|default:'+60123456789'|cut:' ' }}" class="site-footer__contact-value" dir="ltr">{{ site_settings.phone|default:'+60 12 345 6789' }}</a>
                             </div>
                         </li>
                         <li class="site-footer__contact-item">
@@ -144,7 +144,7 @@
                             </span>
                             <div class="site-footer__contact-text">
                                 <span class="site-footer__contact-label">واتساب</span>
-                                <a href="https://wa.me/60123456789" class="site-footer__contact-value" dir="ltr" target="_blank" rel="noopener">+60 12 345 6789</a>
+                                <a href="https://wa.me/{{ site_settings.whatsapp_primary|default:'60123456789'|cut:' ' }}" class="site-footer__contact-value" dir="ltr" target="_blank" rel="noopener">{{ site_settings.whatsapp_primary|default:'+60 12 345 6789' }}</a>
                             </div>
                         </li>
                         <li class="site-footer__contact-item">
@@ -153,7 +153,7 @@
                             </span>
                             <div class="site-footer__contact-text">
                                 <span class="site-footer__contact-label">البريد الإلكتروني</span>
-                                <a href="mailto:info@sciencesgates.com" class="site-footer__contact-value" dir="ltr">info@sciencesgates.com</a>
+                                <a href="mailto:{{ site_settings.email|default:'info@sciencesgates.com' }}" class="site-footer__contact-value" dir="ltr">{{ site_settings.email|default:'info@sciencesgates.com' }}</a>
                             </div>
                         </li>
                         <li class="site-footer__contact-item">
