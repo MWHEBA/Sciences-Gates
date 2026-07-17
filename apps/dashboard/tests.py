@@ -517,7 +517,7 @@ class DashboardMessagesComponentTests(TestCase):
         from django.contrib.messages.storage.base import Message
         messages = [Message(20, 'معلومات عامة', extra_tags='info')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        self.assertIn('px-4 py-3', rendered)
+        self.assertIn('px-5 py-3', rendered)
 
     def test_messages_component_has_correct_border_radius(self):
         """Test that messages component has correct border radius."""

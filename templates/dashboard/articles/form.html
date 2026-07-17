@@ -6,6 +6,10 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/html_editor.css' %}">
+<link rel="stylesheet" href="{% static 'css/tags_input.css' %}">
+<link rel="stylesheet" href="{% static 'css/relations_select.css' %}">
+<link rel="stylesheet" href="{% static 'css/faq-manager.css' %}">
+<link rel="stylesheet" href="{% static 'css/faq-bulk-import.css' %}">
 {% endblock %}
 
 {% block content_wrapper %}
@@ -84,14 +88,49 @@
                                 {% endif %}
                                 <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.slug.help_text }}</p>
                             </div>
+                            <!-- شبكة ثنائية الأعمدة للصورة المميزة والفئة والكاتب -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- العمود الأول: الصورة المميزة -->
+                                <div>
+                                    <label class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                        {{ form.featured_image.label }}
+                                        <span style="color: var(--danger);">*</span>
+                                    </label>
+                                    {% if form.instance.featured_image %}
+                                        {% include "dashboard/components/image_upload.html" with field=form.featured_image required=True current_image=form.instance.featured_image.url %}
+                                    {% else %}
+                                        {% include "dashboard/components/image_upload.html" with field=form.featured_image required=True %}
+                                    {% endif %}
+                                </div>
 
-                            <!-- الصورة البارزة -->
-                            <div>
-                                {% if form.instance.featured_image %}
-                                    {% include "dashboard/components/image_upload.html" with field=form.featured_image required=True current_image=form.instance.featured_image.url %}
-                                {% else %}
-                                    {% include "dashboard/components/image_upload.html" with field=form.featured_image required=True %}
-                                {% endif %}
+                                <!-- العمود الثاني: الفئة واسم الكاتب -->
+                                <div class="flex flex-col gap-6">
+                                    <!-- الفئة -->
+                                    <div>
+                                        <label for="{{ form.category.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                            {{ form.category.label }}
+                                            <span style="color: var(--danger);">*</span>
+                                        </label>
+                                        {{ form.category }}
+                                        {% if form.category.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.category.errors.0 }}</p>
+                                        {% endif %}
+                                        <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.category.help_text }}</p>
+                                    </div>
+
+                                    <!-- الكاتب -->
+                                    <div>
+                                        <label for="{{ form.author.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                            {{ form.author.label }}
+                                            <span style="color: var(--danger);">*</span>
+                                        </label>
+                                        {{ form.author }}
+                                        {% if form.author.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.author.errors.0 }}</p>
+                                        {% endif %}
+                                        <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.author.help_text }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -106,51 +145,6 @@
                     <section>
                         <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">المحتوى</h2>
                         <div class="space-y-6">
-                            <!-- الفئة -->
-                            <div>
-                                <label for="{{ form.category.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                    {{ form.category.label }}
-                                    <span style="color: var(--danger);">*</span>
-                                </label>
-                                {{ form.category }}
-                                {% if form.category.errors %}
-                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.category.errors.0 }}</p>
-                                {% endif %}
-                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.category.help_text }}</p>
-                            </div>
-
-                            <!-- الوسوم -->
-                            <div>
-                                <label class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                    {{ form.tags.label }}
-                                </label>
-                                
-                                <!-- المخفي: قائمة الاختيار الافتراضية من Django -->
-                                <div id="django-tags-checkboxes" style="display: none;">
-                                    {{ form.tags }}
-                                </div>
-
-                                <!-- الظاهر: مكون التاجات المخصص -->
-                                <div class="relative" style="position: relative;">
-                                    <div id="tag-input-box" class="w-full min-h-10 px-3 py-2 border rounded-lg flex flex-wrap gap-2 items-center cursor-text transition-colors duration-200" style="border-color: var(--border); background-color: var(--surface); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; cursor: text;">
-                                        <!-- التاجات المختارة ستظهر هنا -->
-                                        <div id="selected-tags-wrapper" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
-                                        <!-- مدخل البحث والكتابة -->
-                                        <input type="text" id="tag-search-input" placeholder="اكتب للبحث أو إضافة وسم جديد واضغط Enter..." style="flex: 1; border: none; outline: none; background: transparent; min-width: 150px; font-size: 13px; color: var(--text-primary); padding: 4px 0;" autocomplete="off">
-                                    </div>
-
-                                    <!-- القائمة المنسدلة للوسوم المتاحة -->
-                                    <div id="tag-dropdown-list" style="display: none; position: absolute; top: 100%; right: 0; left: 0; z-index: 50; max-height: 200px; overflow-y: auto; background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); margin-top: 4px;">
-                                        <!-- العناصر ستولد بالجافا سكريبت -->
-                                    </div>
-                                </div>
-
-                                {% if form.tags.errors %}
-                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.tags.errors.0 }}</p>
-                                {% endif %}
-                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.tags.help_text }}</p>
-                            </div>
-
                             <!-- المحتوى باستخدام محرر HTML -->
                             <div>
                                 <label for="{{ form.content.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
@@ -162,6 +156,400 @@
                                     <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.content.errors.0 }}</p>
                                 {% endif %}
                                 <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.content.help_text }}</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- الأسئلة الشائعة — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <div class="faq-section__header">
+                            <div class="faq-section__title">
+                                <h2 class="text-lg font-semibold">الأسئلة الشائعة</h2>
+                                <span class="faq-counter" id="faq-counter">0</span>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="faq-add-btn" id="faq-add-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 6px; background: var(--primary); color: #ffffff; font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-family: inherit; font-weight: 600;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                    إضافة سؤال
+                                </button>
+                                <button type="button" class="faq-add-btn" id="faq-bulk-import-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px dashed var(--border-strong); border-radius: 6px; background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.2s ease; font-family: inherit; font-weight: 600;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 5v14M5 12h14"/>
+                                    </svg>
+                                    استيراد أسئلة
+                                </button>
+                            </div>
+                        </div>
+
+                        {{ faq_formset.management_form }}
+
+                        <div id="faq-items-container">
+                            {% for faq_form in faq_formset %}
+                            <div class="faq-item faq-item--existing faq-item--visible" data-faq-index="{{ forloop.counter0 }}">
+                                <div class="faq-item__header">
+                                    <div class="faq-item__drag-handle" title="اسحب لإعادة الترتيب">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="9" cy="6" r="1.5"/>
+                                            <circle cx="15" cy="6" r="1.5"/>
+                                            <circle cx="9" cy="12" r="1.5"/>
+                                            <circle cx="15" cy="12" r="1.5"/>
+                                            <circle cx="9" cy="18" r="1.5"/>
+                                            <circle cx="15" cy="18" r="1.5"/>
+                                        </svg>
+                                    </div>
+                                    <div class="faq-item__number">{{ forloop.counter }}</div>
+                                    <span class="faq-item__question-preview">{{ faq_form.question.value|default:"سؤال جديد" }}</span>
+                                    <button type="button" class="faq-item__toggle" title="عرض/إخفاء الإجابة" data-toggle-answer>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="faq-item__delete" title="حذف السؤال">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/>
+                                            <line x1="10" y1="11" x2="10" y2="17"/>
+                                            <line x1="14" y1="11" x2="14" y2="17"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="faq-item__content">
+                                    <div class="faq-item__field">
+                                        <label for="{{ faq_form.question.id_for_label }}">السؤال</label>
+                                        {{ faq_form.question }}
+                                        {% if faq_form.question.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ faq_form.question.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="faq-item__field">
+                                        <label for="{{ faq_form.answer.id_for_label }}">الإجابة</label>
+                                        {{ faq_form.answer }}
+                                        {% if faq_form.answer.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ faq_form.answer.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
+                                    {{ faq_form.sort_order }}
+                                    {{ faq_form.id }}
+                                    <input type="hidden" name="faqs-{{ forloop.counter0 }}-DELETE" value="">
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="faq-empty-state" id="faq-empty-state">
+                            <div class="faq-empty-state__icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                            </div>
+                            <p class="faq-empty-state__text">لا توجد أسئلة شائعة مضافة</p>
+                            <p class="faq-empty-state__hint">اضغط "إضافة سؤال" لإضافة سؤال جديد</p>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- الارتباطات — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">الارتباطات</h2>
+                        <div class="space-y-6">
+                            <!-- الوسوم -->
+                            <div>
+                                <label for="{{ form.tags.id_for_label }}" class="block text-sm font-semibold mb-2" style="color: var(--text-secondary);">
+                                    {{ form.tags.label }}
+                                </label>
+                                {% include "dashboard/components/tags_input.html" with field=form.tags %}
+                                {% if form.tags.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.tags.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- الجامعات المرتبطة -->
+                            <div>
+                                <label for="{{ form.related_universities.id_for_label }}" class="block text-sm font-semibold mb-2" style="color: var(--text-secondary);">
+                                    {{ form.related_universities.label }}
+                                </label>
+                                <div x-data="relationsSelectComponent({
+                                    fieldId: '{{ form.related_universities.id_for_label }}',
+                                    fieldName: '{{ form.related_universities.name }}',
+                                    placeholder: 'ابحث واختر جامعة...'
+                                })"
+                                class="relations-select-container"
+                                @click.away="closeDropdown()">
+                                    <!-- Hidden Django Original Input Container -->
+                                    <div class="hidden" x-ref="djangoContainer">
+                                        {{ form.related_universities }}
+                                    </div>
+
+                                    <!-- Interactive Wrapper -->
+                                    <div class="relations-select-wrapper" @click="$refs.searchInput.focus()">
+                                        <!-- Selected Pills -->
+                                        <template x-for="item in selectedItems" :key="item.id">
+                                            <span class="relations-select-pill">
+                                                <span x-text="item.name"></span>
+                                                <button type="button" class="relations-select-pill-remove" @click.stop="removeItem(item)" aria-label="حذف">
+                                                    &times;
+                                                </button>
+                                            </span>
+                                        </template>
+
+                                        <!-- Text Input for Search -->
+                                        <input type="text"
+                                               x-ref="searchInput"
+                                               x-model="searchQuery"
+                                               @focus="showDropdown = true"
+                                               @keydown.down.prevent="nextSuggestion"
+                                               @keydown.up.prevent="prevSuggestion"
+                                               @keydown.enter.prevent="selectActive"
+                                               @keydown.escape="closeDropdown"
+                                               @keydown.backspace="handleBackspace"
+                                               class="relations-select-field"
+                                               placeholder="ابحث واختر جامعة..."
+                                               autocomplete="off">
+                                    </div>
+
+                                    <!-- Dropdown Suggestions -->
+                                    <div x-show="showDropdown && filteredSuggestions.length"
+                                         class="relations-select-dropdown"
+                                         x-transition:enter="transition ease-out duration-100"
+                                         x-transition:enter-start="opacity-0 scale-95"
+                                         x-transition:enter-end="opacity-100 scale-100"
+                                         x-transition:leave="transition ease-in duration-75"
+                                         x-transition:leave-start="opacity-100 scale-100"
+                                         x-transition:leave-end="opacity-0 scale-95"
+                                         style="display: none;">
+                                        
+                                        <ul class="relations-select-dropdown-list">
+                                            <template x-for="(suggestion, index) in filteredSuggestions" :key="suggestion.id">
+                                                <li @click="selectItem(suggestion)"
+                                                    :class="{
+                                                        'relations-select-dropdown-item': true,
+                                                        'active': index === activeIndex
+                                                    }"
+                                                    x-html="highlightMatch(suggestion.name)">
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- Recently Used Universities -->
+                                    <div class="relations-select-recent">
+                                        <span class="relations-select-recent-label">مستخدم مؤخراً:</span>
+                                        <div class="relations-select-recent-list">
+                                            {% for r_uni in recently_used_universities %}
+                                                <button type="button"
+                                                        class="relations-select-recent-badge"
+                                                        :class="isSelected({id: '{{ r_uni.id }}'}) ? 'selected' : ''"
+                                                        @click="selectItem({id: '{{ r_uni.id }}', name: '{{ r_uni.name|escapejs }}'})"
+                                                        :disabled="isSelected({id: '{{ r_uni.id }}'})">
+                                                    {{ r_uni.name }}
+                                                </button>
+                                            {% empty %}
+                                                <span class="relations-select-recent-empty">لا توجد جامعات مستخدمة مؤخراً</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if form.related_universities.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_universities.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- المعاهد المرتبطة -->
+                            <div>
+                                <label for="{{ form.related_institutes.id_for_label }}" class="block text-sm font-semibold mb-2" style="color: var(--text-secondary);">
+                                    {{ form.related_institutes.label }}
+                                </label>
+                                <div x-data="relationsSelectComponent({
+                                    fieldId: '{{ form.related_institutes.id_for_label }}',
+                                    fieldName: '{{ form.related_institutes.name }}',
+                                    placeholder: 'ابحث واختر معهداً...'
+                                })"
+                                class="relations-select-container"
+                                @click.away="closeDropdown()">
+                                    <!-- Hidden Django Original Input Container -->
+                                    <div class="hidden" x-ref="djangoContainer">
+                                        {{ form.related_institutes }}
+                                    </div>
+
+                                    <!-- Interactive Wrapper -->
+                                    <div class="relations-select-wrapper" @click="$refs.searchInput.focus()">
+                                        <!-- Selected Pills -->
+                                        <template x-for="item in selectedItems" :key="item.id">
+                                            <span class="relations-select-pill">
+                                                <span x-text="item.name"></span>
+                                                <button type="button" class="relations-select-pill-remove" @click.stop="removeItem(item)" aria-label="حذف">
+                                                    &times;
+                                                </button>
+                                            </span>
+                                        </template>
+
+                                        <!-- Text Input for Search -->
+                                        <input type="text"
+                                               x-ref="searchInput"
+                                               x-model="searchQuery"
+                                               @focus="showDropdown = true"
+                                               @keydown.down.prevent="nextSuggestion"
+                                               @keydown.up.prevent="prevSuggestion"
+                                               @keydown.enter.prevent="selectActive"
+                                               @keydown.escape="closeDropdown"
+                                               @keydown.backspace="handleBackspace"
+                                               class="relations-select-field"
+                                               placeholder="ابحث واختر معهداً..."
+                                               autocomplete="off">
+                                    </div>
+
+                                    <!-- Dropdown Suggestions -->
+                                    <div x-show="showDropdown && filteredSuggestions.length"
+                                         class="relations-select-dropdown"
+                                         x-transition:enter="transition ease-out duration-100"
+                                         x-transition:enter-start="opacity-0 scale-95"
+                                         x-transition:enter-end="opacity-100 scale-100"
+                                         x-transition:leave="transition ease-in duration-75"
+                                         x-transition:leave-start="opacity-100 scale-100"
+                                         x-transition:leave-end="opacity-0 scale-95"
+                                         style="display: none;">
+                                        
+                                        <ul class="relations-select-dropdown-list">
+                                            <template x-for="(suggestion, index) in filteredSuggestions" :key="suggestion.id">
+                                                <li @click="selectItem(suggestion)"
+                                                    :class="{
+                                                        'relations-select-dropdown-item': true,
+                                                        'active': index === activeIndex
+                                                    }"
+                                                    x-html="highlightMatch(suggestion.name)">
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- Recently Used Institutes -->
+                                    <div class="relations-select-recent">
+                                        <span class="relations-select-recent-label">مستخدم مؤخراً:</span>
+                                        <div class="relations-select-recent-list">
+                                            {% for r_inst in recently_used_institutes %}
+                                                <button type="button"
+                                                        class="relations-select-recent-badge"
+                                                        :class="isSelected({id: '{{ r_inst.id }}'}) ? 'selected' : ''"
+                                                        @click="selectItem({id: '{{ r_inst.id }}', name: '{{ r_inst.name|escapejs }}'})"
+                                                        :disabled="isSelected({id: '{{ r_inst.id }}'})">
+                                                    {{ r_inst.name }}
+                                                </button>
+                                            {% empty %}
+                                                <span class="relations-select-recent-empty">لا توجد معاهد مستخدمة مؤخراً</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if form.related_institutes.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_institutes.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- التخصصات المرتبطة -->
+                            <div>
+                                <label for="{{ form.related_majors.id_for_label }}" class="block text-sm font-semibold mb-2" style="color: var(--text-secondary);">
+                                    {{ form.related_majors.label }}
+                                </label>
+                                <div x-data="relationsSelectComponent({
+                                    fieldId: '{{ form.related_majors.id_for_label }}',
+                                    fieldName: '{{ form.related_majors.name }}',
+                                    placeholder: 'ابحث واختر تخصصاً...'
+                                })"
+                                class="relations-select-container"
+                                @click.away="closeDropdown()">
+                                    <!-- Hidden Django Original Input Container -->
+                                    <div class="hidden" x-ref="djangoContainer">
+                                        {{ form.related_majors }}
+                                    </div>
+
+                                    <!-- Interactive Wrapper -->
+                                    <div class="relations-select-wrapper" @click="$refs.searchInput.focus()">
+                                        <!-- Selected Pills -->
+                                        <template x-for="item in selectedItems" :key="item.id">
+                                            <span class="relations-select-pill">
+                                                <span x-text="item.name"></span>
+                                                <button type="button" class="relations-select-pill-remove" @click.stop="removeItem(item)" aria-label="حذف">
+                                                    &times;
+                                                </button>
+                                            </span>
+                                        </template>
+
+                                        <!-- Text Input for Search -->
+                                        <input type="text"
+                                               x-ref="searchInput"
+                                               x-model="searchQuery"
+                                               @focus="showDropdown = true"
+                                               @keydown.down.prevent="nextSuggestion"
+                                               @keydown.up.prevent="prevSuggestion"
+                                               @keydown.enter.prevent="selectActive"
+                                               @keydown.escape="closeDropdown"
+                                               @keydown.backspace="handleBackspace"
+                                               class="relations-select-field"
+                                               placeholder="ابحث واختر تخصصاً..."
+                                               autocomplete="off">
+                                    </div>
+
+                                    <!-- Dropdown Suggestions -->
+                                    <div x-show="showDropdown && filteredSuggestions.length"
+                                         class="relations-select-dropdown"
+                                         x-transition:enter="transition ease-out duration-100"
+                                         x-transition:enter-start="opacity-0 scale-95"
+                                         x-transition:enter-end="opacity-100 scale-100"
+                                         x-transition:leave="transition ease-in duration-75"
+                                         x-transition:leave-start="opacity-100 scale-100"
+                                         x-transition:leave-end="opacity-0 scale-95"
+                                         style="display: none;">
+                                        
+                                        <ul class="relations-select-dropdown-list">
+                                            <template x-for="(suggestion, index) in filteredSuggestions" :key="suggestion.id">
+                                                <li @click="selectItem(suggestion)"
+                                                    :class="{
+                                                        'relations-select-dropdown-item': true,
+                                                        'active': index === activeIndex
+                                                    }"
+                                                    x-html="highlightMatch(suggestion.name)">
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- Recently Used Majors -->
+                                    <div class="relations-select-recent">
+                                        <span class="relations-select-recent-label">مستخدم مؤخراً:</span>
+                                        <div class="relations-select-recent-list">
+                                            {% for r_major in recently_used_majors %}
+                                                <button type="button"
+                                                        class="relations-select-recent-badge"
+                                                        :class="isSelected({id: '{{ r_major.id }}'}) ? 'selected' : ''"
+                                                        @click="selectItem({id: '{{ r_major.id }}', name: '{{ r_major.name|escapejs }}'})"
+                                                        :disabled="isSelected({id: '{{ r_major.id }}'})">
+                                                    {{ r_major.name }}
+                                                </button>
+                                            {% empty %}
+                                                <span class="relations-select-recent-empty">لا توجد تخصصات مستخدمة مؤخراً</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if form.related_majors.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_majors.errors.0 }}</p>
+                                {% endif %}
                             </div>
                         </div>
                     </section>
@@ -239,6 +627,91 @@
                         </script>
                         {% endif %}
 
+                        <!-- تاريخ النشر (عرض فقط مع زر التعديل) -->
+                        <div class="flex items-center justify-between mb-4 p-3 rounded-lg" style="background-color: var(--surface-2); border: 1px solid var(--border);">
+                            <div class="flex items-center gap-2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span style="color: var(--text-secondary); font-size: 13px;">تاريخ النشر:</span>
+                                <span id="display_publish_date" class="font-normal" style="color: var(--text-primary); font-size: 13px;">
+                                    {% if form.publish_date.value %}
+                                        {{ form.publish_date.value }}
+                                    {% else %}
+                                        تلقائي عند الحفظ
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <button type="button" id="edit_publish_date_btn" class="p-1 rounded transition-all duration-200 cursor-pointer flex items-center justify-center" 
+                                    style="color: var(--text-secondary); border: none; background: transparent;" 
+                                    onmouseover="this.style.backgroundColor='var(--primary-light)'; this.style.color='var(--primary)';" 
+                                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';"
+                                    title="تعديل تاريخ النشر يدوياً">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- حقل تاريخ النشر (مخفي ويظهر بالتعديل) -->
+                        <div id="publish_date_input_wrapper" class="mb-4 p-3 rounded-lg {% if not form.publish_date.errors %}hidden{% endif %}" style="background-color: var(--surface-2); border: 1px solid var(--border);">
+                            <label for="{{ form.publish_date.id_for_label }}" class="block text-xs font-normal mb-2" style="color: var(--text-secondary);">
+                                حدد تاريخ النشر يدوياً:
+                            </label>
+                            {{ form.publish_date }}
+                            {% if form.publish_date.errors %}
+                                <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.publish_date.errors.0 }}</p>
+                            {% endif %}
+                            {% if form.publish_date.help_text %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted); font-size: 11px;">{{ form.publish_date.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        {% if form.instance.pk %}
+                        <!-- تاريخ آخر تحديث -->
+                        <div class="flex items-center gap-2 mb-6 p-3 rounded-lg" style="background-color: var(--surface-2); border: 1px solid var(--border);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
+                                <path d="M12 8v4l3 3"></path>
+                                <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+                            </svg>
+                            <span style="color: var(--text-secondary); font-size: 13px;">آخر تحديث:</span>
+                            <span class="font-normal" style="color: var(--text-primary); font-size: 13px;" dir="ltr">
+                                {{ form.instance.updated_at|date:"Y-m-d" }}
+                            </span>
+                        </div>
+                        {% endif %}
+
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const editBtn = document.getElementById('edit_publish_date_btn');
+                            const wrapper = document.getElementById('publish_date_input_wrapper');
+                            const input = document.getElementById('{{ form.publish_date.id_for_label }}');
+                            const display = document.getElementById('display_publish_date');
+
+                            if (editBtn && wrapper && input && display) {
+                                editBtn.addEventListener('click', function() {
+                                    wrapper.classList.toggle('hidden');
+                                    if (!wrapper.classList.contains('hidden')) {
+                                        input.focus();
+                                    }
+                                });
+
+                                // تحديث المعاينة تلقائياً عند تغيير الحقل
+                                input.addEventListener('change', function() {
+                                    if (input.value) {
+                                        display.textContent = input.value;
+                                    } else {
+                                        display.textContent = 'تلقائي عند الحفظ';
+                                    }
+                                });
+                            }
+                        });
+                        </script>
+
                         <!-- أزرار -->
                         <div class="flex gap-2">
                             {% if form.publish_status.value == 'published' %}
@@ -279,58 +752,6 @@
                                     حفظ كمسودة
                                 </button>
                             {% endif %}
-                        </div>
-                    </section>
-                </div>
-
-                <!-- الارتباطات — Floating Card -->
-                <div style="background-color: var(--surface);
-                            border: 1px solid var(--border);
-                            border-radius: var(--radius-xl);
-                            box-shadow: var(--shadow-sm);
-                            padding: 20px;
-                            margin-bottom: 24px;">
-                    <section>
-                        <h3 class="text-base font-semibold" style="color: var(--text-primary); margin-bottom: 16px;">الارتباطات</h3>
-                        <div class="space-y-4">
-                            <!-- الجامعات المرتبطة -->
-                            <div>
-                                <label for="{{ form.related_universities.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                    {{ form.related_universities.label }}
-                                </label>
-                                <div class="max-h-36 overflow-y-auto rounded-lg p-3" style="border: 1px solid var(--border); background-color: var(--surface-2);">
-                                    {{ form.related_universities }}
-                                </div>
-                                {% if form.related_universities.errors %}
-                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_universities.errors.0 }}</p>
-                                {% endif %}
-                            </div>
-
-                            <!-- المعاهد المرتبطة -->
-                            <div>
-                                <label for="{{ form.related_institutes.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                    {{ form.related_institutes.label }}
-                                </label>
-                                <div class="max-h-36 overflow-y-auto rounded-lg p-3" style="border: 1px solid var(--border); background-color: var(--surface-2);">
-                                    {{ form.related_institutes }}
-                                </div>
-                                {% if form.related_institutes.errors %}
-                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_institutes.errors.0 }}</p>
-                                {% endif %}
-                            </div>
-
-                            <!-- التخصصات المرتبطة -->
-                            <div>
-                                <label for="{{ form.related_majors.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                    {{ form.related_majors.label }}
-                                </label>
-                                <div class="max-h-36 overflow-y-auto rounded-lg p-3" style="border: 1px solid var(--border); background-color: var(--surface-2);">
-                                    {{ form.related_majors }}
-                                </div>
-                                {% if form.related_majors.errors %}
-                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.related_majors.errors.0 }}</p>
-                                {% endif %}
-                            </div>
                         </div>
                     </section>
                 </div>
@@ -593,6 +1014,13 @@
                     </section>
                 </div>
 
+
+
+                {% if form.instance.pk %}
+                    {% url 'dashboard:article_delete' form.instance.pk as article_delete_url %}
+                    {% include "dashboard/components/danger_zone.html" with delete_url=article_delete_url item_name=form.instance.title %}
+                {% endif %}
+
             </div>
         </div>
 
@@ -609,213 +1037,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<!-- Media Edit Modal -->
+{% include "dashboard/components/media_edit_modal.html" %}
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/importer.js' %}"></script>
 <script src="{% static 'js/html_editor.js' %}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const djangoCheckboxesContainer = document.getElementById('django-tags-checkboxes');
-    const selectedTagsWrapper = document.getElementById('selected-tags-wrapper');
-    const tagSearchInput = document.getElementById('tag-search-input');
-    const tagDropdownList = document.getElementById('tag-dropdown-list');
-    const tagInputBox = document.getElementById('tag-input-box');
-
-    // 1. Get all available tags from the Django form markup
-    function getAvailableTags() {
-        const checkboxes = djangoCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
-        const tags = [];
-        checkboxes.forEach(cb => {
-            const labelText = cb.closest('label').textContent.trim();
-            tags.push({
-                id: cb.value,
-                name: labelText,
-                checkbox: cb
-            });
-        });
-        return tags;
-    }
-
-    let availableTags = getAvailableTags();
-
-    // 2. Render selected tags
-    function renderSelectedTags() {
-        selectedTagsWrapper.innerHTML = '';
-        availableTags.forEach(tag => {
-            if (tag.checkbox.checked) {
-                const tagElement = document.createElement('span');
-                tagElement.style.cssText = 'background-color: var(--info-light); color: var(--info); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 12px;';
-                tagElement.innerHTML = `
-                    <span>${tag.name}</span>
-                    <button type="button" style="background: transparent; border: none; padding: 0; margin-right: 4px; color: var(--info); font-weight: bold; cursor: pointer; line-height: 1;" onclick="removeTag('${tag.id}')">&times;</button>
-                `;
-                selectedTagsWrapper.appendChild(tagElement);
-            }
-        });
-    }
-
-    window.removeTag = function(id) {
-        const tag = availableTags.find(t => t.id === id);
-        if (tag) {
-            tag.checkbox.checked = false;
-            tag.checkbox.dispatchEvent(new Event('change'));
-            renderSelectedTags();
-            renderDropdown();
-        }
-    };
-
-    // 3. Render dropdown items
-    function renderDropdown() {
-        const query = tagSearchInput.value.trim().toLowerCase();
-        tagDropdownList.innerHTML = '';
-        let count = 0;
-
-        availableTags.forEach(tag => {
-            if (!tag.checkbox.checked && (tag.name.toLowerCase().includes(query) || query === '')) {
-                const item = document.createElement('div');
-                item.style.cssText = 'padding: 8px 16px; cursor: pointer; font-size: 13px; color: var(--text-primary); transition: background-color 0.15s;';
-                item.textContent = tag.name;
-                item.addEventListener('mouseover', () => {
-                    item.style.backgroundColor = 'var(--surface-2)';
-                });
-                item.addEventListener('mouseout', () => {
-                    item.style.backgroundColor = 'transparent';
-                });
-                item.addEventListener('click', function() {
-                    selectTag(tag.id);
-                });
-                tagDropdownList.appendChild(item);
-                count++;
-            }
-        });
-
-        if (count > 0) {
-            tagDropdownList.style.display = 'block';
-        } else {
-            if (query !== '') {
-                tagDropdownList.innerHTML = `<div class="px-4 py-2 text-xs text-gray-500" style="padding: 8px 16px; font-size: 12px; color: var(--text-muted);">اضغط Enter لإنشاء وسم جديد باسم "${tagSearchInput.value.trim()}"</div>`;
-                tagDropdownList.style.display = 'block';
-            } else {
-                tagDropdownList.style.display = 'none';
-            }
-        }
-    }
-
-    function selectTag(id) {
-        const tag = availableTags.find(t => t.id === id);
-        if (tag) {
-            tag.checkbox.checked = true;
-            tag.checkbox.dispatchEvent(new Event('change'));
-            tagSearchInput.value = '';
-            renderSelectedTags();
-            tagDropdownList.style.display = 'none';
-            tagSearchInput.focus();
-        }
-    }
-
-    // 4. Focus input when clicking tag container
-    tagInputBox.addEventListener('click', function(e) {
-        if (e.target !== tagSearchInput && !e.target.closest('button')) {
-            tagSearchInput.focus();
-        }
-    });
-
-    // 5. Input key events and search
-    tagSearchInput.addEventListener('focus', function() {
-        renderDropdown();
-    });
-
-    tagSearchInput.addEventListener('input', function() {
-        renderDropdown();
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('#tag-input-box') && !e.target.closest('#tag-dropdown-list')) {
-            tagDropdownList.style.display = 'none';
-        }
-    });
-
-    // Prevent enter key from submitting the form, instead create tag
-    tagSearchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const val = this.value.trim();
-            if (val === '') return;
-
-            // Check if tag already exists and select it
-            const existing = availableTags.find(t => t.name.toLowerCase() === val.toLowerCase());
-            if (existing) {
-                selectTag(existing.id);
-                return;
-            }
-
-            // Otherwise create new tag via AJAX
-            createNewTag(val);
-        }
-    });
-
-    function createNewTag(name) {
-        const slug = name
-            .toLowerCase()
-            .replace(/[^\w\s\u0621-\u064A\u0660-\u0669-]/g, '')
-            .replace(/[\s_]+/g, '-')
-            .replace(/-+/g, '-');
-
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        fetch('/dashboard/tags/create/?json=1', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfToken
-            },
-            body: new URLSearchParams({
-                'name': name,
-                'slug': slug
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                const ul = djangoCheckboxesContainer.querySelector('ul') || djangoCheckboxesContainer;
-                const li = document.createElement('li');
-                const label = document.createElement('label');
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.name = 'tags';
-                checkbox.value = data.id;
-                checkbox.checked = true;
-                
-                label.appendChild(checkbox);
-                label.appendChild(document.createTextNode(' ' + data.name));
-                li.appendChild(label);
-                ul.appendChild(li);
-
-                availableTags.push({
-                    id: String(data.id),
-                    name: data.name,
-                    checkbox: checkbox
-                });
-
-                tagSearchInput.value = '';
-                renderSelectedTags();
-                tagDropdownList.style.display = 'none';
-                tagSearchInput.focus();
-            } else {
-                alert('فشل إنشاء الوسم. قد يكون هذا الاسم أو الرابط مستخدماً بالفعل.');
-            }
-        })
-        .catch(error => {
-            console.error('Error creating tag:', error);
-        });
-    }
-
-    renderSelectedTags();
-});
-</script>
+<script src="{% static 'js/faq-manager.js' %}"></script>
+<script src="{% static 'js/tags_input.js' %}"></script>
+<script src="{% static 'js/relations_select.js' %}"></script>
 <script src="{% static 'js/content-lock.js' %}"></script>
 {% if form.instance.pk %}
 {{ form.instance.pk|json_script:"lock-object-id" }}

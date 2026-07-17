@@ -119,7 +119,8 @@ class ArticleDetailView(BreadcrumbMixin, DetailView):
             'tags',
             'related_universities',
             'related_institutes',
-            'related_majors'
+            'related_majors',
+            'faqs'
         )
     
     def get_breadcrumbs(self):
@@ -167,6 +168,7 @@ class ArticleDetailView(BreadcrumbMixin, DetailView):
         context['related_universities'] = article.related_universities.all()
         context['related_institutes'] = article.related_institutes.all()
         context['related_majors'] = article.related_majors.all()
+        context['faqs'] = article.faqs.all()
         
         # Get related articles from the same category
         if article.category:

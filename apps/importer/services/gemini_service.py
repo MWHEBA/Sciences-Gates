@@ -218,7 +218,6 @@ class GeminiService:
             "salary_tables": mapped_data.get('salary_tables', []),
             "faqs_data": mapped_data.get('faqs_data', []),
             "countries_tables": mapped_data.get('countries_tables', []),
-            "tuition_fees": mapped_data.get('tuition_fees', []) or mapped_data['form_initial'].get('tuition_fees', []),
             "best_universities": mapped_data.get('best_universities', []),
             "cheap_universities": mapped_data.get('cheap_universities', []),
             "seo": mapped_data.get('seo', {})

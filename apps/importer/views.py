@@ -95,7 +95,7 @@ class ImportPageView(ContentAdminRequiredMixin, View):
                     
                 # Parse table row
                 if line.startswith('|') and not line.startswith('|-') and not 'الرقم' in line and '---' not in line:
-                    temp_line = line.replace(r'\|', ' - ')
+                    temp_line = line.replace('\\ |', ' - ').replace('\\|', ' - ')
                     parts = [p.strip() for p in temp_line.split('|')]
                     
                     if parts and parts[0] == '':
@@ -126,6 +126,9 @@ class ImportPageView(ContentAdminRequiredMixin, View):
                             slug_part = parts[-1] if len(parts) >= 4 else ''
                             competitor_url = ''
                             
+                        # Clean stray backslashes from title
+                        title = title.replace('\\', '').strip()
+                        
                         # Extract URL from markdown link [Text](URL)
                         url_match = re.search(r'\((https?://[^\)]+)\)', link_part)
                         url = url_match.group(1) if url_match else link_part

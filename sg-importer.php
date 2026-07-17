@@ -267,9 +267,60 @@ function sg_importer_handle_request(WP_REST_Request $request) {
         $faculties_raw_html .= sg_build_elementor_accordion_html($accordion);
     }
 
+    $faqs = array();
     $faqs_raw_html = '';
-    foreach ($elementor_data['_faq_accordions'] as $accordion) {
-        $faqs_raw_html .= sg_build_elementor_accordion_html($accordion);
+    $fields = array();
+
+    if ($type_info['type'] === 'article') {
+        // Rebuild ordered HTML from Elementor elements
+        $elementor_data_raw = get_post_meta($post_id, '_elementor_data', true);
+        $rebuilt_html = '';
+        if (!empty($elementor_data_raw)) {
+            $elements = json_decode($elementor_data_raw, true);
+            if (is_string($elements)) {
+                $elements = json_decode($elements, true);
+            }
+            if (is_array($elements)) {
+                $rebuilt_html = sg_rebuild_elementor_html_ordered($elements, $faqs);
+            }
+        }
+        
+        // Fallback to post_content if rebuilt HTML is empty
+        if (empty($rebuilt_html)) {
+            $rebuilt_html = $post->post_content;
+        }
+
+        $fields = array(
+            'content'     => array('value' => $rebuilt_html, 'confidence' => 'high'),
+            'description' => array('value' => $rebuilt_html, 'confidence' => 'high'),
+        );
+
+        if (!empty($faqs)) {
+            $accordion_items = array();
+            foreach ($faqs as $faq) {
+                $accordion_items[] = array(
+                    'title' => $faq['question'],
+                    'content' => $faq['answer']
+                );
+            }
+            $faqs_raw_html = sg_build_elementor_accordion_html($accordion_items);
+        }
+    } else {
+        foreach ($elementor_data['_faq_accordions'] as $accordion) {
+            $faqs_raw_html .= sg_build_elementor_accordion_html($accordion);
+        }
+
+        foreach ($elementor_data['_faq_accordions'] as $accordion) {
+            foreach ($accordion as $item) {
+                $faqs[] = array(
+                    'question' => trim($item['title']),
+                    'answer'   => trim($item['content']),
+                );
+            }
+        }
+
+        // 7. تقسيم وتعيين الحقول حسب النوع والـ keywords
+        $fields = sg_map_fields($type_info['type'], $elementor_data['_raw_blocks']);
     }
 
     // استخراج الكليات والبرامج كبيانات مهيأة (كـ fallback)
@@ -280,22 +331,8 @@ function sg_importer_handle_request(WP_REST_Request $request) {
         }
     }
 
-    // استخراج الأسئلة الشائعة كبيانات مهيأة (كـ fallback)
-    $faqs = array();
-    foreach ($elementor_data['_faq_accordions'] as $accordion) {
-        foreach ($accordion as $item) {
-            $faqs[] = array(
-                'question' => trim($item['title']),
-                'answer'   => trim($item['content']),
-            );
-        }
-    }
-
     // 6. استخراج الصور
     $images = sg_extract_images($post_id, $elementor_data['_images'], $seo_data['og_image_url']);
-
-    // 7. تقسيم وتعيين الحقول حسب النوع والـ keywords
-    $fields = sg_map_fields($type_info['type'], $elementor_data['_raw_blocks']);
 
     // 8. جداول التخصصات (إذا كان النوع Major)
     $subjects_tables = array();
@@ -345,6 +382,7 @@ function sg_importer_handle_request(WP_REST_Request $request) {
         'categories'         => wp_get_post_categories($post_id, array('fields' => 'names')),
         'tags'               => $tags,
         'wp_post_id'         => $post_id,
+        'created_at'         => $post->post_date_gmt,
     );
 
     if ($type_info['type'] === 'major') {
@@ -371,12 +409,7 @@ function sg_detect_content_type($post_id) {
     $categories = wp_get_post_categories($post_id, array('fields' => 'names'));
     $all_cats = implode(' ', $categories);
 
-    if (sg_str_contains($all_cats, 'خاص')) {
-        return array('type' => 'university', 'sub' => 'private');
-    }
-    if (sg_str_contains($all_cats, 'حكوم')) {
-        return array('type' => 'university', 'sub' => 'public');
-    }
+    // التحقق من فئات المعاهد واللغة أولاً
     if (sg_str_contains($all_cats, 'لغ')) {
         return array('type' => 'institute', 'sub' => 'language');
     }
@@ -384,8 +417,20 @@ function sg_detect_content_type($post_id) {
         return array('type' => 'institute', 'sub' => 'academic');
     }
 
-    // Fallback لجامعة خاصة كخيار افتراضي
-    return array('type' => 'university', 'sub' => 'private');
+    // التحقق من فئات الجامعات
+    if (sg_str_contains($all_cats, 'خاص')) {
+        return array('type' => 'university', 'sub' => 'private');
+    }
+    if (sg_str_contains($all_cats, 'حكوم')) {
+        return array('type' => 'university', 'sub' => 'public');
+    }
+    if (sg_str_contains($all_cats, 'جامع')) {
+        // إذا كان يحتوي على جامعة/جامعات ولكن بدون تحديد، نعتبره جامعة خاصة كـ fallback
+        return array('type' => 'university', 'sub' => 'private');
+    }
+
+    // إذا لم يكن أي مما سبق، وكان نوعه post أو page، فهو مقال
+    return array('type' => 'article', 'sub' => '');
 }
 
 /**
@@ -423,6 +468,106 @@ function sg_extract_elementor_data($post_id) {
     }
 
     return $extracted;
+}
+
+/**
+ * Rebuilds the Elementor data into a single ordered HTML string and extracts FAQs for articles.
+ */
+function sg_rebuild_elementor_html_ordered($elements, &$faqs) {
+    $html = '';
+    sg_traverse_elementor_ordered($elements, $html, $faqs);
+    return trim($html);
+}
+
+function sg_traverse_elementor_ordered($elements, &$html, &$faqs) {
+    foreach ($elements as $element) {
+        $type = $element['elType'] ?? '';
+
+        if (in_array($type, array('section', 'column'))) {
+            sg_traverse_elementor_ordered($element['elements'] ?? array(), $html, $faqs);
+            continue;
+        }
+
+        if ($type === 'widget') {
+            sg_process_widget_ordered($element, $html, $faqs);
+        }
+    }
+}
+
+function sg_process_widget_ordered($widget, &$html, &$faqs) {
+    $widget_type = $widget['widgetType'] ?? '';
+    $settings = $widget['settings'] ?? array();
+
+    switch ($widget_type) {
+        case 'heading':
+            $title = $settings['title'] ?? '';
+            $tag = 'h2';
+            if (!empty($settings['header_size']) && in_array($settings['header_size'], array('h1', 'h2', 'h3', 'h4', 'h5', 'h6'))) {
+                $tag = $settings['header_size'];
+            }
+            if (!empty($title)) {
+                $html .= "<{$tag}>" . $title . "</{$tag}>\n\n";
+            }
+            break;
+
+        case 'text-editor':
+        case 'html':
+            $content = $settings['editor'] ?? $settings['html'] ?? '';
+            if (!empty($content)) {
+                $html .= $content . "\n\n";
+            }
+            break;
+
+        case 'image':
+            if (!empty($settings['image']['url'])) {
+                $img_url = $settings['image']['url'];
+                $img_alt = $settings['image_alt'] ?? '';
+                $html .= '<p class="article-image-container"><img src="' . esc_url($img_url) . '" alt="' . esc_attr($img_alt) . '" /></p>' . "\n\n";
+            }
+            break;
+
+        case 'accordion':
+        case 'toggle':
+            $tabs = $settings['tabs'] ?? $settings['items'] ?? array();
+            if (empty($tabs)) break;
+
+            // Check if this accordion contains a table (some tables might be inside accordion)
+            $has_table = false;
+            foreach ($tabs as $tab) {
+                $content = $tab['tab_content'] ?? $tab['item_content'] ?? '';
+                if (stripos($content, '<table') !== false) {
+                    $has_table = true;
+                    break;
+                }
+            }
+
+            if ($has_table) {
+                // Render accordion tabs directly as sequential content in the article body (fixes table transfer)
+                foreach ($tabs as $tab) {
+                    $title = $tab['tab_title'] ?? $tab['item_title'] ?? '';
+                    $content = $tab['tab_content'] ?? $tab['item_content'] ?? '';
+                    if (!empty($title)) {
+                        $html .= "<h3>" . $title . "</h3>\n";
+                    }
+                    if (!empty($content)) {
+                        $html .= $content . "\n\n";
+                    }
+                }
+            } else {
+                // Extract to the FAQ list for Django/frontend to use as dynamic accordion
+                foreach ($tabs as $tab) {
+                    $faqs[] = array(
+                        'question' => wp_strip_all_tags($tab['tab_title'] ?? $tab['item_title'] ?? ''),
+                        'answer'   => $tab['tab_content'] ?? $tab['item_content'] ?? '',
+                    );
+                }
+            }
+            break;
+
+        case 'divider':
+            $html .= '<hr class="section-divider" />' . "\n\n";
+            break;
+    }
 }
 
 /**

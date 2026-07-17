@@ -139,12 +139,6 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
     )
 
     # Quick Information Fields
-    tuition_fees = models.JSONField(
-        blank=True,
-        default=list,
-        verbose_name='الرسوم الدراسية',
-        help_text='جداول الرسوم الدراسية للجامعات بصيغة JSON'
-    )
     study_language = models.TextField(
         blank=True,
         default='',
@@ -225,11 +219,6 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
     def get_absolute_url(self):
         """Return the absolute URL for this major."""
         return reverse('majors:detail', kwargs={'slug': self.slug})
-
-    @property
-    def is_tuition_fees_json(self):
-        """Check if the tuition fees are stored in the new JSON table format."""
-        return isinstance(self.tuition_fees, list)
 
     def save(self, *args, **kwargs):
         """Store old slug for redirect creation if slug changes."""

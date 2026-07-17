@@ -305,7 +305,7 @@
                 <section class="detail-section">
                     <div class="detail-section-header">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg>
-                        <h2 class="detail-section-title">الجامعات الماليزية التي توفر تخصص {{ major.name }}</h2>
+                        <h2 class="detail-section-title">رسوم الجامعات الماليزية التي توفر تخصص {{ major.name }}</h2>
                     </div>
                     <!-- Instant Search, Filter and Sort Controls -->
                     <div class="programs-controls-container" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center;">
@@ -544,60 +544,7 @@
                 </section>
             {% endif %}
 
-            <!-- Tuition Fees Table Section -->
-            {% if major.tuition_fees %}
-                {% if major.is_tuition_fees_json %}
-                    <section class="detail-section" id="tuition-section">
-                        <div class="detail-section-header">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <line x1="12" y1="1" x2="12" y2="23"></line>
-                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                            </svg>
-                            <h2 class="detail-section-title">تكاليف دراسة تخصص {{ major.name }} في ماليزيا</h2>
-                        </div>
-                        
-                        <div style="display: flex; flex-direction: column; gap: 24px; width: 100%;">
-                            {% for table in major.tuition_fees %}
-                            <div style="margin-bottom: 8px;">
-                                {% if table.title %}
-                                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; border-right: 3px solid var(--secondary); padding-right: 8px; line-height: 1.5;">
-                                    {{ table.title }}
-                                </h3>
-                                {% endif %}
-                                <div class="detail-table-wrapper">
-                                    <table class="detail-table fees-table">
-                                        {% if table.headers and table.headers.0 %}
-                                        <thead>
-                                            <tr>
-                                                {% for header in table.headers %}
-                                                <th>{{ header }}</th>
-                                                {% endfor %}
-                                            </tr>
-                                        </thead>
-                                        {% endif %}
-                                        <tbody>
-                                            {% for row in table.rows %}
-                                            <tr>
-                                                {% for cell in row %}
-                                                    {% if forloop.first %}
-                                                        <td class="detail-table-cell-primary">{{ cell }}</td>
-                                                    {% elif forloop.last and row|length > 1 %}
-                                                        <td class="detail-table-cell-highlight">{{ cell }}</td>
-                                                    {% else %}
-                                                        <td>{{ cell }}</td>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </section>
-                {% endif %}
-            {% endif %}
+
 
             <!-- Countries Comparison Table Section -->
             {% if countries_tables %}

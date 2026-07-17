@@ -1,0 +1,98 @@
+<div style="background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            padding: 20px;
+            margin-top: 24px;"
+     x-data="{ showDangerZone: false, showDeleteModal: false }">
+    {% csrf_token %}
+    <section>
+        <!-- عنوان منطقة الخطر القابل للطي -->
+        <button type="button"
+                @click="showDangerZone = !showDangerZone"
+                class="flex items-center justify-between w-full cursor-pointer"
+                style="background: transparent; border: none; padding: 0;">
+            <span class="text-base font-semibold" style="color: var(--danger);">منطقة الخطر (إجراءات متقدمة)</span>
+            <svg :class="showDangerZone ? 'rotate-90' : ''" style="width: 14px; height: 14px; color: var(--text-muted); transition: transform 0.2s ease;" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+
+        <!-- المحتوى المطوي -->
+        <div x-show="showDangerZone" x-collapse style="display: none;">
+            <div class="pt-4" style="border-top: 1px solid var(--border); margin-top: 12px;">
+                <p class="text-xs mb-3" style="color: var(--text-secondary);">
+                    حذف هذا العنصر نهائياً من قاعدة البيانات. لا يمكن التراجع عن هذا الإجراء.
+                </p>
+                <button type="button"
+                        @click="showDeleteModal = true"
+                        class="w-full px-4 py-2 rounded-lg font-normal text-white transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2"
+                        style="background-color: var(--danger);"
+                        onmouseover="this.style.backgroundColor='var(--danger-hover)'"
+                        onmouseout="this.style.backgroundColor='var(--danger)'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                    حذف نهائياً
+                </button>
+            </div>
+        </div>
+
+        <!-- الـ Modal التأكيدي -->
+        <div x-show="showDeleteModal" 
+             class="fixed inset-0 z-50 flex items-center justify-center p-4" 
+             style="background-color: rgba(6, 20, 36, 0.45); display: none;">
+             
+            <!-- حاوية الـ Modal الداخلية -->
+            <div @click.away="showDeleteModal = false" 
+                 class="w-full max-w-md p-6 rounded-xl shadow-lg" 
+                 style="background-color: var(--surface); border: 1px solid var(--border); text-align: right; box-shadow: var(--shadow);">
+                 
+                 <!-- الهيدر -->
+                 <div class="flex items-center gap-3 mb-4" style="color: var(--danger); justify-content: flex-start; flex-direction: row-reverse;">
+                     <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                     </svg>
+                     <h3 class="text-lg font-semibold" style="margin: 0; padding-right: 8px;">تأكيد الحذف النهائي</h3>
+                 </div>
+                 
+                 <!-- النص -->
+                 <p class="text-sm mb-4" style="color: var(--text-secondary); line-height: 1.6;">
+                     أنت على وشك حذف العنصر <strong>"{{ item_name }}"</strong> بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.
+                 </p>
+                 
+                 <!-- الأزرار -->
+                 <div class="flex gap-3" style="flex-direction: row-reverse;">
+                     <button type="button" 
+                             @click="showDeleteModal = false" 
+                             class="flex-1 px-4 py-2 rounded-lg font-normal transition-colors" 
+                             style="background-color: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border);">
+                         إلغاء
+                     </button>
+                     <div class="flex-1">
+                         <button type="button" 
+                                 @click="const form = document.createElement('form');
+                                         form.method = 'post';
+                                         form.action = '{{ delete_url }}';
+                                         const csrf = document.createElement('input');
+                                         csrf.type = 'hidden';
+                                         csrf.name = 'csrfmiddlewaretoken';
+                                         csrf.value = $el.closest('[x-data]').querySelector('[name=csrfmiddlewaretoken]').value;
+                                         form.appendChild(csrf);
+                                         document.body.appendChild(form);
+                                         form.submit();"
+                                 class="w-full px-4 py-2 rounded-lg font-normal text-white transition-colors cursor-pointer" 
+                                 style="background-color: var(--danger);"
+                                 onmouseover="this.style.backgroundColor='var(--danger-hover)'"
+                                 onmouseout="this.style.backgroundColor='var(--danger)'">
+                             تأكيد حذف
+                         </button>
+                     </div>
+                 </div>
+            </div>
+        </div>
+    </section>
+</div>

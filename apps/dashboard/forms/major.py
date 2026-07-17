@@ -22,7 +22,7 @@ class MajorForm(forms.ModelForm):
             'name', 'slug', 'category', 'main_image', 'main_image_alt',
             # Quick Information Fields
             'bachelor_duration', 'master_duration', 'phd_duration',
-            'tuition_fees', 'study_language', 'practical_training', 'career_opportunities', 'competitor_url',
+            'study_language', 'practical_training', 'career_opportunities', 'competitor_url',
             # Rich Text Sections
             'description', 'why_study_section', 'how_to_apply_section',
             # Relationships
@@ -84,10 +84,6 @@ class MajorForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'مثال: 3-4 سنوات',
                 'dir': 'rtl',
-            }),
-            'tuition_fees': forms.Textarea(attrs={
-                'class': 'hidden',
-                'id': 'id_tuition_fees',
             }),
             'study_language': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -214,7 +210,6 @@ class MajorForm(forms.ModelForm):
             'bachelor_duration': 'مدة البكالوريوس',
             'master_duration': 'مدة الماجستير',
             'phd_duration': 'مدة الدكتوراه',
-            'tuition_fees': 'الرسوم الدراسية',
             'study_language': 'لغة الدراسة',
             'practical_training': 'التدريب العملي',
             'career_opportunities': 'فرص العمل',
@@ -259,7 +254,6 @@ class MajorForm(forms.ModelForm):
             'bachelor_duration': 'مدة البكالوريوس (مثال: 4 سنوات)',
             'master_duration': 'مدة الماجستير (مثال: سنتان)',
             'phd_duration': 'مدة الدكتوراه (مثال: 3-4 سنوات)',
-            'tuition_fees': 'الرسوم الدراسية (مثال: 15,000 - 25,000 رنجت سنوياً)',
             'study_language': 'لغة الدراسة (مثال: الإنجليزية)',
             'practical_training': 'معلومات التدريب العملي (مثال: متاح في السنة الأخيرة)',
             'career_opportunities': 'فرص العمل المتاحة بعد التخرج',
@@ -327,53 +321,6 @@ class MajorForm(forms.ModelForm):
             instance.save()
             self.save_m2m()
         return instance
-
-    def clean_tuition_fees(self):
-        data = self.cleaned_data.get('tuition_fees')
-        if not data:
-            return []
-        
-        if isinstance(data, list):
-            parsed_data = data
-        elif isinstance(data, str):
-            import json
-            val_stripped = data.strip()
-            if not val_stripped or val_stripped in ['غير محدد', 'لا يوجد', 'null', 'NULL', '-']:
-                return []
-            try:
-                parsed_data = json.loads(val_stripped)
-            except json.JSONDecodeError:
-                # Wrap plain text in a single default table structure
-                parsed_data = [{
-                    'title': 'الرسوم الدراسية',
-                    'headers': ['الرسوم'],
-                    'rows': [[val_stripped]]
-                }]
-        else:
-            raise forms.ValidationError("صيغة البيانات غير صحيحة")
-            
-        if not isinstance(parsed_data, list):
-            # Wrap non-list values (like string/number) in a single default table structure
-            parsed_data = [{
-                'title': 'الرسوم الدراسية',
-                'headers': ['الرسوم'],
-                'rows': [[str(parsed_data)]]
-            }]
-            
-        for idx, table in enumerate(parsed_data):
-            if not isinstance(table, dict):
-                raise forms.ValidationError(f"الجدول رقم {idx+1} غير صالح")
-            if 'title' not in table or 'headers' not in table or 'rows' not in table:
-                raise forms.ValidationError(f"الجدول رقم {idx+1} ينقصه حقول أساسية (العنوان أو الأعمدة أو الصفوف)")
-            if not isinstance(table['headers'], list):
-                raise forms.ValidationError(f"أعمدة الجدول رقم {idx+1} غير صالحة")
-            if not isinstance(table['rows'], list):
-                raise forms.ValidationError(f"صفوف الجدول رقم {idx+1} غير صالحة")
-            for r_idx, row in enumerate(table['rows']):
-                if not isinstance(row, list):
-                    raise forms.ValidationError(f"الصف رقم {r_idx+1} في الجدول رقم {idx+1} غير صالح")
-                    
-        return parsed_data
 
 
 # ============================================================================

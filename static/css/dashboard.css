@@ -220,7 +220,7 @@ select:focus {
 
 textarea {
     resize: vertical;
-    min-height: 120px;
+    min-height: 80px;
 }
 
 /* Disabled Input Styles */

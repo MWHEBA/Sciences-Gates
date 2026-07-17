@@ -95,9 +95,28 @@ class SimpleRichTextEditor {
         this.editor.focus();
         
         if (command === 'createLink') {
-            const url = prompt('أدخل عنوان الرابط:', 'https://');
+            const selection = window.getSelection();
+            let existingLink = null;
+            if (selection && selection.rangeCount > 0) {
+                let node = selection.anchorNode;
+                while (node && node !== this.editor) {
+                    if (node.nodeName === 'A') {
+                        existingLink = node;
+                        break;
+                    }
+                    node = node.parentNode;
+                }
+            }
+            
+            const defaultUrl = existingLink ? existingLink.getAttribute('href') : 'https://';
+            const url = prompt('أدخل عنوان الرابط:', defaultUrl);
+            
             if (url) {
-                document.execCommand('createLink', false, url);
+                if (existingLink) {
+                    existingLink.setAttribute('href', url);
+                } else {
+                    document.execCommand('createLink', false, url);
+                }
             }
         } else if (command === 'formatBlock') {
             document.execCommand(command, false, value);

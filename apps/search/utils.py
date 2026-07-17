@@ -146,12 +146,6 @@ def build_search_query(query_string, filters=None):
     if filters.get('study_language'):
         majors = majors.filter(study_language=filters['study_language'])
     
-    # Apply tuition filter
-    if filters.get('min_tuition'):
-        majors = majors.filter(tuition_fees__gte=filters['min_tuition'])
-    if filters.get('max_tuition'):
-        majors = majors.filter(tuition_fees__lte=filters['max_tuition'])
-    
     majors = majors.prefetch_related(
         'best_universities',
         'cheap_universities',

@@ -20,7 +20,6 @@ class MajorModelTest(TestCase):
             slug='software-engineering',
             description='تخصص هندسة البرمجيات يركز على تطوير البرامج',
             study_duration='4 سنوات',
-            tuition_fees='15,000 - 25,000 رنجت سنوياً',
             study_language='الإنجليزية',
             practical_training='متاح في السنة الأخيرة',
             career_opportunities='فرص عمل متعددة في شركات التكنولوجيا',
@@ -84,31 +83,9 @@ class MajorModelTest(TestCase):
 
     def test_major_quick_info_fields(self):
         """Test quick information fields."""
-        self.assertEqual(self.major.tuition_fees, '15,000 - 25,000 رنجت سنوياً')
         self.assertEqual(self.major.study_language, 'الإنجليزية')
         self.assertEqual(self.major.practical_training, 'متاح في السنة الأخيرة')
         self.assertIn('فرص عمل', self.major.career_opportunities)
-
-    def test_major_tuition_fees_json(self):
-        """Test tuition fees stored in JSON format."""
-        # By default, setup created it as a legacy string
-        self.assertFalse(self.major.is_tuition_fees_json)
-        
-        # Change to valid JSON table list
-        json_tables = [{
-            "title": "رسوم البكالوريوس",
-            "headers": ["الجامعة", "الرسوم السنوية"],
-            "rows": [["جامعة مالايا", "20,000 رنجت"]]
-        }]
-        self.major.tuition_fees = json_tables
-        self.major.save()
-        
-        # Retrieve and verify
-        major_refreshed = Major.objects.get(pk=self.major.pk)
-        self.assertTrue(major_refreshed.is_tuition_fees_json)
-        self.assertEqual(major_refreshed.tuition_fees[0]['title'], "رسوم البكالوريوس")
-        self.assertEqual(major_refreshed.tuition_fees[0]['headers'], ["الجامعة", "الرسوم السنوية"])
-        self.assertEqual(major_refreshed.tuition_fees[0]['rows'], [["جامعة مالايا", "20,000 رنجت"]])
 
     def test_major_content_sections(self):
         """Test content section fields."""
@@ -195,7 +172,6 @@ class MajorPublicViewsTest(TestCase):
             slug='software-engineering',
             description='تخصص هندسة البرمجيات يركز على تطوير البرامج',
             study_duration='4 سنوات',
-            tuition_fees='15,000 - 25,000 رنجت سنوياً',
             study_language='الإنجليزية',
             practical_training='متاح في السنة الأخيرة',
             career_opportunities='فرص عمل متعددة في شركات التكنولوجيا',
@@ -327,7 +303,6 @@ class MajorPublicViewsTest(TestCase):
         # Check that content is rendered
         self.assertContains(response, self.major.name)
         self.assertContains(response, self.major.study_duration)
-        self.assertContains(response, self.major.tuition_fees)
 
     def test_major_detail_view_tables_rendering(self):
         """Test that dynamic tables are rendered correctly."""

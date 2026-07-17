@@ -31,7 +31,7 @@ from apps.dashboard.forms import (
     UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet,
     InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet,
     MajorForm, MajorCategoryForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet, MajorFAQFormSet, MajorAttachmentFormSet,
-    ArticleForm, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm
+    ArticleForm, ArticleFAQFormSet, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm
 )
 from apps.articles.models import Category, Tag
 from apps.seo.mixins import DashboardBreadcrumbMixin
@@ -256,15 +256,69 @@ class UserListView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
             .build())
 
     def get_queryset(self):
-        """Get all users ordered by username."""
-        return User.objects.filter(is_staff=True).select_related('profile').order_by('username')
+        """Get all staff users filtered by search query and role, ordered by username."""
+        queryset = User.objects.filter(is_staff=True).select_related('profile').order_by('username')
+        
+        # Search query filtering
+        search_query = self.request.GET.get('search', '').strip()
+        if search_query:
+            queryset = queryset.filter(
+                Q(username__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query)
+            )
+            
+        # Role filtering
+        role_filter = self.request.GET.get('role', '').strip()
+        if role_filter:
+            queryset = queryset.filter(profile__role=role_filter)
+            
+        return queryset
 
     def get_context_data(self, **kwargs):
-        """Add page title to context."""
+        """Add page title and forms to context."""
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إدارة المستخدمين'
+        context['page_description'] = 'إدارة جميع مستخدمي النظام وأدوارهم الصلاحيات الخاصة بهم'
+        context['search_placeholder'] = 'ابحث عن اسم مستخدم أو بريد إلكتروني...'
+        context['search_value'] = self.request.GET.get('search', '')
+        context['base_url'] = reverse_lazy('dashboard:user_list')
+        
+        # Action button for topbar (with javascript function call to open modal)
+        context['action_buttons'] = [
+            {
+                'url': 'javascript:openCreateModal()',
+                'label': 'إضافة مستخدم جديد',
+                'variant': 'primary',
+            }
+        ]
+        
+        # Filters definition for unified filter bar
+        context['filters'] = [
+            {
+                'name': 'role',
+                'label': 'الدور',
+                'selected': self.request.GET.get('role', ''),
+                'options': [
+                    {'value': 'super_admin', 'label': 'مسؤول عام'},
+                    {'value': 'content_admin', 'label': 'مسؤول محتوى'},
+                    {'value': 'seo_admin', 'label': 'مسؤول SEO'},
+                ]
+            }
+        ]
+        
+        context['empty_state_icon'] = '<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>'
+        
         # Add items for list_page.html template
         context['items'] = context.get('users', context.get('object_list', []))
+        
+        # Query params for pagination
+        context['query_params'] = '&'.join([f'{k}={v}' for k, v in self.request.GET.items() if k != 'page'])
+        
+        # Instantiate empty forms for use in the modals (using prefixes to prevent ID conflicts)
+        context['create_form'] = UserCreateForm(prefix='create')
+        context['update_form'] = UserUpdateForm(prefix='edit')
         return context
 
 
@@ -278,27 +332,51 @@ class UserCreateView(SuperAdminRequiredMixin, CreateView):
     template_name = 'dashboard/users/create.html'
     success_url = reverse_lazy('dashboard:user_list')
 
+    def get_form_kwargs(self):
+        """Pass the 'create' prefix to the form."""
+        kwargs = super().get_form_kwargs()
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('json') == '1':
+            kwargs['prefix'] = 'create'
+        return kwargs
+
+    def get(self, request, *args, **kwargs):
+        """Redirect GET requests to list page since creation is done via modal."""
+        return redirect(self.success_url)
+
     def form_valid(self, form):
         """Handle successful form submission."""
-        response = super().form_valid(form)
-        messages.success(
-            self.request,
-            f'تم إنشاء المستخدم {self.object.username} بنجاح'
-        )
-        return response
+        self.object = form.save()
+        success_message = f'تم إنشاء المستخدم {self.object.username} بنجاح'
+        
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('json') == '1':
+            messages.success(self.request, success_message)
+            return JsonResponse({
+                'status': 'success',
+                'message': success_message,
+                'user': {
+                    'id': self.object.id,
+                    'username': self.object.username,
+                    'email': self.object.email,
+                }
+            })
+            
+        messages.success(self.request, success_message)
+        return super().form_valid(form)
 
     def form_invalid(self, form):
         """Handle form errors."""
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('json') == '1':
+            # Extract first error for each field
+            errors = {field: errs[0] for field, errs in form.errors.items()}
+            return JsonResponse({
+                'status': 'error',
+                'errors': errors
+            }, status=400)
+            
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{field}: {error}')
-        return super().form_invalid(form)
-
-    def get_context_data(self, **kwargs):
-        """Add page title to context."""
-        context = super().get_context_data(**kwargs)
-        context['page_title'] = 'إنشاء مستخدم جديد'
-        return context
+        return redirect(self.success_url)
 
 
 class UserUpdateView(SuperAdminRequiredMixin, UpdateView):
@@ -311,31 +389,64 @@ class UserUpdateView(SuperAdminRequiredMixin, UpdateView):
     template_name = 'dashboard/users/edit.html'
     success_url = reverse_lazy('dashboard:user_list')
 
+    def get_form_kwargs(self):
+        """Pass the 'edit' prefix to the form."""
+        kwargs = super().get_form_kwargs()
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('json') == '1':
+            kwargs['prefix'] = 'edit'
+        return kwargs
+
     def get_queryset(self):
         """Get only staff users."""
         return User.objects.filter(is_staff=True).select_related('profile')
 
+    def get(self, request, *args, **kwargs):
+        """Return JSON for AJAX modal populating, redirect to list page otherwise."""
+        self.object = self.get_object()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('json') == '1':
+            return JsonResponse({
+                'status': 'success',
+                'username': self.object.username,
+                'email': self.object.email,
+                'first_name': self.object.first_name,
+                'last_name': self.object.last_name,
+                'role': self.object.profile.role if hasattr(self.object, 'profile') else '',
+            })
+        return redirect(self.success_url)
+
     def form_valid(self, form):
         """Handle successful form submission."""
-        response = super().form_valid(form)
-        messages.success(
-            self.request,
-            f'تم تحديث بيانات المستخدم {self.object.username} بنجاح'
-        )
-        return response
+        self.object = form.save()
+        success_message = f'تم تحديث بيانات المستخدم {self.object.username} بنجاح'
+        
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('json') == '1':
+            messages.success(self.request, success_message)
+            return JsonResponse({
+                'status': 'success',
+                'message': success_message,
+                'user': {
+                    'id': self.object.id,
+                    'username': self.object.username,
+                    'email': self.object.email,
+                }
+            })
+            
+        messages.success(self.request, success_message)
+        return super().form_valid(form)
 
     def form_invalid(self, form):
         """Handle form errors."""
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('json') == '1':
+            errors = {field: errs[0] for field, errs in form.errors.items()}
+            return JsonResponse({
+                'status': 'error',
+                'errors': errors
+            }, status=400)
+            
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{field}: {error}')
-        return super().form_invalid(form)
-
-    def get_context_data(self, **kwargs):
-        """Add page title to context."""
-        context = super().get_context_data(**kwargs)
-        context['page_title'] = f'تحديث المستخدم: {self.object.username}'
-        return context
+        return redirect(self.success_url)
 
 
 class UserDeleteView(SuperAdminRequiredMixin, DeleteView):
@@ -351,22 +462,36 @@ class UserDeleteView(SuperAdminRequiredMixin, DeleteView):
         """Get only staff users."""
         return User.objects.filter(is_staff=True).select_related('profile')
 
-    def delete(self, request, *args, **kwargs):
-        """Handle deletion with success message."""
-        user = self.get_object()
-        username = user.username
-        response = super().delete(request, *args, **kwargs)
-        messages.success(
-            request,
-            f'تم حذف المستخدم {username} بنجاح'
-        )
-        return response
+    def get(self, request, *args, **kwargs):
+        """Return JSON for AJAX delete modal, redirect to list page otherwise."""
+        self.object = self.get_object()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('json') == '1':
+            return JsonResponse({
+                'status': 'success',
+                'username': self.object.username,
+                'email': self.object.email,
+                'first_name': self.object.first_name,
+                'last_name': self.object.last_name,
+                'role': self.object.profile.get_role_display() if hasattr(self.object, 'profile') else '',
+            })
+        return redirect(self.success_url)
 
-    def get_context_data(self, **kwargs):
-        """Add page title to context."""
-        context = super().get_context_data(**kwargs)
-        context['page_title'] = f'حذف المستخدم: {self.object.username}'
-        return context
+    def post(self, request, *args, **kwargs):
+        """Handle deletion with success message or AJAX response."""
+        self.object = self.get_object()
+        username = self.object.username
+        self.object.delete()
+        success_message = f'تم حذف المستخدم {username} بنجاح'
+        
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('json') == '1':
+            messages.success(request, success_message)
+            return JsonResponse({
+                'status': 'success',
+                'message': success_message
+            })
+            
+        messages.success(request, success_message)
+        return redirect(self.success_url)
 
 
 class RedirectListView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
@@ -3135,7 +3260,7 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
         return context
 
 
-class ArticleCreateView(ContentAdminRequiredMixin, CreateView):
+class ArticleCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, CreateView):
     """
     Create a new article with Custom HTML Editor.
     إنشاء مقالة جديدة مع محرر HTML المخصص
@@ -3152,32 +3277,58 @@ class ArticleCreateView(ContentAdminRequiredMixin, CreateView):
     form_class = ArticleForm
     template_name = 'dashboard/articles/form.html'
 
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for article create page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_articles')
+            .current('إضافة مقالة')
+            .build())
+
     def form_valid(self, form):
         """Handle successful form submission.
         كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
         """
-        try:
-            with transaction.atomic():
-                # Set author to current user
-                self.object = form.save(commit=False)
-                self.object.author = self.request.user
+        context = self.get_context_data()
+        faq_formset = context['faq_formset']
+        
+        if faq_formset.is_valid():
+            try:
+                with transaction.atomic():
+                    # Set author to selected user or current user
+                    self.object = form.save(commit=False)
+                    if not self.object.author:
+                        self.object.author = self.request.user
+                    
+                    # Sanitize HTML content before saving
+                    from apps.html_editor.sanitizer import sanitize_article_html
+                    self.object.content = sanitize_article_html(self.object.content)
+                    
+                    self.object.save()
+                    form.save_m2m()  # Save many-to-many relationships
+                    
+                    # Save FAQs
+                    faq_formset.instance = self.object
+                    faq_formset.save()
                 
-                # Sanitize HTML content before saving
-                from apps.html_editor.sanitizer import sanitize_article_html
-                self.object.content = sanitize_article_html(self.object.content)
-                
-                self.object.save()
-                form.save_m2m()  # Save many-to-many relationships
-            
-            messages.success(
-                self.request,
-                f'تم إنشاء المقالة "{self.object.title}" بنجاح'
-            )
-            return redirect('dashboard:article_edit', pk=self.object.pk)
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).error(f"Error saving article: {e}")
-            messages.error(self.request, 'حدث خطأ أثناء حفظ المقالة. لم يتم حفظ أي بيانات.')
+                messages.success(
+                    self.request,
+                    f'تم إنشاء المقالة "{self.object.title}" بنجاح'
+                )
+                return redirect('dashboard:article_edit', pk=self.object.pk)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error saving article: {e}")
+                messages.error(self.request, 'حدث خطأ أثناء حفظ المقالة. لم يتم حفظ أي بيانات.')
+                return self.form_invalid(form)
+        else:
+            # Add formset errors to messages
+            for error in faq_formset.non_form_errors():
+                messages.error(self.request, f'{error}')
+            for error_dict in faq_formset.errors:
+                for field, field_errors in error_dict.items():
+                    for error in field_errors:
+                        messages.error(self.request, f'{error}')
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -3188,13 +3339,42 @@ class ArticleCreateView(ContentAdminRequiredMixin, CreateView):
         return super().form_invalid(form)
 
     def get_context_data(self, **kwargs):
-        """Add page title to context."""
+        """Add page title and recently used relations to context."""
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'إنشاء مقالة جديدة'
+        
+        if self.request.POST:
+            context['faq_formset'] = ArticleFAQFormSet(self.request.POST, instance=self.object)
+        else:
+            context['faq_formset'] = ArticleFAQFormSet(instance=self.object)
+        
+        # Add recently used relations to context with fallback
+        recent_art_ids = Article.objects.order_by('-updated_at').values_list('id', flat=True)[:10]
+        
+        recently_used_universities = list(University.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_universities) < 5:
+            recently_used_universities = list(University.objects.order_by('-updated_at')[:5])
+        context['recently_used_universities'] = recently_used_universities
+        
+        recently_used_institutes = list(Institute.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_institutes) < 5:
+            recently_used_institutes = list(Institute.objects.order_by('-updated_at')[:5])
+        context['recently_used_institutes'] = recently_used_institutes
+        
+        recently_used_majors = list(Major.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_majors) < 5:
+            recently_used_majors = list(Major.objects.order_by('-updated_at')[:5])
+        context['recently_used_majors'] = recently_used_majors
+        
+        recently_used_tags = list(Tag.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_tags) < 5:
+            recently_used_tags = list(Tag.objects.order_by('-name')[:5])
+        context['recently_used_tags'] = recently_used_tags
+        
         return context
 
 
-class ArticleUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateView):
+class ArticleUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, LockValidationMixin, UpdateView):
     """
     Update an existing article with Custom HTML Editor.
     تحديث مقالة موجودة مع محرر HTML المخصص
@@ -3212,6 +3392,14 @@ class ArticleUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateVi
     template_name = 'dashboard/articles/form.html'
     success_url = reverse_lazy('dashboard:article_list')
 
+    def get_breadcrumbs(self):
+        """Build breadcrumb trail for article edit page."""
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_articles')
+            .current('تعديل مقالة')
+            .build())
+
     def get_success_url(self):
         return reverse('dashboard:article_edit', kwargs={'pk': self.object.pk})
 
@@ -3219,14 +3407,42 @@ class ArticleUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateVi
         return self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     def get_context_data(self, **kwargs):
-        """Add page title and slug change warning to context."""
+        """Add page title, slug change warning, and recently used relations to context."""
         context = super().get_context_data(**kwargs)
         context['page_title'] = f'تحديث المقالة: {self.object.title}'
         
+        if self.request.POST:
+            context['faq_formset'] = ArticleFAQFormSet(self.request.POST, instance=self.object)
+        else:
+            context['faq_formset'] = ArticleFAQFormSet(instance=self.object)
+            
         # Check if slug was changed and show warning
         if hasattr(self.object, '_old_slug'):
             context['slug_changed'] = True
             context['old_slug'] = self.object._old_slug
+            
+        # Add recently used relations to context with fallback
+        recent_art_ids = Article.objects.order_by('-updated_at').values_list('id', flat=True)[:10]
+        
+        recently_used_universities = list(University.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_universities) < 5:
+            recently_used_universities = list(University.objects.order_by('-updated_at')[:5])
+        context['recently_used_universities'] = recently_used_universities
+        
+        recently_used_institutes = list(Institute.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_institutes) < 5:
+            recently_used_institutes = list(Institute.objects.order_by('-updated_at')[:5])
+        context['recently_used_institutes'] = recently_used_institutes
+        
+        recently_used_majors = list(Major.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_majors) < 5:
+            recently_used_majors = list(Major.objects.order_by('-updated_at')[:5])
+        context['recently_used_majors'] = recently_used_majors
+        
+        recently_used_tags = list(Tag.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_tags) < 5:
+            recently_used_tags = list(Tag.objects.order_by('-name')[:5])
+        context['recently_used_tags'] = recently_used_tags
         
         return context
 
@@ -3234,58 +3450,75 @@ class ArticleUpdateView(ContentAdminRequiredMixin, LockValidationMixin, UpdateVi
         """Handle successful form submission.
         كل عمليات الحفظ داخل transaction — لو أي حاجة فشلت، كل شيء يترجع
         """
-        try:
-            with transaction.atomic():
-                # حفظ الـ slug القديم قبل الحفظ
-                old_slug = self.object.slug
-                
-                # Sanitize HTML content before saving
-                from apps.html_editor.sanitizer import sanitize_article_html
-                self.object = form.save(commit=False)
-                self.object.content = sanitize_article_html(self.object.content)
-                self.object.save()
-                form.save_m2m()  # Save many-to-many relationships
-                
-                # إنشاء redirect لو الـ slug اتغير
-                new_slug = form.cleaned_data.get('slug')
-                if old_slug != new_slug and self.object.is_published:
-                    create_redirect = self.request.POST.get('create_redirect') == 'on'
-                    if create_redirect:
-                        old_url = f'/articles/{old_slug}/'
-                        new_url = f'/articles/{new_slug}/'
-                        Redirect.objects.update_or_create(
-                            old_url=old_url,
-                            defaults={
-                                'new_url': new_url,
-                                'is_active': True,
-                                'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط المقالة: {self.object.title}'
-                            }
-                        )
+        context = self.get_context_data()
+        faq_formset = context['faq_formset']
+        
+        if faq_formset.is_valid():
+            try:
+                with transaction.atomic():
+                    # حفظ الـ slug القديم قبل الحفظ
+                    old_slug = self.object.slug
+                    
+                    # Sanitize HTML content before saving
+                    from apps.html_editor.sanitizer import sanitize_article_html
+                    self.object = form.save(commit=False)
+                    self.object.content = sanitize_article_html(self.object.content)
+                    self.object.save()
+                    form.save_m2m()  # Save many-to-many relationships
+                    
+                    # Save FAQs
+                    faq_formset.instance = self.object
+                    faq_formset.save()
+                    
+                    # إنشاء redirect لو الـ slug اتغير
+                    new_slug = form.cleaned_data.get('slug')
+                    if old_slug != new_slug and self.object.is_published:
+                        create_redirect = self.request.POST.get('create_redirect') == 'on'
+                        if create_redirect:
+                            old_url = f'/articles/{old_slug}/'
+                            new_url = f'/articles/{new_slug}/'
+                            Redirect.objects.update_or_create(
+                                old_url=old_url,
+                                defaults={
+                                    'new_url': new_url,
+                                    'is_active': True,
+                                    'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط المقالة: {self.object.title}'
+                                }
+                            )
+                            if not self._is_ajax():
+                                messages.success(
+                                    self.request,
+                                    f'تم تحديث المقالة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                                )
+                        else:
+                            if not self._is_ajax():
+                                messages.warning(
+                                    self.request,
+                                    f'تم تحديث المقالة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
+                                )
+                    else:
                         if not self._is_ajax():
                             messages.success(
                                 self.request,
-                                f'تم تحديث المقالة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
+                                f'تم تحديث المقالة "{self.object.title}" بنجاح'
                             )
-                    else:
-                        if not self._is_ajax():
-                            messages.warning(
-                                self.request,
-                                f'تم تحديث المقالة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                            )
-                else:
-                    if not self._is_ajax():
-                        messages.success(
-                            self.request,
-                            f'تم تحديث المقالة "{self.object.title}" بنجاح'
-                        )
-            
-            if self._is_ajax():
-                return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
-            return redirect(self.get_success_url())
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).error(f"Error updating article: {e}")
-            messages.error(self.request, 'حدث خطأ أثناء تحديث المقالة. لم يتم حفظ أي تغييرات.')
+                
+                if self._is_ajax():
+                    return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
+                return redirect(self.get_success_url())
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error updating article: {e}")
+                messages.error(self.request, 'حدث خطأ أثناء تحديث المقالة. لم يتم حفظ أي تغييرات.')
+                return self.form_invalid(form)
+        else:
+            # Add formset errors to messages
+            for error in faq_formset.non_form_errors():
+                messages.error(self.request, f'{error}')
+            for error_dict in faq_formset.errors:
+                for field, field_errors in error_dict.items():
+                    for error in field_errors:
+                        messages.error(self.request, f'{error}')
             return self.form_invalid(form)
 
     def form_invalid(self, form):

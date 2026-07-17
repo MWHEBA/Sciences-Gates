@@ -8,7 +8,7 @@ from apps.core.models import UserProfile, UserRole
 from .university import UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet
 from .institute import InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet
 from .major import MajorForm, MajorCategoryForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet, MajorFAQFormSet, MajorAttachmentFormSet
-from .article import ArticleForm, CategoryForm, TagForm
+from .article import ArticleForm, ArticleFAQFormSet, CategoryForm, TagForm
 from .settings import SiteSettingsForm, SiteSEOSettingsForm, SEOSettingsForm
 
 
@@ -146,6 +146,23 @@ class UserUpdateForm(forms.ModelForm):
         label='الدور',
         help_text='اختر دور المستخدم في لوحة التحكم'
     )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': 'كلمة المرور الجديدة (اختياري)',
+        }),
+        label='كلمة المرور الجديدة',
+        required=False,
+        help_text='اتركها فارغة إذا لم تكن تريد تغيير كلمة المرور'
+    )
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': 'تأكيد كلمة المرور الجديدة',
+        }),
+        label='تأكيد كلمة المرور الجديدة',
+        required=False
+    )
 
     class Meta:
         model = User
@@ -180,6 +197,12 @@ class UserUpdateForm(forms.ModelForm):
         """Validate form data."""
         cleaned_data = super().clean()
         email = cleaned_data.get('email')
+        password = cleaned_data.get('password')
+        password_confirm = cleaned_data.get('password_confirm')
+
+        if password or password_confirm:
+            if password != password_confirm:
+                raise forms.ValidationError('كلمات المرور غير متطابقة')
 
         # Check email uniqueness (excluding current user)
         if email and User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
@@ -189,8 +212,12 @@ class UserUpdateForm(forms.ModelForm):
 
     def save(self, commit=True):
         """Save user and update profile role."""
-        user = super().save(commit=commit)
+        user = super().save(commit=False)
+        password = self.cleaned_data.get('password')
+        if password:
+            user.set_password(password)
         if commit:
+            user.save()
             profile = user.profile
             profile.role = self.cleaned_data['role']
             profile.save()
@@ -294,6 +321,7 @@ __all__ = [
     'SalaryTableFormSet',
     'CountriesTableFormSet',
     'ArticleForm',
+    'ArticleFAQFormSet',
     'CategoryForm',
     'TagForm',
     'SiteSettingsForm',

@@ -64,6 +64,11 @@
             </div>
         </section>
     </div>
+
+    {% if form.instance.pk %}
+        {% url 'dashboard:major_category_delete' form.instance.pk as major_cat_delete_url %}
+        {% include "dashboard/components/danger_zone.html" with delete_url=major_cat_delete_url item_name=form.instance.name %}
+    {% endif %}
 </div>
 {% endblock %}
 

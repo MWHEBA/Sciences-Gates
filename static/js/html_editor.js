@@ -46,7 +46,7 @@ class ProfessionalHTMLEditor {
         image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
         clear: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`,
         fontSize: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 17h6"/><path d="M6 4v14"/><path d="M18 4v14"/></svg>`,
-        fontColor: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 17h6"/><path d="M6 4v14"/><path d="M18 4v14"/><line x1="3" y1="20" x2="21" y2="20" stroke="currentColor" stroke-width="3"/></svg>`,
+        fontColor: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M9.5 4h5l4.5 12H5z" fill="none"/><path d="M12 4l4 12M12 4L8 16"/><line x1="7" y1="13" x2="17" y2="13"/></svg>`,
         table: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>`,
         insertIcon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
         magic: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 4 5 5M3 21l10-10M20.96 2.04a2.12 2.12 0 0 0-3 0l-5.32 5.32 3 3 5.32-5.32a2.12 2.12 0 0 0 0-3Z"/><path d="M19 16c.5 0 1 .5 1 1v1c0 .5-.5 1-1 1h-1c-.5 0-1-.5-1-1v-1c0-.5.5-1 1-1h1ZM10 4c.5 0 1 .5 1 1v1c0 .5-.5 1-1 1H9c-.5 0-1-.5-1-1V5c0-.5.5-1 1-1h1ZM6 14c.5 0 1 .5 1 1v1c0 .5-.5 1-1 1H5c-.5 0-1-.5-1-1v-1c0-.5.5-1 1-1h1Z"/></svg>`,
@@ -133,9 +133,9 @@ class ProfessionalHTMLEditor {
 
     // ─── Minimal Toolbar Config (الأدوات الأساسية فقط) ───────────────────────
     static MINIMAL_TOOLBAR_IDS = new Set([
-        'undo', 'redo', 'bold', 'h2', 'h3', 'ul',
+        'undo', 'redo', 'bold', 'h2', 'h3', 'ul', 'ol',
         'alignRight', 'alignCenter', 'alignLeft', 'alignJustify',
-        'table',
+        'link', 'image', 'table',
     ]);
 
     // ─── Init ──────────────────────────────────────────────────────────────────
@@ -148,6 +148,7 @@ class ProfessionalHTMLEditor {
         this._buildDOM();
         this._bindEvents();
         this._loadInitialContent();
+        this._initResize();
     }
 
     _buildDOM() {
@@ -355,12 +356,7 @@ class ProfessionalHTMLEditor {
         this._fontColorBtn.title = 'لون الخط';
         this._fontColorBtn.setAttribute('aria-label', 'لون الخط');
         this._fontColorBtn.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 20h16"/>
-                <path d="M9.5 4h5l4.5 12H5z" fill="none"/>
-                <path d="M12 4l4 12M12 4L8 16"/>
-                <line x1="7" y1="13" x2="17" y2="13"/>
-            </svg>
+            ${ProfessionalHTMLEditor.ICONS.fontColor}
             <span class="pro-color-indicator" style="background-color: #000000;"></span>
         `;
         this._currentFontColor = '#000000';
@@ -445,9 +441,15 @@ class ProfessionalHTMLEditor {
         this.hiddenTextarea.style.display = 'none';
         this.hiddenTextarea.setAttribute('aria-hidden', 'true');
 
+        // Resize handle
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'pro-editor-resize-handle';
+        resizeHandle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="9" x2="18" y2="9"/><line x1="6" y1="13" x2="18" y2="13"/><line x1="6" y1="17" x2="18" y2="17"/></svg>`;
+
         this.container.appendChild(this.toolbar);
         this.container.appendChild(visualPanel);
         this.container.appendChild(textPanel);
+        this.container.appendChild(resizeHandle);
         this.container.appendChild(footer);
         this.container.appendChild(this.hiddenTextarea);
 
@@ -472,9 +474,29 @@ class ProfessionalHTMLEditor {
         });
 
         // Editor click/selection → update toolbar state
-        this.editorArea.addEventListener('click', () => {
+        this.editorArea.addEventListener('click', (e) => {
             this._updateToolbarState();
             this._updateFontSizeDisplay();
+            
+            // Check if clicked inside a link
+            const link = e.target.closest('a');
+            const iconWrapper = e.target.closest('.pro-inserted-icon');
+
+            if (link) {
+                e.preventDefault();
+                this._showLinkTooltip(link);
+            } else {
+                const activeTooltip = document.querySelector('.pro-link-tooltip');
+                if (activeTooltip) activeTooltip.remove();
+            }
+
+            if (iconWrapper) {
+                e.preventDefault();
+                e.stopPropagation();
+                this._showIconTooltip(iconWrapper);
+            } else {
+                this._removeIconTooltip();
+            }
         });
 
         // Text area input → sync to editor
@@ -487,6 +509,28 @@ class ProfessionalHTMLEditor {
             if (document.activeElement === this.editorArea || this.editorArea.contains(document.activeElement)) {
                 this._updateToolbarState();
                 this._updateFontSizeDisplay();
+
+                // Check if selection is within a link
+                const selection = window.getSelection();
+                if (selection && selection.rangeCount > 0) {
+                    let node = selection.anchorNode;
+                    let link = null;
+                    while (node && node !== this.editorArea) {
+                        if (node && node.nodeName === 'A') {
+                            link = node;
+                            break;
+                        }
+                        node = node ? node.parentNode : null;
+                    }
+                    if (link) {
+                        this._showLinkTooltip(link);
+                    } else {
+                        const activeTooltip = document.querySelector('.pro-link-tooltip');
+                        if (activeTooltip && !activeTooltip.contains(document.activeElement)) {
+                            activeTooltip.remove();
+                        }
+                    }
+                }
             }
         });
 
@@ -508,6 +552,8 @@ class ProfessionalHTMLEditor {
             this.container.classList.remove('is-focused');
             this._syncFromTextarea();
         });
+
+        this._initSelectionPopover();
     }
 
     _loadInitialContent() {
@@ -582,44 +628,195 @@ class ProfessionalHTMLEditor {
     }
 
     _insertLink() {
-        const selection = window.getSelection();
-        const selectedText = selection ? selection.toString() : '';
+        let selection = window.getSelection();
+        if (this._savedRange) {
+            selection.removeAllRanges();
+            selection.addRange(this._savedRange);
+        }
+        
+        // Check if cursor is inside an existing link
+        let existingLink = null;
+        if (selection && selection.rangeCount > 0) {
+            let node = selection.anchorNode;
+            while (node && node !== this.editorArea) {
+                if (node.nodeName === 'A') {
+                    existingLink = node;
+                    break;
+                }
+                node = node.parentNode;
+            }
+        }
+
+        const selectedText = existingLink ? existingLink.textContent : (selection ? selection.toString() : '');
+        const existingUrl = existingLink ? existingLink.getAttribute('href') : '';
+        const existingNewTab = existingLink ? (existingLink.getAttribute('target') === '_blank') : false;
 
         // Simple inline modal
-        const modal = this._createLinkModal(selectedText, (url, text, newTab) => {
-            if (!url) return;
+        const modal = this._createLinkModal(selectedText, existingUrl, existingNewTab, (url, text, newTab) => {
+            if (!url) {
+                this._savedRange = null;
+                return;
+            }
             this.editorArea.focus();
+            if (this._savedRange) {
+                selection.removeAllRanges();
+                selection.addRange(this._savedRange);
+            }
 
-            if (selectedText) {
-                document.execCommand('createLink', false, url);
-                // Set target if needed
-                const links = this.editorArea.querySelectorAll('a');
-                links.forEach(a => {
-                    if (a.href === url || a.getAttribute('href') === url) {
-                        if (newTab) a.setAttribute('target', '_blank');
-                        else a.removeAttribute('target');
-                    }
-                });
+            if (existingLink) {
+                this._saveState('تعديل الرابط');
+                existingLink.setAttribute('href', url);
+                if (newTab) {
+                    existingLink.setAttribute('target', '_blank');
+                } else {
+                    existingLink.removeAttribute('target');
+                }
+                if (text && text !== existingLink.textContent) {
+                    existingLink.textContent = text;
+                }
             } else {
-                const a = document.createElement('a');
-                a.href = url;
-                a.textContent = text || url;
-                if (newTab) a.setAttribute('target', '_blank');
-                if (selection && selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-                    range.deleteContents();
-                    range.insertNode(a);
-                    range.setStartAfter(a);
-                    range.collapse(true);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
+                this._saveState('إدراج رابط');
+                if (selectedText) {
+                    document.execCommand('createLink', false, url);
+                    // Set target if needed
+                    const links = this.editorArea.querySelectorAll('a');
+                    links.forEach(a => {
+                        if (a.href === url || a.getAttribute('href') === url) {
+                            if (newTab) a.setAttribute('target', '_blank');
+                            else a.removeAttribute('target');
+                        }
+                    });
+                } else {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.textContent = text || url;
+                    if (newTab) a.setAttribute('target', '_blank');
+                    if (selection && selection.rangeCount > 0) {
+                        const range = selection.getRangeAt(0);
+                        range.deleteContents();
+                        range.insertNode(a);
+                        range.setStartAfter(a);
+                        range.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
                 }
             }
+            this._savedRange = null;
             this._syncToTextarea();
         });
 
         document.body.appendChild(modal);
         modal.querySelector('.pro-link-url').focus();
+    }
+
+    _showLinkTooltip(link) {
+        // Remove existing link tooltip if any
+        const existing = document.querySelector('.pro-link-tooltip');
+        if (existing) {
+            // If it's already shown for the same link, just reposition and return
+            if (existing.linkElement === link) {
+                this._positionLinkTooltip(existing, link);
+                return;
+            }
+            existing.remove();
+        }
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'pro-link-tooltip';
+        tooltip.linkElement = link; // store reference
+        
+        const url = link.getAttribute('href') || '#';
+        const displayUrl = url.length > 30 ? url.substring(0, 30) + '...' : url;
+
+        tooltip.innerHTML = `
+            <div class="pro-link-tooltip-content">
+                <a href="${url}" target="_blank" class="pro-link-tooltip-url" title="${url}">${displayUrl}</a>
+                <span class="pro-link-tooltip-sep">|</span>
+                <button type="button" class="pro-link-tooltip-btn pro-link-tooltip-edit" title="تعديل الرابط">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <span>تعديل</span>
+                </button>
+                <button type="button" class="pro-link-tooltip-btn pro-link-tooltip-unlink" title="إلغاء الارتباط">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M18.84 12.25l1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71"/><path d="M5.17 11.75l-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.72-1.71"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="16" y1="19" x2="16" y2="22"/><line x1="19" y1="16" x2="22" y2="16"/></svg>
+                    <span>إلغاء</span>
+                </button>
+            </div>
+        `;
+
+        // Bind Edit button
+        tooltip.querySelector('.pro-link-tooltip-edit').addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            tooltip.remove();
+            
+            // Highlight the link text before opening edit modal
+            const range = document.createRange();
+            range.selectNodeContents(link);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            this._insertLink();
+        });
+
+        // Bind Unlink button
+        tooltip.querySelector('.pro-link-tooltip-unlink').addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this._saveState('إلغاء الارتباط');
+            
+            // Replace link element with its text content
+            const parent = link.parentNode;
+            while (link.firstChild) {
+                parent.insertBefore(link.firstChild, link);
+            }
+            link.remove();
+            tooltip.remove();
+            this._syncToTextarea();
+        });
+
+        document.body.appendChild(tooltip);
+        this._positionLinkTooltip(tooltip, link);
+
+        // Close on outside click
+        const closeHandler = (e) => {
+            if (tooltip.contains(e.target)) return;
+            if (e.target === link || link.contains(e.target)) return;
+            tooltip.remove();
+            document.removeEventListener('mousedown', closeHandler);
+        };
+        setTimeout(() => document.addEventListener('mousedown', closeHandler), 10);
+
+        // Reposition on scroll/resize
+        const reposition = () => {
+            if (!document.body.contains(tooltip)) {
+                window.removeEventListener('scroll', reposition, true);
+                window.removeEventListener('resize', reposition);
+                return;
+            }
+            this._positionLinkTooltip(tooltip, link);
+        };
+        window.addEventListener('scroll', reposition, true);
+        window.addEventListener('resize', reposition);
+    }
+
+    _positionLinkTooltip(tooltip, link) {
+        const rect = link.getBoundingClientRect();
+        const tRect = tooltip.getBoundingClientRect();
+        
+        // Position below the link
+        let top = rect.bottom + window.scrollY + 6;
+        let left = rect.left + window.scrollX + (rect.width - tRect.width) / 2;
+
+        // If off screen, adjust
+        if (left < 8) left = 8;
+        if (left + tRect.width > window.innerWidth) left = window.innerWidth - tRect.width - 8;
+
+        tooltip.style.position = 'absolute';
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = left + 'px';
+        tooltip.style.zIndex = '10000';
     }
 
     _insertImage() {
@@ -760,13 +957,18 @@ class ProfessionalHTMLEditor {
         dropdown.style.zIndex = '10000';
     }
 
-    _createLinkModal(selectedText, onConfirm) {
+    _createLinkModal(selectedText, existingUrl, existingNewTab, onConfirm) {
+        const isEditing = !!existingUrl;
         const overlay = document.createElement('div');
         overlay.className = 'pro-editor-modal-overlay';
+        
+        // Show text field if we don't have selectedText, or if we are editing an existing link
+        const showTextField = !selectedText || isEditing;
+
         overlay.innerHTML = `
-            <div class="pro-editor-modal" role="dialog" aria-modal="true" aria-label="إدراج رابط">
+            <div class="pro-editor-modal" role="dialog" aria-modal="true" aria-label="${isEditing ? 'تعديل الرابط' : 'إدراج رابط'}">
                 <div class="pro-editor-modal-header">
-                    <span>إدراج رابط</span>
+                    <span>${isEditing ? 'تعديل الرابط' : 'إدراج رابط'}</span>
                     <button type="button" class="pro-modal-close" aria-label="إغلاق">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
@@ -776,7 +978,7 @@ class ProfessionalHTMLEditor {
                         <label>عنوان الرابط (URL)</label>
                         <input type="url" class="pro-link-url" placeholder="https://" dir="ltr" />
                     </div>
-                    ${!selectedText ? `
+                    ${showTextField ? `
                     <div class="pro-modal-field">
                         <label>نص الرابط</label>
                         <input type="text" class="pro-link-text" placeholder="نص يظهر للقارئ" dir="rtl" />
@@ -788,7 +990,7 @@ class ProfessionalHTMLEditor {
                 </div>
                 <div class="pro-editor-modal-footer">
                     <button type="button" class="pro-modal-cancel">إلغاء</button>
-                    <button type="button" class="pro-modal-confirm">إدراج</button>
+                    <button type="button" class="pro-modal-confirm">${isEditing ? 'حفظ' : 'إدراج'}</button>
                 </div>
             </div>
         `;
@@ -799,11 +1001,25 @@ class ProfessionalHTMLEditor {
         overlay.querySelector('.pro-modal-cancel').addEventListener('click', close);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
+        const urlInput = overlay.querySelector('.pro-link-url');
+        if (isEditing) {
+            urlInput.value = existingUrl;
+        }
+
+        const textInput = overlay.querySelector('.pro-link-text');
+        if (textInput && selectedText) {
+            textInput.value = selectedText;
+        }
+
+        const newTabCheckbox = overlay.querySelector('.pro-link-newtab');
+        if (existingNewTab) {
+            newTabCheckbox.checked = true;
+        }
+
         overlay.querySelector('.pro-modal-confirm').addEventListener('click', () => {
-            const url = overlay.querySelector('.pro-link-url').value.trim();
-            const textEl = overlay.querySelector('.pro-link-text');
-            const text = textEl ? textEl.value.trim() : selectedText;
-            const newTab = overlay.querySelector('.pro-link-newtab').checked;
+            const url = urlInput.value.trim();
+            const text = textInput ? textInput.value.trim() : selectedText;
+            const newTab = newTabCheckbox.checked;
             close();
             onConfirm(url, text, newTab);
         });
@@ -1303,48 +1519,56 @@ class ProfessionalHTMLEditor {
             {
                 label: 'صف',
                 items: [
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="7" rx="1"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="12" y1="14" x2="12" y2="21"/><line x1="7" y1="17" x2="17" y2="17"/></svg>`, title: 'إضافة صف فوق',   action: 'addRowAbove' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="14" width="18" height="7" rx="1"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="3" x2="12" y2="10"/><line x1="7" y1="6" x2="17" y2="6"/></svg>`, title: 'إضافة صف تحت',   action: 'addRowBelow' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16" stroke-linecap="round"/><rect x="3" y="3" width="18" height="18" rx="1" stroke-dasharray="3 3"/><rect x="3" y="3" width="18" height="6" fill="currentColor" opacity="0.3"/></svg>`, title: 'تحويل الصف لرأس/عادي', action: 'toggleRowHeader' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>`, title: 'حذف الصف',        action: 'deleteRow',  danger: true },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="1"/><line x1="3" y1="14" x2="21" y2="14"/><line x1="12" y1="14" x2="12" y2="21"/><line x1="7" y1="17" x2="17" y2="17"/></svg>`, title: 'إضافة صف فوق',   action: 'addRowAbove' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="14" width="18" height="7" rx="1"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="3" x2="12" y2="10"/><line x1="7" y1="6" x2="17" y2="6"/></svg>`, title: 'إضافة صف تحت',   action: 'addRowBelow' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h16"/><rect x="3" y="3" width="18" height="18" rx="1" stroke-dasharray="3 3"/><rect x="3" y="3" width="18" height="6" fill="currentColor" opacity="0.3"/></svg>`, title: 'تحويل الصف لرأس/عادي', action: 'toggleRowHeader' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>`, title: 'حذف الصف',        action: 'deleteRow',  danger: true },
                 ],
             },
             {
                 label: 'عمود',
                 items: [
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><line x1="14" y1="3" x2="14" y2="21"/><line x1="14" y1="12" x2="21" y2="12"/><line x1="17" y1="7" x2="17" y2="17"/></svg>`, title: 'إضافة عمود يمين', action: 'addColRight' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="14" y="3" width="7" height="18" rx="1"/><line x1="10" y1="3" x2="10" y2="21"/><line x1="3" y1="12" x2="10" y2="12"/><line x1="6" y1="7" x2="6" y2="17"/></svg>`, title: 'إضافة عمود يسار', action: 'addColLeft' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v16M10 4v16" stroke-linecap="round"/><rect x="3" y="3" width="18" height="18" rx="1" stroke-dasharray="3 3"/><rect x="3" y="3" width="6" height="18" fill="currentColor" opacity="0.3"/></svg>`, title: 'تحويل العمود لرأس/عادي', action: 'toggleColHeader' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>`, title: 'حذف العمود',      action: 'deleteCol',  danger: true },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><line x1="14" y1="3" x2="14" y2="21"/><line x1="14" y1="12" x2="21" y2="12"/><line x1="17" y1="7" x2="17" y2="17"/></svg>`, title: 'إضافة عمود يمين', action: 'addColRight' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="3" width="7" height="18" rx="1"/><line x1="10" y1="3" x2="10" y2="21"/><line x1="3" y1="12" x2="10" y2="12"/><line x1="6" y1="7" x2="6" y2="17"/></svg>`, title: 'إضافة عمود يسار', action: 'addColLeft' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M10 4v16"/><rect x="3" y="3" width="18" height="18" rx="1" stroke-dasharray="3 3"/><rect x="3" y="3" width="6" height="18" fill="currentColor" opacity="0.3"/></svg>`, title: 'تحويل العمود لرأس/عادي', action: 'toggleColHeader' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>`, title: 'حذف العمود',      action: 'deleteCol',  danger: true },
                 ],
             },
             {
                 label: 'دمج',
                 items: [
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21" stroke-dasharray="3 2"/><line x1="3" y1="12" x2="21" y2="12" stroke-dasharray="3 2"/><polyline points="9,9 12,12 15,9"/><polyline points="9,15 12,12 15,15"/></svg>`, title: 'دمج الخلايا',    action: 'mergeCells' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/><polyline points="15,9 12,12 9,9"/><polyline points="15,15 12,12 9,15"/></svg>`, title: 'فك الدمج',       action: 'splitCell' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21" stroke-dasharray="3 2"/><line x1="3" y1="12" x2="21" y2="12" stroke-dasharray="3 2"/><polyline points="9,9 12,12 15,9"/><polyline points="9,15 12,12 15,15"/></svg>`, title: 'دمج الخلايا',    action: 'mergeCells' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/><polyline points="15,9 12,12 9,9"/><polyline points="15,15 12,12 9,15"/></svg>`, title: 'فك الدمج',       action: 'splitCell' },
                 ],
             },
             {
                 label: 'محاذاة',
                 items: [
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="8" x2="3" y2="8"/><line x1="21" y1="12" x2="3" y2="12"/><line x1="21" y1="16" x2="7" y2="16"/></svg>`, title: 'محاذاة يمين',  action: 'cellAlignRight' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="8" x2="6" y2="8"/><line x1="21" y1="12" x2="3" y2="12"/><line x1="18" y1="16" x2="6" y2="16"/></svg>`, title: 'محاذاة وسط',   action: 'cellAlignCenter' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="8" x2="17" y2="8"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="16" x2="17" y2="16"/></svg>`, title: 'محاذاة يسار',  action: 'cellAlignLeft' },
+                    { icon: ProfessionalHTMLEditor.ICONS.alignRight, title: 'محاذاة يمين',  action: 'cellAlignRight' },
+                    { icon: ProfessionalHTMLEditor.ICONS.alignCenter, title: 'محاذاة وسط',   action: 'cellAlignCenter' },
+                    { icon: ProfessionalHTMLEditor.ICONS.alignLeft, title: 'محاذاة يسار',  action: 'cellAlignLeft' },
+                ],
+            },
+            {
+                label: 'خط',
+                items: [
+                    { icon: ProfessionalHTMLEditor.ICONS.bold, title: 'خط عريض', action: 'cellBold' },
+                    { icon: ProfessionalHTMLEditor.ICONS.fontColor, title: 'لون الخط', action: 'cellTextColor' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/><path d="M4 20h16M12 4L5 18h14z"/></svg>`, title: 'مسح لون الخط', action: 'cellTextClear' },
                 ],
             },
             {
                 label: 'خلفية',
                 items: [
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none" opacity="0.5"/></svg>`, title: 'خلفية الخلية', action: 'cellBgColor' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>`, title: 'مسح الخلفية',  action: 'cellBgClear' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none" opacity="0.5"/></svg>`, title: 'خلفية الخلية', action: 'cellBgColor' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>`, title: 'مسح الخلفية',  action: 'cellBgClear' },
                 ],
             },
             {
                 label: 'جدول',
                 items: [
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="16" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>`, title: 'تحديد الجدول كله', action: 'selectTable' },
-                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`, title: 'حذف الجدول',       action: 'deleteTable', danger: true },
+                    { icon: ProfessionalHTMLEditor.ICONS.table, title: 'تحديد الجدول كله', action: 'selectTable' },
+                    { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`, title: 'حذف الجدول',       action: 'deleteTable', danger: true },
                 ],
             },
         ];
@@ -1385,7 +1609,7 @@ class ProfessionalHTMLEditor {
         });
 
         document.body.appendChild(toolbar);
-        this._positionTableToolbar(toolbar, table);
+        this._positionTableToolbar(toolbar, activeCell);
 
         // Close on outside click (but not on table cells)
         const closeHandler = (e) => {
@@ -1403,17 +1627,17 @@ class ProfessionalHTMLEditor {
                 window.removeEventListener('resize', reposition);
                 return;
             }
-            this._positionTableToolbar(toolbar, table);
+            this._positionTableToolbar(toolbar, activeCell);
         };
         window.addEventListener('scroll', reposition, true);
         window.addEventListener('resize', reposition);
     }
 
-    _positionTableToolbar(toolbar, table) {
-        const rect = table.getBoundingClientRect();
+    _positionTableToolbar(toolbar, cell) {
+        const rect = cell.getBoundingClientRect();
         const tRect = toolbar.getBoundingClientRect();
         let top = rect.top - tRect.height - 8;
-        let left = rect.left;
+        let left = rect.left + (rect.width - tRect.width) / 2;
 
         if (top < 8) top = rect.bottom + 8;
         if (left + tRect.width > window.innerWidth) left = window.innerWidth - tRect.width - 8;
@@ -1507,13 +1731,13 @@ class ProfessionalHTMLEditor {
             }
 
             case 'addRowAbove': {
-                const newRow = this._createRow(colCount, false);
+                const newRow = this._createRow(colCount, false, row);
                 row.before(newRow);
                 break;
             }
 
             case 'addRowBelow': {
-                const newRow = this._createRow(colCount, false);
+                const newRow = this._createRow(colCount, false, row);
                 row.after(newRow);
                 break;
             }
@@ -1532,8 +1756,13 @@ class ProfessionalHTMLEditor {
                     newCell.contentEditable = 'true';
                     newCell.innerHTML = '<br>';
                     const ref = tr.cells[cellIndex];
-                    if (ref) ref.after(newCell);
-                    else tr.appendChild(newCell);
+                    if (ref) {
+                        if (ref.className) newCell.className = ref.className;
+                        const style = ref.getAttribute('style');
+                        if (style) newCell.setAttribute('style', style);
+                    }
+                    if (ref) ref.before(newCell);
+                    else tr.prepend(newCell);
                 });
                 break;
             }
@@ -1545,8 +1774,13 @@ class ProfessionalHTMLEditor {
                     newCell.contentEditable = 'true';
                     newCell.innerHTML = '<br>';
                     const ref = tr.cells[cellIndex];
-                    if (ref) ref.before(newCell);
-                    else tr.prepend(newCell);
+                    if (ref) {
+                        if (ref.className) newCell.className = ref.className;
+                        const style = ref.getAttribute('style');
+                        if (style) newCell.setAttribute('style', style);
+                    }
+                    if (ref) ref.after(newCell);
+                    else tr.appendChild(newCell);
                 });
                 break;
             }
@@ -1606,6 +1840,24 @@ class ProfessionalHTMLEditor {
                 activeCells.forEach(c => c.style.textAlign = 'left');
                 break;
 
+            case 'cellBold':
+                this._saveState('خط عريض للخلية');
+                const isBold = activeCells[0].style.fontWeight === 'bold' || activeCells[0].style.fontWeight === '700';
+                activeCells.forEach(c => {
+                    c.style.fontWeight = isBold ? 'normal' : 'bold';
+                });
+                break;
+
+            case 'cellTextColor':
+                this._saveState('تغيير لون خط الخلايا');
+                this._showCellTextColorPicker(activeCells, btn);
+                return; // Don't sync yet
+
+            case 'cellTextClear':
+                this._saveState('مسح لون خط الخلايا');
+                activeCells.forEach(c => c.style.color = '');
+                break;
+
             case 'cellBgColor':
                 this._saveState('تغيير خلفية الخلية');
                 this._showCellColorPicker(activeCells, btn);
@@ -1618,8 +1870,7 @@ class ProfessionalHTMLEditor {
 
             case 'selectTable':
                 table.querySelectorAll('td, th').forEach(c => c.classList.add('is-selected'));
-                setTimeout(() => table.querySelectorAll('td, th').forEach(c => c.classList.remove('is-selected')), 800);
-                return;
+                break;
 
             case 'deleteTable':
                 this._deleteTable(table);
@@ -1638,12 +1889,18 @@ class ProfessionalHTMLEditor {
         }
     }
 
-    _createRow(colCount, isHeader = false) {
+    _createRow(colCount, isHeader = false, refRow = null) {
         const tr = document.createElement('tr');
         for (let i = 0; i < colCount; i++) {
             const cell = document.createElement(isHeader ? 'th' : 'td');
             cell.contentEditable = 'true';
             cell.innerHTML = '<br>';
+            if (refRow && refRow.cells[i]) {
+                const refCell = refRow.cells[i];
+                if (refCell.className) cell.className = refCell.className;
+                const style = refCell.getAttribute('style');
+                if (style) cell.setAttribute('style', style);
+            }
             tr.appendChild(cell);
         }
         return tr;
@@ -1706,9 +1963,84 @@ class ProfessionalHTMLEditor {
         setTimeout(() => document.addEventListener('mousedown', close), 10);
     }
 
+    _showCellTextColorPicker(cells, triggerBtn) {
+        const cellsArray = Array.isArray(cells) ? cells : [cells];
+        const existing = document.querySelector('.pro-cell-text-color-palette');
+        if (existing) { existing.remove(); return; }
+
+        const palette = document.createElement('div');
+        palette.className = 'pro-color-palette pro-cell-text-color-palette';
+
+        let html = '<div class="pro-palette-grid">';
+        ProfessionalHTMLEditor.COLOR_PALETTE.forEach(color => {
+            html += `<button class="pro-palette-swatch" data-color="${color}" style="background-color:${color};" title="${color}"></button>`;
+        });
+        html += '</div>';
+        palette.innerHTML = html;
+
+        palette.querySelectorAll('.pro-palette-swatch').forEach(swatch => {
+            swatch.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const color = swatch.getAttribute('data-color');
+                cellsArray.forEach(c => c.style.color = color);
+                palette.remove();
+                this._syncToTextarea();
+            });
+        });
+
+        document.body.appendChild(palette);
+
+        setTimeout(() => {
+            const rect = triggerBtn.getBoundingClientRect();
+            const pRect = palette.getBoundingClientRect();
+            let top = rect.bottom + 6;
+            let left = rect.left;
+            if (left + pRect.width > window.innerWidth) left = window.innerWidth - pRect.width - 8;
+            if (top + pRect.height > window.innerHeight) top = rect.top - pRect.height - 6;
+            palette.style.position = 'fixed';
+            palette.style.top = top + 'px';
+            palette.style.left = left + 'px';
+            palette.style.zIndex = '10001';
+        }, 0);
+
+        const close = (e) => {
+            if (!palette.contains(e.target)) {
+                palette.remove();
+                document.removeEventListener('mousedown', close);
+            }
+        };
+        setTimeout(() => document.addEventListener('mousedown', close), 10);
+    }
+
     // ─── Re-bind tables on content load ───────────────────────────────────────
     _bindAllTableEvents() {
-        this.editorArea.querySelectorAll('table[data-pro-table]').forEach(t => this._bindTableEvents(t));
+        this.editorArea.querySelectorAll('table').forEach(table => {
+            if (!table.classList.contains('pro-editor-table')) {
+                table.classList.add('pro-editor-table');
+            }
+            if (!table.hasAttribute('data-pro-table')) {
+                table.setAttribute('data-pro-table', '1');
+            }
+            
+            // Ensure all cells are contenteditable
+            table.querySelectorAll('td, th').forEach(cell => {
+                if (cell.getAttribute('contenteditable') !== 'true') {
+                    cell.setAttribute('contenteditable', 'true');
+                }
+            });
+
+            // Ensure table is wrapped in .pro-table-wrapper
+            const parent = table.parentElement;
+            if (!parent || !parent.classList.contains('pro-table-wrapper')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'pro-table-wrapper';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            }
+
+            this._bindTableEvents(table);
+        });
     }
 
     // ─── Image Selection & Resize ──────────────────────────────────────────────
@@ -1870,6 +2202,366 @@ class ProfessionalHTMLEditor {
 
     _removeImageToolbar() {
         document.querySelector('[data-image-toolbar]')?.remove();
+    }
+
+    _initResize() {
+        const handle = this.container.querySelector('.pro-editor-resize-handle');
+        if (!handle) return;
+
+        let startY = 0;
+        let startHeightVal = 0;
+        let startHeightTxt = 0;
+
+        const onMouseMove = (e) => {
+            const dy = e.clientY - startY;
+            const newHeightVal = Math.max(150, startHeightVal + dy);
+            const newHeightTxt = Math.max(150, startHeightTxt + dy);
+            
+            this.editorArea.style.height = newHeightVal + 'px';
+            this.textArea.style.height = newHeightTxt + 'px';
+        };
+
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            this.container.classList.remove('is-resizing');
+        };
+
+        handle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startY = e.clientY;
+            startHeightVal = this.editorArea.offsetHeight;
+            startHeightTxt = this.textArea.offsetHeight;
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            this.container.classList.add('is-resizing');
+        });
+    }
+
+    _initSelectionPopover() {
+        let selectionTimeout = null;
+
+        const handleSelection = () => {
+            if (selectionTimeout) clearTimeout(selectionTimeout);
+            
+            selectionTimeout = setTimeout(() => {
+                const selection = window.getSelection();
+                if (!selection || selection.isCollapsed) {
+                    this._hideSelectionPopover();
+                    return;
+                }
+
+                // Check text length (at least 2 chars)
+                const text = selection.toString().trim();
+                if (text.length < 2) {
+                    this._hideSelectionPopover();
+                    return;
+                }
+
+                // Check if selection resides inside editorArea
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    if (this.editorArea.contains(range.commonAncestorContainer)) {
+                        this._showSelectionPopover(range);
+                        return;
+                    }
+                }
+                
+                this._hideSelectionPopover();
+            }, 150);
+        };
+
+        // Listeners for selection popover triggers
+        this.editorArea.addEventListener('mouseup', handleSelection);
+        this.editorArea.addEventListener('keyup', handleSelection);
+
+        // Hide popover if click elsewhere
+        document.addEventListener('mousedown', (e) => {
+            const popover = document.querySelector('.pro-selection-popover');
+            if (popover && !popover.contains(e.target) && !this.editorArea.contains(e.target)) {
+                this._hideSelectionPopover();
+            }
+        });
+    }
+
+    _showSelectionPopover(range) {
+        // Remove existing popover if any
+        this._hideSelectionPopover();
+
+        const popover = document.createElement('div');
+        popover.className = 'pro-selection-popover';
+        popover.setAttribute('data-selection-popover', '1');
+
+        // Create buttons
+        const items = [
+            { icon: ProfessionalHTMLEditor.ICONS.bold, title: 'غامق (Ctrl+B)', action: 'bold', toggle: true },
+            { icon: ProfessionalHTMLEditor.ICONS.italic, title: 'مائل (Ctrl+I)', action: 'italic', toggle: true },
+            { icon: ProfessionalHTMLEditor.ICONS.link, title: 'رابط (Ctrl+K)', action: 'link' },
+            { type: 'sep' },
+            { icon: ProfessionalHTMLEditor.ICONS.h2, title: 'عنوان 2', action: 'formatBlock', value: 'h2', toggle: true },
+            { icon: ProfessionalHTMLEditor.ICONS.h3, title: 'عنوان 3', action: 'formatBlock', value: 'h3', toggle: true }
+        ];
+
+        const stateMap = {
+            'bold': () => document.queryCommandState('bold'),
+            'italic': () => document.queryCommandState('italic')
+        };
+        const blockValue = document.queryCommandValue('formatBlock').toLowerCase();
+
+        items.forEach(item => {
+            if (item.type === 'sep') {
+                const sep = document.createElement('div');
+                sep.className = 'pro-selection-popover-sep';
+                popover.appendChild(sep);
+            } else {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'pro-selection-popover-btn';
+                btn.title = item.title;
+                btn.innerHTML = item.icon;
+
+                // Active state
+                let active = false;
+                if (item.action === 'formatBlock' && item.value) {
+                    active = blockValue === item.value;
+                } else if (stateMap[item.action]) {
+                    active = stateMap[item.action]();
+                }
+                if (active) btn.classList.add('is-active');
+
+                btn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Restore selection range
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+
+                    if (item.action === 'link') {
+                        this._savedRange = range.cloneRange();
+                        this._hideSelectionPopover();
+                        this._insertLink();
+                    } else if (item.action === 'formatBlock') {
+                        this._toggleBlock(item.value, btn);
+                        this._hideSelectionPopover();
+                    } else {
+                        this._saveState(item.title);
+                        document.execCommand(item.action, false, item.value || null);
+                        this._updateToolbarState();
+                        // Re-trigger handleSelection to update popover button state
+                        setTimeout(() => {
+                            const newSel = window.getSelection();
+                            if (newSel && newSel.rangeCount > 0) {
+                                this._showSelectionPopover(newSel.getRangeAt(0));
+                            }
+                        }, 50);
+                    }
+                    this._syncToTextarea();
+                });
+
+                popover.appendChild(btn);
+            }
+        });
+
+        document.body.appendChild(popover);
+        this._positionSelectionPopover(popover, range);
+
+        // Reposition on scroll/resize
+        const reposition = () => {
+            if (!document.body.contains(popover)) {
+                window.removeEventListener('scroll', reposition, true);
+                window.removeEventListener('resize', reposition);
+                return;
+            }
+            this._positionSelectionPopover(popover, range);
+        };
+        window.addEventListener('scroll', reposition, true);
+        window.addEventListener('resize', reposition);
+    }
+
+    _positionSelectionPopover(popover, range) {
+        const rect = range.getBoundingClientRect();
+        const pRect = popover.getBoundingClientRect();
+
+        // Calculate bottom of sticky toolbar if it exists and is visible
+        let stickyToolbarBottom = 0;
+        if (this.toolbar) {
+            const tRect = this.toolbar.getBoundingClientRect();
+            stickyToolbarBottom = tRect.bottom;
+        }
+
+        // Try putting popover above the selection first
+        let top = rect.top + window.scrollY - pRect.height - 8;
+        
+        // Flip below the selection if it collides with viewport top or sticky toolbar
+        if (rect.top - pRect.height - 8 < Math.max(8, stickyToolbarBottom)) {
+            top = rect.bottom + window.scrollY + 8;
+        }
+
+        let left = rect.left + window.scrollX + (rect.width - pRect.width) / 2;
+
+        // Horizontally constrain
+        if (left < 8) left = 8;
+        if (left + pRect.width > window.innerWidth) left = window.innerWidth - pRect.width - 8;
+
+        popover.style.position = 'absolute';
+        popover.style.top = top + 'px';
+        popover.style.left = left + 'px';
+        popover.style.zIndex = '10000';
+    }
+
+    _hideSelectionPopover() {
+        document.querySelector('[data-selection-popover]')?.remove();
+    }
+
+    _showIconTooltip(iconWrapper) {
+        // Remove existing icon tooltip
+        this._removeIconTooltip();
+
+        const svg = iconWrapper.querySelector('svg');
+        if (!svg) return;
+
+        // Get current size
+        const currentSize = svg.getAttribute('width') || '24';
+        
+        // Get current color (check stroke, style color, etc.)
+        let currentColor = svg.getAttribute('stroke') || svg.style.color || '#0B2D4D';
+        // Normalize hex color to uppercase 7 chars if needed
+        if (currentColor.startsWith('#') && currentColor.length === 4) {
+            currentColor = '#' + currentColor[1] + currentColor[1] + currentColor[2] + currentColor[2] + currentColor[3] + currentColor[3];
+        }
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'pro-icon-tooltip';
+        tooltip.setAttribute('data-icon-tooltip', '1');
+
+        tooltip.innerHTML = `
+            <div class="pro-icon-tooltip-group">
+                <span class="pro-icon-tooltip-label">الحجم:</span>
+                <select class="pro-icon-tooltip-select">
+                    <option value="16" ${currentSize === '16' ? 'selected' : ''}>16px</option>
+                    <option value="20" ${currentSize === '20' ? 'selected' : ''}>20px</option>
+                    <option value="24" ${currentSize === '24' ? 'selected' : ''}>24px</option>
+                    <option value="32" ${currentSize === '32' ? 'selected' : ''}>32px</option>
+                    <option value="48" ${currentSize === '48' ? 'selected' : ''}>48px</option>
+                    <option value="64" ${currentSize === '64' ? 'selected' : ''}>64px</option>
+                </select>
+            </div>
+            <div class="pro-icon-tooltip-group">
+                <span class="pro-icon-tooltip-label">اللون:</span>
+                <input type="color" class="pro-icon-tooltip-color" value="${currentColor}" />
+            </div>
+            <div class="pro-icon-tooltip-sep"></div>
+            <button type="button" class="pro-icon-tooltip-btn is-danger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                حذف الأيقونة
+            </button>
+        `;
+
+        // Event listener: Size change
+        tooltip.querySelector('.pro-icon-tooltip-select').addEventListener('change', (e) => {
+            const newSize = e.target.value;
+            this._saveState('تعديل حجم الأيقونة');
+            svg.setAttribute('width', newSize);
+            svg.setAttribute('height', newSize);
+            this._syncToTextarea();
+            this._positionIconTooltip(tooltip, iconWrapper);
+        });
+
+        // Event listener: Color change
+        tooltip.querySelector('.pro-icon-tooltip-color').addEventListener('input', (e) => {
+            const newColor = e.target.value;
+            this._saveState('تعديل لون الأيقونة');
+            
+            // Set style color on wrapper
+            iconWrapper.style.color = newColor;
+            
+            // Set SVG stroke & fill properties as color
+            svg.style.color = newColor;
+            if (svg.getAttribute('stroke') && svg.getAttribute('stroke') !== 'none') {
+                svg.setAttribute('stroke', newColor);
+            }
+            if (svg.getAttribute('fill') && svg.getAttribute('fill') !== 'none') {
+                svg.setAttribute('fill', newColor);
+            }
+            
+            // Check inner paths/shapes as well
+            svg.querySelectorAll('path, circle, rect, polygon, polyline, ellipse').forEach(el => {
+                if (el.getAttribute('stroke') && el.getAttribute('stroke') !== 'none') {
+                    el.setAttribute('stroke', newColor);
+                }
+                if (el.getAttribute('fill') && el.getAttribute('fill') !== 'none') {
+                    el.setAttribute('fill', newColor);
+                }
+            });
+
+            this._syncToTextarea();
+        });
+
+        // Event listener: Delete button
+        tooltip.querySelector('.pro-icon-tooltip-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            this._saveState('حذف الأيقونة');
+            iconWrapper.remove();
+            this._removeIconTooltip();
+            this._syncToTextarea();
+        });
+
+        document.body.appendChild(tooltip);
+        this._positionIconTooltip(tooltip, iconWrapper);
+
+        // Reposition on scroll/resize
+        const reposition = () => {
+            if (!document.body.contains(tooltip)) {
+                window.removeEventListener('scroll', reposition, true);
+                window.removeEventListener('resize', reposition);
+                return;
+            }
+            this._positionIconTooltip(tooltip, iconWrapper);
+        };
+        window.addEventListener('scroll', reposition, true);
+        window.addEventListener('resize', reposition);
+
+        // Close on outside click
+        const closeHandler = (e) => {
+            if (!document.body.contains(tooltip)) {
+                document.removeEventListener('mousedown', closeHandler);
+                return;
+            }
+            if (tooltip.contains(e.target) || iconWrapper.contains(e.target)) return;
+            this._removeIconTooltip();
+            document.removeEventListener('mousedown', closeHandler);
+        };
+        setTimeout(() => document.addEventListener('mousedown', closeHandler), 10);
+    }
+
+    _positionIconTooltip(tooltip, iconWrapper) {
+        const rect = iconWrapper.getBoundingClientRect();
+        const tRect = tooltip.getBoundingClientRect();
+
+        let top = rect.bottom + window.scrollY + 8;
+        
+        // Flip above if it collides with viewport bottom
+        if (rect.bottom + tRect.height + 8 > window.innerHeight) {
+            top = rect.top + window.scrollY - tRect.height - 8;
+        }
+
+        let left = rect.left + window.scrollX + (rect.width - tRect.width) / 2;
+
+        // Horizontally constrain
+        if (left < 8) left = 8;
+        if (left + tRect.width > window.innerWidth) left = window.innerWidth - tRect.width - 8;
+
+        tooltip.style.position = 'absolute';
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = left + 'px';
+        tooltip.style.zIndex = '10000';
+    }
+
+    _removeIconTooltip() {
+        document.querySelector('[data-icon-tooltip]')?.remove();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -2085,6 +2777,7 @@ class ProfessionalHTMLEditor {
         }
 
         this._syncToTextarea();
+        this._bindAllTableEvents();
     }
 
     // ─── HTML Sanitizer (ذكي — ينظف شوائب اللصق من المصادر الخارجية) ────────
@@ -2386,9 +3079,11 @@ class ProfessionalHTMLEditor {
         // Sync content when switching
         if (tabName === 'text') {
             this._syncToTextarea();
+            this.textArea.style.height = this.editorArea.offsetHeight + 'px';
             this.textArea.focus();
         } else {
             this._syncFromTextarea();
+            this.editorArea.style.height = this.textArea.offsetHeight + 'px';
             this.editorArea.focus();
         }
 
@@ -2728,7 +3423,10 @@ class ProfessionalHTMLEditor {
 
             // إظهار حجم الخط ولون الخط
             if (fontSizeSelect) fontSizeSelect.parentElement.style.display = '';
-            if (fontColorBtn) fontColorBtn.parentElement.style.display = '';
+            if (fontColorBtn) {
+                fontColorBtn.style.display = '';
+                fontColorBtn.parentElement.style.display = '';
+            }
 
             // إخفاء الفواصل الزائدة
             allSeps.forEach(sep => {
@@ -2745,7 +3443,10 @@ class ProfessionalHTMLEditor {
             allSeps.forEach(sep => sep.style.display = '');
             if (fontSizeSelect) fontSizeSelect.parentElement.style.display = '';
             if (lineHeightSelect) lineHeightSelect.parentElement.style.display = '';
-            if (fontColorBtn) fontColorBtn.parentElement.style.display = '';
+            if (fontColorBtn) {
+                fontColorBtn.style.display = '';
+                fontColorBtn.parentElement.style.display = '';
+            }
         }
     }
 

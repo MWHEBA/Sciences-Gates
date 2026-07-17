@@ -21,6 +21,12 @@
 <script type="application/ld+json">
 {% breadcrumb_schema %}
 </script>
+<!-- FAQ Schema -->
+{% if faqs %}
+<script type="application/ld+json">
+{% faq_schema faqs %}
+</script>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -52,13 +58,14 @@
 
         <!-- Identity and Title Row -->
         <div class="detail-header-content">
-            <h1 class="detail-header-title">
-                {{ article.title }}
-            </h1>
-            {% include 'components/breadcrumb.html' %}
-            <p class="detail-header-subtitle">
-                بواسطة {{ article.author|default:"بوابات العلوم" }} • {{ article.publish_date|date:"d F Y" }}
-            </p>
+            <div class="detail-header-main-row">
+                <div class="detail-header-info">
+                    <h1 class="detail-header-title">
+                        {{ article.title }}
+                    </h1>
+                    {% include 'components/breadcrumb.html' %}
+                </div>
+            </div>
         </div>
     </div>
 
@@ -167,6 +174,50 @@
             </section>
             {% endif %}
 
+            <!-- FAQ Section -->
+            {% if faqs %}
+            <section class="detail-section">
+                <div class="detail-section-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <h2 class="detail-section-title">
+                        الأسئلة الشائعة
+                        <span class="detail-section-hint" style="font-size: 0.85rem; font-weight: normal; color: var(--text-light); margin-right: 8px;">(اضغط على السؤال لعرض الإجابة)</span>
+                    </h2>
+                </div>
+
+                <div class="detail-faq-accordion" x-data="{ openFaq: null }">
+                    {% for faq in faqs %}
+                    <div class="detail-faq-item">
+                        <!-- FAQ Question (Accordion Toggle) -->
+                        <button class="detail-faq-header" @click="
+                                        openFaq = openFaq === {{ forloop.counter0 }} ? null : {{ forloop.counter0 }};
+                                        if (openFaq === {{ forloop.counter0 }}) { setTimeout(() => { $el.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, 300) }
+                                    " :aria-expanded="openFaq === {{ forloop.counter0 }}"
+                            :class="{ 'detail-faq-header--open': openFaq === {{ forloop.counter0 }} }">
+                            <span class="detail-faq-question">{{ faq.question }}</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" aria-hidden="true" class="detail-faq-icon">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+
+                        <!-- FAQ Answer (Accordion Content) -->
+                        <div class="detail-faq-content" x-show="openFaq === {{ forloop.counter0 }}" x-collapse>
+                            <div class="detail-faq-answer">
+                                {{ faq.answer|safe }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
             <!-- Tags Section -->
             {% if article.tags.all %}
             <section class="detail-section">
@@ -217,14 +268,14 @@
                     {% endif %}
                     <div class="detail-sidebar-item">
                         <dt class="detail-sidebar-label">تاريخ النشر:</dt>
-                        <dd class="detail-sidebar-value">{{ article.publish_date|date:"d F Y" }}</dd>
+                        <dd class="detail-sidebar-value date">
+                            <time datetime="{{ article.publish_date|date:'Y-m-d' }}">{{ article.publish_date|date:"d F Y" }}</time>
+                        </dd>
                     </div>
-                    {% if article.author %}
                     <div class="detail-sidebar-item">
                         <dt class="detail-sidebar-label">الكاتب:</dt>
-                        <dd class="detail-sidebar-value">{{ article.author }}</dd>
+                        <dd class="detail-sidebar-value author">{{ article.author_display_name }}</dd>
                     </div>
-                    {% endif %}
                 </dl>
             </div>
 

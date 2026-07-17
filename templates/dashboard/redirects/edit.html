@@ -67,4 +67,9 @@
         </div>
     </div>
 </div>
+
+{% if form.instance.pk %}
+    {% url 'dashboard:redirect_delete' form.instance.pk as redirect_delete_url %}
+    {% include "dashboard/components/danger_zone.html" with delete_url=redirect_delete_url item_name=form.instance.old_url %}
+{% endif %}
 {% endblock %}

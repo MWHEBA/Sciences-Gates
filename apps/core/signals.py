@@ -166,14 +166,46 @@ def sync_media_file(instance, field_name, alt_field_name, source_type):
 
 
 def delete_entity_media_files(sender, instance, **kwargs):
-    """Delete corresponding MediaFile entries when model instance is deleted."""
+    """Delete corresponding MediaFile entries, physical files, and related attachments when model instance is deleted."""
     from apps.core.models import MediaFile
     from django.contrib.contenttypes.models import ContentType
+    import os
     
-    MediaFile.objects.filter(
-        content_type=ContentType.objects.get_for_model(instance),
-        object_id=instance.pk
-    ).delete()
+    # 1. Clean up related attachments (if any) to delete their physical files
+    if hasattr(instance, 'attachments'):
+        try:
+            for attachment in instance.attachments.all():
+                if attachment.file:
+                    try:
+                        if os.path.exists(attachment.file.path):
+                            os.remove(attachment.file.path)
+                    except Exception as e:
+                        logger.warning(f"Error deleting physical file for attachment {attachment.pk}: {e}")
+        except Exception as e:
+            logger.warning(f"Error accessing attachments for {instance}: {e}")
+
+    # 2. Clean up associated MediaFiles (including logos, main images, and editor uploads) and their physical files
+    try:
+        content_type = ContentType.objects.get_for_model(instance)
+        media_files = MediaFile.objects.filter(
+            content_type=content_type,
+            object_id=instance.pk
+        )
+        for media in media_files:
+            try:
+                if media.file:
+                    # Delete main file on disk
+                    if os.path.exists(media.file.path):
+                        os.remove(media.file.path)
+                    # Delete WebP version of the image if it exists
+                    webp_path = os.path.splitext(media.file.path)[0] + '.webp'
+                    if os.path.exists(webp_path):
+                        os.remove(webp_path)
+            except Exception as e:
+                logger.warning(f"Error deleting physical file for MediaFile {media.pk}: {e}")
+        media_files.delete()
+    except Exception as e:
+        logger.warning(f"Error cleaning up MediaFiles for {instance}: {e}")
 
 
 def sync_university_media(sender, instance, **kwargs):
@@ -212,7 +244,7 @@ def invalidate_mega_menu_cache(sender, instance, **kwargs):
 
 def connect_media_signals():
     """Connect all media synchronization signals and cache invalidations."""
-    from django.db.models.signals import post_save, post_delete
+    from django.db.models.signals import post_save, post_delete, pre_delete
     from apps.universities.models import University
     from apps.institutes.models import Institute
     from apps.majors.models import Major
@@ -220,16 +252,16 @@ def connect_media_signals():
     from apps.articles.models import Article
 
     post_save.connect(sync_university_media, sender=University)
-    post_delete.connect(delete_entity_media_files, sender=University)
+    pre_delete.connect(delete_entity_media_files, sender=University)
 
     post_save.connect(sync_institute_media, sender=Institute)
-    post_delete.connect(delete_entity_media_files, sender=Institute)
+    pre_delete.connect(delete_entity_media_files, sender=Institute)
 
     post_save.connect(sync_major_media, sender=Major)
-    post_delete.connect(delete_entity_media_files, sender=Major)
+    pre_delete.connect(delete_entity_media_files, sender=Major)
 
     post_save.connect(sync_article_media, sender=Article)
-    post_delete.connect(delete_entity_media_files, sender=Article)
+    pre_delete.connect(delete_entity_media_files, sender=Article)
 
     # Invalidate Mega Menu Cache
     post_save.connect(invalidate_mega_menu_cache, sender=University)

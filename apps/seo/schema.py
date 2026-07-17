@@ -94,11 +94,16 @@ class SchemaGenerator:
                 "height": 630
             }
         
-        # Add author information if available
+        # Add author information
         if article.author:
             schema["author"] = {
                 "@type": "Person",
-                "name": article.author.get_full_name() or article.author.username
+                "name": article.author_display_name
+            }
+        else:
+            schema["author"] = {
+                "@type": "Organization",
+                "name": article.author_display_name
             }
         
         # Add publisher information

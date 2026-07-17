@@ -42,3 +42,25 @@ Run `python manage.py collectstatic --noinput` to collect all static files into 
 
 ## SSL Certificate
 Ensure Let's Encrypt or another SSL Certificate is generated and activated on cPanel.
+
+## Updating Majors Database (Best & Cheap Universities)
+To safely populate the missing `best_universities` and `cheap_universities` relationships in production:
+
+1. **Backup MySQL Database (Crucial)**:
+   - Log in to your cPanel dashboard.
+   - Go to **phpMyAdmin** or **Backup Wizard**.
+   - Select your production database and click **Export** to save a `.sql` backup file locally before making any changes.
+
+2. **Deploy the custom command**:
+   - Ensure the new command file [populate_missing_universities.py](file:///c:/Users/MohYousif/Desktop/Sciences%20Gates/apps/majors/management/commands/populate_missing_universities.py) is uploaded to the production directory.
+
+3. **Execute the update**:
+   - Run the simulation first on the production server (via SSH or the cPanel terminal/cron utility) to verify the records:
+     ```bash
+     python manage.py populate_missing_universities --dry-run
+     ```
+   - If the output completes successfully, run the actual commit to update the production database:
+     ```bash
+     python manage.py populate_missing_universities --commit
+     ```
+

@@ -401,7 +401,9 @@ class TestArticleSchemaGenerator:
         
         schema = SchemaGenerator.generate_article_schema(article, self.request)
         
-        assert 'author' not in schema
+        assert 'author' in schema
+        assert schema['author']['@type'] == 'Organization'
+        assert schema['author']['name'] == 'بوابات العلوم'
 
 
 @pytest.mark.django_db

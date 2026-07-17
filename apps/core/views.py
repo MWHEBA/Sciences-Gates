@@ -50,15 +50,15 @@ class HomeView(TemplateView):
             'related_articles'
         )[:6]
         
-        # Fetch featured institutes (published only)
+        # Fetch featured institutes (published only) - Limited to 4 items per user request
         institutes = Institute.objects.filter(
             publish_status=PublishStatus.PUBLISHED
         ).prefetch_related(
             'courses',
             'related_articles'
-        )[:6]
+        )[:4]
         
-        # Fetch featured majors (published only)
+        # Fetch featured majors (published only) - Limited to 4 items per user request
         majors = Major.objects.filter(
             publish_status=PublishStatus.PUBLISHED
         ).prefetch_related(
@@ -68,7 +68,7 @@ class HomeView(TemplateView):
             'subjects_tables',
             'salary_tables',
             'countries_tables'
-        )[:6]
+        )[:4]
         
         # Fetch recent articles (published only)
         articles = Article.objects.filter(

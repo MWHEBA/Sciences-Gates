@@ -234,6 +234,166 @@ class ContentMapper:
         elif content_type == 'major':
             form_initial['major_category'] = wp_data.get('major_category', 'science')
             confidence['major_category'] = 'high'
+        elif content_type == 'article':
+            # Map title and content for articles
+            form_initial['title'] = form_initial.get('name', '')
+            confidence['title'] = confidence.get('name', 'high')
+            
+            # WP maps article content into 'description' field under university/institute mapping
+            description_val = form_initial.get('description', '')
+            content_val = form_initial.get('content', '')
+            
+            raw_content = content_val or description_val
+            
+            if raw_content:
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(raw_content, 'html.parser')
+                
+                # 1. Clean boilerplate call-to-action/social links at the end
+                has_boilerplate = 'إذا كنت مهتم' in raw_content or 'تابعونا' in raw_content
+                if has_boilerplate:
+                    block_tags = {'p', 'div', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'section', 'article', 'pre', 'blockquote', 'table', 'tr', 'td', 'ul', 'ol'}
+                    
+                    target_node = None
+                    for element in soup.find_all(string=re.compile(r"(إذا كنت مهتم|تابعونا)")):
+                        curr = element
+                        while curr and curr.parent:
+                            if curr.name in block_tags or curr.parent.name is None:
+                                break
+                            curr = curr.parent
+                        target_node = curr
+                        if target_node:
+                            break
+                            
+                    if target_node:
+                        siblings_to_remove = []
+                        curr = target_node
+                        while curr:
+                            siblings_to_remove.append(curr)
+                            curr = curr.next_sibling
+                            
+                        for sibling in siblings_to_remove:
+                            if hasattr(sibling, 'decompose'):
+                                sibling.decompose()
+                                
+                # 2. Clean empty lines / empty paragraphs
+                for tag in soup.find_all(['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+                    text = tag.get_text(strip=True)
+                    text = text.replace('\xa0', '').replace('&nbsp;', '').strip()
+                    if not text and not tag.find(['img', 'iframe', 'table', 'ul', 'ol', 'li']):
+                        tag.decompose()
+                        
+                # 3. Standardize tables: convert first row of any table to proper thead/th if it doesn't already have a header
+                for table in soup.find_all('table'):
+                    # Skip if the table already has a thead or th elements
+                    if table.find('thead') or table.find('th'):
+                        continue
+                        
+                    rows = table.find_all('tr')
+                    if rows:
+                        first_row = rows[0]
+                        tds = first_row.find_all('td')
+                        if tds:
+                            thead = soup.new_tag('thead')
+                            table.insert(0, thead)
+                            thead.append(first_row)
+                            for td in tds:
+                                th = soup.new_tag('th')
+                                for child in list(td.contents):
+                                    th.append(child)
+                                td.replace_with(th)
+                                
+                # 4. Format "البرامج المعتمدة" column as bullets if separated by commas
+                for table in soup.find_all('table'):
+                    headers = table.find_all('th')
+                    prog_col_idx = -1
+                    for idx, th in enumerate(headers):
+                        th_text = th.get_text().strip()
+                        if "البرامج" in th_text:
+                            prog_col_idx = idx
+                            break
+                            
+                    if prog_col_idx != -1:
+                        rows = table.find_all('tr')
+                        for row in rows[1:]:
+                            cells = row.find_all('td')
+                            if len(cells) > prog_col_idx:
+                                cell = cells[prog_col_idx]
+                                text = cell.get_text().strip()
+                                items = [item.strip() for item in re.split(r'[،,]', text) if item.strip()]
+                                if len(items) > 1:
+                                    ul = soup.new_tag('ul')
+                                    for item in items:
+                                        li = soup.new_tag('li')
+                                        li.string = item
+                                        ul.append(li)
+                                    cell.clear()
+                                    cell.append(ul)
+                                    
+                # 5. Strip inline font-size and font-family styles from all elements
+                for el in soup.find_all(style=True):
+                    style_str = el['style']
+                    props = [p.strip() for p in style_str.split(';') if p.strip()]
+                    new_props = []
+                    for prop in props:
+                        if ':' in prop:
+                            name, val = prop.split(':', 1)
+                            if name.strip().lower() not in ('font-size', 'font-family'):
+                                new_props.append(prop)
+                    if new_props:
+                        el['style'] = '; '.join(new_props) + ';'
+                    else:
+                        del el['style']
+                        
+                # 6. Replace #0000ff (pure blue) with var(--primary) in inline styles and font tags
+                for el in soup.find_all(style=True):
+                    style_str = el['style']
+                    new_style = re.sub(r'#0000ff', 'var(--primary)', style_str, flags=re.IGNORECASE)
+                    new_style = re.sub(r'rgb\(\s*0\s*,\s*0\s*,\s*255\s*\)', 'var(--primary)', new_style, flags=re.IGNORECASE)
+                    if new_style != style_str:
+                        el['style'] = new_style
+
+                for font in soup.find_all('font', color=True):
+                    if font['color'].strip().lower() in ('#0000ff', 'blue'):
+                        font['style'] = font.get('style', '') + '; color: var(--primary);'
+                        del font['color']
+                        
+                raw_content = str(soup)
+            
+            form_initial['content'] = raw_content
+            confidence['content'] = confidence.get('content', confidence.get('description', 'medium'))
+
+            # Resolve Category ForeignKey
+            wp_categories = wp_data.get('categories', [])
+            if wp_categories:
+                from apps.articles.models import Category
+                matched_cat = None
+                for cat_name in wp_categories:
+                    cat_name = cat_name.strip()
+                    if cat_name:
+                        matched_cat = Category.objects.filter(name__iexact=cat_name).first()
+                        if matched_cat:
+                            break
+                
+                if not matched_cat and wp_categories:
+                    first_cat_name = wp_categories[0].strip()
+                    if first_cat_name:
+                        cat_slug = slugify(first_cat_name, allow_unicode=True)
+                        if not cat_slug:
+                            cat_slug = "category"
+                        
+                        unique_slug = cat_slug
+                        counter = 1
+                        while Category.objects.filter(slug=unique_slug).exists():
+                            unique_slug = f"{cat_slug}-{counter}"
+                            counter += 1
+                        
+                        matched_cat = Category.objects.create(name=first_cat_name, slug=unique_slug)
+                
+                if matched_cat:
+                    form_initial['category'] = matched_cat.id
+                    confidence['category'] = 'high'
+
 
         # 3. Clean and Truncate SEO Fields
         seo_data = wp_data.get('seo', {})
@@ -502,6 +662,7 @@ class ContentMapper:
             'content_type': content_type,
             'city_raw': city_raw,
             'redirect_url': redirect_url,
+            'created_at': wp_data.get('created_at'),
         }
 
     def _map_city(self, city_raw: str) -> tuple:

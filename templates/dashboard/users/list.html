@@ -7,72 +7,11 @@
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Header with Create Button -->
-    <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-semibold text-gray-900">المستخدمون</h1>
-        <a href="{% url 'dashboard:user_create' %}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-normal text-[14px] leading-none py-2 px-4 rounded-lg transition duration-200">
-            <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
-            إضافة مستخدم جديد
-        </a>
-    </div>
+    <!-- Topbar Unified Component -->
+    {% include "dashboard/components/topbar.html" with page_title=page_title page_description=page_description action_buttons=action_buttons %}
 
-    <!-- Search Form -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <form method="get" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Search Input -->
-                <div>
-                    <label for="search" class="block text-sm font-semibold text-gray-700 mb-2">
-                        البحث
-                    </label>
-                    <input 
-                        type="text" 
-                        id="search" 
-                        name="search" 
-                        value="{{ request.GET.search }}"
-                        placeholder="ابحث عن اسم مستخدم أو بريد إلكتروني..."
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                </div>
-
-                <!-- Role Filter -->
-                <div>
-                    <label for="role" class="block text-sm font-semibold text-gray-700 mb-2">
-                        الدور
-                    </label>
-                    <select 
-                        id="role" 
-                        name="role"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                        <option value="">جميع الأدوار</option>
-                        <option value="super_admin" {% if request.GET.role == 'super_admin' %}selected{% endif %}>مسؤول عام</option>
-                        <option value="content_admin" {% if request.GET.role == 'content_admin' %}selected{% endif %}>مسؤول محتوى</option>
-                        <option value="seo_admin" {% if request.GET.role == 'seo_admin' %}selected{% endif %}>مسؤول SEO</option>
-                    </select>
-                </div>
-
-                <!-- Search Button -->
-                <div class="flex items-end">
-                    <button 
-                        type="submit" 
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-                    >
-                        بحث
-                    </button>
-                </div>
-            </div>
-
-            <!-- Clear Filters Link -->
-            {% if request.GET.search or request.GET.role %}
-            <div class="text-right">
-                <a href="{% url 'dashboard:user_list' %}" class="text-blue-600 hover:text-blue-700 text-sm font-normal">
-                    مسح الفلاتر
-                </a>
-            </div>
-            {% endif %}
-        </form>
-    </div>
+    <!-- Filter Bar Unified Component -->
+    {% include "dashboard/components/filter_bar.html" with search_placeholder=search_placeholder filters=filters search_value=search_value base_url=base_url %}
 
     <!-- Users Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -90,8 +29,10 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
                 {% for user in users %}
-                <tr class="hover:bg-gray-50 transition duration-150 cursor-pointer"
-                    data-row-url="{% url 'dashboard:user_edit' user.pk %}">
+                <tr class="hover:bg-gray-50 transition duration-150 cursor-pointer user-row"
+                    data-user-id="{{ user.pk }}"
+                    data-edit-url="{% url 'dashboard:user_edit' user.pk %}"
+                    data-delete-url="{% url 'dashboard:user_delete' user.pk %}">
                     <td class="px-6 py-4 text-sm text-gray-900">{{ user.username }}</td>
                     <td class="px-6 py-4 text-sm text-gray-600">{{ user.email }}</td>
                     <td class="px-6 py-4 text-sm text-gray-900">
@@ -117,13 +58,19 @@
                     <td class="px-6 py-4 text-sm text-gray-600">
                         {{ user.date_joined|date:"d/m/Y" }}
                     </td>
-                    <td class="px-6 py-4 text-sm space-x-2">
-                        <a href="{% url 'dashboard:user_edit' user.pk %}" class="text-blue-600 hover:text-blue-900 font-normal">
-                            تعديل
-                        </a>
-                        <a href="{% url 'dashboard:user_delete' user.pk %}" class="text-red-600 hover:text-red-900 font-normal">
-                            حذف
-                        </a>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <button type="button" class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors duration-200 cursor-pointer edit-btn bg-transparent border-none" data-edit-url="{% url 'dashboard:user_edit' user.pk %}" aria-label="تعديل">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                            <button type="button" class="p-2 rounded-lg text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer delete-btn bg-transparent border-none" data-delete-url="{% url 'dashboard:user_delete' user.pk %}" aria-label="حذف">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -131,15 +78,406 @@
         </table>
 
         <!-- Pagination -->
-        {% include "dashboard/components/pagination.html" with page_obj=page_obj %}
+        {% include "dashboard/components/pagination.html" with page_obj=page_obj query_params=query_params %}
         {% else %}
-        <div class="px-6 py-12 text-center">
-            <p class="text-gray-500 text-lg">لا توجد مستخدمون حالياً</p>
-            <a href="{% url 'dashboard:user_create' %}" class="mt-4 inline-block text-blue-600 hover:text-blue-900 font-normal">
-                إنشاء مستخدم جديد
-            </a>
-        </div>
+        {% include "dashboard/components/empty_state.html" with icon_svg=empty_state_icon heading="لا توجد مستخدمين" description="لم نجد مستخدمين يطابقون معايير البحث أو التصفية الحالية." action_url=base_url action_label="مسح الفلاتر" %}
         {% endif %}
     </div>
 </div>
+
+<!-- Create User Modal -->
+<div id="create-user-modal" style="display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.5); padding: 16px;">
+    <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); width: 100%; max-width: 600px; overflow: hidden; display: flex; flex-direction: column;" dir="rtl">
+        <div class="flex items-center justify-between p-4" style="border-bottom: 1px solid var(--border);">
+            <h3 class="text-lg font-semibold" style="color: var(--text-primary);">إضافة مستخدم جديد</h3>
+            <button type="button" onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer" style="background: transparent; border: none; font-size: 24px; padding: 0; line-height: 1;">&times;</button>
+        </div>
+        <form id="create-user-form" method="post" action="{% url 'dashboard:user_create' %}">
+            {% csrf_token %}
+            <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                <!-- Section 1: Basic Info -->
+                <div class="space-y-4">
+                    <h4 class="text-sm font-semibold pb-2 border-b border-gray-100" style="color: var(--primary);">البيانات الأساسية</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="id_create-username" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">اسم المستخدم <span class="text-red-500">*</span></label>
+                            {{ create_form.username }}
+                            <span id="create-error-username" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label for="id_create-email" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">البريد الإلكتروني <span class="text-red-500">*</span></label>
+                            {{ create_form.email }}
+                            <span id="create-error-email" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label for="id_create-first_name" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">الاسم الأول</label>
+                            {{ create_form.first_name }}
+                            <span id="create-error-first_name" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label for="id_create-last_name" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">الاسم الأخير</label>
+                            {{ create_form.last_name }}
+                            <span id="create-error-last_name" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                        <div class="col-span-2">
+                            <label for="id_create-role" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">الدور <span class="text-red-500">*</span></label>
+                            {{ create_form.role }}
+                            <span id="create-error-role" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Password -->
+                <div class="space-y-4 pt-4 border-t" style="border-color: var(--border);">
+                    <h4 class="text-sm font-semibold pb-2 border-b border-gray-100" style="color: var(--primary);">إعداد كلمة المرور</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="id_create-password" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">كلمة المرور <span class="text-red-500">*</span></label>
+                            {{ create_form.password }}
+                            <span id="create-error-password" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label for="id_create-password_confirm" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">تأكيد كلمة المرور <span class="text-red-500">*</span></label>
+                            {{ create_form.password_confirm }}
+                            <span id="create-error-password_confirm" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                    </div>
+                </div>
+                <div id="create-non-field-errors" class="text-sm text-red-600 bg-red-50 p-2 rounded-lg" style="display: none;"></div>
+            </div>
+            <div class="flex justify-end gap-2 p-4" style="border-top: 1px solid var(--border); background-color: var(--surface-2); display: flex;">
+                <button type="button" onclick="closeCreateModal()" class="px-4 py-2 rounded-lg font-normal bg-gray-100 text-gray-800 hover:bg-gray-200" style="border: none; cursor: pointer;">إلغاء</button>
+                <button type="submit" class="px-4 py-2 rounded-lg font-normal text-white" style="background-color: var(--primary); border: none; cursor: pointer;" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'">إنشاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="edit-user-modal" style="display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.5); padding: 16px;">
+    <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); width: 100%; max-width: 600px; overflow: hidden; display: flex; flex-direction: column;" dir="rtl">
+        <div class="flex items-center justify-between p-4" style="border-bottom: 1px solid var(--border);">
+            <h3 class="text-lg font-semibold" style="color: var(--text-primary);">تعديل بيانات المستخدم</h3>
+            <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer" style="background: transparent; border: none; font-size: 24px; padding: 0; line-height: 1;">&times;</button>
+        </div>
+        <form id="edit-user-form" method="post" action="">
+            {% csrf_token %}
+            <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                <!-- Section 1: Basic Info -->
+                <div class="space-y-4">
+                    <h4 class="text-sm font-semibold pb-2 border-b border-gray-100" style="color: var(--primary);">البيانات الأساسية</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">اسم المستخدم (لا يمكن تغييره)</label>
+                            <input type="text" id="edit_username_display" disabled class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500" style="border-color: var(--border);">
+                        </div>
+                        <div>
+                            <label for="id_edit-email" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">البريد الإلكتروني <span class="text-red-500">*</span></label>
+                            {{ update_form.email }}
+                            <span id="edit-error-email" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label for="id_edit-first_name" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">الاسم الأول</label>
+                            {{ update_form.first_name }}
+                            <span id="edit-error-first_name" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label for="id_edit-last_name" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">الاسم الأخير</label>
+                            {{ update_form.last_name }}
+                            <span id="edit-error-last_name" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                        <div class="col-span-2">
+                            <label for="id_edit-role" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">الدور <span class="text-red-500">*</span></label>
+                            {{ update_form.role }}
+                            <span id="edit-error-role" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Password Change -->
+                <div class="space-y-4 pt-4 border-t" style="border-color: var(--border);">
+                    <h4 class="text-sm font-semibold pb-2 border-b border-gray-100" style="color: var(--primary);">تغيير كلمة المرور (اختياري)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="id_edit-password" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">كلمة المرور الجديدة</label>
+                            {{ update_form.password }}
+                            <span id="edit-error-password" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label for="id_edit-password_confirm" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">تأكيد كلمة المرور الجديدة</label>
+                            {{ update_form.password_confirm }}
+                            <span id="edit-error-password_confirm" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                    </div>
+                </div>
+                <div id="edit-non-field-errors" class="text-sm text-red-600 bg-red-50 p-2 rounded-lg" style="display: none;"></div>
+            </div>
+            <div class="flex justify-between items-center p-4 bg-gray-50" style="border-top: 1px solid var(--border); display: flex;">
+                <button type="button" id="edit_delete_btn" class="px-4 py-2 rounded-lg font-normal text-white bg-red-600 hover:bg-red-700 cursor-pointer" style="border: none;">حذف المستخدم</button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 rounded-lg font-normal bg-gray-100 text-gray-800 hover:bg-gray-200" style="border: none; cursor: pointer;">إلغاء</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg font-normal text-white" style="background-color: var(--primary); border: none; cursor: pointer;" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'">حفظ التغييرات</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div id="delete-user-modal" style="display: none; position: fixed; inset: 0; z-index: 60; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.5); padding: 16px;">
+    <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); width: 100%; max-width: 500px; overflow: hidden; display: flex; flex-direction: column;" dir="rtl">
+        <div class="flex items-center justify-between p-4" style="border-bottom: 1px solid var(--border);">
+            <h3 class="text-lg font-semibold text-red-600">تأكيد حذف المستخدم</h3>
+            <button type="button" onclick="closeDeleteModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer" style="background: transparent; border: none; font-size: 24px; padding: 0; line-height: 1;">&times;</button>
+        </div>
+        <form id="delete-user-form" method="post" action="">
+            {% csrf_token %}
+            <div class="p-6 space-y-4">
+                <p style="color: var(--text-primary);">
+                    هل أنت متأكد من رغبتك في حذف المستخدم <strong id="delete_username_confirm"></strong> نهائياً؟
+                </p>
+                <p class="text-sm text-red-600 bg-red-50 p-2 rounded-lg">
+                    تحذير: هذا الإجراء لا يمكن التراجع عنه وسيتم حذف جميع بيانات هذا المستخدم من النظام.
+                </p>
+                <div class="flex items-center">
+                    <input type="checkbox" id="confirm_delete_checkbox" required class="w-4 h-4 text-red-600 rounded focus:ring-2 focus:ring-red-500">
+                    <label for="confirm_delete_checkbox" class="mr-2 text-sm text-gray-700">أؤكد رغبتي في حذف هذا المستخدم</label>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 p-4" style="border-top: 1px solid var(--border); background-color: var(--surface-2); display: flex;">
+                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg font-normal bg-gray-100 text-gray-800 hover:bg-gray-200" style="border: none; cursor: pointer;">إلغاء</button>
+                <button type="submit" class="px-4 py-2 rounded-lg font-normal text-white bg-red-600 hover:bg-red-700 cursor-pointer" style="border: none;">حذف نهائي</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const createModal = document.getElementById('create-user-modal');
+    const editModal = document.getElementById('edit-user-modal');
+    const deleteModal = document.getElementById('delete-user-modal');
+    
+    const createForm = document.getElementById('create-user-form');
+    const editForm = document.getElementById('edit-user-form');
+    const deleteForm = document.getElementById('delete-user-form');
+
+    // Open/Close Modals Functions
+    window.openCreateModal = function() {
+        createForm.reset();
+        clearErrors(createForm);
+        createModal.style.display = 'flex';
+    };
+
+    window.closeCreateModal = function() {
+        createModal.style.display = 'none';
+    };
+
+    window.openEditModal = function(userId, editUrl) {
+        clearErrors(editForm);
+        editForm.reset();
+        editForm.action = editUrl;
+        
+        // Setup Delete button on Edit Modal to redirect to delete confirmation
+        const deleteUrl = editUrl.replace('/edit/', '/delete/');
+        document.getElementById('edit_delete_btn').onclick = function() {
+            closeEditModal();
+            window.openDeleteModal(userId, deleteUrl);
+        };
+        
+        // Fetch current user details
+        fetch(editUrl + '?json=1', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('edit_username_display').value = data.username;
+                document.getElementById('id_edit-email').value = data.email;
+                document.getElementById('id_edit-first_name').value = data.first_name;
+                document.getElementById('id_edit-last_name').value = data.last_name;
+                document.getElementById('id_edit-role').value = data.role;
+                editModal.style.display = 'flex';
+            }
+        });
+    };
+
+    window.closeEditModal = function() {
+        editModal.style.display = 'none';
+    };
+
+    window.openDeleteModal = function(userId, deleteUrl) {
+        deleteForm.reset();
+        deleteForm.action = deleteUrl;
+        document.getElementById('confirm_delete_checkbox').checked = false;
+        
+        // Fetch details for confirmation text
+        fetch(deleteUrl + '?json=1', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('delete_username_confirm').textContent = data.username;
+                deleteModal.style.display = 'flex';
+            }
+        });
+    };
+
+    window.closeDeleteModal = function() {
+        deleteModal.style.display = 'none';
+    };
+
+    // Global Key Events
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeCreateModal();
+            closeEditModal();
+            closeDeleteModal();
+        }
+    });
+
+    // Row Click & Button Events
+    document.addEventListener('click', function(e) {
+        const editBtn = e.target.closest('.edit-btn');
+        const deleteBtn = e.target.closest('.delete-btn');
+        const row = e.target.closest('.user-row');
+        
+        if (editBtn) {
+            e.stopPropagation();
+            const editUrl = editBtn.getAttribute('data-edit-url');
+            const userId = editBtn.closest('.user-row').getAttribute('data-user-id');
+            openEditModal(userId, editUrl);
+            return;
+        }
+        
+        if (deleteBtn) {
+            e.stopPropagation();
+            const deleteUrl = deleteBtn.getAttribute('data-delete-url');
+            const userId = deleteBtn.closest('.user-row').getAttribute('data-user-id');
+            openDeleteModal(userId, deleteUrl);
+            return;
+        }
+
+        if (row) {
+            // Only trigger if click wasn't on interactive element
+            const isInteractive = e.target.closest('a, button, input, select, textarea, [role="button"]');
+            if (!isInteractive || isInteractive === row) {
+                const editUrl = row.getAttribute('data-edit-url');
+                const userId = row.getAttribute('data-user-id');
+                openEditModal(userId, editUrl);
+            }
+        }
+    });
+
+    // Form Submissions
+    createForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        clearErrors(createForm);
+        
+        const formData = new FormData(createForm);
+        fetch(createForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json().then(data => ({ status: res.status, data })))
+        .then(({ status, data }) => {
+            if (data.status === 'success') {
+                location.reload();
+            } else if (data.status === 'error') {
+                displayErrors(createForm, 'create', data.errors);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('حدث خطأ أثناء الاتصال بالخادم.');
+        });
+    });
+
+    editForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        clearErrors(editForm);
+        
+        const formData = new FormData(editForm);
+        fetch(editForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json().then(data => ({ status: res.status, data })))
+        .then(({ status, data }) => {
+            if (data.status === 'success') {
+                location.reload();
+            } else if (data.status === 'error') {
+                displayErrors(editForm, 'edit', data.errors);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('حدث خطأ أثناء الاتصال بالخادم.');
+        });
+    });
+
+    deleteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(deleteForm);
+        fetch(deleteForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json().then(data => ({ status: res.status, data })))
+        .then(({ status, data }) => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء حذف المستخدم.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('حدث خطأ أثناء الاتصال بالخادم.');
+        });
+    });
+
+    // Helper functions for error handling
+    function clearErrors(form) {
+        form.querySelectorAll('[id^="create-error-"], [id^="edit-error-"]').forEach(el => {
+            el.textContent = '';
+        });
+        const nonFieldCreate = document.getElementById('create-non-field-errors');
+        if (nonFieldCreate) {
+            nonFieldCreate.textContent = '';
+            nonFieldCreate.style.display = 'none';
+        }
+        const nonFieldEdit = document.getElementById('edit-non-field-errors');
+        if (nonFieldEdit) {
+            nonFieldEdit.textContent = '';
+            nonFieldEdit.style.display = 'none';
+        }
+    }
+
+    function displayErrors(form, prefix, errors) {
+        for (const [field, errorMsg] of Object.entries(errors)) {
+            if (field === '__all__') {
+                const nonFieldContainer = document.getElementById(`${prefix}-non-field-errors`);
+                if (nonFieldContainer) {
+                    nonFieldContainer.textContent = errorMsg;
+                    nonFieldContainer.style.display = 'block';
+                }
+            } else {
+                const errorSpan = document.getElementById(`${prefix}-error-${field}`);
+                if (errorSpan) {
+                    errorSpan.textContent = errorMsg;
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+

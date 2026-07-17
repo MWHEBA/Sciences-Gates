@@ -3,7 +3,8 @@ Article forms for the dashboard.
 نماذج المقالات في لوحة التحكم
 """
 from django import forms
-from apps.articles.models import Article, Category, Tag
+from django.forms.models import inlineformset_factory
+from apps.articles.models import Article, ArticleFAQ, Category, Tag
 from apps.html_editor.widgets import CustomHTMLEditorWidget
 
 
@@ -28,11 +29,11 @@ class ArticleForm(forms.ModelForm):
             # Basic Information
             'title', 'slug', 'featured_image', 'featured_image_alt',
             # Content
-            'category', 'tags', 'content',
+            'category', 'author', 'tags', 'content',
             # Relationships
             'related_universities', 'related_institutes', 'related_majors',
             # Publishing
-            'publish_status',
+            'publish_status', 'publish_date',
             # SEO Fields
             'meta_title', 'meta_description', 'focus_keyword', 'keyphrase_synonyms', 'canonical_url',
             'robots_index', 'robots_follow', 'sitemap_include',
@@ -67,6 +68,9 @@ class ArticleForm(forms.ModelForm):
             'category': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             }),
+            'author': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            }),
             'tags': forms.CheckboxSelectMultiple(attrs={
                 'class': 'space-y-2',
             }),
@@ -93,6 +97,14 @@ class ArticleForm(forms.ModelForm):
             'publish_status': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             }),
+            'publish_date': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={
+                    'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                    'type': 'date',
+                    'dir': 'rtl',
+                }
+            ),
             
             # SEO Fields
             'meta_title': forms.TextInput(attrs={
@@ -159,6 +171,7 @@ class ArticleForm(forms.ModelForm):
             
             # Content
             'category': 'الفئة',
+            'author': 'الكاتب',
             'tags': 'الوسوم',
             'content': 'محتوى المقالة',
             
@@ -169,6 +182,7 @@ class ArticleForm(forms.ModelForm):
             
             # Publishing
             'publish_status': 'حالة النشر',
+            'publish_date': 'تاريخ النشر',
             
             # SEO Fields
             'meta_title': 'عنوان SEO',
@@ -191,8 +205,8 @@ class ArticleForm(forms.ModelForm):
             
             # Content
             'category': 'اختر فئة المقالة',
+            'author': 'اختر كاتب المقالة',
             'tags': 'اختر الوسوم المرتبطة بالمقالة',
-            'content': 'محتوى المقالة (يدعم: غامق، مائل، عناوين H2-H4، قوائم، روابط، صور)',
             
             # Relationships
             'related_universities': 'اختر الجامعات المرتبطة بهذه المقالة',
@@ -201,6 +215,7 @@ class ArticleForm(forms.ModelForm):
             
             # Publishing
             'publish_status': 'المحتوى المنشور فقط يظهر للزوار',
+            'publish_date': 'تاريخ نشر المقالة',
             
             # SEO Fields
             'meta_title': 'يظهر في نتائج البحث (60 حرف كحد أقصى)',
@@ -221,6 +236,14 @@ class ArticleForm(forms.ModelForm):
         if self.data:
             if self.data.get('imported_featured_image_path'):
                 self.fields['featured_image'].required = False
+        
+        # Display author's full name if available, fallback to username
+        if 'author' in self.fields:
+            self.fields['author'].label_from_instance = lambda obj: obj.get_full_name() if obj.get_full_name() else obj.username
+        
+        # Format publish_date initial value for date input
+        if self.instance and self.instance.pk and self.instance.publish_date:
+            self.initial['publish_date'] = self.instance.publish_date.strftime('%Y-%m-%d')
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -338,3 +361,36 @@ class TagForm(forms.ModelForm):
         if queryset.exists():
             raise forms.ValidationError('هذا الرابط مستخدم بالفعل لوسم آخر.')
         return slug
+
+
+# Create inline formset for FAQ entries
+ArticleFAQFormSet = inlineformset_factory(
+    Article,
+    ArticleFAQ,
+    fields=['question', 'answer', 'sort_order'],
+    extra=0,
+    can_delete=True,
+    widgets={
+        'question': forms.TextInput(attrs={
+            'class': 'faq-item__question-input',
+            'placeholder': 'السؤال',
+            'required': True,
+            'dir': 'rtl',
+        }),
+        'answer': CustomHTMLEditorWidget(attrs={
+            'data-placeholder': 'الإجابة...',
+            'required': True,
+        }),
+        'sort_order': forms.HiddenInput(),
+    },
+    labels={
+        'question': 'السؤال',
+        'answer': 'الإجابة',
+        'sort_order': 'ترتيب العرض',
+    },
+    help_texts={
+        'question': 'السؤال الشائع',
+        'answer': 'إجابة السؤال',
+        'sort_order': 'ترتيب ظهور السؤال (الأصغر أولاً)',
+    }
+)

@@ -282,6 +282,20 @@ class TestArticleDetailView:
         assert 'related_universities' in response.context
         assert 'related_institutes' in response.context
         assert 'related_majors' in response.context
+        assert 'faqs' in response.context
+    
+    def test_article_detail_view_faqs_in_context(self):
+        """Test that article detail view passes faqs in context."""
+        from .models import ArticleFAQ
+        faq = ArticleFAQ.objects.create(
+            article=self.article,
+            question='ما هو السؤال؟',
+            answer='<p>هذه هي الإجابة</p>',
+            sort_order=1
+        )
+        response = self.client.get(self.article.get_absolute_url())
+        assert response.status_code == 200
+        assert faq in response.context['faqs']
     
     def test_article_detail_view_unpublished_404(self):
         """Test that unpublished articles return 404."""
@@ -439,3 +453,68 @@ class TestTagArticleListView:
         
         assert response.context['tag'] == self.tag1
         assert response.context['clear_url'] == reverse('articles:list')
+
+
+@pytest.mark.django_db
+class TestArticleFAQModel:
+    """Test cases for ArticleFAQ model."""
+    
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        """Create test article."""
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.category = Category.objects.create(
+            name='أخبار',
+            slug='news'
+        )
+        self.article = Article.objects.create(
+            title='اختبار المقالة',
+            slug='test-article',
+            featured_image='articles/test.jpg',
+            category=self.category,
+            author=self.user,
+            content='<p>محتوى المقالة</p>',
+            publish_status='published'
+        )
+        
+    def test_faq_creation(self):
+        """Test that FAQ is created correctly."""
+        from .models import ArticleFAQ
+        faq = ArticleFAQ.objects.create(
+            article=self.article,
+            question='ما هو السؤال؟',
+            answer='<p>هذه هي الإجابة</p>',
+            sort_order=1
+        )
+        assert faq.article == self.article
+        assert faq.question == 'ما هو السؤال؟'
+        assert faq.answer == '<p>هذه هي الإجابة</p>'
+        assert faq.sort_order == 1
+        
+    def test_faq_str(self):
+        """Test FAQ string representation."""
+        from .models import ArticleFAQ
+        faq = ArticleFAQ.objects.create(
+            article=self.article,
+            question='ما هو السؤال؟',
+            answer='<p>هذه هي الإجابة</p>'
+        )
+        assert str(faq) == 'ما هو السؤال؟'
+        
+    def test_faq_sanitization(self):
+        """Test that FAQ answer is sanitized before saving."""
+        from .models import ArticleFAQ
+        # Answer with malicious script tag
+        faq = ArticleFAQ.objects.create(
+            article=self.article,
+            question='سؤال أمني؟',
+            answer='<p>إجابة آمنة</p><script>alert("XSS")</script>'
+        )
+        # Script tag should be stripped by sanitizer in pre_save
+        assert '<script>' not in faq.answer
+        assert 'alert("XSS")' not in faq.answer
+        assert '<p>إجابة آمنة</p>' in faq.answer

@@ -52,7 +52,7 @@ class MajorAdmin(admin.ModelAdmin):
             'fields': ('description', 'study_duration', 'why_study_section', 'how_to_apply_section')
         }),
         ('معلومات سريعة', {
-            'fields': ('tuition_fees', 'study_language', 'practical_training', 'career_opportunities')
+            'fields': ('study_language', 'practical_training', 'career_opportunities')
         }),
         ('العلاقات', {
             'fields': ('best_universities', 'cheap_universities', 'related_articles')

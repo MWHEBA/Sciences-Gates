@@ -63,12 +63,7 @@ Usage:
                                     <span>{{ major.study_duration|default:major.bachelor_duration|default:"3-4 سنوات" }}</span>
                                 </div>
                             {% endif %}
-                            {% if major.tuition_fees %}
-                                <div class="flex items-center gap-2">
-                                    <span class="text-secondary text-base">💰</span>
-                                    <span class="font-semibold text-secondary">{{ major.tuition_fees }}</span>
-                                </div>
-                            {% endif %}
+
                             {% if major.study_language %}
                                 <div class="flex items-center gap-2">
                                     <span class="text-secondary text-base">🌐</span>

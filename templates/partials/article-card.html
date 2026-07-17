@@ -28,19 +28,16 @@
         <div class="it-course-info">
             <span>
                 <i class="fa-solid fa-calendar-days ml-2 text-secondary"></i>
-                {{ article.published_date|date:"d F Y" }}
+                {{ article.publish_date|date:"d F Y" }}
             </span>
             <span>
                 <i class="fa-solid fa-user ml-2 text-secondary"></i>
-                {{ article.author.get_full_name|default:article.author.username }}
+                {{ article.author_display_name }}
             </span>
         </div>
         
         <!-- رابط قراءة المقال -->
         <div class="it-course-price-box">
-            <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-body);">
-                بوابات العلوم للأخبار
-            </span>
             <a href="{{ article.get_absolute_url }}">
                 <span>اقرأ المقال</span>
                 <i class="fa-solid fa-arrow-left mr-2"></i>

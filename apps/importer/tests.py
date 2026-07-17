@@ -1336,6 +1336,51 @@ class BulkSaveAPITests(TestCase):
         self.assertEqual(article.slug, 'سكن-جامعة-mmu-في-ملاكا')
 
     @patch('apps.importer.services.wp_client.requests.get')
+    def test_bulk_save_article_fallback_mapping_and_category_creation(self, mock_get):
+        """
+        Test that standard WP posts (which fallback to 'university' structure on WP)
+        successfully map 'name' to 'title', 'description' to 'content', and dynamically
+        create/resolve the category.
+        """
+        from apps.articles.models import Category
+        # Make sure it does not exist
+        Category.objects.filter(name='التعليم في ماليزيا').delete()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'content_type': 'university',  # Standard WP post defaults to university
+            'name': 'مقال تجريبي',
+            'slug': 'مقال تجريبي',
+            'images': {},
+            'fields': {
+                'description': {
+                    'value': '<p>محتوى المقال التجريبي</p>\n<p>تابعونا على مواقع التواصل الاجتماعي ليصلكم منا كل جديد:</p>\n<p>عبر الروابط التالية</p>\n<p>Facebook , Twitter , LinkedIn</p>',
+                    'confidence': 'medium'
+                },
+            },
+            'categories': ['التعليم في ماليزيا'],
+            'seo': {}
+        }
+        mock_get.return_value = mock_response
+
+        data = self.post_bulk_save(
+            'https://old-site.com/مقال-تجريبي/',
+            'article'  # Overridden by user
+        )
+        self.assertTrue(data['success'])
+        
+        from apps.articles.models import Article
+        self.assertTrue(Article.objects.filter(slug='مقال-تجريبي').exists())
+        article = Article.objects.get(slug='مقال-تجريبي')
+        self.assertEqual(article.title, 'مقال تجريبي')
+        self.assertEqual(article.content, '<p>محتوى المقال التجريبي</p>')
+        
+        # Verify category was created
+        self.assertTrue(Category.objects.filter(name='التعليم في ماليزيا').exists())
+        self.assertEqual(article.category.name, 'التعليم في ماليزيا')
+
+    @patch('apps.importer.services.wp_client.requests.get')
     def test_bulk_save_program_duration_fees_fallback(self, mock_get):
         """
         Test that university programs with blank duration or tuition fees
@@ -1803,6 +1848,157 @@ class ImportAutoSearchCompetitorTests(TestCase):
             response = self.client.post('/dashboard/import/fetch/', payload)
             self.assertEqual(response.status_code, 200)
             mock_search.assert_not_called()
+
+
+class ContentMapperBoilerplateCleaningTests(TestCase):
+    """
+    Tests for removing call-to-action and social links boilerplate from imported articles.
+    اختبارات إزالة الختام الثابت والروابط من المقالات المستوردة
+    """
+
+    def setUp(self):
+        self.mapper = ContentMapper()
+
+    def test_clean_content_with_tabeona(self):
+        wp_data = {
+            'content_type': 'article',
+            'name': 'اختبار المقال',
+            'slug': 'test-article',
+            'fields': {
+                'content': {
+                    'value': '<p>محتوى المقال الأصلي هنا.</p><p>تابعونا على مواقع التواصل الاجتماعي ليصلكم كل جديد.</p><p>رابط فيسبوك</p>'
+                }
+            }
+        }
+        res = self.mapper.map_data(wp_data, {}, [])
+        self.assertIn('محتوى المقال الأصلي هنا.', res['form_initial']['content'])
+        self.assertNotIn('تابعونا', res['form_initial']['content'])
+        self.assertNotIn('رابط فيسبوك', res['form_initial']['content'])
+
+    def test_clean_content_with_eza_kont_mohtam(self):
+        wp_data = {
+            'content_type': 'article',
+            'name': 'اختبار المقال',
+            'slug': 'test-article',
+            'fields': {
+                'content': {
+                    'value': '<p>محتوى المقال الأصلي هنا.</p><p>إذا كنت مهتماً بالدراسة في ماليزيا يرجى التواصل معنا.</p><p>تابعونا على مواقع التواصل.</p>'
+                }
+            }
+        }
+        res = self.mapper.map_data(wp_data, {}, [])
+        self.assertIn('محتوى المقال الأصلي هنا.', res['form_initial']['content'])
+        self.assertNotIn('إذا كنت مهتماً', res['form_initial']['content'])
+        self.assertNotIn('تابعونا', res['form_initial']['content'])
+
+    def test_strip_empty_paragraphs_and_lines(self):
+        wp_data = {
+            'content_type': 'article',
+            'name': 'اختبار المقال',
+            'slug': 'test-article',
+            'fields': {
+                'content': {
+                    'value': '<p>السطر الأول</p>\n<p>&nbsp;</p>\n<p></p>\n<p>السطر الثاني</p>\n<div>\xa0</div>'
+                }
+            }
+        }
+        res = self.mapper.map_data(wp_data, {}, [])
+        content = res['form_initial']['content']
+        self.assertIn('السطر الأول', content)
+        self.assertIn('السطر الثاني', content)
+        self.assertNotIn('&nbsp;', content)
+        self.assertNotIn('<p></p>', content)
+        self.assertNotIn('<div></div>', content)
+
+    def test_standardize_tables(self):
+        wp_data = {
+            'content_type': 'article',
+            'name': 'اختبار المقال',
+            'slug': 'test-article',
+            'fields': {
+                'content': {
+                    'value': '<table><tbody><tr><td>الجامعة</td><td>الدرجة</td></tr><tr><td>UM</td><td>بكالوريوس</td></tr></tbody></table>'
+                }
+            }
+        }
+        res = self.mapper.map_data(wp_data, {}, [])
+        content = res['form_initial']['content']
+        self.assertIn('<th>الجامعة</th>', content)
+        self.assertIn('<th>الدرجة</th>', content)
+        self.assertIn('<thead>', content)
+        self.assertIn('<td>UM</td>', content)
+
+    def test_standardize_tables_skips_if_already_has_header(self):
+        wp_data = {
+            'content_type': 'article',
+            'name': 'اختبار المقال',
+            'slug': 'test-article',
+            'fields': {
+                'content': {
+                    'value': '<table><thead><tr><th>الجامعة</th><th>الدرجة</th></tr></thead><tbody><tr><td>UM</td><td>بكالوريوس</td></tr></tbody></table>'
+                }
+            }
+        }
+        res = self.mapper.map_data(wp_data, {}, [])
+        content = res['form_initial']['content']
+        self.assertIn('<th>الجامعة</th>', content)
+        self.assertIn('<th>الدرجة</th>', content)
+        self.assertEqual(content.count('<thead>'), 1)
+
+    def test_format_programs_column_as_bullets(self):
+        wp_data = {
+            'content_type': 'article',
+            'name': 'اختبار المقال',
+            'slug': 'test-article',
+            'fields': {
+                'content': {
+                    'value': '<table><thead><tr><th>الجامعة</th><th>البرامج المعتمدة</th></tr></thead><tbody><tr><td>UM</td><td>الهندسة، العلوم، إدارة الأعمال</td></tr></tbody></table>'
+                }
+            }
+        }
+        res = self.mapper.map_data(wp_data, {}, [])
+        content = res['form_initial']['content']
+        self.assertIn('<ul>', content)
+        self.assertIn('<li>الهندسة</li>', content)
+        self.assertIn('<li>العلوم</li>', content)
+        self.assertIn('<li>إدارة الأعمال</li>', content)
+
+    def test_strip_inline_font_sizes_and_families(self):
+        wp_data = {
+            'content_type': 'article',
+            'name': 'اختبار المقال',
+            'slug': 'test-article',
+            'fields': {
+                'content': {
+                    'value': '<p style="font-size: 18px; font-family: Inter; color: red;">نص تجريبي</p><span style="font-size: 14pt;">سبان</span>'
+                }
+            }
+        }
+        res = self.mapper.map_data(wp_data, {}, [])
+        content = res['form_initial']['content']
+        self.assertIn('color: red', content)
+        self.assertNotIn('font-size', content)
+        self.assertNotIn('font-family', content)
+        # Verify that the style attribute of the span was completely removed
+        self.assertNotIn('style', content.split('span')[1])
+
+    def test_replace_blue_color_with_primary(self):
+        wp_data = {
+            'content_type': 'article',
+            'name': 'اختبار المقال',
+            'slug': 'test-article',
+            'fields': {
+                'content': {
+                    'value': '<span style="color: #0000ff;">نص أزرق</span><font color="#0000FF">نص آخر</font><span style="color: rgb(0,0,255);">نص ثالث</span>'
+                }
+            }
+        }
+        res = self.mapper.map_data(wp_data, {}, [])
+        content = res['form_initial']['content']
+        self.assertIn('color: var(--primary)', content)
+        self.assertNotIn('#0000ff', content.lower())
+        self.assertNotIn('color="#0000ff"', content.lower())
+
 
 
 

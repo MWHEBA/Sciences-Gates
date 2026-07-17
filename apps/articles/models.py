@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 from apps.core.models import TimestampedModel, PublishableModel, SEOMixin
 from apps.html_editor.sanitizer import sanitize_article_html
 
@@ -130,7 +131,8 @@ class Article(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='الكاتب'
     )
     publish_date = models.DateTimeField(
-        auto_now_add=True,
+        default=timezone.now,
+        blank=True,
         verbose_name='تاريخ النشر',
         db_index=True
     )
@@ -179,8 +181,17 @@ class Article(TimestampedModel, PublishableModel, SEOMixin):
         """Return the absolute URL for this article."""
         return reverse('articles:detail', kwargs={'slug': self.slug})
 
+    @property
+    def author_display_name(self):
+        """Return the author's full name, username, or a default fallback."""
+        if self.author:
+            return self.author.get_full_name() or self.author.username
+        return "بوابات العلوم"
+
     def save(self, *args, **kwargs):
         """Store old slug for redirect creation if slug changes."""
+        if not self.publish_date:
+            self.publish_date = timezone.now()
         if self.pk:
             old_instance = Article.objects.get(pk=self.pk)
             if old_instance.slug != self.slug and old_instance.is_published:
@@ -198,3 +209,42 @@ def sanitize_article_content(sender, instance, **kwargs):
     """
     if instance.content:
         instance.content = sanitize_article_html(instance.content)
+
+
+class ArticleFAQ(models.Model):
+    """FAQ entry for an article.
+    الأسئلة الشائعة للمقالة
+    """
+    article = models.ForeignKey(
+        Article,
+        on_delete=models.CASCADE,
+        related_name='faqs',
+        verbose_name='المقالة'
+    )
+    question = models.CharField(
+        max_length=300,
+        verbose_name='السؤال'
+    )
+    answer = models.TextField(
+        verbose_name='الإجابة'
+    )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='ترتيب العرض',
+        help_text='ترتيب ظهور السؤال (الأصغر أولاً)'
+    )
+
+    class Meta:
+        verbose_name = 'سؤال شائع للمقالة'
+        verbose_name_plural = 'الأسئلة الشائعة للمقالات'
+        ordering = ['sort_order']
+
+    def __str__(self):
+        return self.question
+
+
+@receiver(pre_save, sender=ArticleFAQ)
+def sanitize_article_faq_content(sender, instance, **kwargs):
+    """Sanitize FAQ answer HTML content before saving."""
+    if instance.answer:
+        instance.answer = sanitize_article_html(instance.answer)

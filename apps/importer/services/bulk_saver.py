@@ -42,6 +42,21 @@ def _make_valid_json_string(val):
             return json.dumps([table])
     return '[]'
 
+def parse_wp_datetime(date_str):
+    if not date_str or date_str == '0000-00-00 00:00:00':
+        return None
+    from django.utils.dateparse import parse_datetime
+    from django.utils.timezone import make_aware
+    from django.utils import timezone
+    from datetime import timezone as datetime_timezone
+    try:
+        dt = parse_datetime(date_str)
+        if dt and timezone.is_naive(dt):
+            return make_aware(dt, datetime_timezone.utc)
+        return dt
+    except Exception:
+        return None
+
 def save_imported_content(content_type, mapped_data, user=None):
     """
     Validates and saves the imported content to the database using Django Forms and Formsets.
@@ -259,6 +274,10 @@ def _save_university(mapped_data, user):
                 faculty_form.program_formset.instance = faculty_form.instance
                 faculty_form.program_formset.save()
                 
+        dt = parse_wp_datetime(mapped_data.get('created_at'))
+        if dt:
+            University.objects.filter(pk=saved_instance.pk).update(created_at=dt)
+                
         return saved_instance, action_type
 
 def _save_institute(mapped_data, user):
@@ -430,6 +449,11 @@ def _save_institute(mapped_data, user):
             course_formset.save()
             faq_formset.instance = saved_instance
             faq_formset.save()
+            
+            dt = parse_wp_datetime(mapped_data.get('created_at'))
+            if dt:
+                Institute.objects.filter(pk=saved_instance.pk).update(created_at=dt)
+                
             return saved_instance, action_type
         else:
             errors = {}
@@ -464,9 +488,6 @@ def _save_major(mapped_data, user):
                 
     action_type = 'updated' if existing_obj else 'created'
     form_data = {**form_initial}
-    
-    # Ensure tuition_fees is serialized to a valid JSON string
-    form_data['tuition_fees'] = _make_valid_json_string(form_data.get('tuition_fees'))
     
     # Resolve category ForeignKey
     from apps.majors.models import MajorCategory
@@ -914,6 +935,10 @@ def _save_major(mapped_data, user):
                     prog.major = saved_instance
                     prog.save()
             
+            dt = parse_wp_datetime(mapped_data.get('created_at'))
+            if dt:
+                Major.objects.filter(pk=saved_instance.pk).update(created_at=dt)
+            
             return saved_instance, action_type
         else:
             errors = {}
@@ -927,7 +952,7 @@ def _save_major(mapped_data, user):
 
 def _save_article(mapped_data, user):
     from apps.articles.models import Article
-    from apps.dashboard.forms.article import ArticleForm
+    from apps.dashboard.forms.article import ArticleForm, ArticleFAQFormSet
     
     form_initial = mapped_data['form_initial']
     slug = form_initial.get('slug', '').strip()
@@ -945,18 +970,75 @@ def _save_article(mapped_data, user):
             key = 'featured_image' if img_key == 'main_image' else img_key
             form_data[f'imported_{key}_path'] = img_path
             
+    # Article FAQs
+    existing_faqs = list(existing_obj.faqs.all()) if existing_obj else []
+    faqs_count = len(existing_faqs)
+    
+    raw_imported_faqs = mapped_data.get('faqs_data', [])
+    imported_faqs = []
+    for faq_item in raw_imported_faqs:
+        q = (faq_item.get('question') or '').strip()
+        a = (faq_item.get('answer') or '').strip()
+        if not q and not a:
+            continue
+        if not q:
+            q = 'غير محدد'
+        if not a:
+            a = 'غير محدد'
+        imported_faqs.append({'question': q, 'answer': a})
+        
+    total_faqs = faqs_count + len(imported_faqs)
+    
+    form_data.update({
+        'faqs-TOTAL_FORMS': str(total_faqs),
+        'faqs-INITIAL_FORMS': str(faqs_count),
+        'faqs-MIN_NUM_FORMS': '0',
+        'faqs-MAX_NUM_FORMS': '1000',
+    })
+    for i, faq in enumerate(existing_faqs):
+        form_data.update({
+            f'faqs-{i}-id': str(faq.id),
+            f'faqs-{i}-question': faq.question,
+            f'faqs-{i}-answer': faq.answer,
+            f'faqs-{i}-sort_order': str(faq.sort_order),
+            f'faqs-{i}-DELETE': 'on',
+        })
+    for j, faq_item in enumerate(imported_faqs):
+        i = faqs_count + j
+        form_data.update({
+            f'faqs-{i}-id': '',
+            f'faqs-{i}-question': faq_item['question'],
+            f'faqs-{i}-answer': faq_item['answer'],
+            f'faqs-{i}-sort_order': str(i),
+        })
+            
     with transaction.atomic():
         form = ArticleForm(form_data, instance=existing_obj)
         for field_name in ['featured_image', 'og_image']:
             if field_name in form.fields:
                 form.fields[field_name].required = False
-        if form.is_valid():
+        faq_formset = ArticleFAQFormSet(form_data, instance=existing_obj)
+        
+        all_valid = form.is_valid() and faq_formset.is_valid()
+        if all_valid:
             # Sanitize HTML content before saving (same as views.py)
             from apps.html_editor.sanitizer import sanitize_article_html
             instance = form.save(commit=False)
             instance.content = sanitize_article_html(instance.content)
+            
+            dt = parse_wp_datetime(mapped_data.get('created_at'))
+            if dt:
+                instance.publish_date = dt
+                
             instance.save()
             form.save_m2m()
+            
+            faq_formset.instance = instance
+            faq_formset.save()
+            
             return instance, action_type
         else:
-            raise ValueError(f"Validation failed: {form.errors}")
+            errors = {}
+            if form.errors: errors['form'] = form.errors
+            if faq_formset.errors: errors['faq'] = faq_formset.errors
+            raise ValueError(f"Validation failed: {errors}")

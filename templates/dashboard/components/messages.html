@@ -1,51 +1,81 @@
 <!-- رسائل النظام - Django Messages Framework -->
-{% for message in messages %}
-<div
-    x-data="{ show: true }"
-    x-show="show"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-    class="flex items-center gap-3 px-4 py-3 rounded-lg border text-sm"
-    style="{% if message.level_tag == 'success' %}background-color: var(--success-light); border-color: var(--success); color: var(--success);{% elif message.level_tag == 'error' %}background-color: var(--danger-light); border-color: var(--danger); color: var(--danger);{% elif message.level_tag == 'warning' %}background-color: var(--warning-light); border-color: var(--warning); color: var(--warning);{% else %}background-color: var(--info-light); border-color: var(--info); color: var(--info);{% endif %}"
-    role="{% if message.level_tag == 'error' or message.level_tag == 'warning' %}alert{% else %}status{% endif %}"
->
-    <!-- Dismiss button on left side (RTL) -->
-    <button
-        @click="show = false"
-        class="flex-shrink-0 p-1 rounded transition-colors duration-200 cursor-pointer"
-        style="color: inherit;"
-        onmouseover="this.style.opacity='0.7'"
-        onmouseout="this.style.opacity='1'"
-        aria-label="إغلاق الرسالة"
+<style>
+.django-msg-toast {
+    min-width: 300px;
+    max-width: 400px;
+    background-color: var(--surface);
+}
+.django-msg-toast[data-level="success"] {
+    border-color: var(--success);
+    color: var(--success);
+}
+.django-msg-toast[data-level="error"] {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+.django-msg-toast[data-level="warning"] {
+    border-color: var(--warning);
+    color: var(--warning);
+}
+.django-msg-toast[data-level="info"] {
+    border-color: var(--info);
+    color: var(--info);
+}
+</style>
+
+<div class="fixed bottom-6 left-6 z-50 flex flex-col-reverse gap-3 pointer-events-none" style="direction: rtl;">
+    {% for message in messages %}
+    <div
+        x-data="{ show: true }"
+        x-init="setTimeout(() => show = false, 5000)"
+        x-show="show"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-4"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="django-msg-toast flex items-center gap-3 px-5 py-3 rounded-lg border text-sm pointer-events-auto shadow-lg"
+        data-level="{% if message.level_tag == 'success' %}success{% elif message.level_tag == 'error' %}error{% elif message.level_tag == 'warning' %}warning{% else %}info{% endif %}"
+        role="{% if message.level_tag == 'error' or message.level_tag == 'warning' %}alert{% else %}status{% endif %}"
     >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-    </button>
+        <!-- Dismiss button on left side (RTL) -->
+        <button
+            @click="show = false"
+            class="flex-shrink-0 p-1 rounded transition-colors duration-200 cursor-pointer"
+            style="color: var(--text-secondary);"
+            onmouseover="this.style.opacity='0.7'"
+            onmouseout="this.style.opacity='1'"
+            aria-label="إغلاق الرسالة"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
 
-    <!-- Message icon -->
-    <div class="flex-shrink-0">
-        {% if message.level_tag == 'success' %}
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        {% elif message.level_tag == 'error' %}
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        {% elif message.level_tag == 'warning' %}
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        {% else %}
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        {% endif %}
+        <!-- Message text -->
+        <span class="flex-1" style="color: var(--text-primary); font-family: 'Alexandria', sans-serif;">{{ message }}</span>
+
+        <!-- Message icon -->
+        <div class="flex-shrink-0">
+            {% if message.level_tag == 'success' %}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {% elif message.level_tag == 'error' %}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {% elif message.level_tag == 'warning' %}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {% else %}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {% endif %}
+        </div>
     </div>
-
-    <!-- Message text -->
-    <span class="flex-1">{{ message }}</span>
+    {% endfor %}
 </div>
-{% endfor %}
