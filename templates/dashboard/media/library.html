@@ -446,7 +446,7 @@ function mediaLibrary() {
         saveMedia() {
             if (!this.selectedMedia) return;
             
-            const url = `/dashboard/media/${this.selectedMedia.id}/update/`;
+            const url = "{% url 'dashboard:media_update' 0 %}".replace('0', this.selectedMedia.id);
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -511,7 +511,7 @@ function mediaLibrary() {
                 customClass: { popup: 'rounded-xl' }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const url = `/dashboard/media/${this.selectedMedia.id}/delete/`;
+                    const url = "{% url 'dashboard:media_delete' 0 %}".replace('0', this.selectedMedia.id);
                     fetch(url, {
                         method: 'POST',
                         headers: {
@@ -572,7 +572,7 @@ function mediaLibrary() {
                 customClass: { popup: 'rounded-xl' }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const url = `/dashboard/media/bulk-delete/`;
+                    const url = "{% url 'dashboard:media_bulk_delete' %}";
                     fetch(url, {
                         method: 'POST',
                         headers: {

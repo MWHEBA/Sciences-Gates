@@ -163,7 +163,7 @@ Usage: Include once in page, opens via JavaScript
 // Global functions for media modal
 function openMediaModal(imageUrl, fieldName) {
     // Extract media file ID from URL or find by image URL
-    fetch(`/dashboard/media/find-by-url/?url=${encodeURIComponent(imageUrl)}`)
+    fetch("{% url 'dashboard:media_find_by_url' %}?url=" + encodeURIComponent(imageUrl))
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -247,7 +247,7 @@ function saveMediaDetails(event) {
     document.getElementById('mediaModalError').style.display = 'none';
     document.getElementById('mediaModalSuccess').style.display = 'none';
     
-    fetch(`/dashboard/media/${mediaFileId}/update/`, {
+    fetch("{% url 'dashboard:media_update' 0 %}".replace('0', mediaFileId), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

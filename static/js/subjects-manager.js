@@ -262,7 +262,21 @@ class SubjectsManager {
 
         // إتاحة السحب والإفلات لإعادة الترتيب
         this.container.querySelectorAll('.subject-item').forEach(item => {
-            item.setAttribute('draggable', 'true');
+            const handle = item.querySelector('.subject-item__drag-handle');
+            if (handle) {
+                item.setAttribute('draggable', 'false');
+                handle.addEventListener('mousedown', () => {
+                    item.setAttribute('draggable', 'true');
+                });
+                const disableDrag = () => {
+                    item.setAttribute('draggable', 'false');
+                };
+                handle.addEventListener('mouseup', disableDrag);
+                handle.addEventListener('mouseleave', disableDrag);
+                item.addEventListener('dragend', disableDrag);
+            } else {
+                item.setAttribute('draggable', 'true');
+            }
             item.ondragstart = (e) => this.onDragStart(e, item);
             item.ondragend = (e) => this.onDragEnd(e, item);
             item.ondragover = (e) => this.onDragOver(e, item);

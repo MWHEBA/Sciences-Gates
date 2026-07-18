@@ -66,6 +66,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.core.middleware.MaintenanceModeMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.redirects.middleware.RedirectMiddleware',
@@ -138,7 +139,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Admin site configuration
-ADMIN_URL = 'admin/'
+ADMIN_URL = 'mw-admin/'
+DASHBOARD_URL = 'sg/'
 
 # Django Sites Framework
 SITE_ID = 1

@@ -48,8 +48,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         # Render the template with minimal context
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -62,8 +62,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that item name displays in bold within warning message."""
         context = {
             'item_name': 'Test Item Name',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -77,8 +77,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         long_name = 'A' * 150
         context = {
             'item_name': long_name,
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -91,8 +91,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that permanent deletion warning message is displayed."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -105,8 +105,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that danger confirm button is present."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -119,21 +119,21 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that secondary cancel button is present and links to list page."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
         # Check for cancel button
         self.assertIn('إلغاء', html)  # Arabic for "Cancel"
-        self.assertIn('/dashboard/items/', html)  # Cancel URL should be present
+        self.assertIn('/sg/items/', html)  # Cancel URL should be present
     
     def test_card_container_styling(self):
         """Test that card container uses p-6 padding and max-w-lg width."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -148,8 +148,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that no JavaScript modal dialogs are used."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -162,8 +162,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that CSS variables are used for colors."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -178,8 +178,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that no hardcoded hex or rgb colors are used (except for rgba fallback)."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -192,8 +192,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that icon has proper accessibility attributes."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -204,8 +204,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that CSRF token is present in delete form."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -216,20 +216,20 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that delete form has correct action URL."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
         # Check for form action
-        self.assertIn('action="/dashboard/items/1/delete/"', html)
+        self.assertIn('action="/sg/items/1/delete/"', html)
     
     def test_centered_layout(self):
         """Test that card is centered horizontally."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -240,8 +240,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that buttons have proper styling classes."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         
@@ -256,8 +256,8 @@ class DeleteConfirmationTemplateTest(TestCase):
         """Test that template supports RTL layout."""
         context = {
             'item_name': 'Test Item',
-            'cancel_url': '/dashboard/items/',
-            'delete_url': '/dashboard/items/1/delete/',
+            'cancel_url': '/sg/items/',
+            'delete_url': '/sg/items/1/delete/',
         }
         html = self._render(context)
         

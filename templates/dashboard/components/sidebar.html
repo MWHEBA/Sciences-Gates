@@ -10,7 +10,7 @@
 
     <!-- قائمة التنقل — max-height ديناميكي = ارتفاع الـ aside - الشعار - الملف الشخصي -->
     <nav class="flex-1 px-4 py-2 overflow-y-auto" x-data="{ 
-            activeSection: {% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path or request.GET.type == 'university' %}'universities'{% elif '/dashboard/institutes' in request.path or request.GET.type == 'institute' %}'institutes'{% elif '/dashboard/majors' in request.path or '/dashboard/major-categories' in request.path %}'majors'{% elif '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}'articles'{% else %}null{% endif %}
+            activeSection: {% if '/sg/universities' in request.path or '/sg/faculties' in request.path or request.GET.type == 'university' %}'universities'{% elif '/sg/institutes' in request.path or request.GET.type == 'institute' %}'institutes'{% elif '/sg/majors' in request.path or '/sg/major-categories' in request.path %}'majors'{% elif '/sg/articles' in request.path or '/sg/categories' in request.path or '/sg/tags' in request.path %}'articles'{% else %}null{% endif %}
         }" style="max-height: calc(100vh - 8px - var(--sidebar-logo-h) - var(--sidebar-profile-h));
                  margin: 5px 0;
                  scrollbar-width: thin;
@@ -68,7 +68,7 @@
         <!-- الرئيسية -->
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
             <a  href="{% url 'dashboard:home' %}"
-                 class="flex items-center px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer sb-link {% if request.path == '/dashboard/' %}active{% endif %}" >
+                 class="flex items-center px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer sb-link {% if request.path == '/sg/' %}active{% endif %}" >
                 <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -90,10 +90,10 @@
                     :style="activeSection === 'universities' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
                     <button  @click="activeSection = activeSection === 'universities' ? null : 'universities'"
                         data-toggle="true"
-                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path %}active{% endif %}" 
+                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/sg/universities' in request.path or '/sg/faculties' in request.path %}active{% endif %}" 
                         :style="activeSection === 'universities' ? 'background-color: var(--primary); color: var(--white);' : ''"
-                        @mouseenter="{% if '/dashboard/universities' not in request.path and '/dashboard/faculties' not in request.path %}if (activeSection !== 'universities') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
-                        @mouseleave="{% if '/dashboard/universities' not in request.path and '/dashboard/faculties' not in request.path %}if (activeSection !== 'universities') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
+                        @mouseenter="{% if '/sg/universities' not in request.path and '/sg/faculties' not in request.path %}if (activeSection !== 'universities') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
+                        @mouseleave="{% if '/sg/universities' not in request.path and '/sg/faculties' not in request.path %}if (activeSection !== 'universities') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -117,7 +117,7 @@
                     <div x-show="activeSection === 'universities'" x-transition class="mt-1 ml-4 space-y-1 border-r-2"
                         style="border-color: var(--border);">
                         <a  href="{% url 'dashboard:university_list' %}"
-                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/dashboard/universities/' %}active{% endif %}" >
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/sg/universities/' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -127,9 +127,9 @@
                             <span>إدارة الجامعات</span>
                         </a>
                         <div
-                            :style="'{{ request.path }}'.includes('/dashboard/universities/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                            :style="'{{ request.path }}'.includes('/sg/universities/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                             <a  href="{% url 'dashboard:university_create' %}"
-                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/universities/create' in request.path %}active{% endif %}" >
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/universities/create' in request.path %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
@@ -149,7 +149,7 @@
                             <span>الكليات والبرامج</span>
                         </a>
                         <a  href="{% url 'dashboard:tag_list' %}?type=university"
-                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/tags' in request.path and request.GET.type == 'university' %}active{% endif %}" >
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/tags' in request.path and request.GET.type == 'university' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -166,10 +166,10 @@
                     :style="activeSection === 'institutes' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
                     <button  @click="activeSection = activeSection === 'institutes' ? null : 'institutes'"
                         data-toggle="true"
-                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/dashboard/institutes' in request.path %}active{% endif %}" 
+                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/sg/institutes' in request.path %}active{% endif %}" 
                         :style="activeSection === 'institutes' ? 'background-color: var(--primary); color: var(--white);' : ''"
-                        @mouseenter="{% if '/dashboard/institutes' not in request.path %}if (activeSection !== 'institutes') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
-                        @mouseleave="{% if '/dashboard/institutes' not in request.path %}if (activeSection !== 'institutes') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
+                        @mouseenter="{% if '/sg/institutes' not in request.path %}if (activeSection !== 'institutes') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
+                        @mouseleave="{% if '/sg/institutes' not in request.path %}if (activeSection !== 'institutes') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -197,7 +197,7 @@
                     <div x-show="activeSection === 'institutes'" x-transition class="mt-1 ml-4 space-y-1 border-r-2"
                         style="border-color: var(--border);">
                         <a  href="{% url 'dashboard:institute_list' %}"
-                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/dashboard/institutes/' %}active{% endif %}" >
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/sg/institutes/' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -207,9 +207,9 @@
                             <span>إدارة المعاهد</span>
                         </a>
                         <div
-                            :style="'{{ request.path }}'.includes('/dashboard/institutes/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                            :style="'{{ request.path }}'.includes('/sg/institutes/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                             <a  href="{% url 'dashboard:institute_create' %}"
-                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/institutes/create' in request.path %}active{% endif %}" >
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/institutes/create' in request.path %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
@@ -229,7 +229,7 @@
                             <span>أنواع المعاهد</span>
                         </a>
                         <a  href="{% url 'dashboard:tag_list' %}?type=institute"
-                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/tags' in request.path and request.GET.type == 'institute' %}active{% endif %}" >
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/tags' in request.path and request.GET.type == 'institute' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -245,10 +245,10 @@
                 <div
                     :style="activeSection === 'majors' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
                     <button  @click="activeSection = activeSection === 'majors' ? null : 'majors'" data-toggle="true"
-                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/dashboard/majors' in request.path %}active{% endif %}" 
+                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/sg/majors' in request.path %}active{% endif %}" 
                         :style="activeSection === 'majors' ? 'background-color: var(--primary); color: var(--white);' : ''"
-                        @mouseenter="{% if '/dashboard/majors' not in request.path %}if (activeSection !== 'majors') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
-                        @mouseleave="{% if '/dashboard/majors' not in request.path %}if (activeSection !== 'majors') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
+                        @mouseenter="{% if '/sg/majors' not in request.path %}if (activeSection !== 'majors') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
+                        @mouseleave="{% if '/sg/majors' not in request.path %}if (activeSection !== 'majors') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -274,9 +274,9 @@
                         
                         <!-- إدارة التخصصات -->
                         <div
-                            :style="'{{ request.path }}' === '/dashboard/majors/' ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                            :style="'{{ request.path }}' === '/sg/majors/' ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                             <a  href="{% url 'dashboard:major_list' %}"
-                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/dashboard/majors/' %}active{% endif %}" >
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/sg/majors/' %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -289,9 +289,9 @@
 
                         <!-- إضافة تخصص -->
                         <div
-                            :style="'{{ request.path }}'.includes('/dashboard/majors/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                            :style="'{{ request.path }}'.includes('/sg/majors/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                             <a  href="{% url 'dashboard:major_create' %}"
-                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/majors/create' in request.path %}active{% endif %}" >
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/majors/create' in request.path %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
@@ -302,9 +302,9 @@
 
                         <!-- تصنيفات التخصصات -->
                         <div
-                            :style="'{{ request.path }}'.includes('/dashboard/major-categories') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                            :style="'{{ request.path }}'.includes('/sg/major-categories') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                             <a  href="{% url 'dashboard:major_category_list' %}"
-                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/major-categories' in request.path %}active{% endif %}" >
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/major-categories' in request.path %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -321,10 +321,10 @@
                 <div
                     :style="activeSection === 'articles' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
                     <button  @click="activeSection = activeSection === 'articles' ? null : 'articles'" data-toggle="true"
-                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}active{% endif %}" 
+                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/sg/articles' in request.path or '/sg/categories' in request.path or '/sg/tags' in request.path %}active{% endif %}" 
                         :style="activeSection === 'articles' ? 'background-color: var(--primary); color: var(--white);' : ''"
-                        @mouseenter="{% if '/dashboard/articles' not in request.path and '/dashboard/categories' not in request.path and '/dashboard/tags' not in request.path %}if (activeSection !== 'articles') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
-                        @mouseleave="{% if '/dashboard/articles' not in request.path and '/dashboard/categories' not in request.path and '/dashboard/tags' not in request.path %}if (activeSection !== 'articles') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
+                        @mouseenter="{% if '/sg/articles' not in request.path and '/sg/categories' not in request.path and '/sg/tags' not in request.path %}if (activeSection !== 'articles') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
+                        @mouseleave="{% if '/sg/articles' not in request.path and '/sg/categories' not in request.path and '/sg/tags' not in request.path %}if (activeSection !== 'articles') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -348,7 +348,7 @@
                     <div x-show="activeSection === 'articles'" x-transition class="mt-1 ml-4 space-y-1 border-r-2"
                         style="border-color: var(--border);">
                         <a  href="{% url 'dashboard:article_list' %}"
-                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/dashboard/articles/' %}active{% endif %}" >
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/sg/articles/' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -358,9 +358,9 @@
                             <span>إدارة المقالات</span>
                         </a>
                         <div
-                            :style="'{{ request.path }}'.includes('/dashboard/articles/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                            :style="'{{ request.path }}'.includes('/sg/articles/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                             <a  href="{% url 'dashboard:article_create' %}"
-                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/articles/create' in request.path %}active{% endif %}" >
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/articles/create' in request.path %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
@@ -369,7 +369,7 @@
                             </a>
                         </div>
                         <a  href="{% url 'dashboard:category_list' %}"
-                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/categories' in request.path %}active{% endif %}" >
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/categories' in request.path %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -379,7 +379,7 @@
                             <span>التصنيفات</span>
                         </a>
                         <a  href="{% url 'dashboard:tag_list' %}?type=article"
-                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/tags' in request.path and request.GET.type|default:'article' == 'article' %}active{% endif %}" >
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/tags' in request.path and request.GET.type|default:'article' == 'article' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -389,7 +389,7 @@
                             <span>وسوم المقالات</span>
                         </a>
                         <a  href="{% url 'dashboard:article_similarity' %}"
-                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/dashboard/articles/similarity/' %}active{% endif %}" >
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/sg/articles/similarity/' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -403,9 +403,9 @@
 
                 <!-- مكتبة الوسائط -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/media') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/media') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="{% url 'dashboard:media_library' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/media' in request.path %}active{% endif %}" >
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/media' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -417,9 +417,9 @@
                 </div>
 
                 <!-- استيراد من WP -->
-                <div :style="'{{ request.path }}'.includes('/dashboard/import') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                <div :style="'{{ request.path }}'.includes('/sg/import') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="{% url 'dashboard:import_page' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/import' in request.path %}active{% endif %}" >
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/import' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -441,9 +441,9 @@
             <div class="space-y-1">
                 <!-- طلبات التسجيل -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/leads') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/leads') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="{% url 'dashboard:lead_list' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/leads' in request.path %}active{% endif %}" >
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/leads' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -472,9 +472,9 @@
             <div class="space-y-1">
                 <!-- إعادة التوجيه -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/redirects') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/redirects') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="{% url 'dashboard:redirect_list' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/redirects' in request.path %}active{% endif %}" >
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/redirects' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -487,9 +487,9 @@
 
                 <!-- إعدادات SEO -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/seo') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/seo') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="{% url 'dashboard:seo_management' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/dashboard/seo' in request.path %}active{% endif %}" >
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/sg/seo' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -513,7 +513,7 @@
                 <!-- تقرير الطلبات -->
                 <!-- تصدير الطلبات -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/lead-export') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/lead-export') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="{% url 'dashboard:lead_export' %}"
                          class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -528,7 +528,7 @@
 
                 <!-- إحصائيات المحتوى -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/statistics') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/statistics') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="{% url 'dashboard:home' %}"
                          class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -551,9 +551,9 @@
             <div class="space-y-1">
                 <!-- إدارة المستخدمين -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/users') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/users') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="{% url 'dashboard:user_list' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/users' in request.path %}active{% endif %}" >
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/users' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -566,9 +566,9 @@
 
                 <!-- الإعدادات العامة -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/settings') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/settings') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="{% url 'dashboard:settings' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/settings' in request.path %}active{% endif %}" >
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/settings' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -591,7 +591,7 @@
             <div class="space-y-1">
                 <!-- سجل النشاط -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/activity-log') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/activity-log') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="#"
                          class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" 
                         title="قريباً">
@@ -607,7 +607,7 @@
 
                 <!-- معلومات النظام -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/system-info') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/system-info') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="#"
                          class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" 
                         title="قريباً">
@@ -622,7 +622,7 @@
 
                 <!-- النسخ الاحتياطية -->
                 <div
-                    :style="'{{ request.path }}'.includes('/dashboard/backups') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    :style="'{{ request.path }}'.includes('/sg/backups') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="#"
                          class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" 
                         title="قريباً">

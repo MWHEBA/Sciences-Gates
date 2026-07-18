@@ -3,8 +3,8 @@
 
 User-agent: *
 Allow: /
-Disallow: /admin/
-Disallow: /dashboard/
+Disallow: /mw-admin/
+Disallow: /sg/
 Disallow: /api/
 Disallow: /*.json$
 Disallow: /*?*page=

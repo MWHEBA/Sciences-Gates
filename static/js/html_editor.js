@@ -271,6 +271,24 @@ class ProfessionalHTMLEditor {
             fontElements.forEach(el => {
                 const span = document.createElement('span');
                 span.style.fontSize = size + 'px';
+                
+                // Preserve color if it exists
+                if (el.hasAttribute('color')) {
+                    span.style.color = el.getAttribute('color');
+                }
+                
+                // Preserve existing inline styles if any
+                if (el.hasAttribute('style')) {
+                    span.setAttribute('style', span.getAttribute('style') + ';' + el.getAttribute('style'));
+                }
+                
+                // Copy any other attributes (except size) to preserve class or custom attrs
+                Array.from(el.attributes).forEach(attr => {
+                    if (attr.name !== 'size' && attr.name !== 'style' && attr.name !== 'color') {
+                        span.setAttribute(attr.name, attr.value);
+                    }
+                });
+
                 span.innerHTML = el.innerHTML;
                 el.parentNode.replaceChild(span, el);
             });
@@ -350,24 +368,49 @@ class ProfessionalHTMLEditor {
         const fontColorGroup = document.createElement('div');
         fontColorGroup.className = 'pro-editor-toolbar-group';
 
+        // Split button container
+        const splitBtn = document.createElement('div');
+        splitBtn.className = 'pro-editor-split-btn';
+
         this._fontColorBtn = document.createElement('button');
         this._fontColorBtn.type = 'button';
         this._fontColorBtn.className = 'pro-editor-btn pro-editor-color-btn';
-        this._fontColorBtn.title = 'لون الخط';
-        this._fontColorBtn.setAttribute('aria-label', 'لون الخط');
+        this._fontColorBtn.title = 'تطبيق لون الخط الحالي';
+        this._fontColorBtn.setAttribute('aria-label', 'تطبيق لون الخط الحالي');
         this._fontColorBtn.innerHTML = `
             ${ProfessionalHTMLEditor.ICONS.fontColor}
-            <span class="pro-color-indicator" style="background-color: #000000;"></span>
+            <span class="pro-color-indicator" style="background-color: var(--text-primary);"></span>
         `;
-        this._currentFontColor = '#000000';
+        this._currentFontColor = 'inherit';
 
+        // Click main button applies the last selected color directly
         this._fontColorBtn.addEventListener('mousedown', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            this._toggleColorPalette();
+            this._applyFontColor(this._currentFontColor);
         });
 
-        fontColorGroup.appendChild(this._fontColorBtn);
+        // Create arrow/dropdown button to open palette
+        this._fontColorDropdownBtn = document.createElement('button');
+        this._fontColorDropdownBtn.type = 'button';
+        this._fontColorDropdownBtn.className = 'pro-editor-btn pro-editor-color-arrow-btn';
+        this._fontColorDropdownBtn.title = 'اختيار لون الخط';
+        this._fontColorDropdownBtn.setAttribute('aria-label', 'اختيار لون الخط');
+        this._fontColorDropdownBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        `;
+
+        this._fontColorDropdownBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this._toggleColorPalette(splitBtn);
+        });
+
+        splitBtn.appendChild(this._fontColorBtn);
+        splitBtn.appendChild(this._fontColorDropdownBtn);
+        fontColorGroup.appendChild(splitBtn);
         this.toolbar.appendChild(fontColorGroup);
 
         // ─── Compact/Minimal Toggle Button (آخر زر في الشريط) ──────────────────
@@ -438,6 +481,7 @@ class ProfessionalHTMLEditor {
 
         // Hidden textarea (carries value on form submit)
         this.hiddenTextarea = document.createElement('textarea');
+        this.hiddenTextarea.className = 'pro-editor-hidden-textarea';
         this.hiddenTextarea.style.display = 'none';
         this.hiddenTextarea.setAttribute('aria-hidden', 'true');
 
@@ -854,7 +898,7 @@ class ProfessionalHTMLEditor {
         document.body.appendChild(modal);
     }
 
-    _toggleColorPalette() {
+    _toggleColorPalette(targetElement) {
         // Close existing palette if open
         const existing = document.querySelector('.pro-color-palette');
         if (existing) {
@@ -862,10 +906,20 @@ class ProfessionalHTMLEditor {
             return;
         }
 
+        const anchorEl = targetElement || this._fontColorBtn.parentElement;
+
         const palette = document.createElement('div');
         palette.className = 'pro-color-palette';
 
-        let html = '<div class="pro-palette-grid">';
+        let html = `
+            <button type="button" class="pro-palette-auto-btn" data-color="inherit" title="تلقائي">
+                <span class="pro-palette-auto-swatch"></span>
+                <span class="pro-palette-auto-label">تلقائي</span>
+            </button>
+            <div class="pro-palette-divider"></div>
+        `;
+
+        html += '<div class="pro-palette-grid">';
         ProfessionalHTMLEditor.COLOR_PALETTE.forEach(color => {
             html += `<button class="pro-palette-swatch" data-color="${color}" style="background-color: ${color};" title="${color}"></button>`;
         });
@@ -873,12 +927,12 @@ class ProfessionalHTMLEditor {
 
         palette.innerHTML = html;
 
-        // Apply color on swatch click
-        palette.querySelectorAll('.pro-palette-swatch').forEach(swatch => {
-            swatch.addEventListener('mousedown', (e) => {
+        // Apply color on swatch or auto button click
+        palette.querySelectorAll('[data-color]').forEach(btn => {
+            btn.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const color = swatch.getAttribute('data-color');
+                const color = btn.getAttribute('data-color');
                 this._applyFontColor(color);
                 palette.remove();
             });
@@ -886,9 +940,9 @@ class ProfessionalHTMLEditor {
 
         document.body.appendChild(palette);
 
-        // Position below the color button - calculate position after rendering
+        // Position below the target element - calculate position after rendering
         setTimeout(() => {
-            const rect = this._fontColorBtn.getBoundingClientRect();
+            const rect = anchorEl.getBoundingClientRect();
             const paletteRect = palette.getBoundingClientRect();
             
             let top = rect.bottom + 6;
@@ -912,8 +966,11 @@ class ProfessionalHTMLEditor {
 
         // Close on outside click
         const closePalette = (e) => {
-            if (!palette.contains(e.target) && e.target !== this._fontColorBtn) {
+            if (!palette.contains(e.target) && 
+                !e.target.closest('.pro-editor-color-btn') && 
+                !e.target.closest('.pro-editor-color-arrow-btn')) {
                 palette.remove();
+                this._popoverRange = null;
                 document.removeEventListener('mousedown', closePalette);
             }
         };
@@ -924,9 +981,23 @@ class ProfessionalHTMLEditor {
 
     _applyFontColor(color) {
         this._currentFontColor = color;
-        // Update indicator
-        const indicator = this._fontColorBtn.querySelector('.pro-color-indicator');
-        if (indicator) indicator.style.backgroundColor = color;
+        // Update all indicator elements on the page (toolbar and popover)
+        const indicators = document.querySelectorAll('.pro-color-indicator');
+        indicators.forEach(indicator => {
+            if (color === 'inherit') {
+                indicator.style.backgroundColor = 'var(--text-primary)';
+            } else {
+                indicator.style.backgroundColor = color;
+            }
+        });
+
+        // Restore selection range if it was triggered from a popover
+        if (this._popoverRange) {
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(this._popoverRange);
+            this._popoverRange = null;
+        }
 
         this.editorArea.focus();
         document.execCommand('foreColor', false, color);
@@ -1231,7 +1302,7 @@ class ProfessionalHTMLEditor {
             progressDiv.style.display = 'none';
         });
 
-        xhr.open('POST', '/dashboard/editor/upload-image/');
+        xhr.open('POST', '/sg/editor/upload-image/');
         xhr.send(formData);
     }
 
@@ -2300,7 +2371,9 @@ class ProfessionalHTMLEditor {
             { icon: ProfessionalHTMLEditor.ICONS.link, title: 'رابط (Ctrl+K)', action: 'link' },
             { type: 'sep' },
             { icon: ProfessionalHTMLEditor.ICONS.h2, title: 'عنوان 2', action: 'formatBlock', value: 'h2', toggle: true },
-            { icon: ProfessionalHTMLEditor.ICONS.h3, title: 'عنوان 3', action: 'formatBlock', value: 'h3', toggle: true }
+            { icon: ProfessionalHTMLEditor.ICONS.h3, title: 'عنوان 3', action: 'formatBlock', value: 'h3', toggle: true },
+            { type: 'sep' },
+            { type: 'fontColor' }
         ];
 
         const stateMap = {
@@ -2314,6 +2387,58 @@ class ProfessionalHTMLEditor {
                 const sep = document.createElement('div');
                 sep.className = 'pro-selection-popover-sep';
                 popover.appendChild(sep);
+            } else if (item.type === 'fontColor') {
+                const splitBtn = document.createElement('div');
+                splitBtn.className = 'pro-editor-split-btn pro-selection-popover-split-btn';
+
+                const mainBtn = document.createElement('button');
+                mainBtn.type = 'button';
+                mainBtn.className = 'pro-selection-popover-btn pro-editor-color-btn';
+                mainBtn.title = 'تطبيق لون الخط الحالي';
+                mainBtn.innerHTML = `
+                    ${ProfessionalHTMLEditor.ICONS.fontColor}
+                    <span class="pro-color-indicator" style="background-color: ${this._currentFontColor === 'inherit' ? 'var(--text-primary)' : this._currentFontColor};"></span>
+                `;
+                
+                mainBtn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Capture range and restore it
+                    this._popoverRange = range.cloneRange();
+                    this._applyFontColor(this._currentFontColor);
+
+                    // Re-trigger handleSelection to update popover button state
+                    setTimeout(() => {
+                        const newSel = window.getSelection();
+                        if (newSel && newSel.rangeCount > 0) {
+                            this._showSelectionPopover(newSel.getRangeAt(0));
+                        }
+                    }, 50);
+                });
+
+                const arrowBtn = document.createElement('button');
+                arrowBtn.type = 'button';
+                arrowBtn.className = 'pro-selection-popover-btn pro-editor-color-arrow-btn';
+                arrowBtn.title = 'اختيار لون الخط';
+                arrowBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                `;
+
+                arrowBtn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Capture range for selection restoration when swatch is chosen
+                    this._popoverRange = range.cloneRange();
+                    this._toggleColorPalette(splitBtn);
+                });
+
+                splitBtn.appendChild(mainBtn);
+                splitBtn.appendChild(arrowBtn);
+                popover.appendChild(splitBtn);
             } else {
                 const btn = document.createElement('button');
                 btn.type = 'button';
@@ -2382,6 +2507,10 @@ class ProfessionalHTMLEditor {
     }
 
     _positionSelectionPopover(popover, range) {
+        // Set position to fixed first so it layouts with its final shrink-to-fit dimensions
+        popover.style.position = 'fixed';
+        popover.style.zIndex = '10000';
+
         const rect = range.getBoundingClientRect();
         const pRect = popover.getBoundingClientRect();
 
@@ -2392,28 +2521,28 @@ class ProfessionalHTMLEditor {
             stickyToolbarBottom = tRect.bottom;
         }
 
-        // Try putting popover above the selection first
-        let top = rect.top + window.scrollY - pRect.height - 8;
+        // Try putting popover above the selection first (viewport relative)
+        let top = rect.top - pRect.height - 8;
         
         // Flip below the selection if it collides with viewport top or sticky toolbar
         if (rect.top - pRect.height - 8 < Math.max(8, stickyToolbarBottom)) {
-            top = rect.bottom + window.scrollY + 8;
+            top = rect.bottom + 8;
         }
 
-        let left = rect.left + window.scrollX + (rect.width - pRect.width) / 2;
+        let left = rect.left + (rect.width - pRect.width) / 2;
 
-        // Horizontally constrain
+        // Horizontally constrain inside viewport
         if (left < 8) left = 8;
         if (left + pRect.width > window.innerWidth) left = window.innerWidth - pRect.width - 8;
 
-        popover.style.position = 'absolute';
         popover.style.top = top + 'px';
         popover.style.left = left + 'px';
-        popover.style.zIndex = '10000';
+        popover.style.visibility = 'visible';
     }
 
     _hideSelectionPopover() {
         document.querySelector('[data-selection-popover]')?.remove();
+        this._popoverRange = null;
     }
 
     _showIconTooltip(iconWrapper) {
@@ -3425,6 +3554,9 @@ class ProfessionalHTMLEditor {
             if (fontSizeSelect) fontSizeSelect.parentElement.style.display = '';
             if (fontColorBtn) {
                 fontColorBtn.style.display = '';
+                if (this._fontColorDropdownBtn) {
+                    this._fontColorDropdownBtn.style.display = '';
+                }
                 fontColorBtn.parentElement.style.display = '';
             }
 
@@ -3445,6 +3577,9 @@ class ProfessionalHTMLEditor {
             if (lineHeightSelect) lineHeightSelect.parentElement.style.display = '';
             if (fontColorBtn) {
                 fontColorBtn.style.display = '';
+                if (this._fontColorDropdownBtn) {
+                    this._fontColorDropdownBtn.style.display = '';
+                }
                 fontColorBtn.parentElement.style.display = '';
             }
         }

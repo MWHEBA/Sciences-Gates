@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0F2A4A;
+            --secondary: #C8A041;
+            --text-dark: #1E293B;
+            --text-body: #475569;
+            --bg-gray: #F8FAFC;
+            --bg-white: #FFFFFF;
+            --border-color: #E2E8F0;
+            --radius-lg: 16px;
+        }
+        body {
+            font-family: 'Alexandria', sans-serif;
+            background-color: var(--bg-gray);
+            color: var(--text-body);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            direction: rtl;
+        }
+        .container {
+            max-width: 600px;
+            width: 90%;
+            background-color: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #FDF9F1;
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+            font-size: 14px;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        h1 {
+            color: var(--text-dark);
+            font-size: 28px;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        .countdown-item {
+            background-color: var(--bg-gray);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 20px;
+            min-width: 70px;
+        }
+        .countdown-val {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--primary);
+            display: block;
+        }
+        .countdown-lbl {
+            font-size: 12px;
+            color: var(--text-body);
+        }
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: opacity 0.2s;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--bg-white);
+        }
+        .btn-secondary {
+            background-color: var(--bg-white);
+            border: 1px solid var(--border-color);
+            color: var(--text-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">بوابات العلوم</div>
+        
+        <div class="status-badge">أعمال صيانة مجدولة</div>
+        
+        <h1>{{ title }}</h1>
+        <p>{{ message }}</p>
+        
+        {% if remaining_seconds %}
+        <div class="countdown" id="countdown-wrapper">
+            <div class="countdown-item">
+                <span class="countdown-val" id="cd-seconds">00</span>
+                <span class="countdown-lbl">ثانية</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-val" id="cd-minutes">00</span>
+                <span class="countdown-lbl">دقيقة</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-val" id="cd-hours">00</span>
+                <span class="countdown-lbl">ساعة</span>
+            </div>
+        </div>
+        
+        <script>
+            (function() {
+                var seconds = parseInt("{{ remaining_seconds }}", 10) || 0;
+                var wrapper = document.getElementById('countdown-wrapper');
+                
+                function updateCountdown() {
+                    if (seconds <= 0) {
+                        location.reload();
+                        return;
+                    }
+                    
+                    var h = Math.floor(seconds / 3600);
+                    var m = Math.floor((seconds % 3600) / 60);
+                    var s = seconds % 60;
+                    
+                    document.getElementById('cd-hours').textContent = String(h).padStart(2, '0');
+                    document.getElementById('cd-minutes').textContent = String(m).padStart(2, '0');
+                    document.getElementById('cd-seconds').textContent = String(s).padStart(2, '0');
+                    
+                    seconds--;
+                }
+                
+                updateCountdown();
+                setInterval(updateCountdown, 1000);
+            })();
+        </script>
+        {% endif %}
+        
+        <div class="actions">
+            {% if whatsapp %}
+            <a href="https://wa.me/{{ whatsapp }}" class="btn btn-primary" target="_blank">تواصل عبر واتساب</a>
+            {% endif %}
+            {% if email %}
+            <a href="mailto:{{ email }}" class="btn btn-secondary">راسلنا بريدياً</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

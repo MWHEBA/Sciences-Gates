@@ -568,8 +568,8 @@ html[dir="rtl"] main {
 #main-form input[type="date"],
 #main-form input[type="time"],
 #main-form input[type="file"]:not(.image-upload-input),
-#main-form select,
-#main-form textarea,
+#main-form select:not(.select2-hidden-accessible),
+#main-form textarea:not(.pro-editor-textarea):not(.pro-editor-hidden-textarea):not(.simple-rich-text-textarea),
 .select2-container--default .select2-selection--single {
     width: 100% !important;
     height: 42px !important;
@@ -599,7 +599,7 @@ html[dir="rtl"] main {
 }
 
 /* Textarea needs variable height */
-#main-form textarea {
+#main-form textarea:not(.pro-editor-textarea):not(.pro-editor-hidden-textarea):not(.simple-rich-text-textarea) {
     height: auto !important;
     min-height: 100px !important;
     padding: 12px 16px !important;
@@ -607,7 +607,7 @@ html[dir="rtl"] main {
 }
 
 /* Adjust Select & Select2 custom arrow positioning and padding */
-#main-form select,
+#main-form select:not(.select2-hidden-accessible),
 .select2-container--default .select2-selection--single {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%2343576B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
@@ -615,7 +615,7 @@ html[dir="rtl"] main {
     background-size: 1rem 1rem !important;
 }
 
-#main-form select {
+#main-form select:not(.select2-hidden-accessible) {
     padding-right: 36px !important;
     appearance: none !important;
 }
@@ -655,8 +655,8 @@ html[dir="rtl"] main {
 #main-form input[type="date"]:hover,
 #main-form input[type="time"]:hover,
 #main-form input[type="file"]:not(.image-upload-input):hover,
-#main-form select:hover,
-#main-form textarea:hover,
+#main-form select:not(.select2-hidden-accessible):hover,
+#main-form textarea:not(.pro-editor-textarea):not(.pro-editor-hidden-textarea):not(.simple-rich-text-textarea):hover,
 .select2-container--default .select2-selection--single:hover {
     border-color: var(--border-strong) !important;
     background-color: var(--bg-light) !important;
@@ -672,8 +672,8 @@ html[dir="rtl"] main {
 #main-form input[type="date"]:focus,
 #main-form input[type="time"]:focus,
 #main-form input[type="file"]:not(.image-upload-input):focus,
-#main-form select:focus,
-#main-form textarea:focus,
+#main-form select:not(.select2-hidden-accessible):focus,
+#main-form textarea:not(.pro-editor-textarea):not(.pro-editor-hidden-textarea):not(.simple-rich-text-textarea):focus,
 .select2-container--default.select2-container--open .select2-selection--single,
 .select2-container--default.select2-container--focus .select2-selection--single {
     outline: none !important;

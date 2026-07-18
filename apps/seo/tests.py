@@ -44,14 +44,15 @@ class TestRobotsTxtView:
     
     def test_robots_txt_contains_disallow_rules(self):
         """Test that robots.txt contains expected disallow rules."""
+        from django.conf import settings
         from apps.seo.views import robots_txt
         
         request = self.factory.get('/robots.txt')
         response = robots_txt(request)
         content = response.content.decode()
         
-        assert 'Disallow: /admin/' in content
-        assert 'Disallow: /dashboard/' in content
+        assert f"Disallow: /{settings.ADMIN_URL.strip('/')}/" in content
+        assert f"Disallow: /{settings.DASHBOARD_URL.strip('/')}/" in content
         assert 'User-agent: *' in content
     
     def test_robots_txt_contains_sitemap_reference(self):

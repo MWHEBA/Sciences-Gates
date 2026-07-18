@@ -31,13 +31,16 @@ def robots_txt(request):
             pass  # Fall back to dynamic if file read fails
     
     # Fallback to dynamic robots.txt
+    admin_url = settings.ADMIN_URL.strip('/')
+    dashboard_url = settings.DASHBOARD_URL.strip('/')
+    
     robots_content = """# Science Gates Platform - robots.txt
 # Generated for search engine optimization
 
 User-agent: *
 Allow: /
-Disallow: /admin/
-Disallow: /dashboard/
+Disallow: /{admin_url}/
+Disallow: /{dashboard_url}/
 Disallow: /api/
 Disallow: /*.json$
 Disallow: /*?*page=
@@ -57,6 +60,8 @@ Disallow: /
 # Sitemap location
 Sitemap: {sitemap_url}
 """.format(
+        admin_url=admin_url,
+        dashboard_url=dashboard_url,
         sitemap_url=request.build_absolute_uri('/sitemap.xml')
     )
     return HttpResponse(robots_content, content_type='text/plain')

@@ -2,6 +2,7 @@
 Context processors for global template context.
 معالجات السياق للسياق العام للقوالب
 """
+from django.conf import settings
 from apps.leads.models import Lead
 from apps.leads.countries import ALL_COUNTRIES, DEFAULT_COUNTRY, DEFAULT_CODE, DEFAULT_PLACEHOLDER
 from apps.core.models import SiteSettings
@@ -18,7 +19,9 @@ def dashboard_context(request):
     context = {}
     
     # Only add dashboard context if user is authenticated and accessing dashboard
-    if request.user.is_authenticated and 'dashboard' in request.path:
+    dashboard_segment = f"/{settings.DASHBOARD_URL.strip('/')}"
+    is_dashboard = request.path == dashboard_segment or request.path.startswith(f"{dashboard_segment}/")
+    if request.user.is_authenticated and is_dashboard:
         unread_leads_count = Lead.objects.filter(is_read=False).count()
         context['unread_leads_count'] = unread_leads_count
     else:
@@ -68,7 +71,9 @@ def phone_countries_context(request):
     إضافة أكواد الدول للقوالب التي تحتاج فورم التواصل
     """
     # Only load for public pages (not dashboard)
-    if 'dashboard' in request.path:
+    dashboard_segment = f"/{settings.DASHBOARD_URL.strip('/')}"
+    is_dashboard = request.path == dashboard_segment or request.path.startswith(f"{dashboard_segment}/")
+    if is_dashboard:
         return {}
     
     return {
@@ -85,10 +90,13 @@ def mega_menu_context(request):
     Filters out helper/auxiliary pages.
     """
     # Only load for public pages (not dashboard or admin)
-    if 'dashboard' in request.path or request.path.startswith('/admin/'):
+    dashboard_segment = f"/{settings.DASHBOARD_URL.strip('/')}"
+    admin_segment = f"/{settings.ADMIN_URL.strip('/')}"
+    is_dashboard = request.path == dashboard_segment or request.path.startswith(f"{dashboard_segment}/")
+    is_admin = request.path == admin_segment or request.path.startswith(f"{admin_segment}/")
+    if is_dashboard or is_admin:
         return {}
     
-    from django.conf import settings
     # Skip during testing to avoid extra queries in assert_num_queries tests
     if getattr(settings, 'TESTING', False):
         return {

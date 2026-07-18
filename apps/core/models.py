@@ -327,6 +327,38 @@ class SiteSettings(models.Model):
         verbose_name='آخر توليد لخريطة الموقع'
     )
     
+    # Maintenance Settings
+    maintenance_mode = models.BooleanField(
+        default=False,
+        verbose_name='تفعيل وضع الصيانة',
+        help_text='إغلاق الموقع للزوار وعرض صفحة الصيانة'
+    )
+    maintenance_title = models.CharField(
+        max_length=200,
+        default='صيانة مجدولة',
+        verbose_name='عنوان صفحة الصيانة'
+    )
+    maintenance_message = models.TextField(
+        default='الموقع قيد الصيانة حالياً لتقديم تجربة أفضل. سنعود قريباً.',
+        verbose_name='رسالة صفحة الصيانة'
+    )
+    maintenance_estimated_end = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='موعد الانتهاء المتوقع',
+        help_text='تحديد موعد الانتهاء يعرض عداداً تنازلياً ويساعد محركات البحث في جدولة الزيارة القادمة'
+    )
+    maintenance_bypass_ips = models.TextField(
+        blank=True,
+        verbose_name='عناوين IP المستثناة',
+        help_text='أدخل عناوين IP المسموح لها بتصفح الموقع مفصولة بأسطر أو فواصل (مثال: 127.0.0.1)'
+    )
+    maintenance_bypass_staff = models.BooleanField(
+        default=True,
+        verbose_name='السماح لمدراء الموقع بالتصفح',
+        help_text='عند التفعيل، يمكن للمستخدمين المسجلين دخولهم كـ Staff تصفح الموقع بشكل طبيعي'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -344,10 +376,39 @@ class SiteSettings(models.Model):
     def __str__(self):
         return 'إعدادات الموقع'
 
+    def update_maintenance_cache(self):
+        """Write current maintenance state to a local JSON file to prevent DB hits."""
+        import json
+        from django.conf import settings
+        from django.core.serializers.json import DjangoJSONEncoder
+        
+        cache_dir = settings.BASE_DIR / 'cache'
+        cache_dir.mkdir(exist_ok=True)
+        cache_file = cache_dir / 'maintenance_state.json'
+        
+        data = {
+            'maintenance_mode': self.maintenance_mode,
+            'maintenance_title': self.maintenance_title,
+            'maintenance_message': self.maintenance_message,
+            'maintenance_estimated_end': self.maintenance_estimated_end.isoformat() if self.maintenance_estimated_end else None,
+            'maintenance_bypass_ips': self.maintenance_bypass_ips,
+            'maintenance_bypass_staff': self.maintenance_bypass_staff,
+            'whatsapp': self.whatsapp,
+            'email': self.email,
+            'phone': self.phone,
+        }
+        
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, cls=DjangoJSONEncoder, ensure_ascii=False, indent=2)
+
     def save(self, *args, **kwargs):
         """Ensure only one instance exists (singleton pattern)."""
         self.pk = 1
         super().save(*args, **kwargs)
+        try:
+            self.update_maintenance_cache()
+        except Exception:
+            pass
 
     def delete(self, *args, **kwargs):
         """Prevent deletion of the singleton instance."""
@@ -358,6 +419,16 @@ class SiteSettings(models.Model):
         """Get or create the singleton instance."""
         settings, created = cls.objects.get_or_create(pk=1)
         return settings
+
+
+@receiver(post_save, sender=SiteSettings)
+def sync_maintenance_cache(sender, instance, **kwargs):
+    """Sync maintenance cache file when SiteSettings is saved."""
+    try:
+        instance.update_maintenance_cache()
+    except Exception:
+        pass
+
 
     @property
     def whatsapp_list(self):

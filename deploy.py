@@ -1122,7 +1122,7 @@ class DeploymentManager:
         run_pip = has_reqs
         run_migrate = has_migrations
         run_collectstatic = has_static
-        run_reload = has_py or has_migrations or has_reqs
+        run_reload = has_py or has_migrations or has_reqs or has_static
         run_clear_cache = has_static or has_html or has_py or has_migrations
 
         print("\n🔍 التحديث الذكي التلقائي اكتشف:")
@@ -1135,7 +1135,7 @@ class DeploymentManager:
         if run_clear_cache:
             print("   🧹 تعديل في الأصول الثابتة أو القوالب أو الكود → سيتم مسح الكاش")
         if run_reload:
-            print("   💻 تعديل في ملفات الكود (Python) → سيتم إعادة تشغيل التطبيق")
+            print("   💻 تعديل في ملفات الكود (Python) أو الملفات الثابتة → سيتم إعادة تشغيل التطبيق")
         
         if not (run_pip or run_migrate or run_collectstatic or run_reload):
             print("   ⏭️  لم يتم كشف أي تغييرات تتطلب تثبيت متطلبات أو ميجريشن أو كولكت ستاتيك.")

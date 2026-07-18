@@ -129,4 +129,98 @@
     </div>
 </div>
 
+<!-- إعدادات وضع الصيانة -->
+<div class="bg-white rounded-lg shadow-sm border p-6 border-amber-200" style="border-color: #fde68a;">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+        <span class="text-amber-950">إعدادات وضع الصيانة (Maintenance Mode)</span>
+    </h2>
+    <p class="text-sm text-amber-800 mb-6 bg-amber-50 border border-amber-100 rounded-lg p-4 leading-relaxed">
+        تفعيل وضع الصيانة سيقوم بإغلاق الموقع بالكامل للزوار العامين وعرض صفحة تنبيهية مخصصة بكود حالة 503 (لحماية أرشفة محركات البحث والـ SEO).
+    </p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Maintenance Mode Toggle -->
+        <div class="md:col-span-2 flex items-start gap-3 bg-amber-50/50 border border-amber-100 rounded-xl p-4">
+            <div class="flex items-center h-5">
+                {{ form.maintenance_mode }}
+            </div>
+            <div class="text-sm">
+                <label for="{{ form.maintenance_mode.id_for_label }}" class="font-medium text-amber-950">
+                    {{ form.maintenance_mode.label }}
+                </label>
+                <p class="text-xs text-amber-800/80 mt-1">{{ form.maintenance_mode.help_text }}</p>
+                {% if form.maintenance_mode.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.maintenance_mode.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Maintenance Title -->
+        <div class="md:col-span-2">
+            <label for="{{ form.maintenance_title.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                {{ form.maintenance_title.label }}
+            </label>
+            {{ form.maintenance_title }}
+            {% if form.maintenance_title.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.maintenance_title.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-1 text-xs text-gray-500">{{ form.maintenance_title.help_text }}</p>
+        </div>
+
+        <!-- Maintenance Message -->
+        <div class="md:col-span-2">
+            <label for="{{ form.maintenance_message.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                {{ form.maintenance_message.label }}
+            </label>
+            {{ form.maintenance_message }}
+            {% if form.maintenance_message.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.maintenance_message.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-1 text-xs text-gray-500">{{ form.maintenance_message.help_text }}</p>
+        </div>
+
+        <!-- Estimated End Time -->
+        <div>
+            <label for="{{ form.maintenance_estimated_end.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                {{ form.maintenance_estimated_end.label }}
+            </label>
+            {{ form.maintenance_estimated_end }}
+            {% if form.maintenance_estimated_end.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.maintenance_estimated_end.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-1 text-xs text-gray-500">{{ form.maintenance_estimated_end.help_text }}</p>
+        </div>
+
+        <!-- Staff Bypass -->
+        <div class="flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-xl p-4">
+            <div class="flex items-center h-5">
+                {{ form.maintenance_bypass_staff }}
+            </div>
+            <div class="text-sm">
+                <label for="{{ form.maintenance_bypass_staff.id_for_label }}" class="font-medium text-gray-900">
+                    {{ form.maintenance_bypass_staff.label }}
+                </label>
+                <p class="text-xs text-gray-500 mt-1">{{ form.maintenance_bypass_staff.help_text }}</p>
+                {% if form.maintenance_bypass_staff.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.maintenance_bypass_staff.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Whitelisted IPs -->
+        <div class="md:col-span-2">
+            <label for="{{ form.maintenance_bypass_ips.id_for_label }}" class="block text-sm font-normal text-gray-700 mb-2">
+                {{ form.maintenance_bypass_ips.label }}
+            </label>
+            {{ form.maintenance_bypass_ips }}
+            {% if form.maintenance_bypass_ips.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.maintenance_bypass_ips.errors.0 }}</p>
+            {% endif %}
+            <p class="mt-1 text-xs text-gray-500">{{ form.maintenance_bypass_ips.help_text }}</p>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

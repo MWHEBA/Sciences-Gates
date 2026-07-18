@@ -5,6 +5,7 @@ Tests for WordPress importer services.
 import io
 from unittest.mock import patch, MagicMock
 from django.test import TestCase
+from django.urls import reverse
 from django.contrib.auth.models import User
 from apps.core.models import MediaFile
 from apps.importer.services.content_mapper import ContentMapper
@@ -1089,10 +1090,12 @@ class ContentMapperRedirectAndMediaReplacementTests(TestCase):
             'faculties': [],
             'faqs': []
         }
+        from django.urls import reverse
         result = self.mapper.map_data(wp_data, {}, [])
-        self.assertEqual(result['redirect_url'], f'/dashboard/universities/{uni.id}/edit/')
+        self.assertEqual(result['redirect_url'], reverse('dashboard:university_edit', kwargs={'pk': uni.id}))
 
     def test_redirect_to_edit_if_institute_exists(self):
+        from django.urls import reverse
         from apps.institutes.models import Institute
         inst = Institute.objects.create(
             name='معهد ماليزيا',
@@ -1106,9 +1109,10 @@ class ContentMapperRedirectAndMediaReplacementTests(TestCase):
             'seo': {}
         }
         result = self.mapper.map_data(wp_data, {}, [])
-        self.assertEqual(result['redirect_url'], f'/dashboard/institutes/{inst.id}/edit/')
+        self.assertEqual(result['redirect_url'], reverse('dashboard:institute_edit', kwargs={'pk': inst.id}))
 
     def test_redirect_to_edit_if_major_exists(self):
+        from django.urls import reverse
         from apps.majors.models import Major
         major = Major.objects.create(
             name='هندسة الحاسوب',
@@ -1122,9 +1126,10 @@ class ContentMapperRedirectAndMediaReplacementTests(TestCase):
             'seo': {}
         }
         result = self.mapper.map_data(wp_data, {}, [])
-        self.assertEqual(result['redirect_url'], f'/dashboard/majors/{major.id}/edit/')
+        self.assertEqual(result['redirect_url'], reverse('dashboard:major_edit', kwargs={'pk': major.id}))
 
     def test_redirect_to_edit_if_article_exists(self):
+        from django.urls import reverse
         from apps.articles.models import Article
         article = Article.objects.create(
             title='مقال جديد',
@@ -1138,7 +1143,7 @@ class ContentMapperRedirectAndMediaReplacementTests(TestCase):
             'seo': {}
         }
         result = self.mapper.map_data(wp_data, {}, [])
-        self.assertEqual(result['redirect_url'], f'/dashboard/articles/{article.id}/edit/')
+        self.assertEqual(result['redirect_url'], reverse('dashboard:article_edit', kwargs={'pk': article.id}))
 
     def test_delete_unused_media_file_on_save(self):
         from apps.universities.models import University
@@ -1203,11 +1208,11 @@ class BulkSaveAPITests(TestCase):
             payload['competitor_url'] = competitor_url
             
         with patch('apps.importer.views.run_in_background', lambda f, *a, **k: f(*a, **k)):
-            response = self.client.post('/dashboard/import/bulk-save/', payload)
+            response = self.client.post(reverse('dashboard:import_bulk_save'), payload)
             self.assertEqual(response.status_code, 200)
             job_id = response.json()['job_id']
             
-            status_response = self.client.get(f'/dashboard/import/status/{job_id}/')
+            status_response = self.client.get(reverse('dashboard:import_job_status', args=[job_id]))
             self.assertEqual(status_response.status_code, 200)
             status_data = status_response.json()
             self.assertEqual(status_data['status'], 'SUCCESS')
@@ -1712,7 +1717,7 @@ class ImportSaveDraftViewTests(TestCase):
             'content_type': 'major',
             'mapped_data': {'form_initial': {'name': 'تخصص مالي', 'slug': 'finance-major'}}
         }
-        response = self.client.post('/dashboard/import/save-draft/', payload, content_type='application/json')
+        response = self.client.post(reverse('dashboard:import_save_draft'), payload, content_type='application/json')
         # Should redirect to login or return forbidden since it uses ContentAdminRequiredMixin
         self.assertIn(response.status_code, [302, 403])
 
@@ -1753,7 +1758,7 @@ class ImportSaveDraftViewTests(TestCase):
             'mapped_data': mapped_data
         }
 
-        response = self.client.post('/dashboard/import/save-draft/', payload, content_type='application/json')
+        response = self.client.post(reverse('dashboard:import_save_draft'), payload, content_type='application/json')
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data['success'])
@@ -1812,7 +1817,7 @@ class ImportAutoSearchCompetitorTests(TestCase):
 
         # Mock run_in_background to run synchronously
         with patch('apps.importer.views.run_in_background', lambda f, *a, **k: f(*a, **k)):
-            response = self.client.post('/dashboard/import/fetch/', payload)
+            response = self.client.post(reverse('dashboard:import_fetch'), payload)
             self.assertEqual(response.status_code, 200)
             mock_search.assert_called_once()
 
@@ -1845,7 +1850,7 @@ class ImportAutoSearchCompetitorTests(TestCase):
 
         # Mock run_in_background to run synchronously
         with patch('apps.importer.views.run_in_background', lambda f, *a, **k: f(*a, **k)):
-            response = self.client.post('/dashboard/import/fetch/', payload)
+            response = self.client.post(reverse('dashboard:import_fetch'), payload)
             self.assertEqual(response.status_code, 200)
             mock_search.assert_not_called()
 

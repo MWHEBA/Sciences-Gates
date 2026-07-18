@@ -184,7 +184,7 @@ http://localhost:8000/robots.txt
 ```txt
 User-agent: *
 Allow: /
-Disallow: /admin/
+Disallow: /mw-admin/
 ...
 Sitemap: http://localhost:8000/sitemap.xml
 ```

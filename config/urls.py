@@ -15,8 +15,8 @@ urlpatterns = [
     path('about-us/', AboutView.as_view(), name='about_us'),
     path('visa-tracking/', VisaTrackingView.as_view(), name='visa_tracking'),
 
-    path('admin/', admin.site.urls),
-    path('dashboard/', include('apps.dashboard.urls')),
+    path(settings.ADMIN_URL, admin.site.urls),
+    path(settings.DASHBOARD_URL, include('apps.dashboard.urls')),
     path('universities/', include('apps.universities.urls')),
     path('institutes/', include('apps.institutes.urls')),
     path('majors/', include('apps.majors.urls')),

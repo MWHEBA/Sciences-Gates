@@ -12,7 +12,7 @@ function sg_init_importer() {
     const pollJobStatus = (jobId, onProgress, onSuccess, onFailure) => {
         const interval = setInterval(async () => {
             try {
-                const res = await fetch(`/dashboard/import/status/${jobId}/`, {
+                const res = await fetch(`/sg/import/status/${jobId}/`, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 const resData = await res.json();
@@ -61,7 +61,7 @@ function sg_init_importer() {
             
             const fetchAndPoll = async (fd) => {
                 try {
-                    const response = await fetch('/dashboard/import/fetch/', {
+                    const response = await fetch('/sg/import/fetch/', {
                         method: 'POST',
                         body: fd,
                         headers: {
@@ -410,7 +410,7 @@ function sg_init_importer() {
                         }
 
 
-                        const response = await fetch('/dashboard/import/bulk-save/', {
+                        const response = await fetch('/sg/import/bulk-save/', {
                             method: 'POST',
                             body: formData,
                             headers: {
@@ -817,7 +817,7 @@ function sg_init_wizard() {
             const csrfToken = csrfTokenEl ? csrfTokenEl.value : '';
 
             try {
-                const response = await fetch('/dashboard/import/save-draft/', {
+                const response = await fetch('/sg/import/save-draft/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -957,7 +957,7 @@ function triggerFetchAndPoll(slug, callback) {
         formData.append('competitor_url', item.competitorUrl);
     }
 
-    fetch('/dashboard/import/fetch/', {
+    fetch('/sg/import/fetch/', {
         method: 'POST',
         body: formData,
         headers: {
@@ -972,7 +972,7 @@ function triggerFetchAndPoll(slug, callback) {
             
             // Poll status
             const pollInterval = setInterval(() => {
-                fetch(`/dashboard/import/status/${jobId}/`, {
+                fetch(`/sg/import/status/${jobId}/`, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                 .then(res => res.json())

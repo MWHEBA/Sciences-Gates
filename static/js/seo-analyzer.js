@@ -311,7 +311,7 @@
     } else if (singularType.endsWith('s')) {
       singularType = singularType.slice(0, -1);
     }
-    var previewUrl = '/dashboard/preview/' + singularType + '/' + objectId + '/';
+    var previewUrl = '/sg/preview/' + singularType + '/' + objectId + '/';
 
     var previewBtn = document.createElement('button');
     previewBtn.type = 'button';
@@ -409,7 +409,7 @@
       }
 
       status.innerHTML = '<span style="color:var(--text-secondary)">🔄 جاري تشغيل فحص الـ SEO...</span>';
-      var analyzeUrl = '/dashboard/seo/analyze/' + contentType + '/' + objectId + '/';
+      var analyzeUrl = '/sg/seo/analyze/' + contentType + '/' + objectId + '/';
       if (isPreviewMode) {
         analyzeUrl += '?preview=1';
       }
@@ -434,7 +434,7 @@
         detailJson = analyzeJson.report;
       } else {
         status.innerHTML = '<span style="color:var(--text-secondary)">🔄 جاري تحميل تقارير التحليل...</span>';
-        var detailResp = await fetch('/dashboard/seo/detail/' + contentType + '/' + objectId + '/', {
+        var detailResp = await fetch('/sg/seo/detail/' + contentType + '/' + objectId + '/', {
           method: 'GET',
           credentials: 'same-origin'
         });

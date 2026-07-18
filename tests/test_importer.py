@@ -66,7 +66,8 @@ class TestContentMapper(SimpleTestCase):
         assert mapped['confidence']['city'] == 'high'
         assert mapped['confidence']['description'] == 'high'
         assert mapped['confidence']['keyphrase_synonyms'] == 'high'
-        assert mapped['redirect_url'] == '/dashboard/universities/create/'
+        from django.urls import reverse
+        assert mapped['redirect_url'] == reverse('dashboard:university_create')
 
     def test_clean_importer_name(self):
         mapper = ContentMapper()

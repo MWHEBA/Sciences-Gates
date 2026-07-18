@@ -11,7 +11,7 @@ class ContentLockManager {
         this.options = Object.assign({
             checkInterval: 45000, // 45 seconds heartbeat
             maxRetries: 2,
-            apiUrl: '/dashboard/api/locks/'
+            apiUrl: '/sg/api/locks/'
         }, options);
     }
 
@@ -181,7 +181,7 @@ class ContentLockManager {
                     ${message} لتفادي الكتابة فوق البيانات وفقدان التعديلات، تم تعطيل نموذج التعديل مؤقتاً.
                 </p>
                 <div class="flex flex-row-reverse gap-3 justify-start">
-                    <a href="${document.referrer || '/dashboard/'}" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                    <a href="${document.referrer || '/sg/'}" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
                         العودة للخلف
                     </a>
                     ${kickButton}
@@ -222,7 +222,7 @@ class ContentLockManager {
                     قام المستخدم <strong>"${kickedBy}"</strong> بالاستحواذ على قفل التعديل لهذا العنصر. تم حفظ نسخة احتياطية من التعديلات في متصفحك مؤقتاً لحمايتها من الفقدان.
                 </p>
                 <div class="flex flex-row-reverse gap-3 justify-start">
-                    <a href="${document.referrer || '/dashboard/'}" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                    <a href="${document.referrer || '/sg/'}" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
                         العودة للخلف
                     </a>
                     <button id="view-only-kicked-btn" class="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-200 transition">

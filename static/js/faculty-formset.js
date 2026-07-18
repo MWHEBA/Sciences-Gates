@@ -214,7 +214,17 @@ class FacultyFormsetManager {
         // السحب والإفلات
         this.container.querySelectorAll('.faculty-item__drag-handle').forEach(handle => {
             const item = handle.closest('.faculty-item');
-            item.setAttribute('draggable', 'true');
+            item.setAttribute('draggable', 'false');
+
+            handle.addEventListener('mousedown', () => {
+                item.setAttribute('draggable', 'true');
+            });
+            const disableDrag = () => {
+                item.setAttribute('draggable', 'false');
+            };
+            handle.addEventListener('mouseup', disableDrag);
+            handle.addEventListener('mouseleave', disableDrag);
+            item.addEventListener('dragend', disableDrag);
 
             item.ondragstart = (e) => this.onDragStart(e, item);
             item.ondragend = (e) => this.onDragEnd(e, item);

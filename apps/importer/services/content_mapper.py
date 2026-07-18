@@ -503,47 +503,48 @@ class ContentMapper:
         from apps.majors.models import Major
         from apps.articles.models import Article
 
+        from django.urls import reverse
         target_slug = form_initial.get('slug', '').strip()
         
         try:
             if content_type == 'university':
                 existing_obj = University.objects.filter(slug=target_slug).first()
                 if existing_obj:
-                    redirect_url = f'/dashboard/universities/{existing_obj.id}/edit/'
+                    redirect_url = reverse('dashboard:university_edit', kwargs={'pk': existing_obj.id})
                 else:
-                    redirect_url = '/dashboard/universities/create/'
+                    redirect_url = reverse('dashboard:university_create')
             elif content_type == 'institute':
                 existing_obj = Institute.objects.filter(slug=target_slug).first()
                 if existing_obj:
-                    redirect_url = f'/dashboard/institutes/{existing_obj.id}/edit/'
+                    redirect_url = reverse('dashboard:institute_edit', kwargs={'pk': existing_obj.id})
                 else:
-                    redirect_url = '/dashboard/institutes/create/'
+                    redirect_url = reverse('dashboard:institute_create')
             elif content_type == 'major':
                 existing_obj = Major.objects.filter(slug=target_slug).first()
                 if existing_obj:
-                    redirect_url = f'/dashboard/majors/{existing_obj.id}/edit/'
+                    redirect_url = reverse('dashboard:major_edit', kwargs={'pk': existing_obj.id})
                 else:
-                    redirect_url = '/dashboard/majors/create/'
+                    redirect_url = reverse('dashboard:major_create')
             elif content_type == 'article':
                 existing_obj = Article.objects.filter(slug=target_slug).first()
                 if existing_obj:
-                    redirect_url = f'/dashboard/articles/{existing_obj.id}/edit/'
+                    redirect_url = reverse('dashboard:article_edit', kwargs={'pk': existing_obj.id})
                 else:
-                    redirect_url = '/dashboard/articles/create/'
+                    redirect_url = reverse('dashboard:article_create')
             else:
-                redirect_url = '/dashboard/universities/create/'
+                redirect_url = reverse('dashboard:university_create')
         except (Exception, AssertionError):
             # Fallback to create view if database queries are forbidden/fail (e.g. in SimpleTestCase)
             if content_type == 'university':
-                redirect_url = '/dashboard/universities/create/'
+                redirect_url = reverse('dashboard:university_create')
             elif content_type == 'institute':
-                redirect_url = '/dashboard/institutes/create/'
+                redirect_url = reverse('dashboard:institute_create')
             elif content_type == 'major':
-                redirect_url = '/dashboard/majors/create/'
+                redirect_url = reverse('dashboard:major_create')
             elif content_type == 'article':
-                redirect_url = '/dashboard/articles/create/'
+                redirect_url = reverse('dashboard:article_create')
             else:
-                redirect_url = '/dashboard/universities/create/'
+                redirect_url = reverse('dashboard:university_create')
 
         courses_data = []
         faqs_data = wp_data.get('faqs', [])

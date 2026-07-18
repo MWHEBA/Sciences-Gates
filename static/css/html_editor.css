@@ -302,7 +302,6 @@
 .pro-editor-content h2 {
     font-size: 1.35rem;
     font-weight: 600;
-    color: var(--text-primary);
     margin: 1.2em 0 0.4em 0;
     line-height: 1.3;
 }
@@ -310,7 +309,6 @@
 .pro-editor-content h3 {
     font-size: 1.15rem;
     font-weight: 600;
-    color: var(--text-primary);
     margin: 1em 0 0.35em 0;
     line-height: 1.3;
 }
@@ -318,7 +316,6 @@
 .pro-editor-content h4 {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--text-primary);
     margin: 0.9em 0 0.3em 0;
     line-height: 1.3;
 }
@@ -326,7 +323,6 @@
 .pro-editor-content strong,
 .pro-editor-content b {
     font-weight: 600;
-    color: var(--text-primary);
 }
 
 .pro-editor-content em,
@@ -1904,6 +1900,9 @@
 
 /* ─── Selection Popover ──────────────────────────────────────────────────── */
 .pro-selection-popover {
+    position: fixed;
+    z-index: 10000;
+    visibility: hidden;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -2085,4 +2084,131 @@
 
 .pro-editor-wrapper.is-resizing {
     user-select: none;
+}
+
+/* ─── Font Color Split Button ─────────────────────────────────────────── */
+.pro-editor-split-btn {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease;
+}
+
+.pro-editor-split-btn:hover {
+    border-color: var(--border);
+}
+
+.pro-editor-split-btn .pro-editor-btn {
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+}
+
+.pro-editor-split-btn .pro-editor-btn:first-child {
+    border-start-start-radius: var(--radius-sm) !important;
+    border-end-start-radius: var(--radius-sm) !important;
+}
+
+.pro-editor-split-btn .pro-editor-btn:last-child {
+    border-start-end-radius: var(--radius-sm) !important;
+    border-end-end-radius: var(--radius-sm) !important;
+    border-inline-start: 1px solid var(--border) !important;
+}
+
+.pro-editor-split-btn .pro-editor-color-arrow-btn {
+    width: 16px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+}
+
+.pro-editor-split-btn .pro-editor-color-arrow-btn svg {
+    width: 10px !important;
+    height: 10px !important;
+}
+
+/* Popover specific styles for the split button */
+.pro-selection-popover-split-btn {
+    height: 28px;
+}
+
+.pro-selection-popover-split-btn .pro-selection-popover-btn {
+    height: 28px !important;
+    width: 28px !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+}
+
+.pro-selection-popover-split-btn .pro-selection-popover-btn:first-child {
+    border-start-start-radius: var(--radius-sm) !important;
+    border-end-start-radius: var(--radius-sm) !important;
+}
+
+.pro-selection-popover-split-btn .pro-selection-popover-btn:last-child {
+    border-start-end-radius: var(--radius-sm) !important;
+    border-end-end-radius: var(--radius-sm) !important;
+    border-inline-start: 1px solid var(--border) !important;
+    width: 14px !important; /* Narrower arrow button for popover */
+}
+
+/* Adjust indicator in popover button */
+.pro-selection-popover-split-btn .pro-editor-color-btn {
+    position: relative;
+    padding-bottom: 2px !important;
+}
+
+.pro-selection-popover-split-btn .pro-editor-color-btn .pro-color-indicator {
+    position: absolute;
+    bottom: 2px;
+    left: 4px;
+    right: 4px;
+    height: 2.5px;
+    border-radius: 0.5px;
+}
+
+/* ─── Color Palette Automatic Button ──────────────────────────────────── */
+.pro-palette-auto-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--text-primary);
+    font-family: 'Alexandria', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    margin-bottom: 6px;
+    direction: rtl;
+}
+
+.pro-palette-auto-btn:hover {
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.pro-palette-auto-swatch {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    background-color: var(--text-primary);
+}
+
+.pro-palette-divider {
+    height: 1px;
+    background-color: var(--border);
+    margin: 6px 0;
+}
+
+/* Bulletproof inherit rendering for font elements */
+.pro-editor-content font[color="inherit"] {
+    color: inherit;
 }
