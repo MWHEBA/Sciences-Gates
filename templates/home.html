@@ -20,7 +20,15 @@
 {% endif %}
 {% endblock %}
 
+
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/visa-tracking.css' %}">
+{% endblock %}
+
 {% block content %}
+
 
 <!-- Hero Section -->
 <div class="it-hero-2-area it-hero-2-bg fix p-relative" data-background="{% static 'images/hero-bg-1.jpg' %}"
@@ -304,6 +312,63 @@
                 <p class="empty-msg">لا توجد معاهد متاحة حالياً</p>
                 {% endfor %}
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- Visa Tracking Split Section -->
+<section class="section section-bg-white visa-home-section" aria-labelledby="visa-home-section-title">
+    <div class="container">
+        <div class="grid grid--2 align-items-center">
+            
+            <!-- Right side: Text Content -->
+            <div class="visa-home-content">
+                <span class="section-tag">تأشيرة الطالب بماليزيا</span>
+                <h2 class="section-title-premium" id="visa-home-section-title">متابعة وتتبع حالة فيزتك (EMGS)</h2>
+                <p class="section-desc-premium">
+                    نحن في بوابات العلوم لا ننتهي من مساعدتك بمجرد استلام القبول الأكاديمي، بل نرافقك خطوة بخطوة في متابعة وتسهيل إجراءات الفيزا الدراسية الخاصة بك عبر النظام الرسمي (EMGS).
+                </p>
+                <p class="section-desc-premium">
+                    نوفر لك أداة تفاعلية ودليلاً كاملاً باللغة العربية لشرح وتفسير كل نسبة مئوية تظهر لطلبك وتوضيح الخطوة التالية المطلوبة منك لضمان سرعة صدور التأشيرة وسفرك بسلام.
+                </p>
+                
+                <!-- المميزات السريعة -->
+                <ul class="visa-home-features">
+                    <li class="visa-home-feature-item">
+                        <span class="visa-home-feature-icon">
+                            <i class="fas fa-check"></i>
+                        </span>
+                        <span class="visa-home-feature-text">توجيه مباشر وآمن لبوابة EMGS الرسمية للتتبع.</span>
+                    </li>
+                    <li class="visa-home-feature-item">
+                        <span class="visa-home-feature-icon">
+                            <i class="fas fa-check"></i>
+                        </span>
+                        <span class="visa-home-feature-text">شرح وتفسير تفصيلي لكل نسبة مئوية باللغة العربية.</span>
+                    </li>
+                    <li class="visa-home-feature-item">
+                        <span class="visa-home-feature-icon">
+                            <i class="fas fa-check"></i>
+                        </span>
+                        <span class="visa-home-feature-text">دعم واستشارات مجانية عند توقف أو تأخر إصدار تأشيرتك.</span>
+                    </li>
+                </ul>
+
+                <div style="margin-top: 2rem;">
+                    <a href="{% url 'visa_tracking' %}" class="btn btn--primary btn--lg">
+                        تتبع فيزتك وافهم حالتها الآن
+                        <i class="fas fa-arrow-left" aria-hidden="true" style="margin-right: 8px;"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Left side: Image and visual effect -->
+            <div class="visa-home-images">
+                <div class="visa-home-image-wrapper">
+                    <img src="{% static 'images/visa_portal_status.png' %}" alt="تتبع تأشيرة الطالب EMGS ماليزيا" class="visa-home-img">
+                </div>
+            </div>
+
         </div>
     </div>
 </section>

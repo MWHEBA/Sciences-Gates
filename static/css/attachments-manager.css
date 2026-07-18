@@ -1,5 +1,5 @@
 /**
- * University Attachments Custom CSS
+ * Attachments Custom CSS
  * Styles for the modern drag-and-drop file upload zone and file cards.
  */
 
@@ -70,7 +70,7 @@
     flex-direction: column;
     gap: 4px;
     flex-grow: 1;
-    min-w-0;
+    min-width: 0;
 }
 
 /* Title Input styling */
@@ -198,31 +198,16 @@
 .attachment-dropzone-icon {
     color: var(--text-muted);
     margin-bottom: 8px;
-    transition: color 0.2s ease;
-}
-
-.attachment-dropzone:hover .attachment-dropzone-icon,
-.attachment-dropzone.dragover .attachment-dropzone-icon {
-    color: var(--primary);
 }
 
 .attachment-dropzone-text {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
 .attachment-dropzone-help {
     font-size: 0.75rem;
     color: var(--text-muted);
-}
-
-/* RTL Adjustments */
-[dir="rtl"] .attachment-card {
-    flex-direction: row;
-}
-
-[dir="rtl"] .attachment-actions {
-    margin-right: auto;
-    margin-left: 0;
 }

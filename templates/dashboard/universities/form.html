@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="{% static 'css/faq-bulk-import.css' %}">
 <link rel="stylesheet" href="{% static 'css/tags_input.css' %}">
 <link rel="stylesheet" href="{% static 'css/relations_select.css' %}">
-<link rel="stylesheet" href="{% static 'css/university-attachments.css' %}">
+<link rel="stylesheet" href="{% static 'css/attachments-manager.css' %}">
 {% endblock %}
 
 {% block content_wrapper %}
@@ -181,11 +181,6 @@
                                     {% else %}
                                         {% include "dashboard/components/image_upload.html" with field=form.logo required=True %}
                                     {% endif %}
-                                    
-                                    <!-- Hidden field for logo_alt (updated via modal) -->
-                                    <div style="display: none;">
-                                        {{ form.logo_alt }}
-                                    </div>
                                 </div>
 
                                 <!-- الصورة الرئيسية -->
@@ -195,11 +190,6 @@
                                     {% else %}
                                         {% include "dashboard/components/image_upload.html" with field=form.main_image required=True %}
                                     {% endif %}
-                                    
-                                    <!-- Hidden field for main_image_alt (updated via modal) -->
-                                    <div style="display: none;">
-                                        {{ form.main_image_alt }}
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1184,7 +1174,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="{% static 'js/importer.js' %}"></script>
 <script src="{% static 'js/tags_input.js' %}"></script>
 <script src="{% static 'js/relations_select.js' %}"></script>
-<script src="{% static 'js/university-attachments.js' %}"></script>
+<script src="{% static 'js/attachments-manager.js' %}"></script>
 <script src="{% static 'js/content-lock.js' %}"></script>
 {% if form.instance.pk %}
 {{ form.instance.pk|json_script:"lock-object-id" }}

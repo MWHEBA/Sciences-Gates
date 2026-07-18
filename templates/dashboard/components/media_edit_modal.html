@@ -266,14 +266,6 @@ function saveMediaDetails(event) {
             // Show success message
             document.getElementById('mediaModalSuccess').style.display = 'block';
             
-            // Update the corresponding form field if it's an alt field
-            if (fieldName && fieldName.endsWith('_alt')) {
-                const altField = document.getElementById(`id_${fieldName}`);
-                if (altField) {
-                    altField.value = altText;
-                }
-            }
-            
             // Close modal after 1.5 seconds
             setTimeout(() => {
                 closeMediaModal();

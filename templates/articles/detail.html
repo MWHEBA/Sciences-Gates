@@ -279,6 +279,54 @@
                 </dl>
             </div>
 
+            <!-- الملفات والتحميلات -->
+            {% if article.attachments.all %}
+            <div class="detail-sidebar-card">
+                <h3 class="detail-sidebar-title" style="margin-bottom: 16px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left: 8px;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    الملفات والتحميلات
+                </h3>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                    {% for attachment in article.attachments.all %}
+                    <li>
+                        <a href="{{ attachment.file.url }}" download style="display: block; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background-color: var(--surface-2); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--border-strong)'; this.style.backgroundColor='var(--primary-light)'; var w=this.querySelector('.download-icon-wrapper'); if(w){w.style.backgroundColor='var(--primary)'; w.style.color='#ffffff';}" onmouseout="this.style.borderColor='var(--border)'; this.style.backgroundColor='var(--surface-2)'; var w=this.querySelector('.download-icon-wrapper'); if(w){w.style.backgroundColor='var(--surface)'; w.style.color='var(--primary)';}">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                                <div style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0;">
+                                    <div style="color: var(--text-muted); margin-top: 2px; flex-shrink: 0;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div style="flex: 1; min-width: 0; text-align: right;" dir="rtl">
+                                        <span style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); word-break: break-word; line-height: 1.4;">
+                                            {{ attachment.title }}
+                                        </span>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">
+                                            {{ attachment.file_size|filesizeformat }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="download-icon-wrapper" style="color: var(--primary); flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background-color: var(--surface); transition: all 0.2s;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
             <!-- Inquiry Lead Form Sidebar Card -->
             <div class="detail-sidebar-card detail-sidebar-card--sticky">
                 {% include 'components/lead_form.html' with source_page=request.path %}

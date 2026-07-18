@@ -80,6 +80,9 @@ urlpatterns = [
     path('articles/<int:pk>/edit/', views.ArticleUpdateView.as_view(), name='article_edit'),
     path('articles/<int:pk>/delete/', views.ArticleDeleteView.as_view(), name='article_delete'),
     path('articles/bulk-action/', views.ArticleBulkActionView.as_view(), name='article_bulk_action'),
+    path('articles/similarity/', views.ArticleSimilarityView.as_view(), name='article_similarity'),
+    path('articles/similarity/action/', views.ArticleSimilarityActionView.as_view(), name='article_similarity_action'),
+    path('articles/similarity/merge/<int:keep_id>/<int:delete_id>/', views.ArticleManualMergeView.as_view(), name='article_manual_merge'),
     
     # Lead management (Content Admin)
     path('leads/', views.LeadListView.as_view(), name='lead_list'),

@@ -1126,6 +1126,145 @@ class TestUniversityFormOneTimeFees:
             form.clean_one_time_fees()
 
 
+@pytest.mark.django_db
+class TestArticleListView:
+    """Tests for dashboard article list view and filtering."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, client):
+        self.client = client
+        self.list_url = reverse('dashboard:article_list')
+        
+        # Create users
+        self.admin = User.objects.create_user(
+            username='admin_user',
+            password='testpass123',
+            is_staff=True
+        )
+        self.author1 = User.objects.create_user(
+            username='author1',
+            password='testpass123',
+            is_staff=True
+        )
+        self.author2 = User.objects.create_user(
+            username='author2',
+            password='testpass123',
+            is_staff=True
+        )
+        
+        # Create articles
+        from apps.articles.models import Article
+        self.article1 = Article.objects.create(
+            title="Article 1",
+            slug="article-1",
+            content="Content 1",
+            author=self.author1,
+            publish_status="published"
+        )
+        self.article2 = Article.objects.create(
+            title="Article 2",
+            slug="article-2",
+            content="Content 2",
+            author=self.author2,
+            publish_status="published"
+        )
+        self.article_no_author = Article.objects.create(
+            title="Article No Author",
+            slug="article-no-author",
+            content="Content 3",
+            author=None,
+            publish_status="published"
+        )
+
+    def test_article_list_loads_successfully(self):
+        """Test article list loads with all articles and author options."""
+        self.client.login(username='admin_user', password='testpass123')
+        response = self.client.get(self.list_url)
+        assert response.status_code == 200
+        assert 'articles' in response.context
+        assert len(response.context['articles']) == 3
+        
+        # Verify authors in filter context
+        authors = response.context['authors']
+        assert self.author1 in authors
+        assert self.author2 in authors
+        assert self.admin not in authors  # has no articles
+        
+        # Verify 'بدون كاتب' option is in the filters
+        filters = response.context['filters']
+        author_filter = next(f for f in filters if f['name'] == 'author')
+        assert {'value': 'none', 'label': 'بدون كاتب'} in author_filter['options']
+
+    def test_filter_by_author(self):
+        """Test filtering the list of articles by a specific author."""
+        self.client.login(username='admin_user', password='testpass123')
+        
+        # Filter by author1
+        response = self.client.get(self.list_url, {'author': self.author1.id})
+        assert response.status_code == 200
+        assert len(response.context['articles']) == 1
+        assert response.context['articles'][0] == self.article1
+
+        # Filter by author2
+        response = self.client.get(self.list_url, {'author': self.author2.id})
+        assert response.status_code == 200
+        assert len(response.context['articles']) == 1
+        assert response.context['articles'][0] == self.article2
+
+    def test_filter_by_no_author(self):
+        """Test filtering the list of articles for those with no author."""
+        self.client.login(username='admin_user', password='testpass123')
+        response = self.client.get(self.list_url, {'author': 'none'})
+        assert response.status_code == 200
+        assert len(response.context['articles']) == 1
+        assert response.context['articles'][0] == self.article_no_author
+
+    def test_bulk_change_author_success(self):
+        """Test bulk changing the author of multiple articles."""
+        self.client.login(username='admin_user', password='testpass123')
+        bulk_url = reverse('dashboard:article_bulk_action')
+        
+        # Verify initial authors
+        assert self.article1.author == self.author1
+        assert self.article_no_author.author is None
+
+        response = self.client.post(bulk_url, {
+            'action': 'change_author',
+            'selected_ids': [self.article1.id, self.article_no_author.id],
+            'new_author_id': self.author2.id
+        })
+        assert response.status_code == 302
+        
+        # Refresh and verify
+        self.article1.refresh_from_db()
+        self.article_no_author.refresh_from_db()
+        assert self.article1.author == self.author2
+        assert self.article_no_author.author == self.author2
+
+    def test_bulk_change_author_to_none(self):
+        """Test bulk removing the author of multiple articles."""
+        self.client.login(username='admin_user', password='testpass123')
+        bulk_url = reverse('dashboard:article_bulk_action')
+        
+        # Verify initial authors
+        assert self.article1.author == self.author1
+        assert self.article2.author == self.author2
+
+        response = self.client.post(bulk_url, {
+            'action': 'change_author',
+            'selected_ids': [self.article1.id, self.article2.id],
+            'new_author_id': 'none'
+        })
+        assert response.status_code == 302
+        
+        # Refresh and verify
+        self.article1.refresh_from_db()
+        self.article2.refresh_from_db()
+        assert self.article1.author is None
+        assert self.article2.author is None
+
+
+
 
 
 

@@ -1,15 +1,19 @@
 """
 Core views for the Science Gates platform.
 """
-from django.views.generic import TemplateView, View
+from django.views.generic import TemplateView, View, FormView
 from django.shortcuts import redirect
 from django.http import Http404
 from django.db.models import Q
+from django.contrib import messages
+from django.urls import reverse_lazy
 from apps.universities.models import University
 from apps.institutes.models import Institute
 from apps.majors.models import Major
 from apps.articles.models import Article
 from apps.core.models import PublishStatus
+from apps.leads.forms import LeadForm
+
 
 
 class HomeView(TemplateView):
@@ -136,6 +140,48 @@ class AboutView(TemplateView):
         ).exclude(logo='').only('name', 'logo')
         context['universities_with_logos'] = universities_with_logos
         return context
+
+
+class VisaTrackingView(FormView):
+    """
+    متابعة حالة الفيزا الدراسية (EMGS) وتقديم طلبات الدعم
+    """
+    template_name = 'visa_tracking.html'
+    form_class = LeadForm
+    success_url = reverse_lazy('visa_tracking')
+
+    def get_context_data(self, **kwargs):
+        # بنجهز سياق الصفحة وبنمرر رابط الصفحة كـ source_page للموديل
+        context = super().get_context_data(**kwargs)
+        context['source_page'] = self.request.build_absolute_uri(self.request.path)
+        return context
+
+    def form_valid(self, form):
+        # حفظ طلب الدعم كـ Lead من نوع استفسار وإضافة علامة تدل على المصدر
+        lead = form.save(commit=False)
+        lead.lead_type = 'contact'
+        lead.source_page = self.request.build_absolute_uri(self.request.path)
+        lead.referrer = self.request.META.get('HTTP_REFERER', '')
+        
+        # بنضيف مقدمة لرسالة الطالب عشان لو الإدمن شافها في لوحة التحكم يفهم إنها من صفحة الفيزا
+        user_msg = lead.message or ""
+        lead.message = f"💬 [طلب مساعدة في تتبع الفيزا - EMGS]\n\n{user_msg}".strip()
+        
+        lead.save()
+        messages.success(
+            self.request,
+            'تم إرسال طلب المساعدة بنجاح. سيقوم أحد مستشارينا بالتحقق من حالة طلبك والتواصل معك قريباً.'
+        )
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # رسالة خطأ للمستخدم في حال وجود مشاكل في الفورم
+        messages.error(
+            self.request,
+            'حدث خطأ في إرسال النموذج. يرجى التحقق من صحة البيانات المدخلة.'
+        )
+        return super().form_invalid(form)
+
 
 
 class LegacyUrlDetailView(View):

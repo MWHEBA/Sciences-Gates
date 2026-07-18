@@ -73,22 +73,4 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const nameInput = document.getElementById('id_name');
-    const slugInput = document.getElementById('id_slug');
-    const formElement = document.getElementById('main-form');
-    const isEditMode = formElement ? formElement.hasAttribute('data-object-id') : false;
-
-    if (nameInput && slugInput && !isEditMode) {
-        nameInput.addEventListener('input', function() {
-            slugInput.value = this.value.trim()
-                .toLowerCase()
-                .replace(/[^\w\s\u0621-\u064A\u0660-\u0669-]/g, '')
-                .replace(/[\s_]+/g, '-')
-                .replace(/-+/g, '-');
-        });
-    }
-});
-</script>
 {% endblock %}

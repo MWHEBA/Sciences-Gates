@@ -448,20 +448,20 @@ class SEOScoringEngine:
                     self.passed.append("focus_keyword_in_content")
             elif combined_density < 0.5:
                 density_deduction = 2
-                msg = f"كثافة الكلمة المفتاحية '{focus_kw}' ومن غيّبها من المرادفات منخفضة جداً ({combined_density:.2f}%). عدد الظهور: {combined_count} مرة ({kw_count} للرئيسية"
                 if synonyms_list:
-                    msg += f" و {syn_count_total} للمرادفات"
-                msg += f") في {word_count} كلمة. يوصى بنسبة 0.5% إلى 2.5%."
+                    msg = f"كثافة الكلمة المفتاحية '{focus_kw}' ومرادفاتها منخفضة جداً ({combined_density:.2f}%). عدد الظهور: {combined_count} مرة ({kw_count} للرئيسية و {syn_count_total} للمرادفات) في {word_count} كلمة. يوصى بنسبة 0.5% إلى 2.5%."
+                else:
+                    msg = f"كثافة الكلمة المفتاحية '{focus_kw}' منخفضة جداً ({combined_density:.2f}%). عدد الظهور: {combined_count} مرة في {word_count} كلمة. يوصى بنسبة 0.5% إلى 2.5%."
                 self.warnings.append({
                     "code": "FOCUS_KEYWORD_DENSITY_LOW",
                     "message": msg
                 })
             else:
                 density_deduction = 1
-                msg = f"كثافة الكلمة المفتاحية '{focus_kw}' ومن غيّبها من المرادفات مرتفعة جداً ({combined_density:.2f}%). عدد الظهور: {combined_count} مرة ({kw_count} للرئيسية"
                 if synonyms_list:
-                    msg += f" و {syn_count_total} للمرادفات"
-                msg += f") في {word_count} كلمة. قد يُعدّ حشواً للكلمات المفتاحية (Keyword Stuffing)."
+                    msg = f"كثافة الكلمة المفتاحية '{focus_kw}' ومرادفاتها مرتفعة جداً ({combined_density:.2f}%). عدد الظهور: {combined_count} مرة ({kw_count} للرئيسية و {syn_count_total} للمرادفات) في {word_count} كلمة. قد يُعدّ حشواً للكلمات المفتاحية (Keyword Stuffing)."
+                else:
+                    msg = f"كثافة الكلمة المفتاحية '{focus_kw}' مرتفعة جداً ({combined_density:.2f}%). عدد الظهور: {combined_count} مرة في {word_count} كلمة. قد يُعدّ حشواً للكلمات المفتاحية (Keyword Stuffing)."
                 self.warnings.append({
                     "code": "FOCUS_KEYWORD_DENSITY_HIGH",
                     "message": msg

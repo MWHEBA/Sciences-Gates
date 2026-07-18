@@ -36,15 +36,39 @@
                 background-color: var(--text-muted);
                 background-clip: content-box;
             }
+
+            /* Custom styling to clean up Django linter errors in HTML */
+            .sb-link {
+                color: var(--text-secondary) !important;
+                background-color: transparent !important;
+            }
+            .sb-link:hover {
+                background-color: var(--bg-light) !important;
+                color: var(--text-secondary) !important;
+            }
+            .sb-link.active {
+                background-color: var(--primary) !important;
+                color: var(--white) !important;
+            }
+            
+            .sb-sub-link {
+                color: var(--text-secondary) !important;
+                background-color: transparent !important;
+            }
+            .sb-sub-link:hover {
+                background-color: var(--bg-light) !important;
+                color: var(--text-secondary) !important;
+            }
+            .sb-sub-link.active {
+                background-color: rgba(149, 157, 165, 0.15) !important;
+                color: var(--text-secondary) !important;
+            }
         </style>
 
         <!-- الرئيسية -->
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
-            <a href="{% url 'dashboard:home' %}"
-                class="flex items-center px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer"
-                style="{% if request.path == '/dashboard/' %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
-                onmouseover="{% if request.path != '/dashboard/' %}this.style.backgroundColor='var(--bg-light)'; this.style.color='var(--text-secondary)';{% endif %}"
-                onmouseout="{% if request.path != '/dashboard/' %}this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)';{% endif %}">
+            <a  href="{% url 'dashboard:home' %}"
+                 class="flex items-center px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer sb-link {% if request.path == '/dashboard/' %}active{% endif %}" >
                 <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -64,10 +88,9 @@
                 <!-- الجامعات (Expandable) -->
                 <div
                     :style="activeSection === 'universities' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
-                    <button @click="activeSection = activeSection === 'universities' ? null : 'universities'"
+                    <button  @click="activeSection = activeSection === 'universities' ? null : 'universities'"
                         data-toggle="true"
-                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
+                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/dashboard/universities' in request.path or '/dashboard/faculties' in request.path %}active{% endif %}" 
                         :style="activeSection === 'universities' ? 'background-color: var(--primary); color: var(--white);' : ''"
                         @mouseenter="{% if '/dashboard/universities' not in request.path and '/dashboard/faculties' not in request.path %}if (activeSection !== 'universities') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
                         @mouseleave="{% if '/dashboard/universities' not in request.path and '/dashboard/faculties' not in request.path %}if (activeSection !== 'universities') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
@@ -93,11 +116,8 @@
                     <!-- Sub-items الجامعات -->
                     <div x-show="activeSection === 'universities'" x-transition class="mt-1 ml-4 space-y-1 border-r-2"
                         style="border-color: var(--border);">
-                        <a href="{% url 'dashboard:university_list' %}"
-                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="{% if request.path == '/dashboard/universities/' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                            @mouseenter="{% if request.path != '/dashboard/universities/' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                            @mouseleave="{% if request.path != '/dashboard/universities/' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        <a  href="{% url 'dashboard:university_list' %}"
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/dashboard/universities/' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -108,11 +128,8 @@
                         </a>
                         <div
                             :style="'{{ request.path }}'.includes('/dashboard/universities/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                            <a href="{% url 'dashboard:university_create' %}"
-                                class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                                style="{% if '/dashboard/universities/create' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                                @mouseenter="{% if '/dashboard/universities/create' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                                @mouseleave="{% if '/dashboard/universities/create' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                            <a  href="{% url 'dashboard:university_create' %}"
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/universities/create' in request.path %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
@@ -120,11 +137,8 @@
                                 <span>إضافة جامعة</span>
                             </a>
                         </div>
-                        <a href="{% url 'dashboard:faculty_list' university_id=0 %}"
-                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="color: var(--text-secondary);"
-                            @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
-                            @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';"
+                        <a  href="{% url 'dashboard:faculty_list' university_id=0 %}"
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-link" 
                             onclick="alert('اختر جامعة أولاً'); return false;">
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -134,11 +148,8 @@
                             </svg>
                             <span>الكليات والبرامج</span>
                         </a>
-                        <a href="{% url 'dashboard:tag_list' %}?type=university"
-                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="{% if '/dashboard/tags' in request.path and request.GET.type == 'university' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                            @mouseenter="{% if '/dashboard/tags' not in request.path or request.GET.type != 'university' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                            @mouseleave="{% if '/dashboard/tags' not in request.path or request.GET.type != 'university' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        <a  href="{% url 'dashboard:tag_list' %}?type=university"
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/tags' in request.path and request.GET.type == 'university' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -153,10 +164,9 @@
                 <!-- المعاهد (Expandable) -->
                 <div
                     :style="activeSection === 'institutes' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
-                    <button @click="activeSection = activeSection === 'institutes' ? null : 'institutes'"
+                    <button  @click="activeSection = activeSection === 'institutes' ? null : 'institutes'"
                         data-toggle="true"
-                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/institutes' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
+                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/dashboard/institutes' in request.path %}active{% endif %}" 
                         :style="activeSection === 'institutes' ? 'background-color: var(--primary); color: var(--white);' : ''"
                         @mouseenter="{% if '/dashboard/institutes' not in request.path %}if (activeSection !== 'institutes') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
                         @mouseleave="{% if '/dashboard/institutes' not in request.path %}if (activeSection !== 'institutes') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
@@ -186,11 +196,8 @@
                     <!-- Sub-items المعاهد -->
                     <div x-show="activeSection === 'institutes'" x-transition class="mt-1 ml-4 space-y-1 border-r-2"
                         style="border-color: var(--border);">
-                        <a href="{% url 'dashboard:institute_list' %}"
-                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="{% if request.path == '/dashboard/institutes/' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                            @mouseenter="{% if request.path != '/dashboard/institutes/' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                            @mouseleave="{% if request.path != '/dashboard/institutes/' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        <a  href="{% url 'dashboard:institute_list' %}"
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/dashboard/institutes/' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -201,11 +208,8 @@
                         </a>
                         <div
                             :style="'{{ request.path }}'.includes('/dashboard/institutes/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                            <a href="{% url 'dashboard:institute_create' %}"
-                                class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                                style="{% if '/dashboard/institutes/create' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                                @mouseenter="{% if '/dashboard/institutes/create' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                                @mouseleave="{% if '/dashboard/institutes/create' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                            <a  href="{% url 'dashboard:institute_create' %}"
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/institutes/create' in request.path %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
@@ -213,11 +217,8 @@
                                 <span>إضافة معهد</span>
                             </a>
                         </div>
-                        <a href="#"
-                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="color: var(--text-secondary);"
-                            @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
-                            @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';"
+                        <a  href="#"
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-link" 
                             title="قريباً">
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -227,11 +228,8 @@
                             </svg>
                             <span>أنواع المعاهد</span>
                         </a>
-                        <a href="{% url 'dashboard:tag_list' %}?type=institute"
-                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="{% if '/dashboard/tags' in request.path and request.GET.type == 'institute' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                            @mouseenter="{% if '/dashboard/tags' not in request.path or request.GET.type != 'institute' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                            @mouseleave="{% if '/dashboard/tags' not in request.path or request.GET.type != 'institute' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        <a  href="{% url 'dashboard:tag_list' %}?type=institute"
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/tags' in request.path and request.GET.type == 'institute' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -246,9 +244,8 @@
                 <!-- التخصصات (Expandable) -->
                 <div
                     :style="activeSection === 'majors' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
-                    <button @click="activeSection = activeSection === 'majors' ? null : 'majors'" data-toggle="true"
-                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/majors' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
+                    <button  @click="activeSection = activeSection === 'majors' ? null : 'majors'" data-toggle="true"
+                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/dashboard/majors' in request.path %}active{% endif %}" 
                         :style="activeSection === 'majors' ? 'background-color: var(--primary); color: var(--white);' : ''"
                         @mouseenter="{% if '/dashboard/majors' not in request.path %}if (activeSection !== 'majors') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
                         @mouseleave="{% if '/dashboard/majors' not in request.path %}if (activeSection !== 'majors') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
@@ -278,11 +275,8 @@
                         <!-- إدارة التخصصات -->
                         <div
                             :style="'{{ request.path }}' === '/dashboard/majors/' ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                            <a href="{% url 'dashboard:major_list' %}"
-                                class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                                style="{% if request.path == '/dashboard/majors/' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                                @mouseenter="{% if request.path != '/dashboard/majors/' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                                @mouseleave="{% if request.path != '/dashboard/majors/' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                            <a  href="{% url 'dashboard:major_list' %}"
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/dashboard/majors/' %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -296,11 +290,8 @@
                         <!-- إضافة تخصص -->
                         <div
                             :style="'{{ request.path }}'.includes('/dashboard/majors/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                            <a href="{% url 'dashboard:major_create' %}"
-                                class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                                style="{% if '/dashboard/majors/create' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                                @mouseenter="{% if '/dashboard/majors/create' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                                @mouseleave="{% if '/dashboard/majors/create' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                            <a  href="{% url 'dashboard:major_create' %}"
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/majors/create' in request.path %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
@@ -312,11 +303,8 @@
                         <!-- تصنيفات التخصصات -->
                         <div
                             :style="'{{ request.path }}'.includes('/dashboard/major-categories') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                            <a href="{% url 'dashboard:major_category_list' %}"
-                                class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                                style="{% if '/dashboard/major-categories' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                                @mouseenter="{% if '/dashboard/major-categories' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                                @mouseleave="{% if '/dashboard/major-categories' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                            <a  href="{% url 'dashboard:major_category_list' %}"
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/major-categories' in request.path %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -332,9 +320,8 @@
                 <!-- المقالات (Expandable) -->
                 <div
                     :style="activeSection === 'articles' ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
-                    <button @click="activeSection = activeSection === 'articles' ? null : 'articles'" data-toggle="true"
-                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
+                    <button  @click="activeSection = activeSection === 'articles' ? null : 'articles'" data-toggle="true"
+                         class="w-full flex items-center justify-between px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/dashboard/articles' in request.path or '/dashboard/categories' in request.path or '/dashboard/tags' in request.path %}active{% endif %}" 
                         :style="activeSection === 'articles' ? 'background-color: var(--primary); color: var(--white);' : ''"
                         @mouseenter="{% if '/dashboard/articles' not in request.path and '/dashboard/categories' not in request.path and '/dashboard/tags' not in request.path %}if (activeSection !== 'articles') { $el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)'; }{% endif %}"
                         @mouseleave="{% if '/dashboard/articles' not in request.path and '/dashboard/categories' not in request.path and '/dashboard/tags' not in request.path %}if (activeSection !== 'articles') { $el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)'; }{% endif %}">
@@ -360,11 +347,8 @@
                     <!-- Sub-items المقالات -->
                     <div x-show="activeSection === 'articles'" x-transition class="mt-1 ml-4 space-y-1 border-r-2"
                         style="border-color: var(--border);">
-                        <a href="{% url 'dashboard:article_list' %}"
-                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="{% if request.path == '/dashboard/articles/' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                            @mouseenter="{% if request.path != '/dashboard/articles/' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                            @mouseleave="{% if request.path != '/dashboard/articles/' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        <a  href="{% url 'dashboard:article_list' %}"
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/dashboard/articles/' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -375,11 +359,8 @@
                         </a>
                         <div
                             :style="'{{ request.path }}'.includes('/dashboard/articles/create') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                            <a href="{% url 'dashboard:article_create' %}"
-                                class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                                style="{% if '/dashboard/articles/create' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                                @mouseenter="{% if '/dashboard/articles/create' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                                @mouseleave="{% if '/dashboard/articles/create' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                            <a  href="{% url 'dashboard:article_create' %}"
+                                 class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/articles/create' in request.path %}active{% endif %}" >
                                 <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
@@ -387,11 +368,8 @@
                                 <span>إضافة مقالة</span>
                             </a>
                         </div>
-                        <a href="{% url 'dashboard:category_list' %}"
-                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="{% if '/dashboard/categories' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                            @mouseenter="{% if '/dashboard/categories' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                            @mouseleave="{% if '/dashboard/categories' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        <a  href="{% url 'dashboard:category_list' %}"
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/categories' in request.path %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -400,11 +378,8 @@
                             </svg>
                             <span>التصنيفات</span>
                         </a>
-                        <a href="{% url 'dashboard:tag_list' %}?type=article"
-                            class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer"
-                            style="{% if '/dashboard/tags' in request.path and request.GET.type|default:'article' == 'article' %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                            @mouseenter="{% if '/dashboard/tags' not in request.path or request.GET.type|default:'article' != 'article' %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                            @mouseleave="{% if '/dashboard/tags' not in request.path or request.GET.type|default:'article' != 'article' %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                        <a  href="{% url 'dashboard:tag_list' %}?type=article"
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/tags' in request.path and request.GET.type|default:'article' == 'article' %}active{% endif %}" >
                             <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -413,17 +388,24 @@
                             </svg>
                             <span>وسوم المقالات</span>
                         </a>
+                        <a  href="{% url 'dashboard:article_similarity' %}"
+                             class="flex items-center px-4 py-2 rounded-lg text-sm transition-colors duration-200 cursor-pointer sb-sub-link {% if request.path == '/dashboard/articles/similarity/' %}active{% endif %}" >
+                            <svg class="w-4 h-4 ml-3 flex-shrink-0" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2">
+                                </path>
+                            </svg>
+                            <span>فحص التكرار والتشابه</span>
+                        </a>
                     </div>
                 </div>
 
                 <!-- مكتبة الوسائط -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/media') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="{% url 'dashboard:media_library' %}"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/media' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/media' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/media' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                    <a  href="{% url 'dashboard:media_library' %}"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/media' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -436,11 +418,8 @@
 
                 <!-- استيراد من WP -->
                 <div :style="'{{ request.path }}'.includes('/dashboard/import') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="{% url 'dashboard:import_page' %}"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/import' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/import' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/import' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                    <a  href="{% url 'dashboard:import_page' %}"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/import' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -463,11 +442,8 @@
                 <!-- طلبات التسجيل -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/leads') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="{% url 'dashboard:lead_list' %}"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/leads' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/leads' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/leads' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                    <a  href="{% url 'dashboard:lead_list' %}"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/leads' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -497,11 +473,8 @@
                 <!-- إعادة التوجيه -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/redirects') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="{% url 'dashboard:redirect_list' %}"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/redirects' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/redirects' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/redirects' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                    <a  href="{% url 'dashboard:redirect_list' %}"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/redirects' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -515,11 +488,8 @@
                 <!-- إعدادات SEO -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/seo') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="{% url 'dashboard:seo_management' %}"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/seo' in request.path %}background-color: var(--primary); color: var(--white);{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/seo' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/seo' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                    <a  href="{% url 'dashboard:seo_management' %}"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/dashboard/seo' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -544,11 +514,8 @@
                 <!-- تصدير الطلبات -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/lead-export') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="{% url 'dashboard:lead_export' %}"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="color: var(--text-secondary);"
-                        @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
-                        @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';">
+                    <a  href="{% url 'dashboard:lead_export' %}"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -562,11 +529,8 @@
                 <!-- إحصائيات المحتوى -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/statistics') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="{% url 'dashboard:home' %}"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="color: var(--text-secondary);"
-                        @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
-                        @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';">
+                    <a  href="{% url 'dashboard:home' %}"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -588,11 +552,8 @@
                 <!-- إدارة المستخدمين -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/users') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="{% url 'dashboard:user_list' %}"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/users' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/users' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/users' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                    <a  href="{% url 'dashboard:user_list' %}"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/users' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -606,11 +567,8 @@
                 <!-- الإعدادات العامة -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/settings') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="{% url 'dashboard:settings' %}"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="{% if '/dashboard/settings' in request.path %}background-color: rgba(149, 157, 165, 0.15); color: var(--text-secondary);{% else %}color: var(--text-secondary);{% endif %}"
-                        @mouseenter="{% if '/dashboard/settings' not in request.path %}$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';{% endif %}"
-                        @mouseleave="{% if '/dashboard/settings' not in request.path %}$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';{% endif %}">
+                    <a  href="{% url 'dashboard:settings' %}"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/dashboard/settings' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -634,11 +592,8 @@
                 <!-- سجل النشاط -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/activity-log') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="#"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="color: var(--text-secondary);"
-                        @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
-                        @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';"
+                    <a  href="#"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" 
                         title="قريباً">
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
@@ -653,11 +608,8 @@
                 <!-- معلومات النظام -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/system-info') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="#"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="color: var(--text-secondary);"
-                        @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
-                        @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';"
+                    <a  href="#"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" 
                         title="قريباً">
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
@@ -671,11 +623,8 @@
                 <!-- النسخ الاحتياطية -->
                 <div
                     :style="'{{ request.path }}'.includes('/dashboard/backups') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a href="#"
-                        class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer"
-                        style="color: var(--text-secondary);"
-                        @mouseenter="$el.style.backgroundColor='var(--bg-light)'; $el.style.color='var(--text-secondary)';"
-                        @mouseleave="$el.style.backgroundColor='transparent'; $el.style.color='var(--text-secondary)';"
+                    <a  href="#"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" 
                         title="قريباً">
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">

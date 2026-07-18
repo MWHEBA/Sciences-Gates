@@ -1,5 +1,5 @@
 /**
- * University Attachments Manager
+ * Attachments Manager
  * Handles modern drag-and-drop file upload and clean list view of attachments.
  */
 (function() {
@@ -39,7 +39,7 @@
         return ICONS.generic;
     }
 
-    class UniversityAttachmentsManager {
+    class AttachmentsManager {
         constructor() {
             this.formsetPrefix = 'attachments';
             this.container = document.getElementById('attachment-formset-container');
@@ -415,6 +415,6 @@
 
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
-        new UniversityAttachmentsManager();
+        new AttachmentsManager();
     });
 })();

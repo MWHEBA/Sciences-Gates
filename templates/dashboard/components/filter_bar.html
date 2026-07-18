@@ -45,6 +45,8 @@
                             كل الأنواع
                         {% elif filter.name == 'status' %}
                             كل الحالات
+                        {% elif filter.name == 'author' %}
+                            كل الكتّاب
                         {% else %}
                             {{ filter.label }}
                         {% endif %}

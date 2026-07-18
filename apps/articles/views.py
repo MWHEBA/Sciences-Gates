@@ -120,7 +120,8 @@ class ArticleDetailView(BreadcrumbMixin, DetailView):
             'related_universities',
             'related_institutes',
             'related_majors',
-            'faqs'
+            'faqs',
+            'attachments'
         )
     
     def get_breadcrumbs(self):

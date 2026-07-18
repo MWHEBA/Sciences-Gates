@@ -10,6 +10,9 @@
 <link rel="stylesheet" href="{% static 'css/relations_select.css' %}">
 <link rel="stylesheet" href="{% static 'css/faq-manager.css' %}">
 <link rel="stylesheet" href="{% static 'css/faq-bulk-import.css' %}">
+<link rel="stylesheet" href="{% static 'css/attachments-manager.css' %}">
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 {% endblock %}
 
 {% block content_wrapper %}
@@ -92,10 +95,6 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- العمود الأول: الصورة المميزة -->
                                 <div>
-                                    <label class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                        {{ form.featured_image.label }}
-                                        <span style="color: var(--danger);">*</span>
-                                    </label>
                                     {% if form.instance.featured_image %}
                                         {% include "dashboard/components/image_upload.html" with field=form.featured_image required=True current_image=form.instance.featured_image.url %}
                                     {% else %}
@@ -555,6 +554,63 @@
                     </section>
                 </div>
 
+                <!-- ملفات المقالة — Floating Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">ملفات المقالة (الشروط التفصيلية، دليل التقديم، إلخ)</h2>
+                        <div id="attachment-formset-container" class="space-y-4">
+                            {{ attachment_formset.management_form }}
+                            {% for attachment_form in attachment_formset %}
+                            <div class="p-4 rounded-lg" style="border: 1px solid var(--border); background-color: var(--bg-light); margin-bottom: 16px;">
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <!-- Title -->
+                                    <div>
+                                        <label for="{{ attachment_form.title.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                            {{ attachment_form.title.label }}
+                                        </label>
+                                        {{ attachment_form.title }}
+                                        {% if attachment_form.title.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ attachment_form.title.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- File -->
+                                    <div>
+                                        <label for="{{ attachment_form.file.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                            {{ attachment_form.file.label }}
+                                        </label>
+                                        {{ attachment_form.file }}
+                                        {% if attachment_form.file.errors %}
+                                            <p class="mt-1 text-sm" style="color: var(--danger);">{{ attachment_form.file.errors.0 }}</p>
+                                        {% endif %}
+                                        {% if attachment_form.instance.pk and attachment_form.instance.file %}
+                                            <p class="mt-2 text-xs" style="color: var(--text-muted);">
+                                                الملف الحالي: <a href="{{ attachment_form.instance.file.url }}" target="_blank" style="color: var(--primary);" class="underline">{{ attachment_form.instance.title }}</a> ({{ attachment_form.instance.file_size|filesizeformat }})
+                                            </p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Delete Checkbox -->
+                                    {% if attachment_form.instance.pk %}
+                                    <div class="md:col-span-2">
+                                        <label class="flex items-center gap-2 cursor-pointer select-none text-sm font-normal" style="color: var(--text-secondary);">
+                                            {{ attachment_form.DELETE }}
+                                            <span>حذف هذا الملف</span>
+                                        </label>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {{ attachment_form.id }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+
             </div>
         </div>
 
@@ -639,7 +695,11 @@
                                 <span style="color: var(--text-secondary); font-size: 13px;">تاريخ النشر:</span>
                                 <span id="display_publish_date" class="font-normal" style="color: var(--text-primary); font-size: 13px;">
                                     {% if form.publish_date.value %}
-                                        {{ form.publish_date.value }}
+                                        {% if form.publish_date.value.year %}
+                                            {{ form.publish_date.value|date:"Y-m-d" }}
+                                        {% else %}
+                                            {{ form.publish_date.value }}
+                                        {% endif %}
                                     {% else %}
                                         تلقائي عند الحفظ
                                     {% endif %}
@@ -1048,6 +1108,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="{% static 'js/faq-manager.js' %}"></script>
 <script src="{% static 'js/tags_input.js' %}"></script>
 <script src="{% static 'js/relations_select.js' %}"></script>
+<script src="{% static 'js/attachments-manager.js' %}"></script>
 <script src="{% static 'js/content-lock.js' %}"></script>
 {% if form.instance.pk %}
 {{ form.instance.pk|json_script:"lock-object-id" }}
@@ -1059,4 +1120,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 </script>
 {% endif %}
+
+<!-- jQuery & Select2 JS Integration -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#id_author').select2({
+            placeholder: 'اختر كاتب المقالة',
+            dir: 'rtl',
+            width: '100%'
+        });
+    });
+</script>
 {% endblock %}

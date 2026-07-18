@@ -23,7 +23,7 @@ from apps.redirects.models import Redirect
 from apps.universities.models import University, Faculty, Program
 from apps.institutes.models import Institute, Course
 from apps.majors.models import Major, MajorCategory
-from apps.articles.models import Article, Category, Tag
+from apps.articles.models import Article, Category, Tag, IgnoredSimilarity
 from apps.core.models import SiteSettings, ContentLock, UserProfile, UserRole
 from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin
 from apps.dashboard.forms import (
@@ -31,7 +31,7 @@ from apps.dashboard.forms import (
     UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet,
     InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet,
     MajorForm, MajorCategoryForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet, MajorFAQFormSet, MajorAttachmentFormSet,
-    ArticleForm, ArticleFAQFormSet, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm
+    ArticleForm, ArticleFAQFormSet, ArticleAttachmentFormSet, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm
 )
 from apps.articles.models import Category, Tag
 from apps.seo.mixins import DashboardBreadcrumbMixin
@@ -3172,6 +3172,14 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
         elif status_filter == 'unpublished':
             queryset = queryset.filter(publish_status='unpublished')
         
+        # Filter by author
+        author_filter = self.request.GET.get('author', '').strip()
+        if author_filter:
+            if author_filter == 'none':
+                queryset = queryset.filter(author__isnull=True)
+            else:
+                queryset = queryset.filter(author_id=author_filter)
+        
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -3196,7 +3204,10 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
         context['search_query'] = self.request.GET.get('search', '')
         context['category_filter'] = self.request.GET.get('category', '')
         context['status_filter'] = self.request.GET.get('status', '')
+        context['author_filter'] = self.request.GET.get('author', '')
         context['categories'] = Category.objects.all().order_by('name')
+        context['authors'] = User.objects.filter(articles__isnull=False).distinct().order_by('first_name', 'username')
+        context['all_users'] = User.objects.filter(is_active=True).order_by('first_name', 'username')
         
         # Add items for list_page.html/data_table template
         context['items'] = context.get('articles', context.get('object_list', []))
@@ -3209,9 +3220,16 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
         context['bulk_action_url'] = reverse('dashboard:article_bulk_action')
         
         # Filters
-        category_options = [{'value': '', 'label': 'كل التصنيفات'}]
+        category_options = []
         for cat in context['categories']:
             category_options.append({'value': str(cat.id), 'label': cat.name})
+            
+        author_options = []
+        if Article.objects.filter(author__isnull=True).exists():
+            author_options.append({'value': 'none', 'label': 'بدون كاتب'})
+        for auth in context['authors']:
+            name = auth.get_full_name().strip() or auth.username
+            author_options.append({'value': str(auth.id), 'label': name})
             
         context['filters'] = [
             {
@@ -3228,6 +3246,12 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
                 'label': 'التصنيف',
                 'options': category_options,
                 'selected': context['category_filter'],
+            },
+            {
+                'name': 'author',
+                'label': 'الكاتب',
+                'options': author_options,
+                'selected': context['author_filter'],
             },
         ]
         
@@ -3291,8 +3315,9 @@ class ArticleCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Cre
         """
         context = self.get_context_data()
         faq_formset = context['faq_formset']
+        attachment_formset = context['attachment_formset']
         
-        if faq_formset.is_valid():
+        if faq_formset.is_valid() and attachment_formset.is_valid():
             try:
                 with transaction.atomic():
                     # Set author to selected user or current user
@@ -3310,6 +3335,10 @@ class ArticleCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Cre
                     # Save FAQs
                     faq_formset.instance = self.object
                     faq_formset.save()
+
+                    # Save Attachments
+                    attachment_formset.instance = self.object
+                    attachment_formset.save()
                 
                 messages.success(
                     self.request,
@@ -3323,12 +3352,13 @@ class ArticleCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Cre
                 return self.form_invalid(form)
         else:
             # Add formset errors to messages
-            for error in faq_formset.non_form_errors():
-                messages.error(self.request, f'{error}')
-            for error_dict in faq_formset.errors:
-                for field, field_errors in error_dict.items():
-                    for error in field_errors:
-                        messages.error(self.request, f'{error}')
+            for formset in [faq_formset, attachment_formset]:
+                for error in formset.non_form_errors():
+                    messages.error(self.request, f'{error}')
+                for error_dict in formset.errors:
+                    for field, field_errors in error_dict.items():
+                        for error in field_errors:
+                            messages.error(self.request, f'{error}')
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -3345,8 +3375,10 @@ class ArticleCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Cre
         
         if self.request.POST:
             context['faq_formset'] = ArticleFAQFormSet(self.request.POST, instance=self.object)
+            context['attachment_formset'] = ArticleAttachmentFormSet(self.request.POST, self.request.FILES, instance=self.object)
         else:
             context['faq_formset'] = ArticleFAQFormSet(instance=self.object)
+            context['attachment_formset'] = ArticleAttachmentFormSet(instance=self.object)
         
         # Add recently used relations to context with fallback
         recent_art_ids = Article.objects.order_by('-updated_at').values_list('id', flat=True)[:10]
@@ -3413,8 +3445,10 @@ class ArticleUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Loc
         
         if self.request.POST:
             context['faq_formset'] = ArticleFAQFormSet(self.request.POST, instance=self.object)
+            context['attachment_formset'] = ArticleAttachmentFormSet(self.request.POST, self.request.FILES, instance=self.object)
         else:
             context['faq_formset'] = ArticleFAQFormSet(instance=self.object)
+            context['attachment_formset'] = ArticleAttachmentFormSet(instance=self.object)
             
         # Check if slug was changed and show warning
         if hasattr(self.object, '_old_slug'):
@@ -3452,8 +3486,9 @@ class ArticleUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Loc
         """
         context = self.get_context_data()
         faq_formset = context['faq_formset']
+        attachment_formset = context['attachment_formset']
         
-        if faq_formset.is_valid():
+        if faq_formset.is_valid() and attachment_formset.is_valid():
             try:
                 with transaction.atomic():
                     # حفظ الـ slug القديم قبل الحفظ
@@ -3469,6 +3504,10 @@ class ArticleUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Loc
                     # Save FAQs
                     faq_formset.instance = self.object
                     faq_formset.save()
+
+                    # Save Attachments
+                    attachment_formset.instance = self.object
+                    attachment_formset.save()
                     
                     # إنشاء redirect لو الـ slug اتغير
                     new_slug = form.cleaned_data.get('slug')
@@ -3513,12 +3552,13 @@ class ArticleUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Loc
                 return self.form_invalid(form)
         else:
             # Add formset errors to messages
-            for error in faq_formset.non_form_errors():
-                messages.error(self.request, f'{error}')
-            for error_dict in faq_formset.errors:
-                for field, field_errors in error_dict.items():
-                    for error in field_errors:
-                        messages.error(self.request, f'{error}')
+            for formset in [faq_formset, attachment_formset]:
+                for error in formset.non_form_errors():
+                    messages.error(self.request, f'{error}')
+                for error_dict in formset.errors:
+                    for field, field_errors in error_dict.items():
+                        for error in field_errors:
+                            messages.error(self.request, f'{error}')
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -3982,6 +4022,20 @@ class ArticleBulkActionView(ContentAdminRequiredMixin, View):
             count = qs.count()
             qs.delete()
             messages.success(request, f'تم حذف {count} مقالة')
+        elif action == 'change_author':
+            new_author_id = request.POST.get('new_author_id')
+            if new_author_id == 'none':
+                qs.update(author=None)
+                messages.success(request, f'تم إزالة الكاتب من {qs.count()} مقالة بنجاح')
+            elif new_author_id:
+                try:
+                    new_author = User.objects.get(id=new_author_id)
+                    qs.update(author=new_author)
+                    messages.success(request, f'تم تغيير الكاتب لـ {qs.count()} مقالة بنجاح إلى "{new_author.get_full_name() or new_author.username}"')
+                except User.DoesNotExist:
+                    messages.error(request, 'الكاتب المحدد غير موجود')
+            else:
+                messages.error(request, 'يرجى اختيار الكاتب الجديد لتطبيق التغيير الجماعي')
 
         return redirect('dashboard:article_list')
 
@@ -4964,6 +5018,514 @@ class ContentLockAPIView(View):
             return 2
             
         return get_role_weight(user_profile) >= get_role_weight(owner_profile)
+
+
+# ============================================================================
+# Article Duplicate & Similarity Analyzer Views
+# ============================================================================
+from django.views.generic import TemplateView
+import re
+
+COUNTRY_MAP = {
+    "السعوديه": "saudi", "سعوديه": "saudi", "سعودي": "saudi", "المملكه العربيه السعوديه": "saudi",
+    "تركيا": "turkey", "التركيه": "turkey", "تركيه": "turkey", "تركي": "turkey",
+    "ماليزيا": "malaysia", "الماليزيه": "malaysia", "ماليزيه": "malaysia", "ماليزي": "malaysia",
+    "مصر": "egypt", "المصريه": "egypt", "مصريه": "egypt", "مصري": "egypt",
+    "المانيا": "germany", "الالمانيه": "germany", "المانيه": "germany", "الماني": "germany",
+    "روسيا": "russia", "الروسيه": "russia", "روسيه": "russia", "روسي": "russia",
+    "الاردن": "jordan", "الاردنيه": "jordan", "اردنيه": "jordan", "اردني": "jordan", "الاردني": "jordan",
+    "الامارات": "uae", "الاماراتيه": "uae", "اماراتيه": "uae", "اماراتي": "uae",
+    "قطر": "qatar", "القطريه": "qatar", "قطريه": "qatar", "قطري": "qatar",
+    "البحرين": "bahrain", "البحرينيه": "bahrain", "بحرينيه": "bahrain", "بحريني": "bahrain",
+    "الكويت": "kuwait", "الكويتيه": "kuwait", "كويتيه": "kuwait", "كويتي": "kuwait",
+    "عمان": "oman", "العمانيه": "oman", "عمانيه": "oman", "عماني": "oman",
+    "السودان": "sudan", "السودانيه": "sudan", "سودانيه": "sudan", "سوداني": "sudan",
+    "اليمن": "yemen", "اليمنيه": "yemen", "يمنيه": "yemen", "يمني": "yemen",
+    "العراق": "iraq", "العراقيه": "iraq", "عراقيه": "iraq", "عراقي": "iraq",
+    "سوريا": "syria", "سوريه": "syria", "السوريه": "syria", "سوري": "syria",
+    "لبنان": "lebanon", "اللبنانيه": "lebanon", "لبنانيه": "lebanon", "لبناني": "lebanon",
+    "فلسطين": "palestine", "الفلسطينيه": "palestine", "فلسطينيه": "palestine", "فلسطيني": "palestine",
+    "ليبيا": "libya", "الليبيه": "libya", "ليبيه": "libya", "ليبي": "libya",
+    "تونس": "tunisia", "التونسيه": "tunisia", "تونسيه": "tunisia", "تونسي": "tunisia",
+    "الجزائر": "algeria", "الجزائريه": "algeria", "جزائريه": "algeria", "جزائري": "algeria",
+    "المغرب": "morocco", "المغربيه": "morocco", "مغربيه": "morocco", "مغربي": "morocco",
+    "بريطانيا": "uk", "البريطانيه": "uk", "بريطانيه": "uk", "بريطاني": "uk", "المملكه المتحده": "uk",
+    "امريكا": "usa", "الامريكيه": "usa", "امريكيه": "usa", "امريكي": "usa", "الولايات المتحده": "usa",
+    "كندا": "canada", "الكنديه": "canada", "كنديه": "canada", "كندي": "canada",
+    "استراليا": "australia", "الاستراليه": "australia", "استراليه": "australia", "استرالي": "australia",
+    "اوكرانيا": "ukraine", "الاوكرانيه": "ukraine", "اوكرانيه": "ukraine", "اوكراني": "ukraine",
+    "قبرص": "cyprus", "القبرصيه": "cyprus", "قبرصيه": "cyprus", "قبرصي": "cyprus",
+    "جورجيا": "georgia", "الجورجيه": "georgia", "جورجيه": "georgia", "جورجي": "georgia",
+    "اذربيجان": "azerbaijan", "الاذربيجانيه": "azerbaijan", "اذربيجانيه": "azerbaijan", "اذربيجاني": "azerbaijan",
+    "المجر": "hungary", "المجريه": "hungary", "مجريه": "hungary", "مجري": "hungary",
+    "بولندا": "poland", "البولنديه": "poland", "بولنديه": "poland", "بولندي": "poland",
+    "رومانيا": "romania", "الرومانيه": "romania", "رومانيه": "romania", "روماني": "romania",
+    "قيرغيزستان": "kyrgyzstan", "قيرغيزيا": "kyrgyzstan",
+    "كازاخستان": "kazakhstan",
+    "فرنسا": "france", "الفرنسيه": "france", "فرنسيه": "france", "فرنسي": "france",
+    "ايطاليا": "italy", "الايطاليه": "italy", "ايطاليه": "italy", "ايطالي": "italy",
+    "اسبانيا": "spain", "الاسبانيه": "spain", "اسبانيه": "spain", "اسباني": "spain",
+    "الصين": "china", "الصينيه": "china", "صينيه": "china", "صيني": "china",
+    "اليابان": "japan", "اليابانيه": "japan", "يابانيه": "japan", "ياباني": "japan",
+    "الهند": "india", "الهنديه": "india", "هنديه": "india", "هندي": "india",
+}
+
+def normalize_arabic_for_countries(text):
+    if not text:
+        return ""
+    text = text.lower()
+    text = re.sub(r'[أإآ]', 'ا', text)
+    text = re.sub(r'ة', 'ه', text)
+    text = re.sub(r'ى', 'ي', text)
+    text = re.sub(r'[^\w\s]', ' ', text)
+    return " ".join(text.split())
+
+def get_countries_from_title(title):
+    normalized = normalize_arabic_for_countries(title)
+    found_countries = set()
+    
+    # Check multi-word first
+    multi_words = {
+        "المملكه العربيه السعوديه": "saudi",
+        "الولايات المتحده": "usa",
+        "المملكه المتحده": "uk",
+        "قبرص التركيه": "northern_cyprus",
+        "شمال قبرص": "northern_cyprus",
+        "سلطنه عمان": "oman",
+    }
+    for phrase, country in multi_words.items():
+        if phrase in normalized:
+            found_countries.add(country)
+            normalized = normalized.replace(phrase, "")
+            
+    # Check single words
+    words = normalized.split()
+    for w in words:
+        if w in COUNTRY_MAP:
+            found_countries.add(COUNTRY_MAP[w])
+            
+    return found_countries
+
+class ArticleSimilarityView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, TemplateView):
+    """
+    Scan articles and display duplicates side-by-side with recommendations.
+    عرض وتحليل المقالات المتشابهة والمكررة واقتراح الحلول
+    """
+    template_name = 'dashboard/articles/similarity.html'
+
+    def get_breadcrumbs(self):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_articles')
+            .current('تحليل التكرار والتشابه')
+            .build())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'تحليل التكرار والتشابه للمقالات'
+        
+        # Ignored count and total count
+        context['ignored_count'] = IgnoredSimilarity.objects.count()
+        context['total_articles'] = Article.objects.count()
+        
+        # Ignored list
+        ignored_list = IgnoredSimilarity.objects.all().select_related('article_a', 'article_b')
+        context['ignored_pairs'] = ignored_list
+        
+        scan = self.request.GET.get('scan', '').strip() == 'true'
+        if scan:
+            threshold = float(self.request.GET.get('threshold', 70)) / 100.0
+            mode = self.request.GET.get('mode', 'both')
+            
+            # Fetch all articles
+            articles = list(Article.objects.all().select_related('category', 'author').prefetch_related('tags'))
+            
+            import re
+            def clean_text(html_text):
+                if not html_text:
+                    return ""
+                # Strip HTML tags
+                text = re.sub(r'<[^>]+>', ' ', html_text)
+                # Keep alphanumeric and spaces, lowercase
+                text = re.sub(r'[^\w\s]', ' ', text)
+                return text.lower().strip()
+
+            def get_ngram_set(text):
+                stopwords = {
+                    "من", "إلى", "عن", "على", "في", "حتى", "إذ", "إذا", "أن", "أو", "ثم", 
+                    "التي", "الذي", "الذين", "هذا", "هذه", "هؤلاء", "ذلك", "تلك", "كان", 
+                    "يكون", "تم", "مع", "بعد", "قبل", "عند", "بين", "كل", "بعض", "غير", 
+                    "لا", "ما", "لو", "لم", "لن", "إلا", "هو", "هي", "هم", "هن"
+                }
+                cleaned = clean_text(text)
+                words = cleaned.split()
+                ngrams = set()
+                for w in words:
+                    if w in stopwords or len(w) < 2:
+                        continue
+                    if len(w) < 3:
+                        ngrams.add(w)
+                    else:
+                        for idx in range(len(w) - 2):
+                            ngrams.add(w[idx:idx+3])
+                return ngrams
+
+            # Precalculate ngram sets
+            article_data = []
+            for art in articles:
+                title_set = get_ngram_set(art.title)
+                content_set = get_ngram_set(art.content)
+                article_data.append({
+                    'article': art,
+                    'title_set': title_set,
+                    'content_set': content_set,
+                })
+                
+            # Get ignored pairs
+            ignored_ids = set()
+            for ip in ignored_list:
+                a_id, b_id = min(ip.article_a_id, ip.article_b_id), max(ip.article_a_id, ip.article_b_id)
+                ignored_ids.add((a_id, b_id))
+                
+            # Strength score calculator
+            def calculate_strength_score(art):
+                score = 0
+                if art.publish_status == 'published':
+                    score += 15
+                word_count = len(art.content.split())
+                score += min(word_count // 50, 20)  # max 20 points
+                if art.featured_image:
+                    score += 10
+                if art.category_id:
+                    score += 5
+                if len(art.tags.all()) > 0:
+                    score += 5
+                if art.meta_title:
+                    score += 5
+                if art.meta_description:
+                    score += 10
+                if art.focus_keyword:
+                    score += 5
+                return score
+
+            def calculate_jaccard(set_a, set_b):
+                if not set_a or not set_b:
+                    return 0.0
+                return len(set_a.intersection(set_b)) / len(set_a.union(set_b))
+
+            duplicate_pairs = []
+            n = len(article_data)
+            
+            for i in range(n):
+                for j in range(i + 1, n):
+                    art_a = article_data[i]
+                    art_b = article_data[j]
+                    
+                    pair_key = (min(art_a['article'].id, art_b['article'].id), max(art_a['article'].id, art_b['article'].id))
+                    if pair_key in ignored_ids:
+                        continue
+                        
+                    countries_a = get_countries_from_title(art_a['article'].title)
+                    countries_b = get_countries_from_title(art_b['article'].title)
+                    if countries_a != countries_b:
+                        title_sim = 0.0
+                    else:
+                        title_sim = calculate_jaccard(art_a['title_set'], art_b['title_set'])
+                    content_sim = calculate_jaccard(art_a['content_set'], art_b['content_set'])
+                    
+                    is_match = False
+                    if mode == 'title':
+                        is_match = title_sim >= threshold
+                    elif mode == 'content':
+                        is_match = content_sim >= threshold
+                    elif mode == 'either':
+                        is_match = title_sim >= threshold or content_sim >= threshold
+                    else:  # both
+                        is_match = title_sim >= threshold and content_sim >= threshold
+                        
+                    if is_match:
+                        score_a = calculate_strength_score(art_a['article'])
+                        score_b = calculate_strength_score(art_b['article'])
+                        
+                        if score_a >= score_b:
+                            keep = art_a['article']
+                            keep_score = score_a
+                            delete = art_b['article']
+                            delete_score = score_b
+                        else:
+                            keep = art_b['article']
+                            keep_score = score_b
+                            delete = art_a['article']
+                            delete_score = score_a
+                            
+                        duplicate_pairs.append({
+                            'article_a': art_a['article'],
+                            'article_b': art_b['article'],
+                            'title_similarity': round(title_sim * 100, 1),
+                            'content_similarity': round(content_sim * 100, 1),
+                            'keep': keep,
+                            'keep_score': keep_score,
+                            'delete': delete,
+                            'delete_score': delete_score,
+                            'word_count_a': len(art_a['article'].content.split()),
+                            'word_count_b': len(art_b['article'].content.split()),
+                        })
+                        
+            context['duplicate_pairs'] = duplicate_pairs
+            context['scanned'] = True
+            context['threshold_pct'] = int(threshold * 100)
+            context['mode'] = mode
+            
+        return context
+
+
+class ArticleSimilarityActionView(ContentAdminRequiredMixin, View):
+    """
+    AJAX handler for similarity scanner actions (ignore, restore, auto-merge, delete_only).
+    التعامل مع طلبات الـ AJAX لعمليات التجاهل والدمج والحذف
+    """
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get('action')
+        a_id = int(request.POST.get('article_a_id', 0))
+        b_id = int(request.POST.get('article_b_id', 0))
+        
+        if not a_id or not b_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing article IDs.'}, status=400)
+            
+        article_a = get_object_or_404(Article, id=a_id)
+        article_b = get_object_or_404(Article, id=b_id)
+        
+        low_id = min(a_id, b_id)
+        high_id = max(a_id, b_id)
+        
+        if action == 'ignore':
+            IgnoredSimilarity.objects.get_or_create(
+                article_a_id=low_id,
+                article_b_id=high_id
+            )
+            return JsonResponse({'status': 'success', 'message': 'تم تجاهل التشابه بنجاح.'})
+            
+        elif action == 'restore':
+            IgnoredSimilarity.objects.filter(
+                article_a_id=low_id,
+                article_b_id=high_id
+            ).delete()
+            return JsonResponse({'status': 'success', 'message': 'تم إلغاء التجاهل واستعادة الثنائي.'})
+            
+        elif action == 'auto_merge':
+            keep_id = int(request.POST.get('keep_id', 0))
+            delete_id = int(request.POST.get('delete_id', 0))
+            
+            if not keep_id or not delete_id:
+                return JsonResponse({'status': 'error', 'message': 'Missing keep/delete IDs.'}, status=400)
+                
+            keep_art = get_object_or_404(Article, id=keep_id)
+            delete_art = get_object_or_404(Article, id=delete_id)
+            
+            with transaction.atomic():
+                # 1. Merge FAQs (avoiding duplicates)
+                keep_faqs = {faq.question: faq for faq in keep_art.faqs.all()}
+                for faq in delete_art.faqs.all():
+                    if faq.question not in keep_faqs:
+                        faq.article = keep_art
+                        faq.save()
+                        
+                # 2. Merge Tags
+                for tag in delete_art.tags.all():
+                    keep_art.tags.add(tag)
+                    
+                # 3. Merge related links
+                for uni in delete_art.related_universities.all():
+                    keep_art.related_universities.add(uni)
+                for inst in delete_art.related_institutes.all():
+                    keep_art.related_institutes.add(inst)
+                for major in delete_art.related_majors.all():
+                    keep_art.related_majors.add(major)
+                    
+                # 4. Create Redirects (old to new)
+                old_path_standard = f"/articles/{delete_art.slug}/"
+                new_path = f"/articles/{keep_art.slug}/"
+                
+                Redirect.objects.get_or_create(
+                    old_url=old_path_standard,
+                    defaults={
+                        'new_url': new_path,
+                        'is_active': True,
+                        'notes': f"توجيه تلقائي من دمج المقالات المكررة: {delete_art.title} -> {keep_art.title}"
+                    }
+                )
+                
+                old_path_legacy = f"/{delete_art.slug}/"
+                Redirect.objects.get_or_create(
+                    old_url=old_path_legacy,
+                    defaults={
+                        'new_url': new_path,
+                        'is_active': True,
+                        'notes': f"توجيه تلقائي من دمج المقالات المكررة (رابط قديم): {delete_art.title} -> {keep_art.title}"
+                    }
+                )
+                
+                # 5. Delete IgnoredSimilarity entries containing deleted article
+                IgnoredSimilarity.objects.filter(Q(article_a=delete_art) | Q(article_b=delete_art)).delete()
+                
+                # 6. Delete duplicate article
+                delete_art.delete()
+                
+            return JsonResponse({'status': 'success', 'message': 'تم الدمج التلقائي وحذف المقالة المكررة وإنشاء التوجيهات بنجاح.'})
+            
+        elif action == 'delete_only':
+            delete_id = int(request.POST.get('delete_id', 0))
+            if not delete_id:
+                return JsonResponse({'status': 'error', 'message': 'Missing delete ID.'}, status=400)
+            delete_art = get_object_or_404(Article, id=delete_id)
+            
+            with transaction.atomic():
+                IgnoredSimilarity.objects.filter(Q(article_a=delete_art) | Q(article_b=delete_art)).delete()
+                delete_art.delete()
+                
+            return JsonResponse({'status': 'success', 'message': 'تم حذف المقالة المكررة نهائياً بدون توجيه.'})
+            
+        return JsonResponse({'status': 'error', 'message': 'Invalid action.'}, status=400)
+
+
+class ArticleManualMergeView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, View):
+    """
+    Dedicated workspace for side-by-side editing and manual merging of duplicate articles.
+    مساحة عمل مخصصة للمقارنة والدمج اليدوي للمقالات المكررة
+    """
+    template_name = 'dashboard/articles/manual_merge.html'
+
+    def get_breadcrumbs(self, keep_art):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add_section('dash_articles')
+            .add('تحليل التكرار والتشابه', reverse('dashboard:article_similarity'))
+            .current('مساحة العمل للدمج اليدوي')
+            .build())
+
+    def get_additional_context(self, keep_art):
+        recent_art_ids = Article.objects.order_by('-updated_at').values_list('id', flat=True)[:10]
+        
+        recently_used_universities = list(University.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_universities) < 5:
+            recently_used_universities = list(University.objects.order_by('-updated_at')[:5])
+        
+        recently_used_institutes = list(Institute.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_institutes) < 5:
+            recently_used_institutes = list(Institute.objects.order_by('-updated_at')[:5])
+        
+        recently_used_majors = list(Major.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_majors) < 5:
+            recently_used_majors = list(Major.objects.order_by('-updated_at')[:5])
+        
+        recently_used_tags = list(Tag.objects.filter(articles__in=recent_art_ids).distinct()[:5])
+        if len(recently_used_tags) < 5:
+            recently_used_tags = list(Tag.objects.order_by('-name')[:5])
+            
+        return {
+            'recently_used_universities': recently_used_universities,
+            'recently_used_institutes': recently_used_institutes,
+            'recently_used_majors': recently_used_majors,
+            'recently_used_tags': recently_used_tags,
+        }
+
+    def get(self, request, keep_id, delete_id, *args, **kwargs):
+        keep_art = get_object_or_404(Article, id=keep_id)
+        delete_art = get_object_or_404(Article, id=delete_id)
+        
+        form = ArticleForm(instance=keep_art)
+        faq_formset = ArticleFAQFormSet(instance=keep_art)
+        
+        context = {
+            'page_title': 'مساحة العمل للدمج اليدوي للمقالات',
+            'breadcrumbs': self.get_breadcrumbs(keep_art),
+            'form': form,
+            'faq_formset': faq_formset,
+            'keep_art': keep_art,
+            'delete_art': delete_art,
+            'word_count_keep': len(keep_art.content.split()),
+            'word_count_delete': len(delete_art.content.split()),
+        }
+        context.update(self.get_additional_context(keep_art))
+        return render(request, self.template_name, context)
+
+    def post(self, request, keep_id, delete_id, *args, **kwargs):
+        keep_art = get_object_or_404(Article, id=keep_id)
+        delete_art = get_object_or_404(Article, id=delete_id)
+        
+        form = ArticleForm(request.POST, request.FILES, instance=keep_art)
+        faq_formset = ArticleFAQFormSet(request.POST, instance=keep_art)
+        
+        if form.is_valid() and faq_formset.is_valid():
+            with transaction.atomic():
+                # Save keep article edits
+                keep_art = form.save()
+                faq_formset.save()
+                
+                # Merge FAQs from delete_art to keep_art (avoiding duplicates)
+                keep_faqs = {faq.question: faq for faq in keep_art.faqs.all()}
+                for faq in delete_art.faqs.all():
+                    if faq.question not in keep_faqs:
+                        faq.article = keep_art
+                        faq.save()
+                        
+                # Merge Tags
+                for tag in delete_art.tags.all():
+                    keep_art.tags.add(tag)
+                    
+                # Merge relations
+                for uni in delete_art.related_universities.all():
+                    keep_art.related_universities.add(uni)
+                for inst in delete_art.related_institutes.all():
+                    keep_art.related_institutes.add(inst)
+                for major in delete_art.related_majors.all():
+                    keep_art.related_majors.add(major)
+                    
+                # Create Redirects
+                old_path_standard = f"/articles/{delete_art.slug}/"
+                new_path = f"/articles/{keep_art.slug}/"
+                
+                Redirect.objects.get_or_create(
+                    old_url=old_path_standard,
+                    defaults={
+                        'new_url': new_path,
+                        'is_active': True,
+                        'notes': f"توجيه تلقائي من دمج يدوي للمقالات: {delete_art.title} -> {keep_art.title}"
+                    }
+                )
+                
+                old_path_legacy = f"/{delete_art.slug}/"
+                Redirect.objects.get_or_create(
+                    old_url=old_path_legacy,
+                    defaults={
+                        'new_url': new_path,
+                        'is_active': True,
+                        'notes': f"توجيه تلقائي من دمج يدوي للمقالات (رابط قديم): {delete_art.title} -> {keep_art.title}"
+                    }
+                )
+                
+                # Delete ignored pairs
+                IgnoredSimilarity.objects.filter(Q(article_a=delete_art) | Q(article_b=delete_art)).delete()
+                
+                # Delete duplicate article
+                delete_art.delete()
+                
+            messages.success(request, 'تم الحفظ والدمج بنجاح وإنشاء التوجيهات.')
+            return redirect('dashboard:article_similarity')
+            
+        context = {
+            'page_title': 'مساحة العمل للدمج اليدوي للمقالات',
+            'breadcrumbs': self.get_breadcrumbs(keep_art),
+            'form': form,
+            'faq_formset': faq_formset,
+            'keep_art': keep_art,
+            'delete_art': delete_art,
+            'word_count_keep': len(keep_art.content.split()),
+            'word_count_delete': len(delete_art.content.split()),
+        }
+        context.update(self.get_additional_context(keep_art))
+        return render(request, self.template_name, context)
+
 
 
 

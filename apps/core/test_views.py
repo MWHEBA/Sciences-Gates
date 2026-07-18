@@ -1,5 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
+from apps.leads.models import Lead
+
 
 class AboutViewTestCase(TestCase):
     """
@@ -42,3 +44,63 @@ class MegaMenuContextTestCase(TestCase):
             self.assertIn('menu_private_univs', context)
             self.assertIn('menu_institutes', context)
             self.assertIn('menu_major_categories', context)
+
+
+class VisaTrackingViewTestCase(TestCase):
+    """
+    اختبارات صفحة متابعة الفيزا ونموذج طلب المساعدة
+    """
+
+    def test_visa_tracking_page_loads_successfully(self):
+        """التحقق من تحميل صفحة تتبع الفيزا بنجاح مع القالب الصحيح"""
+        response = self.client.get(reverse('visa_tracking'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'visa_tracking.html')
+        self.assertContains(response, 'متابعة حالة الفيزا')
+        self.assertContains(response, 'EMGS')
+
+    def test_visa_tracking_form_submission_success(self):
+        """التحقق من إرسال نموذج المساعدة بنجاح وحفظه كـ Lead"""
+        url = reverse('visa_tracking')
+        form_data = {
+            'lead_type': 'contact',
+            'name': 'أحمد علي',
+            'email': 'ahmed.ali@example.com',
+            'phone': '+201234567890',
+            'message': 'أريد مساعدة في تتبع طلبي الموقف عند 35%',
+            'website': '',  # حقل الهوني بوت فارغ
+        }
+        
+        response = self.client.post(url, data=form_data)
+        
+        # التحقق من إعادة التوجيه للصفحة نفسها بعد الإرسال الناجح
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, url)
+        
+        # التحقق من تخزين البيانات في الداتا بيز
+        self.assertEqual(Lead.objects.count(), 1)
+        lead = Lead.objects.first()
+        self.assertEqual(lead.name, 'أحمد علي')
+        self.assertEqual(lead.email, 'ahmed.ali@example.com')
+        self.assertEqual(lead.phone, '+201234567890')
+        self.assertIn('[طلب مساعدة في تتبع الفيزا - EMGS]', lead.message)
+        self.assertIn('أريد مساعدة في تتبع طلبي الموقف عند 35%', lead.message)
+        self.assertIn('visa-tracking', lead.source_page)
+
+    def test_visa_tracking_form_submission_honeypot_spam(self):
+        """التحقق من رفض الفورم إذا تم ملء حقل الهوني بوت (سبام)"""
+        url = reverse('visa_tracking')
+        form_data = {
+            'lead_type': 'contact',
+            'name': 'سبامر',
+            'email': 'spam@example.com',
+            'phone': '+201234567890',
+            'message': 'رسالة سبام',
+            'website': 'http://spambot.com',  # حقل الهوني بوت مملوء
+        }
+        
+        response = self.client.post(url, data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Lead.objects.count(), 0)
+
+

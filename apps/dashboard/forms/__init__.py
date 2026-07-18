@@ -8,7 +8,7 @@ from apps.core.models import UserProfile, UserRole
 from .university import UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet
 from .institute import InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet
 from .major import MajorForm, MajorCategoryForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet, MajorFAQFormSet, MajorAttachmentFormSet
-from .article import ArticleForm, ArticleFAQFormSet, CategoryForm, TagForm
+from .article import ArticleForm, ArticleFAQFormSet, CategoryForm, TagForm, ArticleAttachmentFormSet
 from .settings import SiteSettingsForm, SiteSEOSettingsForm, SEOSettingsForm
 
 
@@ -322,6 +322,7 @@ __all__ = [
     'CountriesTableFormSet',
     'ArticleForm',
     'ArticleFAQFormSet',
+    'ArticleAttachmentFormSet',
     'CategoryForm',
     'TagForm',
     'SiteSettingsForm',

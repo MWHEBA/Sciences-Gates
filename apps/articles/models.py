@@ -9,6 +9,11 @@ from django.dispatch import receiver
 from django.utils import timezone
 from apps.core.models import TimestampedModel, PublishableModel, SEOMixin
 from apps.html_editor.sanitizer import sanitize_article_html
+from apps.core.utils import (
+    validate_attachment_file,
+    cleanup_attachment_file_on_save,
+    cleanup_attachment_file_on_delete
+)
 
 
 class Category(TimestampedModel):
@@ -248,3 +253,57 @@ def sanitize_article_faq_content(sender, instance, **kwargs):
     """Sanitize FAQ answer HTML content before saving."""
     if instance.answer:
         instance.answer = sanitize_article_html(instance.answer)
+
+
+class IgnoredSimilarity(models.Model):
+    """Model to store ignored duplicate/similarity article pairs."""
+    article_a = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='ignored_similarities_a')
+    article_b = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='ignored_similarities_b')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('article_a', 'article_b')
+        verbose_name = 'تشابه متجاهل'
+        verbose_name_plural = 'التشابهات المتجاهلة'
+
+
+class ArticleAttachment(TimestampedModel):
+    """File attachment for an article."""
+    article = models.ForeignKey(
+        Article,
+        on_delete=models.CASCADE,
+        related_name='attachments',
+        verbose_name='المقالة'
+    )
+    title = models.CharField(
+        max_length=200,
+        verbose_name='عنوان الملف'
+    )
+    file = models.FileField(
+        upload_to='articles/attachments/',
+        validators=[validate_attachment_file],
+        verbose_name='الملف'
+    )
+    file_size = models.PositiveIntegerField(
+        default=0,
+        verbose_name='حجم الملف (بايت)'
+    )
+
+    class Meta:
+        verbose_name = 'ملف المقالة'
+        verbose_name_plural = 'ملفات المقالة'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.title} - {self.article.title}'
+
+    def save(self, *args, **kwargs):
+        cleanup_attachment_file_on_save(self)
+        if self.file and hasattr(self.file, 'size'):
+            self.file_size = self.file.size
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        cleanup_attachment_file_on_delete(self)
+        super().delete(*args, **kwargs)
+

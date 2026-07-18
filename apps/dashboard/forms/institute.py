@@ -39,7 +39,7 @@ class InstituteForm(forms.ModelForm):
         model = Institute
         fields = [
             # Basic Information
-            'name', 'slug', 'state', 'city', 'logo', 'logo_alt', 'main_image', 'main_image_alt', 'location',
+            'name', 'slug', 'state', 'city', 'logo', 'main_image', 'location',
             'telephone', 'website',
             # Rich Text Sections
             'introduction', 'description', 'why_choose_us', 'english_study',
@@ -77,20 +77,10 @@ class InstituteForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'accept': 'image/*',
             }),
-            'logo_alt': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'الوصف البديل لشعار المعهد (SEO)',
-                'dir': 'rtl',
-            }),
             'main_image': forms.FileInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'accept': 'image/*',
                 'required': True,
-            }),
-            'main_image_alt': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'الوصف البديل للصورة الرئيسية (SEO)',
-                'dir': 'rtl',
             }),
             'location': CustomHTMLEditorWidget(attrs={
                 'data-placeholder': 'موقع المعهد (المدينة، الولاية)...',
@@ -209,9 +199,7 @@ class InstituteForm(forms.ModelForm):
             'state': 'الولاية',
             'city': 'المدينة',
             'logo': 'شعار المعهد',
-            'logo_alt': 'النص البديل للشعار',
             'main_image': 'الصورة الرئيسية',
-            'main_image_alt': 'النص البديل للصورة الرئيسية',
             'location': 'الموقع',
             'telephone': 'رقم الهاتف',
             'website': 'الموقع الرسمي للمعهد',
@@ -250,9 +238,7 @@ class InstituteForm(forms.ModelForm):
             'state': 'الولاية التي يقع بها المعهد لتسهيل التصفية والبحث',
             'city': 'المدينة التي يقع بها المعهد لتسهيل التصفية والبحث',
             'logo': 'شعار المعهد (PNG مع خلفية شفافة مفضل)',
-            'logo_alt': 'نص يصف محتوى شعار المعهد لمحركات البحث ومستعرضات الصور',
             'main_image': 'صورة رئيسية للمعهد',
-            'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للمعهد لمحركات البحث ومستعرضات الصور',
             'location': 'موقع المعهد الجغرافي بالتفصيل',
             'telephone': 'رقم هاتف التواصل للمعهد لتسهيل التواصل والبحث المحلي',
             'website': 'رابط الموقع الإلكتروني الرسمي للمعهد (sameAs)',

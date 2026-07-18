@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="{% static 'css/faq-bulk-import.css' %}">
 <link rel="stylesheet" href="{% static 'css/tags_input.css' %}">
 <link rel="stylesheet" href="{% static 'css/relations_select.css' %}">
-<link rel="stylesheet" href="{% static 'css/university-attachments.css' %}">
+<link rel="stylesheet" href="{% static 'css/attachments-manager.css' %}">
 <link rel="stylesheet" href="{% static 'css/countries-manager.css' %}">
 <link rel="stylesheet" href="{% static 'css/subjects-manager.css' %}">
 <link rel="stylesheet" href="{% static 'css/salaries-manager.css' %}">
@@ -127,19 +127,11 @@
 
                                 <!-- Main Image -->
                                 <div>
-                                    <label class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                                        الصورة الرئيسية للتخصص
-                                        <span style="color: var(--danger);">*</span>
-                                    </label>
                                     {% if form.instance.main_image %}
                                         {% include "dashboard/components/image_upload.html" with field=form.main_image required=True current_image=form.instance.main_image.url %}
                                     {% else %}
                                         {% include "dashboard/components/image_upload.html" with field=form.main_image required=True %}
                                     {% endif %}
-                                    <!-- Hidden field for main_image_alt (updated via modal) -->
-                                    <div style="display: none;">
-                                        {{ form.main_image_alt }}
-                                    </div>
                                     {% if form.main_image.errors %}
                                         <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.main_image.errors.0 }}</p>
                                     {% endif %}
@@ -1619,7 +1611,7 @@ function removeFormsetRow(btn, prefix) {
 <script src="{% static 'js/countries-manager.js' %}"></script>
 <script src="{% static 'js/subjects-manager.js' %}"></script>
 <script src="{% static 'js/salaries-manager.js' %}"></script>
-<script src="{% static 'js/university-attachments.js' %}"></script>
+<script src="{% static 'js/attachments-manager.js' %}"></script>
 <script src="{% static 'js/content-lock.js' %}"></script>
 {% if form.instance.pk %}
 {{ form.instance.pk|json_script:"lock-object-id" }}

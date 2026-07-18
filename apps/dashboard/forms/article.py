@@ -4,7 +4,7 @@ Article forms for the dashboard.
 """
 from django import forms
 from django.forms.models import inlineformset_factory
-from apps.articles.models import Article, ArticleFAQ, Category, Tag
+from apps.articles.models import Article, ArticleFAQ, Category, Tag, ArticleAttachment
 from apps.html_editor.widgets import CustomHTMLEditorWidget
 
 
@@ -27,7 +27,7 @@ class ArticleForm(forms.ModelForm):
         model = Article
         fields = [
             # Basic Information
-            'title', 'slug', 'featured_image', 'featured_image_alt',
+            'title', 'slug', 'featured_image',
             # Content
             'category', 'author', 'tags', 'content',
             # Relationships
@@ -57,11 +57,6 @@ class ArticleForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'accept': 'image/*',
                 'required': True,
-            }),
-            'featured_image_alt': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'الوصف البديل للصورة المميزة (SEO)',
-                'dir': 'rtl',
             }),
             
             # Content Section
@@ -167,7 +162,6 @@ class ArticleForm(forms.ModelForm):
             'title': 'عنوان المقالة',
             'slug': 'الرابط',
             'featured_image': 'الصورة المميزة',
-            'featured_image_alt': 'النص البديل للصورة المميزة',
             
             # Content
             'category': 'الفئة',
@@ -201,7 +195,6 @@ class ArticleForm(forms.ModelForm):
             # Basic Information
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
             'featured_image': 'صورة مميزة للمقالة',
-            'featured_image_alt': 'نص يصف محتوى الصورة المميزة للمقالة لمحركات البحث ومستعرضات الصور',
             
             # Content
             'category': 'اختر فئة المقالة',
@@ -237,9 +230,13 @@ class ArticleForm(forms.ModelForm):
             if self.data.get('imported_featured_image_path'):
                 self.fields['featured_image'].required = False
         
-        # Display author's full name if available, fallback to username
+        # Display author's full name/username with their email in parentheses
         if 'author' in self.fields:
-            self.fields['author'].label_from_instance = lambda obj: obj.get_full_name() if obj.get_full_name() else obj.username
+            self.fields['author'].label_from_instance = (
+                lambda obj: f"{obj.get_full_name() or obj.username} ({obj.email})"
+                if obj.email
+                else (obj.get_full_name() or obj.username)
+            )
         
         # Format publish_date initial value for date input
         if self.instance and self.instance.pk and self.instance.publish_date:
@@ -393,4 +390,35 @@ ArticleFAQFormSet = inlineformset_factory(
         'answer': 'إجابة السؤال',
         'sort_order': 'ترتيب ظهور السؤال (الأصغر أولاً)',
     }
+)
+
+
+class ArticleAttachmentForm(forms.ModelForm):
+    """Form for uploading files for an article."""
+    class Meta:
+        model = ArticleAttachment
+        fields = ['title', 'file']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'عنوان الملف (مثال: الشروط التفصيلية، دليل التقديم)',
+                'dir': 'rtl',
+            }),
+            'file': forms.FileInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            }),
+        }
+        labels = {
+            'title': 'عنوان الملف',
+            'file': 'الملف',
+        }
+
+
+ArticleAttachmentFormSet = inlineformset_factory(
+    Article,
+    ArticleAttachment,
+    form=ArticleAttachmentForm,
+    fields=['title', 'file'],
+    extra=1,
+    can_delete=True,
 )

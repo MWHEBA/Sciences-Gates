@@ -140,6 +140,22 @@ def sync_media_file(instance, field_name, alt_field_name, source_type):
         width, height, file_size = None, None, 0
 
     if media_file:
+        # Check if the image file has changed (i.e. replaced with a new file)
+        image_changed = media_file.file.name != image_file.name
+        
+        if image_changed:
+            # If the image was replaced, clear the alt text
+            alt_text = ''
+            # Update the instance field in the DB directly without triggering signals
+            type(instance).objects.filter(pk=instance.pk).update(**{alt_field_name: ''})
+        else:
+            # If the image did NOT change, but the incoming alt_text is empty and media_file has one,
+            # it means the model was saved without the alt text in the form, so preserve it.
+            if not alt_text and media_file.alt_text:
+                alt_text = media_file.alt_text
+                # Sync it back to the instance DB field
+                type(instance).objects.filter(pk=instance.pk).update(**{alt_field_name: alt_text})
+
         media_file.alt_text = alt_text
         media_file.width = width
         media_file.height = height
@@ -147,7 +163,7 @@ def sync_media_file(instance, field_name, alt_field_name, source_type):
         media_file.content_type = ContentType.objects.get_for_model(instance)
         media_file.object_id = instance.pk
         media_file.source_type = source_type
-        if media_file.file.name != image_file.name:
+        if image_changed:
             media_file.file = image_file
             media_file.original_filename = os.path.basename(image_file.name)
         media_file.save()

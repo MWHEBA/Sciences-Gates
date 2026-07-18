@@ -22,12 +22,24 @@
                 </span>
             </div>
             <div class="flex items-center gap-3">
-                <select name="action" id="bulk-action-select" class="text-sm rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 p-2 cursor-pointer bg-white" style="border: 1px solid var(--border); color: var(--text-primary);" required>
+                <select name="action" id="bulk-action-select" class="text-sm rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 cursor-pointer bg-white appearance-none" style="border: 1px solid var(--border); color: var(--text-primary); background-image: url('data:image/svg+xml;utf8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2343576B\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\' viewBox=\'0 0 24 24\'%3E%3Cpath d=\'M6 9l6 6 6-6\'%3E%3C/path%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: left 10px center; background-size: 14px 14px; padding-left: 30px; padding-right: 12px; padding-top: 6px; padding-bottom: 6px; appearance: none; -webkit-appearance: none; -moz-appearance: none; height: 38px; min-width: 130px;" required>
                     <option value="" disabled selected>اختر إجراءً...</option>
                     <option value="delete">حذف المحدد</option>
                     <option value="publish">نشر المحدد</option>
                     <option value="unpublish">إلغاء نشر المحدد</option>
+                    {% if page_type == 'articles' %}
+                    <option value="change_author">تغيير الكاتب</option>
+                    {% endif %}
                 </select>
+                {% if page_type == 'articles' %}
+                <select name="new_author_id" id="bulk-author-select" class="hidden text-sm rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 cursor-pointer bg-white appearance-none" style="border: 1px solid var(--border); color: var(--text-primary); background-image: url('data:image/svg+xml;utf8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2343576B\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\' viewBox=\'0 0 24 24\'%3E%3Cpath d=\'M6 9l6 6 6-6\'%3E%3C/path%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: left 10px center; background-size: 14px 14px; padding-left: 30px; padding-right: 12px; padding-top: 6px; padding-bottom: 6px; appearance: none; -webkit-appearance: none; -moz-appearance: none; height: 38px; min-width: 160px;">
+                    <option value="" disabled selected>اختر الكاتب الجديد...</option>
+                    <option value="none">بدون كاتب</option>
+                    {% for u in all_users %}
+                        <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
                 <button type="submit" id="bulk-action-submit" class="px-4 py-2 text-sm font-medium rounded-lg text-white transition-colors duration-200 cursor-pointer" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'">
                     تطبيق
                 </button>
@@ -91,8 +103,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedCountSpan = document.getElementById('selected-count');
     const bulkForm = document.getElementById('bulk-action-form');
     const bulkActionSelect = document.getElementById('bulk-action-select');
+    const bulkAuthorSelect = document.getElementById('bulk-author-select');
 
     if (!selectAllCheckbox || !bulkActionsBar) return;
+
+    if (bulkActionSelect && bulkAuthorSelect) {
+        bulkActionSelect.addEventListener('change', function() {
+            if (bulkActionSelect.value === 'change_author') {
+                bulkAuthorSelect.classList.remove('hidden');
+                bulkAuthorSelect.required = true;
+            } else {
+                bulkAuthorSelect.classList.add('hidden');
+                bulkAuthorSelect.required = false;
+            }
+        });
+    }
 
     function updateBulkActionsBar() {
         const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
@@ -136,6 +161,14 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             alert('يرجى تحديد عنصر واحد على الأقل');
             return;
+        }
+
+        if (action === 'change_author') {
+            if (!bulkAuthorSelect || !bulkAuthorSelect.value) {
+                e.preventDefault();
+                alert('يرجى اختيار الكاتب الجديد');
+                return;
+            }
         }
 
         if (action === 'delete') {

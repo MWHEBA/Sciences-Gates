@@ -4,6 +4,11 @@ University content models including University, Faculty, Program, and FAQ.
 from django.db import models
 from django.urls import reverse
 from apps.core.models import TimestampedModel, PublishableModel, SEOMixin
+from apps.core.utils import (
+    validate_attachment_file,
+    cleanup_attachment_file_on_save,
+    cleanup_attachment_file_on_delete
+)
 
 
 class University(TimestampedModel, PublishableModel, SEOMixin):
@@ -519,6 +524,7 @@ class UniversityAttachment(TimestampedModel):
     )
     file = models.FileField(
         upload_to='universities/attachments/',
+        validators=[validate_attachment_file],
         verbose_name='الملف'
     )
     file_size = models.PositiveIntegerField(
@@ -535,16 +541,12 @@ class UniversityAttachment(TimestampedModel):
         return f'{self.title} - {self.university.name}'
 
     def save(self, *args, **kwargs):
-        if self.file:
+        cleanup_attachment_file_on_save(self)
+        if self.file and hasattr(self.file, 'size'):
             self.file_size = self.file.size
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if self.file:
-            try:
-                self.file.delete(save=False)
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).warning(f"Error deleting physical file for UniversityAttachment: {e}")
+        cleanup_attachment_file_on_delete(self)
         super().delete(*args, **kwargs)
 

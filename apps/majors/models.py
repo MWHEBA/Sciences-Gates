@@ -4,6 +4,11 @@ Major/Specialization content models.
 from django.db import models
 from django.urls import reverse
 from apps.core.models import TimestampedModel, PublishableModel, SEOMixin
+from apps.core.utils import (
+    validate_attachment_file,
+    cleanup_attachment_file_on_save,
+    cleanup_attachment_file_on_delete
+)
 
 
 from django.core.exceptions import ValidationError
@@ -395,6 +400,7 @@ class MajorAttachment(TimestampedModel):
     )
     file = models.FileField(
         upload_to='majors/attachments/',
+        validators=[validate_attachment_file],
         verbose_name='الملف'
     )
     file_size = models.PositiveIntegerField(
@@ -407,12 +413,17 @@ class MajorAttachment(TimestampedModel):
         verbose_name_plural = 'ملفات التخصص'
         ordering = ['-created_at']
 
+    def __str__(self):
+        return f'{self.title} - {self.major.name}'
+
     def save(self, *args, **kwargs):
+        cleanup_attachment_file_on_save(self)
         if self.file and hasattr(self.file, 'size'):
             self.file_size = self.file.size
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f'{self.title} - {self.major.name}'
+    def delete(self, *args, **kwargs):
+        cleanup_attachment_file_on_delete(self)
+        super().delete(*args, **kwargs)
 
 

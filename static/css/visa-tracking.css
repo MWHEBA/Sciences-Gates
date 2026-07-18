@@ -1,0 +1,319 @@
+/*
+ * Sciences Gates - Visa Tracking Page Styles
+ * Designed to be clean, professional, and accessible using flat CSS variables.
+ */
+
+/* ==========================================================================
+   Page Layout and Containers
+   ========================================================================== */
+.visa-tracking-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+@media (min-width: 992px) {
+    .visa-tracking-layout {
+        grid-template-columns: 7fr 5fr;
+    }
+}
+
+.visa-tracking-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================================================
+   Direct Tracking Card
+   ========================================================================== */
+.direct-track-card {
+    text-align: center;
+    border-top: 4px solid var(--secondary);
+}
+
+.direct-track-title {
+    font-size: 1.5rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.direct-track-desc {
+    color: var(--text-body);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.direct-track-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: var(--secondary);
+    color: var(--surface);
+    font-weight: 600;
+    padding: 0.85rem 2rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    width: 100%;
+}
+
+.direct-track-btn:hover {
+    background-color: var(--secondary-hover);
+    color: var(--surface);
+}
+
+.direct-track-note {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: var(--secondary-light);
+    border-radius: 0.375rem;
+    font-size: 0.85rem;
+    color: var(--warning);
+    border: 1px solid var(--warning-light);
+}
+
+/* ==========================================================================
+   Interactive Percentage Accordion
+   ========================================================================== */
+.percentage-guide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+}
+
+.percentage-guide-title {
+    font-size: 1.5rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.percentage-status-keys {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.status-key-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.85rem;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-dot--green { background-color: var(--success); }
+.status-dot--yellow { background-color: var(--warning); }
+.status-dot--red { background-color: var(--danger); }
+
+.accordion-item {
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    background-color: var(--surface);
+    transition: border-color 0.2s ease;
+}
+
+.accordion-item--active {
+    border-color: var(--primary);
+}
+
+.accordion-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: right;
+    font-family: inherit;
+}
+
+.accordion-trigger-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.accordion-percentage {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 1.15rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.accordion-percentage--success {
+    background-color: var(--success-light);
+    color: var(--success);
+}
+
+.accordion-percentage--warning {
+    background-color: var(--warning-light);
+    color: var(--warning);
+}
+
+.accordion-label {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.accordion-icon {
+    color: var(--text-body);
+    transition: transform 0.2s ease;
+}
+
+.accordion-item--active .accordion-icon {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    padding: 0 1.25rem 1.25rem 1.25rem;
+    font-size: 0.95rem;
+    color: var(--text-body);
+    line-height: 1.7;
+    border-top: 1px solid var(--border);
+    background-color: var(--surface-2);
+}
+
+.accordion-advice {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-right: 3px solid var(--secondary);
+    background-color: var(--surface);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   Help Support Form Section
+   ========================================================================== */
+.visa-help-section {
+    margin-top: 3rem;
+    border-top: 2px dashed var(--border);
+    padding-top: 3rem;
+}
+
+.visa-help-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 2.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.visa-help-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.visa-help-title {
+    font-size: 1.75rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.visa-help-desc {
+    color: var(--text-body);
+    font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   Homepage Visa Section (Split Grid Layout)
+   ========================================================================== */
+.visa-home-section {
+    padding: 80px 0;
+}
+
+.visa-home-features {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0 2rem 0;
+}
+
+.visa-home-feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 1.05rem;
+    color: var(--text-body);
+}
+
+.visa-home-feature-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--secondary-muted);
+    color: var(--secondary);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+@keyframes visaFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.visa-home-image-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+}
+
+.visa-home-img {
+    width: 100%;
+    max-width: 480px;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    border-radius: 0.5rem;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.05));
+    animation: visaFloat 6s ease-in-out infinite;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+}
+
+.visa-home-image-wrapper:hover .visa-home-img {
+    transform: scale(1.04) translateY(-4px);
+    filter: drop-shadow(0 20px 30px rgba(11, 45, 77, 0.12));
+}
+
+

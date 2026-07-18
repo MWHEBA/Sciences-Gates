@@ -556,3 +556,169 @@ html[dir="rtl"] main {
     opacity: 0;
     pointer-events: none;
 }
+
+/* ═══════════════════════════════════
+   Unified Premium Input Styling (Global Overrides)
+   ═══════════════════════════════════ */
+/* Target all dashboard form inputs to force absolute visual consistency */
+#main-form input[type="text"],
+#main-form input[type="email"],
+#main-form input[type="password"],
+#main-form input[type="number"],
+#main-form input[type="date"],
+#main-form input[type="time"],
+#main-form input[type="file"]:not(.image-upload-input),
+#main-form select,
+#main-form textarea,
+.select2-container--default .select2-selection--single {
+    width: 100% !important;
+    height: 42px !important;
+    padding: 0 16px !important;
+    font-size: 14px !important;
+    border: 2px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important; /* 8px to match 0.5rem */
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+    font-family: 'Alexandria', sans-serif !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    box-shadow: none !important;
+}
+
+/* Ensure hidden image upload input remains completely hidden */
+.image-upload-input {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    pointer-events: none !important;
+}
+
+/* Textarea needs variable height */
+#main-form textarea {
+    height: auto !important;
+    min-height: 100px !important;
+    padding: 12px 16px !important;
+    align-items: flex-start !important;
+}
+
+/* Adjust Select & Select2 custom arrow positioning and padding */
+#main-form select,
+.select2-container--default .select2-selection--single {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%2343576B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: left 14px center !important;
+    background-size: 1rem 1rem !important;
+}
+
+#main-form select {
+    padding-right: 36px !important;
+    appearance: none !important;
+}
+
+/* Select2 Container sizing */
+.select2-container {
+    width: 100% !important;
+}
+
+/* Select2 Selection container */
+.select2-container--default .select2-selection--single {
+    outline: none !important;
+}
+
+/* Select2 Rendered Text alignment */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--text-primary) !important;
+    padding-right: 0 !important;
+    padding-left: 36px !important; /* Space for the arrow on the left */
+    line-height: 38px !important; /* height (42px) minus border (2px * 2) */
+    width: 100% !important;
+    text-align: right !important;
+}
+
+/* Hide default Select2 arrow completely since we use background-image */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    display: none !important;
+}
+
+/* ═══════════════════════════════════
+   Hover States (All Inputs)
+   ═══════════════════════════════════ */
+#main-form input[type="text"]:hover,
+#main-form input[type="email"]:hover,
+#main-form input[type="password"]:hover,
+#main-form input[type="number"]:hover,
+#main-form input[type="date"]:hover,
+#main-form input[type="time"]:hover,
+#main-form input[type="file"]:not(.image-upload-input):hover,
+#main-form select:hover,
+#main-form textarea:hover,
+.select2-container--default .select2-selection--single:hover {
+    border-color: var(--border-strong) !important;
+    background-color: var(--bg-light) !important;
+}
+
+/* ═══════════════════════════════════
+   Focus States (All Inputs)
+   ═══════════════════════════════════ */
+#main-form input[type="text"]:focus,
+#main-form input[type="email"]:focus,
+#main-form input[type="password"]:focus,
+#main-form input[type="number"]:focus,
+#main-form input[type="date"]:focus,
+#main-form input[type="time"]:focus,
+#main-form input[type="file"]:not(.image-upload-input):focus,
+#main-form select:focus,
+#main-form textarea:focus,
+.select2-container--default.select2-container--open .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--single {
+    outline: none !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(11, 45, 77, 0.1) !important;
+    background-color: var(--surface) !important;
+}
+
+/* Dropdown Results Styling */
+.select2-dropdown {
+    border: 2px solid var(--border) !important;
+    background-color: var(--surface) !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: var(--shadow-lg) !important;
+    z-index: 9999 !important;
+    overflow: hidden;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    border: 2px solid var(--border) !important;
+    background-color: var(--bg-page) !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--text-primary) !important;
+    padding: 6px 12px !important;
+    outline: none !important;
+    font-family: 'Alexandria', sans-serif !important;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field:focus {
+    border-color: var(--primary) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--primary) !important;
+    color: white !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected="true"] {
+    background-color: var(--primary-light) !important;
+    color: var(--primary) !important;
+}
+
+.select2-results__option {
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+    text-align: right !important;
+    font-family: 'Alexandria', sans-serif !important;
+}

@@ -19,7 +19,7 @@ class MajorForm(forms.ModelForm):
         model = Major
         fields = [
             # Basic Information
-            'name', 'slug', 'category', 'main_image', 'main_image_alt',
+            'name', 'slug', 'category', 'main_image',
             # Quick Information Fields
             'bachelor_duration', 'master_duration', 'phd_duration',
             'study_language', 'practical_training', 'career_opportunities', 'competitor_url',
@@ -57,11 +57,6 @@ class MajorForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'accept': 'image/*',
                 'required': True,
-            }),
-            'main_image_alt': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'الوصف البديل للصورة الرئيسية (SEO)',
-                'dir': 'rtl',
             }),
             
             'study_duration': forms.TextInput(attrs={
@@ -203,7 +198,6 @@ class MajorForm(forms.ModelForm):
             'slug': 'الرابط',
             'category': 'تصنيف التخصص',
             'main_image': 'الصورة الرئيسية',
-            'main_image_alt': 'النص البديل للصورة الرئيسية',
             
             # Quick Information Fields
             'study_duration': 'مدة الدراسة (عام)',
@@ -247,7 +241,6 @@ class MajorForm(forms.ModelForm):
             'slug': 'رابط الصفحة (يدعم الأحرف العربية)',
             'category': 'التصنيف الهرمي للتخصص',
             'main_image': 'صورة رئيسية للتخصص',
-            'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للتخصص لمحركات البحث ومستعرضات الصور',
             
             # Quick Information Fields
             'study_duration': 'مدة الدراسة العامة (مثال: 4 سنوات)',

@@ -537,3 +537,57 @@ def clean_description(value):
     
     return value
 
+
+def validate_attachment_file(value):
+    """
+    Validate attachment file size and file extension.
+    - Max size: 10MB
+    - Allowed extensions: PDF, Word, Excel, ZIP, RAR, images (PNG, JPG, JPEG)
+    """
+    # 10MB limit
+    limit = 10 * 1024 * 1024
+    if value.size > limit:
+        raise ValidationError('حجم الملف كبير جداً. الحد الأقصى المسموح به هو 10 ميجابايت.')
+    
+    # Allowed extensions
+    ext = os.path.splitext(value.name)[1].lower()
+    valid_extensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg', '.zip', '.rar']
+    if ext not in valid_extensions:
+        raise ValidationError(
+            'امتداد الملف غير مسموح به. الامتدادات المسموحة: PDF, Word, Excel, ZIP, RAR, PNG, JPG, JPEG'
+        )
+
+
+def cleanup_attachment_file_on_save(instance):
+    """
+    Deletes the old physical file from disk when a file is replaced during update.
+    """
+    if instance.pk:
+        try:
+            old_instance = instance.__class__.objects.get(pk=instance.pk)
+            if old_instance.file and old_instance.file != instance.file:
+                try:
+                    old_instance.file.delete(save=False)
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).warning(
+                        f"Error deleting physical file on update for {instance.__class__.__name__} (ID: {instance.pk}): {e}"
+                    )
+        except instance.__class__.DoesNotExist:
+            pass
+
+
+def cleanup_attachment_file_on_delete(instance):
+    """
+    Deletes the physical file from disk when the attachment model instance is deleted.
+    """
+    if instance.file:
+        try:
+            instance.file.delete(save=False)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(
+                f"Error deleting physical file on delete for {instance.__class__.__name__} (ID: {instance.pk}): {e}"
+            )
+
+

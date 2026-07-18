@@ -43,11 +43,11 @@
          </div>
          <div class="it-info-wrapper mb-20 d-flex align-items-center">
             <div class="itoffcanvas__info-icon">
-               <a href="#"><i class="fa-solid fa-location-dot"></i></a>
+               <a href="{% url 'visa_tracking' %}"><i class="fa-solid fa-passport"></i></a>
             </div>
             <div class="itoffcanvas__info-address">
-               <span>الموقع</span>
-               <a href="#">كوالالمبور، ماليزيا</a>
+               <span>تتبع التأشيرة</span>
+               <a href="{% url 'visa_tracking' %}">متابعة حالة الفيزا (EMGS)</a>
             </div>
          </div>
       </div>
@@ -92,19 +92,11 @@
                         </a>
                      </li>
                      <li class="d-none d-xl-inline-block">
-                        <a href="#">
+                        <a href="{% url 'visa_tracking' %}">
                            <span>
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                 xmlns="http://www.w3.org/2000/svg">
-                                 <path
-                                    d="M19.1776 2.9731C17.2604 1.05586 14.7113 0 11.9999 0C9.28857 0 6.73941 1.05586 4.82222 2.9731C2.90498 4.89038 1.84912 7.43945 1.84912 10.1508C1.84912 15.6357 7.03529 20.1978 9.8215 22.6487C10.2087 22.9893 10.543 23.2835 10.8094 23.5323C11.1432 23.844 11.5716 24 11.9999 24C12.4283 24 12.8566 23.844 13.1904 23.5323C13.4568 23.2834 13.7911 22.9893 14.1783 22.6487C16.9645 20.1978 22.1507 15.6357 22.1507 10.1508C22.1506 7.43945 21.0948 4.89038 19.1776 2.9731ZM13.2497 21.5932C12.854 21.9412 12.5124 22.2419 12.2306 22.505C12.1012 22.6258 11.8985 22.6258 11.7691 22.505C11.4874 22.2418 11.1457 21.9412 10.75 21.5932C8.13062 19.289 3.25491 15 3.25491 10.1508C3.25491 5.32885 7.17783 1.40592 11.9998 1.40592C16.8218 1.40592 20.7447 5.32885 20.7447 10.1508C20.7448 15 15.8691 19.289 13.2497 21.5932Z"
-                                    fill="currentColor" />
-                                 <path
-                                    d="M12.0002 5.29395C9.53358 5.29395 7.52686 7.30062 7.52686 9.76724C7.52686 12.2339 9.53358 14.2405 12.0002 14.2405C14.4668 14.2405 16.4735 12.2339 16.4735 9.76724C16.4735 7.30062 14.4668 5.29395 12.0002 5.29395ZM12.0002 12.8346C10.3088 12.8346 8.93273 11.4585 8.93273 9.76719C8.93273 8.07584 10.3088 6.69978 12.0002 6.69978C13.6916 6.69978 15.0676 8.07584 15.0676 9.76719C15.0676 11.4585 13.6916 12.8346 12.0002 12.8346Z"
-                                    fill="currentColor" />
-                              </svg>
+                              <i class="fas fa-passport" aria-hidden="true" style="color: var(--secondary); font-size: 1rem;"></i>
                            </span>
-                           كوالالمبور، ماليزيا
+                           متابعة الفيزا (EMGS)
                         </a>
                      </li>
                   </ul>
@@ -387,8 +379,8 @@
                                      <li><a href="{% url 'majors:list' %}">كل التخصصات</a></li>
                                   </ul>
                                </li>
-                              <li><a href="{% url 'articles:list' %}"
-                                    class="{% if 'articles' in request.path %}is-active{% endif %}">المقالات</a></li>
+                               <li><a href="{% url 'articles:list' %}"
+                                     class="{% if 'articles' in request.path %}is-active{% endif %}">المقالات</a></li>
                               <li><a href="{% url 'leads:submit' %}"
                                     class="{% if 'leads' in request.path %}is-active{% endif %}">تواصل معنا</a></li>
                            </ul>

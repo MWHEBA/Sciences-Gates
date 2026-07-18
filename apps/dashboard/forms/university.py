@@ -40,7 +40,7 @@ class UniversityForm(forms.ModelForm):
         model = University
         fields = [
             # Basic Information
-            'name', 'slug', 'university_type', 'state', 'city', 'logo', 'logo_alt', 'main_image', 'main_image_alt', 'location', 'video_url',
+            'name', 'slug', 'university_type', 'state', 'city', 'logo', 'main_image', 'location', 'video_url',
             'telephone', 'website',
             # Rich Text Sections
             'description',
@@ -82,20 +82,10 @@ class UniversityForm(forms.ModelForm):
                 'accept': 'image/*',
                 'required': True,
             }),
-            'logo_alt': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'الوصف البديل لشعار الجامعة (SEO)',
-                'dir': 'rtl',
-            }),
             'main_image': forms.FileInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'accept': 'image/*',
                 'required': True,
-            }),
-            'main_image_alt': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'الوصف البديل للصورة الرئيسية (SEO)',
-                'dir': 'rtl',
             }),
             'location': CustomHTMLEditorWidget(attrs={
                 'data-placeholder': 'موقع الجامعة (المدينة، الولاية)...',
@@ -217,9 +207,7 @@ class UniversityForm(forms.ModelForm):
             'state': 'الولاية',
             'city': 'المدينة',
             'logo': 'شعار الجامعة',
-            'logo_alt': 'النص البديل للشعار',
             'main_image': 'الصورة الرئيسية',
-            'main_image_alt': 'النص البديل للصورة الرئيسية',
             'location': 'الموقع',
             'video_url': 'رابط الفيديو',
             'telephone': 'رقم الهاتف',
@@ -259,9 +247,7 @@ class UniversityForm(forms.ModelForm):
             'state': 'الولاية التي تقع بها الجامعة لتسهيل التصفية والبحث',
             'city': 'المدينة التي تقع بها الجامعة لتسهيل التصفية والبحث',
             'logo': 'شعار الجامعة (PNG مع خلفية شفافة مفضل)',
-            'logo_alt': 'نص يصف محتوى شعار الجامعة لمحركات البحث ومستعرضات الصور',
             'main_image': 'صورة رئيسية للجامعة',
-            'main_image_alt': 'نص يصف محتوى الصورة الرئيسية للجامعة لمحركات البحث ومستعرضات الصور',
             'location': 'موقع الجامعة (المدينة، الولاية)',
             'telephone': 'رقم هاتف التواصل للجامعة لتسهيل التواصل والبحث المحلي',
             'website': 'رابط الموقع الإلكتروني الرسمي للجامعة (sameAs)',

@@ -1,0 +1,508 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="space-y-6" x-data="{ activeTab: 'scan' }">
+    <!-- التبويبات العلوبة -->
+    <div class="flex border-b" style="border-color: var(--border);">
+        <button @click="activeTab = 'scan'" :class="activeTab === 'scan' ? 'border-b-2 font-semibold text-primary' : 'text-muted'" class="px-6 py-3 text-sm focus:outline-none transition-colors cursor-pointer" :style="activeTab === 'scan' ? 'border-color: var(--primary); color: var(--primary);' : ''">
+            فحص مقالات مكررة
+        </button>
+        <button @click="activeTab = 'ignored'" :class="activeTab === 'ignored' ? 'border-b-2 font-semibold text-primary' : 'text-muted'" class="px-6 py-3 text-sm focus:outline-none transition-colors cursor-pointer" :style="activeTab === 'ignored' ? 'border-color: var(--primary); color: var(--primary);' : ''">
+            التشابهات المتجاهلة ({{ ignored_count }})
+        </button>
+    </div>
+
+    <!-- تبويب الفحص -->
+    <div x-show="activeTab === 'scan'" class="space-y-6">
+        <!-- كارت إعدادات الفحص -->
+        <div class="p-6 bg-white rounded-lg border shadow-sm" style="border-color: var(--border);">
+            <h3 class="text-lg font-semibold mb-4" style="color: var(--text-primary);">إعدادات وتصفية الفحص</h3>
+            <form method="get" action="." class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                <input type="hidden" name="scan" value="true">
+                
+                <!-- حقل اختيار طريقة المطابقة -->
+                <div class="space-y-2">
+                    <label for="mode" class="block text-sm font-medium" style="color: var(--text-secondary);">طريقة المطابقة</label>
+                    <select name="mode" id="mode" class="w-full rounded-lg p-2.5 bg-white cursor-pointer" style="border: 1px solid var(--border); color: var(--text-primary);">
+                        <option value="both" {% if mode == 'both' or not mode %}selected{% endif %}>تطابق العناوين والمحتوى معاً</option>
+                        <option value="title" {% if mode == 'title' %}selected{% endif %}>تطابق العناوين فقط</option>
+                        <option value="content" {% if mode == 'content' %}selected{% endif %}>تطابق المحتوى فقط</option>
+                        <option value="either" {% if mode == 'either' %}selected{% endif %}>تطابق العناوين أو المحتوى</option>
+                    </select>
+                </div>
+
+                <!-- حقل نسبة التشابه -->
+                <div class="space-y-2" x-data="{ val: {{ threshold_pct|default:70 }} }">
+                    <div class="flex justify-between">
+                        <label for="threshold" class="text-sm font-medium" style="color: var(--text-secondary);">حد نسبة التشابه</label>
+                        <span class="text-sm font-semibold" style="color: var(--primary);" x-text="val + '%'"></span>
+                    </div>
+                    <input type="range" name="threshold" id="threshold" min="50" max="100" step="5" x-model="val" class="w-full cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none" style="accent-color: var(--primary);">
+                </div>
+
+                <!-- زر الفحص -->
+                <div>
+                    <button type="submit" class="w-full px-5 py-3 rounded-lg text-white font-medium transition-colors cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--primary);" onmouseover="this.style.backgroundColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary)'">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <span>ابدأ فحص التشابه</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- إحصائيات سريعة -->
+        <div style="display: flex; gap: 16px; margin-bottom: 24px; width: 100%;">
+            <div class="p-5 bg-white rounded-lg border shadow-sm flex items-center justify-between" style="flex: 1; min-width: 0; border-color: var(--border);">
+                <div>
+                    <p class="text-xs font-normal" style="color: var(--text-muted);">المقالات التي تم فحصها</p>
+                    <h4 class="text-2xl font-bold mt-1" style="color: var(--text-primary);">{{ total_articles }}</h4>
+                </div>
+                <div class="p-3 rounded-full" style="background-color: var(--primary-light); color: var(--primary);">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="p-5 bg-white rounded-lg border shadow-sm flex items-center justify-between" style="flex: 1; min-width: 0; border-color: var(--border);">
+                <div>
+                    <p class="text-xs font-normal" style="color: var(--text-muted);">أزواج المقالات المتشابهة</p>
+                    <h4 class="text-2xl font-bold mt-1" style="color: var(--danger);">{{ duplicate_pairs|length }}</h4>
+                </div>
+                <div class="p-3 rounded-full" style="background-color: var(--danger-light); color: var(--danger);">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="p-5 bg-white rounded-lg border shadow-sm flex items-center justify-between" style="flex: 1; min-width: 0; border-color: var(--border);">
+                <div>
+                    <p class="text-xs font-normal" style="color: var(--text-muted);">التشابهات المتجاهلة</p>
+                    <h4 class="text-2xl font-bold mt-1" style="color: var(--text-muted);">{{ ignored_count }}</h4>
+                </div>
+                <div class="p-3 rounded-full bg-gray-100 text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- نتائج الفحص -->
+        {% if scanned %}
+            {% if duplicate_pairs %}
+            <div class="space-y-6">
+                {% for pair in duplicate_pairs %}
+                <div id="pair-row-{{ pair.article_a.id }}-{{ pair.article_b.id }}" class="bg-white border rounded-xl overflow-hidden shadow-sm transition-all duration-300" style="border-color: var(--border);">
+                    <!-- الهيدر الخاص بنسبة التشابه -->
+                    <div class="px-6 py-4 flex items-center justify-between border-b" style="background-color: var(--bg-light); border-color: var(--border);">
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--danger-light); color: var(--danger);">
+                                تشابه المحتوى: {{ pair.content_similarity }}%
+                            </span>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--info-light); color: var(--info);">
+                                تشابه العنوان: {{ pair.title_similarity }}%
+                            </span>
+                        </div>
+                        <div class="text-xs font-normal" style="color: var(--text-muted);">
+                            الرقم التعريفي: #{{ pair.article_a.id }} و #{{ pair.article_b.id }}
+                        </div>
+                    </div>
+
+                    <!-- مقارنة المقالتين جنب لجنب -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse" style="border-color: var(--border);">
+                        
+                        <!-- المقالة المقترح الاحتفاظ بها (الأقوى) -->
+                        <div class="p-6 flex flex-col justify-between" style="border-right: 3px solid var(--success);">
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--success-light); color: var(--success);">
+                                        النسخة المقترحة للاحتفاظ بها (الأقوى)
+                                    </span>
+                                    <span class="text-xs font-semibold" style="color: var(--success);">قوة المقالة: {{ pair.keep_score }} نقطة</span>
+                                </div>
+                                <h4 class="text-base font-bold mb-2" style="color: var(--text-primary);">
+                                    <a href="{% url 'dashboard:preview_article' pk=pair.keep.id %}" target="_blank" class="hover:underline flex items-center gap-1" style="color: var(--primary);">
+                                        {{ pair.keep.title }}
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                        </svg>
+                                    </a>
+                                </h4>
+                                <div class="space-y-1.5 text-xs mb-4" style="color: var(--text-secondary);">
+                                    <div><strong style="color: var(--text-primary);">حالة النشر:</strong> {{ pair.keep.get_publish_status_display }}</div>
+                                    <div><strong style="color: var(--text-primary);">تاريخ النشر:</strong> {{ pair.keep.publish_date|date:"Y-m-d" }}</div>
+                                    <div><strong style="color: var(--text-primary);">عدد الكلمات:</strong> {% if pair.keep.id == pair.article_a.id %}{{ pair.word_count_a }}{% else %}{{ pair.word_count_b }}{% endif %} كلمة</div>
+                                    <div>
+                                        <strong style="color: var(--text-primary);">حالة الـ SEO:</strong> 
+                                        {% if pair.keep.meta_description %}
+                                            <span class="text-success font-semibold">مكتمل الوصف ✓</span>
+                                        {% else %}
+                                            <span class="text-danger font-semibold">ينقصه الوصف ✗</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t flex justify-end" style="border-color: var(--border);">
+                                <a href="{% url 'dashboard:article_edit' pk=pair.keep.id %}" target="_blank" class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer" style="border-color: var(--border); color: var(--text-secondary);" onmouseover="this.style.backgroundColor='var(--bg-light)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    تعديل في صفحة منفصلة
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- المقالة المقترح حذفها (الأضعف) -->
+                        <div class="p-6 flex flex-col justify-between" style="border-right: 3px solid var(--warning);">
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--warning-light); color: var(--warning);">
+                                        النسخة المقترح حذفها/دمجها (الأضعف)
+                                    </span>
+                                    <span class="text-xs font-semibold" style="color: var(--warning);">قوة المقالة: {{ pair.delete_score }} نقطة</span>
+                                </div>
+                                <h4 class="text-base font-bold mb-2" style="color: var(--text-primary);">
+                                    <a href="{% url 'dashboard:preview_article' pk=pair.delete.id %}" target="_blank" class="hover:underline flex items-center gap-1" style="color: var(--primary);">
+                                        {{ pair.delete.title }}
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                        </svg>
+                                    </a>
+                                </h4>
+                                <div class="space-y-1.5 text-xs mb-4" style="color: var(--text-secondary);">
+                                    <div><strong style="color: var(--text-primary);">حالة النشر:</strong> {{ pair.delete.get_publish_status_display }}</div>
+                                    <div><strong style="color: var(--text-primary);">تاريخ النشر:</strong> {{ pair.delete.publish_date|date:"Y-m-d" }}</div>
+                                    <div><strong style="color: var(--text-primary);">عدد الكلمات:</strong> {% if pair.delete.id == pair.article_a.id %}{{ pair.word_count_a }}{% else %}{{ pair.word_count_b }}{% endif %} كلمة</div>
+                                    <div>
+                                        <strong style="color: var(--text-primary);">حالة الـ SEO:</strong> 
+                                        {% if pair.delete.meta_description %}
+                                            <span class="text-success font-semibold">مكتمل الوصف ✓</span>
+                                        {% else %}
+                                            <span class="text-danger font-semibold">ينقصه الوصف ✗</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t flex justify-end" style="border-color: var(--border);">
+                                <a href="{% url 'dashboard:article_edit' pk=pair.delete.id %}" target="_blank" class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer" style="border-color: var(--border); color: var(--text-secondary);" onmouseover="this.style.backgroundColor='var(--bg-light)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    تعديل في صفحة منفصلة
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- أزرار الإجراءات السريعة على الثنائي -->
+                    <div class="px-6 py-4 flex items-center justify-between border-t gap-3 flex-wrap bg-gray-50" style="border-color: var(--border);">
+                        <!-- دمج وإعادة توجيه (الأقوى) -->
+                        <div class="flex items-center gap-2">
+                            <button data-action="auto_merge" data-art-a="{{ pair.article_a.id }}" data-art-b="{{ pair.article_b.id }}" data-keep="{{ pair.keep.id }}" data-delete="{{ pair.delete.id }}" class="action-btn px-4 py-2 text-sm font-semibold rounded-lg text-white transition-colors cursor-pointer flex items-center gap-1" style="background-color: var(--success);" onmouseover="this.style.backgroundColor='#0b6b3b'" onmouseout="this.style.backgroundColor='var(--success)'">
+                                <span>دمج تلقائي وتحويل 301</span>
+                            </button>
+                            <a href="{% url 'dashboard:article_manual_merge' keep_id=pair.keep.id delete_id=pair.delete.id %}" class="px-4 py-2 text-sm font-semibold rounded-lg text-white transition-colors cursor-pointer flex items-center gap-1" style="background-color: var(--info);" onmouseover="this.style.backgroundColor='#1b5493'" onmouseout="this.style.backgroundColor='var(--info)'">
+                                <span>تعديل ودمج يدوي</span>
+                            </a>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button data-action="ignore" data-art-a="{{ pair.article_a.id }}" data-art-b="{{ pair.article_b.id }}" class="action-btn px-4 py-2 text-sm font-semibold rounded-lg border transition-colors cursor-pointer" style="border-color: var(--border); color: var(--text-secondary);" onmouseover="this.style.backgroundColor='var(--bg-light)'" onmouseout="this.style.backgroundColor='transparent'">
+                                تجاهل التشابه
+                            </button>
+                            <button data-action="delete_only" data-art-a="{{ pair.article_a.id }}" data-art-b="{{ pair.article_b.id }}" data-delete="{{ pair.delete.id }}" class="action-btn px-4 py-2 text-sm font-semibold rounded-lg text-white transition-colors cursor-pointer" style="background-color: var(--danger);" onmouseover="this.style.backgroundColor='var(--danger-hover)'" onmouseout="this.style.backgroundColor='var(--danger)'">
+                                حذف المكررة فوراً
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- حالة الفحص بلا نتائج -->
+            <div class="p-12 text-center bg-white rounded-lg border shadow-sm" style="border-color: var(--border);">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-bold" style="color: var(--text-primary);">لم نجد مقالات مكررة!</h4>
+                <p class="text-sm mt-1" style="color: var(--text-muted);">جميع مقالاتك تبدو فريدة وممتازة بناءً على حد التشابه والتصفية الحالية.</p>
+            </div>
+            {% endif %}
+        {% else %}
+        <!-- حالة الانتظار قبل الفحص -->
+        <div class="p-12 text-center bg-white rounded-lg border shadow-sm" style="border-color: var(--border);">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-gray-500 bg-gray-100">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <h4 class="text-lg font-bold" style="color: var(--text-primary);">جاهز لبدء الفحص</h4>
+            <p class="text-sm mt-1 mb-4" style="color: var(--text-muted);">اضغط على الزر بالأعلى لتحليل جميع المقالات واستخراج المتشابه والمكرر منها.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- تبويب المتجاهلات -->
+    <div x-show="activeTab === 'ignored'" class="space-y-6">
+        {% if ignored_pairs %}
+        <div class="bg-white border rounded-lg shadow-sm overflow-hidden" style="border-color: var(--border);">
+            <table class="w-full text-right border-collapse">
+                <thead class="bg-gray-50 border-b" style="border-color: var(--border);">
+                    <tr>
+                        <th class="p-4 text-xs font-semibold" style="color: var(--text-secondary);">المقالة الأولى</th>
+                        <th class="p-4 text-xs font-semibold" style="color: var(--text-secondary);">المقالة الثانية</th>
+                        <th class="p-4 text-xs font-semibold" style="color: var(--text-secondary);">تاريخ الإضافة للتجاهل</th>
+                        <th class="p-4 text-xs font-semibold text-center" style="color: var(--text-secondary);">الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y" style="border-color: var(--border);">
+                    {% for pair in ignored_pairs %}
+                    <tr id="ignored-row-{{ pair.article_a.id }}-{{ pair.article_b.id }}">
+                        <td class="p-4 text-sm font-medium" style="color: var(--text-primary);">
+                            {{ pair.article_a.title }}
+                        </td>
+                        <td class="p-4 text-sm font-medium" style="color: var(--text-primary);">
+                            {{ pair.article_b.title }}
+                        </td>
+                        <td class="p-4 text-sm" style="color: var(--text-muted);">
+                            {{ pair.created_at|date:"Y-m-d" }}
+                        </td>
+                        <td class="p-4 text-center">
+                            <button data-restore-a="{{ pair.article_a.id }}" data-restore-b="{{ pair.article_b.id }}" class="restore-btn px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer" style="border-color: var(--border); color: var(--primary);" onmouseover="this.style.backgroundColor='var(--bg-light)'" onmouseout="this.style.backgroundColor='transparent'">
+                                إلغاء التجاهل
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-12 text-center bg-white rounded-lg border shadow-sm" style="border-color: var(--border);">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-gray-500 bg-gray-100">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                </svg>
+            </div>
+            <h4 class="text-lg font-bold" style="color: var(--text-primary);">لا توجد مقالات متجاهلة</h4>
+            <p class="text-sm mt-1" style="color: var(--text-muted);">عندما تقوم بعمل "تجاهل" للتشابه بين مقالتين، ستظهر في هذه القائمة.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function executeAction(actionType, aId, bId, keepId, deleteId) {
+    const csrfToken = getCookie('csrftoken');
+    const formData = new FormData();
+    formData.append('action', actionType);
+    formData.append('article_a_id', aId);
+    formData.append('article_b_id', bId);
+    if (keepId) formData.append('keep_id', keepId);
+    if (deleteId) formData.append('delete_id', deleteId);
+
+    fetch("{% url 'dashboard:article_similarity_action' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            Swal.fire({
+                title: 'تم بنجاح!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonColor: 'var(--primary)',
+                confirmButtonText: 'حسناً',
+                customClass: { popup: 'rounded-xl' }
+            }).then(() => {
+                const row = document.getElementById(`pair-row-${aId}-${bId}`);
+                if (row) {
+                    row.style.opacity = '0';
+                    setTimeout(() => {
+                        row.remove();
+                        if (document.querySelectorAll('[id^="pair-row-"]').length === 0) {
+                            window.location.reload();
+                        }
+                    }, 300);
+                }
+            });
+        } else {
+            Swal.fire({
+                title: 'حدث خطأ!',
+                text: data.message,
+                icon: 'error',
+                confirmButtonColor: 'var(--primary)',
+                confirmButtonText: 'حسناً',
+                customClass: { popup: 'rounded-xl' }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'خطأ في الاتصال!',
+            text: 'حدث خطأ في الاتصال بالخادم.',
+            icon: 'error',
+            confirmButtonColor: 'var(--primary)',
+            confirmButtonText: 'حسناً',
+            customClass: { popup: 'rounded-xl' }
+        });
+    });
+}
+
+function handleAction(actionType, aId, bId, keepId = null, deleteId = null) {
+    let confirmMsg = 'هل أنت متأكد من تنفيذ هذا الإجراء؟';
+    let confirmTitle = 'تأكيد الإجراء';
+    let iconType = 'question';
+
+    if (actionType === 'auto_merge') {
+        confirmTitle = 'دمج تلقائي وتحويل 301';
+        confirmMsg = 'سيتم دمج الوسوم والأسئلة الشائعة، وحذف النسخة الأضعف تلقائياً مع إنشاء توجيه 301. هل أنت متأكد؟';
+    } else if (actionType === 'delete_only') {
+        confirmTitle = 'حذف المقالة';
+        confirmMsg = 'سيتم حذف المقالة الأضعف نهائياً بدون أي توجيه. هل أنت متأكد؟';
+        iconType = 'warning';
+    } else if (actionType === 'ignore') {
+        confirmTitle = 'تجاهل التشابه';
+        confirmMsg = 'هل تريد تجاهل هذا التشابه لعدم التنبيه عنه مستقبلاً؟';
+    }
+
+    Swal.fire({
+        title: confirmTitle,
+        text: confirmMsg,
+        icon: iconType,
+        showCancelButton: true,
+        confirmButtonColor: actionType === 'delete_only' ? 'var(--danger)' : 'var(--primary)',
+        cancelButtonColor: 'var(--border)',
+        confirmButtonText: 'نعم، متأكد',
+        cancelButtonText: 'إلغاء',
+        customClass: { popup: 'rounded-xl' }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            executeAction(actionType, aId, bId, keepId, deleteId);
+        }
+    });
+}
+
+function executeRestore(aId, bId) {
+    const csrfToken = getCookie('csrftoken');
+    const formData = new FormData();
+    formData.append('action', 'restore');
+    formData.append('article_a_id', aId);
+    formData.append('article_b_id', bId);
+
+    fetch("{% url 'dashboard:article_similarity_action' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            Swal.fire({
+                title: 'تم بنجاح!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonColor: 'var(--primary)',
+                confirmButtonText: 'حسناً',
+                customClass: { popup: 'rounded-xl' }
+            }).then(() => {
+                const row = document.getElementById(`ignored-row-${aId}-${bId}`);
+                if (row) {
+                    row.remove();
+                }
+                window.location.reload();
+            });
+        } else {
+            Swal.fire({
+                title: 'حدث خطأ!',
+                text: data.message,
+                icon: 'error',
+                confirmButtonColor: 'var(--primary)',
+                confirmButtonText: 'حسناً',
+                customClass: { popup: 'rounded-xl' }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'خطأ في الاتصال!',
+            text: 'حدث خطأ في الاتصال بالخادم.',
+            icon: 'error',
+            confirmButtonColor: 'var(--primary)',
+            confirmButtonText: 'حسناً',
+            customClass: { popup: 'rounded-xl' }
+        });
+    });
+}
+
+function handleRestore(aId, bId) {
+    Swal.fire({
+        title: 'إلغاء التجاهل',
+        text: 'هل تريد إلغاء تجاهل هذا التشابه لإعادة فحصه؟',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--primary)',
+        cancelButtonColor: 'var(--border)',
+        confirmButtonText: 'نعم، إلغاء التجاهل',
+        cancelButtonText: 'تراجع',
+        customClass: { popup: 'rounded-xl' }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            executeRestore(aId, bId);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Attach click listeners to action buttons
+    document.querySelectorAll('.action-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const actionType = this.getAttribute('data-action');
+            const aId = this.getAttribute('data-art-a');
+            const bId = this.getAttribute('data-art-b');
+            const keepId = this.getAttribute('data-keep');
+            const deleteId = this.getAttribute('data-delete');
+            handleAction(actionType, aId, bId, keepId, deleteId);
+        });
+    });
+
+    // Attach click listeners to restore buttons
+    document.querySelectorAll('.restore-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const aId = this.getAttribute('data-restore-a');
+            const bId = this.getAttribute('data-restore-b');
+            handleRestore(aId, bId);
+        });
+    });
+});
+</script>
+{% endblock %}
