@@ -441,23 +441,45 @@
             <div class="space-y-1">
                 <!-- طلبات التسجيل -->
                 <div
-                    :style="'{{ request.path }}'.includes('/sg/leads') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a  href="{% url 'dashboard:lead_list' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/leads' in request.path %}active{% endif %}" >
+                    :style="'{{ request.path }}'.includes('/sg/leads') && '{{ request.GET.lead_type }}' !== 'contact' ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    <a  href="{% url 'dashboard:lead_list' %}?lead_type=registration"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/leads' in request.path and request.GET.lead_type != 'contact' %}active{% endif %}" >
+                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m-9-6v6"></path>
+                        </svg>
+                        <span>طلبات التسجيل</span>
+
+                        <!-- شارة الرسائل غير المقروءة -->
+                        {% if unread_registrations_count > 0 %}
+                        <span
+                            class="mr-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold leading-none text-white rounded-full"
+                            style="background-color: var(--danger);">
+                            {{ unread_registrations_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <!-- إدارة الرسائل والاستفسارات -->
+                <div
+                    :style="'{{ request.path }}'.includes('/sg/leads') && '{{ request.GET.lead_type }}' === 'contact' ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    <a  href="{% url 'dashboard:lead_list' %}?lead_type=contact"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/leads' in request.path and request.GET.lead_type == 'contact' %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
                             </path>
                         </svg>
-                        <span>طلبات التسجيل</span>
+                        <span>الرسائل والاستفسارات</span>
 
                         <!-- شارة الرسائل غير المقروءة -->
-                        {% if unread_leads_count > 0 %}
+                        {% if unread_contacts_count > 0 %}
                         <span
                             class="mr-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold leading-none text-white rounded-full"
                             style="background-color: var(--danger);">
-                            {{ unread_leads_count }}
+                            {{ unread_contacts_count }}
                         </span>
                         {% endif %}
                     </a>

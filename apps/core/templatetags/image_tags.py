@@ -265,3 +265,101 @@ def media_file_image(media_file, css_class='', loading='lazy'):
         css_class=css_class,
         loading=loading
     )
+
+
+@register.filter
+def thumbnail_url(image_url, size_str):
+    """
+    Generate or retrieve a thumbnail URL for the given image URL and size.
+    Size string format: 'widthxheight' (e.g. '360x240').
+    Saves the thumbnail as compressed WebP.
+    """
+    if not image_url:
+        return ''
+    
+    import urllib.parse
+    from django.conf import settings
+    
+    try:
+        # Parse width and height
+        width, height = map(int, size_str.split('x'))
+    except ValueError:
+        return image_url # Return original if invalid size format
+        
+    # Standardize image url
+    parsed_url = urllib.parse.urlparse(str(image_url))
+    url_path = parsed_url.path
+    
+    # Check if URL starts with MEDIA_URL
+    media_url = settings.MEDIA_URL
+    if not url_path.startswith(media_url):
+        return image_url # Not a media file, return original
+        
+    # Get relative path from media url
+    rel_path = url_path[len(media_url):]
+    # Ensure safe path join by stripping leading slashes
+    rel_path_clean = rel_path.lstrip('/')
+    source_file_path = os.path.join(settings.MEDIA_ROOT, rel_path_clean)
+    
+    if not os.path.exists(source_file_path):
+        return image_url # Original file not found
+        
+    # Define cache directory and thumbnail path
+    cache_dir_rel = os.path.join('cache', 'thumbnails', os.path.dirname(rel_path_clean))
+    cache_dir_abs = os.path.join(settings.MEDIA_ROOT, cache_dir_rel)
+    
+    # Filename with size and webp extension
+    base_name = os.path.splitext(os.path.basename(rel_path_clean))[0]
+    thumb_name = f"{base_name}_{size_str}.webp"
+    thumb_file_path = os.path.join(cache_dir_abs, thumb_name)
+    
+    # Clean URL building for the response
+    thumb_url_rel = os.path.join(cache_dir_rel, thumb_name).replace('\\', '/')
+    thumb_url = urllib.parse.urljoin(media_url, thumb_url_rel)
+    
+    # If thumbnail exists, return it
+    if os.path.exists(thumb_file_path):
+        return thumb_url
+        
+    # Otherwise, generate the thumbnail
+    try:
+        from PIL import Image
+        os.makedirs(cache_dir_abs, exist_ok=True)
+        img = Image.open(source_file_path)
+        
+        # Convert to RGB if in RGBA mode for JPEG/WebP compatibility
+        if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'P':
+                # Convert palette to RGBA to merge transparent color properly
+                img = img.convert('RGBA')
+            background.paste(img, mask=img.split()[3]) # 3 is alpha channel
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+            
+        # Crop and resize to match the target aspect ratio
+        img_ratio = img.width / img.height
+        target_ratio = width / height
+        
+        if img_ratio > target_ratio:
+            # Source is wider than target
+            new_width = int(img.height * target_ratio)
+            left = (img.width - new_width) // 2
+            img = img.crop((left, 0, left + new_width, img.height))
+        else:
+            # Source is taller than target
+            new_height = int(img.width / target_ratio)
+            top = (img.height - new_height) // 2
+            img = img.crop((0, top, img.width, top + new_height))
+            
+        # Resize using Lanczos resampling
+        img = img.resize((width, height), Image.Resampling.LANCZOS)
+        
+        # Save as optimized WebP
+        img.save(thumb_file_path, 'WEBP', quality=60)
+        return thumb_url
+    except Exception as e:
+        # Log to console and fail gracefully by returning original url
+        print(f"Error generating thumbnail for {source_file_path}: {e}")
+        return image_url

@@ -4,8 +4,8 @@
   "description": "A comprehensive Django-based platform for studying in Malaysia. Built with Django 4.2.11 LTS, MySQL/MariaDB, and full Arabic/RTL support.",
   "main": "index.js",
   "scripts": {
-    "build:css": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/tailwind.min.css --minify",
-    "watch:css": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/tailwind.min.css --watch",
+    "build:css": "tailwindcss -i ./static/css/public-bundle.css -o ./static/css/public-bundle.min.css --minify && python -c \"import pathlib; p = pathlib.Path('static/css/public-bundle.min.css'); p.write_text(p.read_text(encoding='utf-8').replace('../../images/Texture.webp', '../images/Texture.webp'), encoding='utf-8')\"",
+    "watch:css": "tailwindcss -i ./static/css/public-bundle.css -o ./static/css/public-bundle.min.css --watch",
     "build:js": "node scripts/minify-js.js",
     "build": "npm run build:css && npm run build:js",
     "dev": "npm run watch:css",

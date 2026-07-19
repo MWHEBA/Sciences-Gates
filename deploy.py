@@ -30,8 +30,9 @@ except ImportError:
     PARAMIKO_AVAILABLE = False
 
 class DeploymentManager:
-    def __init__(self, force=False):
+    def __init__(self, force=False, purge_cloudflare=False):
         self.force = force
+        self.purge_cloudflare = purge_cloudflare
         # تحميل إعدادات من .env
         self.load_env_settings()
         
@@ -59,13 +60,13 @@ class DeploymentManager:
         env_file = Path('.env')
         
         # الإعدادات الافتراضية
-        self.server_ip = "84.247.179.163"
-        self.username = "mwhebaco"
-        self.ssh_port = "2951"
+        self.server_ip = "208.109.79.3"
+        self.username = "s2jbje0ncqbo"
+        self.ssh_port = "22"
         self.ssh_password = None
         self.private_key = None
         self.ssh_key_passphrase = None
-        self.remote_path = "/home/mwhebaco/science_erp"
+        self.remote_path = "/home/s2jbje0ncqbo/science"
         self.site_url = None
         self.db_name = ''
         self.db_user = ''
@@ -197,11 +198,21 @@ class DeploymentManager:
             return None
 
     def get_all_files(self):
-        """الحصول على جميع الملفات"""
+        """الحصول على جميع الملفات بكفاءة متجاوزاً المجلدات الكبيرة"""
         files = []
-        for file_path in self.project_root.rglob('*'):
-            if file_path.is_file() and not self.is_ignored(file_path):
-                files.append(file_path)
+        ignored_dirs = {
+            'node_modules', '.git', 'virtualenv', '.venv', 'env', 
+            '__pycache__', 'staticfiles', 'media', 'deploy_logs',
+            '.pytest_cache', '.hypothesis', '.kiro', '.specify', 'cache'
+        }
+        
+        for root, dirs, filenames in os.walk(self.project_root):
+            # منع الدخول للمجلدات المتجاهلة أو المخفية
+            dirs[:] = [d for d in dirs if d not in ignored_dirs and not d.startswith('.')]
+            for filename in filenames:
+                file_path = Path(root) / filename
+                if not self.is_ignored(file_path):
+                    files.append(file_path)
         return files
 
     def _create_ssh_connection(self):
@@ -1087,6 +1098,7 @@ class DeploymentManager:
 
                 print("\n⚠️  لازم تعمل superuser يدوياً:")
                 print(f"  python manage.py createsuperuser")
+                self._write_htaccess_files(ssh)
                 ssh.close()
             except Exception as e:
                 print(f"  ⚠️  تعذّر تنفيذ إعداد النشر الأول: {e}")
@@ -1185,9 +1197,181 @@ class DeploymentManager:
                         ssh.exec_command(touch_cmd)
                         print(f"  ✅ إعادة تشغيل تطبيق الويب (عبر touch passenger_wsgi.py)")
 
+                # إعداد ملفات الـ .htaccess للكاش والضغط
+                self._write_htaccess_files(ssh)
                 ssh.close()
             except Exception as e:
                 print(f"  ⚠️  تعذّر تنفيذ أوامر ما بعد النشر: {e}")
+
+        # مسح كاش كلاود فلير للملفات الاستاتيك المعدلة المرفوعة
+        self._purge_cloudflare_target_urls()
+
+    def _purge_cloudflare_target_urls(self):
+        """مسح كاش كلاود فلير للملفات المرفوعة"""
+        # إذا تم طلب مسح الكاش بالكامل يدوياً
+        if getattr(self, 'purge_cloudflare', False):
+            print("\n⚡ تم طلب مسح كاش كلاود فلير بالكامل يدوياً. جاري التنفيذ...")
+            cmd = [sys.executable, "scripts/manage_cloudflare.py", "--action", "purge_cache", "--all"]
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+                if result.returncode == 0:
+                    print("  ✅ تم مسح كاش كلاود فلير بالكامل بنجاح.")
+                else:
+                    print(f"  ❌ فشل مسح كاش كلاود فلير بالكامل: {result.stderr or result.stdout}")
+            except Exception as e:
+                print(f"  ⚠️  فشل تشغيل سكربت مسح الكاش: {e}")
+            return
+
+        uploaded_list = getattr(self, 'uploaded_files', []) or []
+        if not uploaded_list:
+            return
+            
+        static_urls = []
+        has_non_static = False
+        site_url = self.site_url or "https://sciencesgates.com"
+        site_url = site_url.rstrip('/')
+        
+        for f in uploaded_list:
+            f_str = str(f).replace('\\', '/')
+            if f_str.startswith('static/'):
+                url = f"{site_url}/{f_str}"
+                static_urls.append(url)
+            elif not f_str.endswith('.htaccess') and not f_str.endswith('.deploy_hashes.json') and not f_str.endswith('.txt'):
+                has_non_static = True
+                
+        # إذا تم تعديل كود بايثون أو قوالب HTML، نقوم بمسح الكاش بالكامل
+        if has_non_static:
+            print("\n⚡ تم كشف تعديل في القوالب أو كود التطبيق المرفوع. جاري مسح كاش كلاود فلير بالكامل (Purge Everything)...")
+            cmd = [sys.executable, "scripts/manage_cloudflare.py", "--action", "purge_cache", "--all"]
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+                if result.returncode == 0:
+                    print("  ✅ تم مسح كاش كلاود فلير بالكامل بنجاح.")
+                else:
+                    print(f"  ❌ فشل مسح كاش كلاود فلير بالكامل: {result.stderr or result.stdout}")
+            except Exception as e:
+                print(f"  ⚠️  فشل تشغيل سكربت مسح الكاش: {e}")
+            return
+            
+        if not static_urls:
+            return
+            
+        print(f"\n⚡ تم كشف تعديل في {len(static_urls)} ملف استاتيك مرفوع. جاري مسح كاش المحدد في كلاود فلير...")
+        
+        # تجنب تجاوز طول سطر الأوامر الأقصى بتقسيم الروابط
+        chunk_size = 20
+        for i in range(0, len(static_urls), chunk_size):
+            chunk = static_urls[i:i+chunk_size]
+            urls_str = ",".join(chunk)
+            
+            cmd = [sys.executable, "scripts/manage_cloudflare.py", "--action", "purge_cache", "--urls", urls_str]
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+                if result.returncode == 0:
+                    print(f"  ✅ تم مسح كاش كلاود فلير لـ {len(chunk)} رابط.")
+                else:
+                    print(f"  ❌ فشل مسح كاش كلاود فلير: {result.stderr or result.stdout}")
+            except Exception as e:
+                print(f"  ⚠️  فشل تشغيل سكربت مسح الكاش: {e}")
+
+    def _write_htaccess_files(self, ssh):
+        """كتابة ملفات .htaccess لتفعيل الكاش والضغط على السيرفر الأصلي"""
+        print("  ⏳ إعداد ملفات .htaccess للتخزين المؤقت والضغط (Caching & GZIP)...")
+        try:
+            sftp = ssh.open_sftp()
+            
+            # 1. ملف staticfiles/.htaccess
+            static_htaccess = r"""# 1. Enable GZIP Compression (mod_deflate)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
+    AddOutputFilterByType DEFLATE application/x-font
+    AddOutputFilterByType DEFLATE application/x-font-opentype
+    AddOutputFilterByType DEFLATE application/x-font-otf
+    AddOutputFilterByType DEFLATE application/x-font-truetype
+    AddOutputFilterByType DEFLATE application/x-font-ttf
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE font/opentype
+    AddOutputFilterByType DEFLATE font/otf
+    AddOutputFilterByType DEFLATE font/ttf
+    AddOutputFilterByType DEFLATE font/woff
+    AddOutputFilterByType DEFLATE font/woff2
+    AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE image/x-icon
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
+</IfModule>
+
+# 2. Browser Caching and Headers
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Match Django hashed files for 1 year immutable caching
+    <FilesMatch "\.[a-f0-9]{12}\.(css|js|woff2|woff|ttf|png|jpg|jpeg|gif|webp|svg|ico)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    
+    # Match unhashed files for 1 day caching with validation
+    <FilesMatch "\.(css|js|woff2|woff|ttf|png|jpg|jpeg|gif|webp|svg|ico)$">
+        <If "%{HTTP:Cache-Control} !~ /immutable/">
+            Header set Cache-Control "public, max-age=86400, must-revalidate"
+        </If>
+    </FilesMatch>
+</IfModule>
+"""
+            
+            # 2. ملف media/.htaccess
+            media_htaccess = r"""PassengerEnabled off
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(png|jpg|jpeg|gif|webp|svg)$">
+        Header set Cache-Control "public, max-age=2592000, must-revalidate"
+    </FilesMatch>
+</IfModule>
+"""
+            
+            # كتابة staticfiles/.htaccess
+            static_path = f"{self.remote_path}/staticfiles/.htaccess"
+            with sftp.file(static_path, 'w') as f:
+                f.write(static_htaccess)
+                
+            # كتابة media/.htaccess
+            media_path = f"{self.remote_path}/media/.htaccess"
+            with sftp.file(media_path, 'w') as f:
+                f.write(media_htaccess)
+                
+            sftp.close()
+            print("  ✅ تم إنشاء وإعداد ملفات .htaccess بنجاح للتخزين المؤقت والضغط.")
+        except Exception as e:
+            print(f"  ⚠️  فشل إعداد ملفات .htaccess: {e}")
 
     def show_status(self):
         """عرض الحالة - بسيط"""
@@ -1472,11 +1656,12 @@ def main():
                        default='modified', help='وضع النشر')
     parser.add_argument('--file', type=str, help='ملف محدد للرفع')
     parser.add_argument('--force', action='store_true', help='بدون تأكيد')
+    parser.add_argument('--purge-cloudflare', action='store_true', help='مسح كاش كلاود فلير بالكامل')
     
     args = parser.parse_args()
     
     try:
-        deploy_manager = DeploymentManager(force=args.force)
+        deploy_manager = DeploymentManager(force=args.force, purge_cloudflare=args.purge_cloudflare)
         
         if args.mode == 'test':
             deploy_manager.test_connection()

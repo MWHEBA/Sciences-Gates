@@ -12,7 +12,8 @@ from django.middleware.csrf import get_token
 from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
 from .models import Lead
-from .forms import LeadForm
+from .forms import LeadForm, ContactLeadForm, RegistrationLeadForm
+
 
 
 class LeadSubmitView(BreadcrumbMixin, FormView):
@@ -31,9 +32,15 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
     
     Requirements: 5, 18
     """
-    form_class = LeadForm
+    form_class = ContactLeadForm
     template_name = 'leads/submit.html'
     success_url = reverse_lazy('leads:thank_you')
+
+    def get_form_class(self):
+        lead_type = self.request.POST.get('lead_type') or self.request.GET.get('lead_type') or 'contact'
+        if lead_type == 'registration':
+            return RegistrationLeadForm
+        return ContactLeadForm
     
     def get_breadcrumbs(self):
         """Define breadcrumbs for lead submit page."""
@@ -75,9 +82,14 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         lead.save()
         
         # Add success message in Arabic
+        if lead.lead_type == 'registration':
+            msg = 'تم استقبال طلب التسجيل بنجاح. سيتم التواصل معك قريباً.'
+        else:
+            msg = 'تم استقبال استفسارك بنجاح. سيتم التواصل معك قريباً.'
+            
         messages.success(
             self.request,
-            'تم استقبال استفسارك بنجاح. سيتم التواصل معك قريباً.'
+            msg
         )
         
         # Redirect to thank you page

@@ -14,9 +14,9 @@ from decouple import config, Csv
 from pathlib import Path
 
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='science.mwheba.co.uk,localhost,127.0.0.1', cast=Csv())
-if 'science.mwheba.co.uk' not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append('science.mwheba.co.uk')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='sciencesgates.com,localhost,127.0.0.1', cast=Csv())
+if 'sciencesgates.com' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('sciencesgates.com')
 
 # Production database configuration
 # Support both SQLite and MySQL dynamically based on DB_ENGINE (defaults to sqlite)

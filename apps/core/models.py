@@ -393,7 +393,7 @@ class SiteSettings(models.Model):
             'maintenance_estimated_end': self.maintenance_estimated_end.isoformat() if self.maintenance_estimated_end else None,
             'maintenance_bypass_ips': self.maintenance_bypass_ips,
             'maintenance_bypass_staff': self.maintenance_bypass_staff,
-            'whatsapp': self.whatsapp,
+            'whatsapp': self.whatsapp_primary_clean,
             'email': self.email,
             'phone': self.phone,
         }
@@ -420,15 +420,28 @@ class SiteSettings(models.Model):
         settings, created = cls.objects.get_or_create(pk=1)
         return settings
 
-
-@receiver(post_save, sender=SiteSettings)
-def sync_maintenance_cache(sender, instance, **kwargs):
-    """Sync maintenance cache file when SiteSettings is saved."""
-    try:
-        instance.update_maintenance_cache()
-    except Exception:
-        pass
-
+    @staticmethod
+    def clean_whatsapp_number(number):
+        """Clean a phone number for use in WhatsApp wa.me links."""
+        if not number:
+            return ""
+        import re
+        # Strip all non-digits
+        cleaned = re.sub(r'\D', '', number)
+        # Strip leading '00' if present
+        if cleaned.startswith('00'):
+            cleaned = cleaned[2:]
+        # Remove redundant zero after common country codes
+        # Egypt: 2001... -> 201...
+        if cleaned.startswith('2001'):
+            cleaned = '20' + cleaned[3:]
+        # Saudi Arabia: 96605... -> 9665...
+        elif cleaned.startswith('96605'):
+            cleaned = '966' + cleaned[4:]
+        # Malaysia: 6001... -> 601...
+        elif cleaned.startswith('6001'):
+            cleaned = '60' + cleaned[3:]
+        return cleaned
 
     @property
     def whatsapp_list(self):
@@ -436,7 +449,15 @@ def sync_maintenance_cache(sender, instance, **kwargs):
         if not self.whatsapp:
             return []
         import re
-        raw_list = re.split(r'[,;\s]+', self.whatsapp)
+        # Split by comma or semicolon
+        raw_list = re.split(r'[,;]+', self.whatsapp)
+        # If there are no commas or semicolons, but there are multiple numbers starting with '+' or clearly separated, we handle that.
+        if ',' not in self.whatsapp and ';' not in self.whatsapp:
+            temp_parts = re.split(r'\s+', self.whatsapp.strip())
+            is_multiple = len(temp_parts) > 1 and all(len(re.sub(r'\D', '', p)) >= 7 for p in temp_parts)
+            if is_multiple:
+                raw_list = temp_parts
+        
         clean_list = []
         for num in raw_list:
             cleaned = num.strip()
@@ -450,6 +471,23 @@ def sync_maintenance_cache(sender, instance, **kwargs):
         numbers = self.whatsapp_list
         return numbers[0] if numbers else None
 
+    @property
+    def whatsapp_primary_clean(self):
+        """Get the primary WhatsApp number cleaned for use in API links (digits only, no leading + or 00)."""
+        primary = self.whatsapp_primary
+        return self.clean_whatsapp_number(primary)
+
+    @property
+    def whatsapp_list_parsed(self):
+        """Get a list of parsed WhatsApp numbers (each is a dict with 'raw' and 'clean' keys)."""
+        numbers = self.whatsapp_list
+        parsed = []
+        for num in numbers:
+            parsed.append({
+                'raw': num,
+                'clean': self.clean_whatsapp_number(num)
+            })
+        return parsed
 
     @property
     def facebook(self):
@@ -460,6 +498,15 @@ def sync_maintenance_cache(sender, instance, **kwargs):
     def instagram(self):
         """Placeholder for instagram link since the field doesn't exist in the database."""
         return None
+
+
+@receiver(post_save, sender=SiteSettings)
+def sync_maintenance_cache(sender, instance, **kwargs):
+    """Sync maintenance cache file when SiteSettings is saved."""
+    try:
+        instance.update_maintenance_cache()
+    except Exception:
+        pass
 
 
 def media_upload_path(instance, filename):

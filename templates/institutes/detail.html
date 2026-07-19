@@ -70,7 +70,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="detail-page-container" x-data="{ openRegModal: false, regStep: 1 }">
+<div class="detail-page-container" x-data="{ openRegModal: false, regStep: 1, showCustomNationality: false }">
     
     <!-- Institute Profile Header Section -->
     <div class="detail-header">
@@ -225,7 +225,7 @@
                                 </div>
                                 <div class="apply-service-item">
                                     <span class="apply-service-check">✓</span>
-                                    <span>استخراج الفيزا الطلابية</span>
+                                    <span>استخراج التأشيرة الطلابية</span>
                                 </div>
                                 <div class="apply-service-item">
                                     <span class="apply-service-check">✓</span>
@@ -241,7 +241,7 @@
                     
                     <!-- Call to action button -->
                     <div class="apply-cta-wrapper">
-                        <a href="https://wa.me/{{ site_settings.whatsapp|default:'60182638888'|cut:' ' }}" target="_blank" rel="noopener noreferrer" class="apply-cta-btn">
+                        <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60182638888' }}" target="_blank" rel="noopener noreferrer" class="apply-cta-btn">
                             <span>📩</span>
                             <span>تواصل معنا الآن عبر الواتساب للحصول على استشارة مجانية</span>
                         </a>
@@ -579,7 +579,7 @@
                         </svg>
                     </div>
                     <h3 class="reg-card__title">إصدار التأشيرة الدراسية</h3>
-                    <p class="reg-card__desc">بعد الحصول على خطاب القبول من المعهد، يجب على الطالب دفع رسوم معالجة الفيزا للبدء في الإجراءات. تستغرق العملية عادةً من 4 إلى 6 أسابيع لإصدار خطاب الموافقة على الفيزا (VAL) من هيئة EMGS الماليزية.</p>
+                    <p class="reg-card__desc">بعد الحصول على خطاب القبول من المعهد، يجب على الطالب دفع رسوم معالجة التأشيرة للبدء في الإجراءات. تستغرق العملية عادةً من 4 إلى 6 أسابيع لإصدار خطاب الموافقة على التأشيرة (VAL) من هيئة EMGS الماليزية.</p>
                 </div>
 
                 <!-- الخطوة الثالثة -->
@@ -593,7 +593,7 @@
                         </svg>
                     </div>
                     <h3 class="reg-card__title">حجز وتنسيق السكن</h3>
-                    <p class="reg-card__desc">يجب عليك التنسيق معنا مسبقاً من أجل حجز السكن، وذلك بعد دفع رسوم الفيزا وحجز المقعد الدراسي لضمان توفر الخيارات المناسبة.</p>
+                    <p class="reg-card__desc">يجب عليك التنسيق معنا مسبقاً من أجل حجز السكن، وذلك بعد دفع رسوم التأشيرة وحجز المقعد الدراسي لضمان توفر الخيارات المناسبة.</p>
                 </div>
 
                 <!-- الخطوة الرابعة -->
@@ -708,11 +708,11 @@
                 <input type="hidden" name="source_page" value="{{ request.build_absolute_uri }}">
                 
                 <!-- Entity details for dynamic JS handling -->
-                <input type="hidden" id="reg_entity_name" value="{{ institute.name }}">
+                <input type="hidden" name="institution_name" id="reg_entity_name" value="{{ institute.name }}">
                 <input type="hidden" id="reg_entity_type" value="معهد">
 
-                <!-- Combined field for Django Lead form submission -->
-                <textarea name="message" id="reg_combined_message" style="display: none;"></textarea>
+                <!-- Combined field for Django Lead form submission (kept as virtual container for client JS fallback) -->
+                <textarea id="reg_combined_message" style="display: none;"></textarea>
                 <!-- Honeypot -->
                 <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
 
@@ -728,9 +728,10 @@
                         </div>
 
                         <div class="reg-form-group">
-                            <label for="reg_email">البريد الإلكتروني</label>
+                            <label for="reg_email">البريد الإلكتروني <span
+                                    style="color: red;">*</span></label>
                             <input type="email" id="reg_email" name="email" class="reg-input"
-                                placeholder="name@example.com" dir="ltr">
+                                placeholder="name@example.com" dir="ltr" required>
                         </div>
 
                         <div class="reg-form-group">
@@ -771,7 +772,8 @@
 
                        <div class="reg-form-group">
                            <label for="reg_nationality">الجنسية <span style="color: red;">*</span></label>
-                           <select id="reg_nationality" class="reg-select" required>
+                           <select id="reg_nationality" name="nationality" class="reg-select" required
+                               @change="showCustomNationality = ($event.target.value === 'دولة اخرى غير موجودة')">
                                <option value="" disabled selected>اختر الجنسية...</option>
                                <option value="سعودي">سعودي</option>
                                <option value="إماراتي">إماراتي</option>
@@ -795,8 +797,15 @@
                                <option value="صومالي">صومالي</option>
                                <option value="جيبوتي">جيبوتي</option>
                                <option value="ماليزي">ماليزي</option>
-                               <option value="أخرى">أخرى</option>
+                               <option value="دولة اخرى غير موجودة">دولة أخرى</option>
                            </select>
+                       </div>
+
+                       <!-- Custom Nationality Conditional Input -->
+                       <div class="reg-form-group" x-show="showCustomNationality" x-cloak style="margin-top: 12px;">
+                           <label for="reg_custom_nationality">اكتب اسم الدولة/الجنسية الأخرى <span style="color: red;">*</span></label>
+                           <input type="text" id="reg_custom_nationality" name="custom_nationality" class="reg-input"
+                               placeholder="اكتب اسم الدولة/الجنسية">
                        </div>
                    </div>
 
@@ -804,7 +813,7 @@
                    <div x-show="regStep === 2" class="space-y-4">
                        <div class="reg-form-group">
                            <label for="reg_level">المرحلة الدراسية <span style="color: red;">*</span></label>
-                           <select id="reg_level" class="reg-select" required>
+                           <select id="reg_level" name="study_level" class="reg-select" required>
                                <option value="" disabled selected>اختر المرحلة الدراسية...</option>
                                <option value="بكالوريوس">بكالوريوس (Bachelor's)</option>
                                <option value="ماجستير">ماجستير (Master's)</option>
@@ -815,7 +824,7 @@
 
                        <div class="reg-form-group">
                            <label for="reg_residence">دولة الإقامة <span style="color: red;">*</span></label>
-                           <select id="reg_residence" class="reg-select" required>
+                           <select id="reg_residence" name="residence_country" class="reg-select" required>
                                <option value="" disabled selected>اختر دولة الإقامة...</option>
                                {% for iso, name, code, placeholder in phone_countries %}
                                <option value="{{ name }}">{{ name }}</option>
@@ -825,13 +834,13 @@
 
                        <div class="reg-form-group">
                            <label for="reg_address">عنوان الإقامة <span style="color: red;">*</span></label>
-                           <input type="text" id="reg_address" class="reg-input" placeholder="المدينة، المنطقة، الشارع"
+                            <input type="text" id="reg_address" name="address" class="reg-input" placeholder="المدينة، المنطقة، الشارع"
                                required>
                        </div>
 
                        <div class="reg-form-group">
                            <label for="reg_notes">ملاحظات</label>
-                           <textarea id="reg_notes" class="reg-textarea"
+                            <textarea id="reg_notes" name="message" class="reg-textarea"
                                placeholder="أدخل أي تفاصيل أو متطلبات خاصة..."></textarea>
                        </div>
                    </div>

@@ -1,10 +1,8 @@
-{% load static institute_tags %}
-<article class="it-course-item cursor-pointer" onclick="window.location.href='{{ institute.get_absolute_url }}'">
+{% load static institute_tags image_tags %}
+<article class="it-course-item cursor-pointer">
     <!-- صورة المعهد -->
     <div class="it-course-thumb mb-4 p-relative">
-        <a href="{{ institute.get_absolute_url }}" onclick="event.stopPropagation();">
-            <img src="{% if institute.main_image %}{{ institute.main_image.url }}{% else %}https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=800{% endif %}" alt="{{ institute.main_image_alt|default:institute.name }}" loading="lazy">
-        </a>
+        <img src="{% if institute.main_image %}{{ institute.main_image.url|thumbnail_url:'360x240' }}{% else %}https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=360&h=240{% endif %}" alt="{{ institute.main_image_alt|default:institute.name }}" width="360" height="240" loading="lazy" decoding="async">
         <div class="it-course-thumb-text">
             <span>معهد</span>
         </div>
@@ -13,9 +11,9 @@
     <!-- محتوى الكرت -->
     <div class="it-course-content">
         <!-- اسم المعهد -->
-        <h4 class="it-course-title">
-            <a href="{{ institute.get_absolute_url }}" onclick="event.stopPropagation();">{{ institute.name }}</a>
-        </h4>
+        <h3 class="it-course-title">
+            <a href="{{ institute.get_absolute_url }}" class="stretched-link">{{ institute.name }}</a>
+        </h3>
         
         <!-- وصف مختصر -->
         <p class="card__desc text-text-secondary text-sm leading-relaxed mb-15 flex-grow" style="font-size: 0.875rem; color: var(--text-body); line-height: 1.6; margin-bottom: 15px;">
@@ -25,11 +23,11 @@
         <!-- معلومات المعهد -->
         <div class="it-course-info">
             <span>
-                <i class="fa-solid fa-location-dot ml-2 text-secondary"></i>
+                <svg class="svg-icon ml-2 text-secondary"><use href="{% static 'images/icons.svg' %}#icon-location"></use></svg>
                 {{ institute.get_location_display }}
             </span>
             <span>
-                <i class="fa-solid fa-book-open ml-2 text-secondary"></i>
+                <svg class="svg-icon ml-2 text-secondary"><use href="{% static 'images/icons.svg' %}#icon-book-open"></use></svg>
                 {{ institute.courses.count }} دورات
             </span>
         </div>
@@ -40,10 +38,10 @@
                 الرسوم تبدأ من: 
                 <strong style="color: var(--secondary); font-weight: 700;">{{ institute.avg_cost|default:"تواصل معنا" }}</strong>
             </span>
-            <a href="{{ institute.get_absolute_url }}" onclick="event.stopPropagation();">
+            <div class="it-course-action-link" style="color: var(--primary); font-weight: 500;">
                 <span>اقرأ المزيد</span>
-                <i class="fa-solid fa-arrow-left mr-2"></i>
-            </a>
+                <svg class="svg-icon mr-2"><use href="{% static 'images/icons.svg' %}#icon-arrow-left"></use></svg>
+            </div>
         </div>
     </div>
 </article>

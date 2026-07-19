@@ -25,12 +25,13 @@
                 <p class="cta-band__desc">فريقنا جاهز لمساعدتك في الحصول على قبولك الجامعي مجاناً.</p>
             </div>
             <div class="cta-band__actions">
+                {% load static %}
                 <a href="{% url 'leads:submit' %}" class="cta-band__btn cta-band__btn--primary">
-                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    <svg class="svg-icon" aria-hidden="true"><use href="{% static 'images/icons.svg' %}#icon-paper-plane"></use></svg>
                     استشارة مجانية
                 </a>
                 <a href="{% url 'universities:list' %}" class="cta-band__btn cta-band__btn--outline">
-                    <i class="fas fa-university" aria-hidden="true"></i>
+                    <svg class="svg-icon" aria-hidden="true"><use href="{% static 'images/icons.svg' %}#icon-university"></use></svg>
                     تصفح الجامعات
                 </a>
             </div>

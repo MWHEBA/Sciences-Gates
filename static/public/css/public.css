@@ -18,7 +18,13 @@
   --bg-gray: #F8FAFC;
   --bg-dark: #0F172A;
 
+  --white: #FFFFFF;
+  --white-65: rgba(255, 255, 255, 0.65);
+  --white-30: rgba(255, 255, 255, 0.30);
+
   --border-color: #E2E8F0;
+  --border: var(--border-color);
+  --text-secondary: var(--text-light);
 
   --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
   --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.1);

@@ -6,6 +6,13 @@
 {% block meta_description %}اكتشف أفضل الجامعات الماليزية، احصل على استشارات مجانية، وقبولات جامعية سريعة مع بوابات
 العلوم.{% endblock %}
 
+{% block extra_css %}
+<link rel="preload" href="{% static 'images/hero-bg-1.webp' %}" as="image" type="image/webp" fetchpriority="high">
+<link rel="preload" href="{% static 'images/Studentes.webp' %}" as="image" type="image/webp" fetchpriority="high">
+<link rel="preload" href="{% static 'images/shape-2-6.webp' %}" as="image" type="image/webp" fetchpriority="high">
+<link rel="preload" href="{% static 'images/visa-application.webp' %}" as="image" type="image/webp" fetchpriority="high">
+{% endblock %}
+
 {% block schema_markup %}
 {{ block.super }}
 <!-- WebPage Schema for Homepage -->
@@ -20,29 +27,21 @@
 {% endif %}
 {% endblock %}
 
-
-
-{% block extra_css %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'css/visa-tracking.css' %}">
-{% endblock %}
-
 {% block content %}
 
-
 <!-- Hero Section -->
-<div class="it-hero-2-area it-hero-2-bg fix p-relative" data-background="{% static 'images/hero-bg-1.jpg' %}"
-    style="background-image: url('{% static 'images/hero-bg-1.jpg' %}');">
+<div class="it-hero-2-area it-hero-2-bg fix p-relative" data-background="{% static 'images/hero-bg-1.webp' %}"
+    style="background-image: url('{% static 'images/hero-bg-1.webp' %}');">
     <div class="it-hero-2-shape-4">
-        <img src="{% static 'images/shape-2-7.png' %}" alt="">
+        <img src="{% static 'images/shape-2-7.webp' %}" alt="خلفية بوابات العلوم" width="400" height="266" loading="eager" decoding="async">
     </div>
     <div class="it-hero-2-shape-7 d-xl-block">
-        <img src="{% static 'images/shape-2-1.png' %}" alt="">
+        <img src="{% static 'images/shape-2-1.webp' %}" alt="رمز تجميلي" width="20" height="21" loading="eager" decoding="async">
     </div>
     <div class="it-hero-2-funfact text-center d-none d-xl-block">
         <span class="theme">+3000</span>
         <span>طالب مقبول</span>
-        <img src="{% static 'images/shape-2-8.png' %}" alt="">
+        <img src="{% static 'images/shape-2-8.webp' %}" alt="تأثير خطي" width="100" height="27" loading="eager" decoding="async">
     </div>
     <div class="container">
         <div class="row align-items-end">
@@ -61,7 +60,7 @@
                                             stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
                                     </svg>
                                 </span>
-                            </span>
+                             </span>
                         </span>
                     </h1>
                     <div class="it-hero-2-text">
@@ -83,8 +82,7 @@
                                 </span>
                             </a>
                             <div class="it-hero-2-play">
-                                <a class="popup-video" href="https://www.youtube.com/watch?v=PO_fBTkoznc"><i
-                                        class="fa-solid fa-play"></i></a>
+                                <a class="popup-video" href="https://www.youtube.com/watch?v=PO_fBTkoznc" aria-label="شاهد الفيديو"><svg class="svg-icon w-4 h-4 text-white"><use href="{% static 'images/icons.svg' %}#icon-play"></use></svg></a>
                                 <span>شاهد الفيديو</span>
                             </div>
                         </div>
@@ -94,12 +92,12 @@
             <div class="col-xl-4 col-lg-4">
                 <div class="it-hero-2-thumb-box p-relative">
                     <div class="it-hero-2-thumb p-relative">
-                        <img src="{% static 'images/Studentes.webp' %}" alt="طلاب بوابات العلوم">
+                        <img src="{% static 'images/Studentes.webp' %}" alt="طلاب بوابات العلوم" width="478" height="597" fetchpriority="high" loading="eager" decoding="async">
                         <div class="it-hero-2-shape-1 d-none d-xl-block">
-                            <img src="{% static 'images/shape-2-6.png' %}" alt="">
+                            <img src="{% static 'images/shape-2-6.webp' %}" alt="إطار تجميلي خلفي" width="550" height="550" loading="eager" decoding="async">
                         </div>
                         <div class="it-hero-2-shape-3 d-none d-xl-block">
-                            <img src="{% static 'images/shape-2-5.png' %}" alt="">
+                            <img src="{% static 'images/shape-2-5.webp' %}" alt="قبعة تخرج" width="80" height="60" loading="eager" decoding="async">
                         </div>
                     </div>
                 </div>
@@ -127,26 +125,26 @@
                 <ul class="about-features">
                     <li class="about-feature-item">
                         <span class="about-feature-icon">
-                            <i class="fas fa-check"></i>
+                            <svg class="svg-icon w-4 h-4 text-white"><use href="{% static 'images/icons.svg' %}#icon-check"></use></svg>
                         </span>
                         <span class="about-feature-text">نفتح لك الطريق نحو أفضل الجامعات في ماليزيا</span>
                     </li>
                     <li class="about-feature-item">
                         <span class="about-feature-icon">
-                            <i class="fas fa-check"></i>
+                            <svg class="svg-icon w-4 h-4 text-white"><use href="{% static 'images/icons.svg' %}#icon-check"></use></svg>
                         </span>
                         <span class="about-feature-text">استشارات أكاديمية دقيقة لبرامج البكالوريوس والدراسات
                             العليا</span>
                     </li>
                     <li class="about-feature-item">
                         <span class="about-feature-icon">
-                            <i class="fas fa-check"></i>
+                            <svg class="svg-icon w-4 h-4 text-white"><use href="{% static 'images/icons.svg' %}#icon-check"></use></svg>
                         </span>
-                        <span class="about-feature-text">نتابع ملفك خطوة بخطوة حتى صدور القبول والفيزا</span>
+                        <span class="about-feature-text">نتابع ملفك خطوة بخطوة حتى صدور القبول والتأشيرة</span>
                     </li>
                     <li class="about-feature-item">
                         <span class="about-feature-icon">
-                            <i class="fas fa-check"></i>
+                            <svg class="svg-icon w-4 h-4 text-white"><use href="{% static 'images/icons.svg' %}#icon-check"></use></svg>
                         </span>
                         <span class="about-feature-text">نسهّل عليك كل الإجراءات لتبدأ رحلتك بثقة وراحة</span>
                     </li>
@@ -155,11 +153,11 @@
                 <!-- كارت المدير التنفيذي والتوقيع (CEO signature card) -->
                 <div class="about-ceo-card">
                     <div class="ceo-meta">
-                        <h4 class="ceo-name">د. محمد كيالي</h4>
+                        <h3 class="ceo-name">د. محمد كيالي</h3>
                         <p class="ceo-role">المدير التنفيذي</p>
                     </div>
                     <div class="ceo-sig-img">
-                        <img src="{% static 'images/ceo-signature.png' %}" alt="توقيع د. محمد كيالي">
+                        <img src="{% static 'images/ceo-signature.png' %}" alt="توقيع د. محمد كيالي" width="203" height="100" loading="lazy" decoding="async">
                     </div>
                 </div>
             </div>
@@ -170,12 +168,12 @@
                     <!-- الصورة الخلفية (Main background image) -->
                     <div class="about-image-card main-image">
                         <img src="{% static 'images/visa-application.webp' %}" alt="تأشيرة الطالب والقبول في ماليزيا"
-                            class="about-img">
+                            class="about-img" width="500" height="333" loading="eager" fetchpriority="high" decoding="async">
                     </div>
                     <!-- الصورة الأمامية المتداخلة (Overlapping secondary image) -->
                     <div class="about-image-card secondary-image">
                         <img src="{% static 'images/square-academic-hat.webp' %}" alt="الدراسة في ماليزيا"
-                            class="about-img">
+                            class="about-img" width="500" height="333" loading="lazy" decoding="async">
                     </div>
 
                     <!-- شارة سنوات الخبرة (Experience Badge) -->
@@ -239,8 +237,8 @@
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                     </svg>
                 </div>
-                <h3 class="feature-card__title">تأمين السكن والفيزا</h3>
-                <p class="feature-card__desc">تغطية كاملة للملف الإجرائي واستخراج فيزا الطالب وتأمين خيارات سكن مريحة
+                <h3 class="feature-card__title">تأمين السكن والتأشيرة</h3>
+                <p class="feature-card__desc">تغطية كاملة للملف الإجرائي واستخراج تأشيرة الطالب وتأمين خيارات سكن مريحة
                     وقريبة.</p>
             </div>
 
@@ -324,9 +322,9 @@
             <!-- Right side: Text Content -->
             <div class="visa-home-content">
                 <span class="section-tag">تأشيرة الطالب بماليزيا</span>
-                <h2 class="section-title-premium" id="visa-home-section-title">متابعة وتتبع حالة فيزتك (EMGS)</h2>
+                <h2 class="section-title-premium" id="visa-home-section-title">متابعة وتتبع حالة تأشيرتك (EMGS)</h2>
                 <p class="section-desc-premium">
-                    نحن في بوابات العلوم لا ننتهي من مساعدتك بمجرد استلام القبول الأكاديمي، بل نرافقك خطوة بخطوة في متابعة وتسهيل إجراءات الفيزا الدراسية الخاصة بك عبر النظام الرسمي (EMGS).
+                    نحن في بوابات العلوم لا ننتهي من مساعدتك بمجرد استلام القبول الأكاديمي، بل نرافقك خطوة بخطوة في متابعة وتسهيل إجراءات تأشيرتك الدراسية الخاصة بك عبر النظام الرسمي (EMGS).
                 </p>
                 <p class="section-desc-premium">
                     نوفر لك أداة تفاعلية ودليلاً كاملاً باللغة العربية لشرح وتفسير كل نسبة مئوية تظهر لطلبك وتوضيح الخطوة التالية المطلوبة منك لضمان سرعة صدور التأشيرة وسفرك بسلام.
@@ -336,19 +334,19 @@
                 <ul class="visa-home-features">
                     <li class="visa-home-feature-item">
                         <span class="visa-home-feature-icon">
-                            <i class="fas fa-check"></i>
+                            <svg class="svg-icon w-4 h-4 text-white"><use href="{% static 'images/icons.svg' %}#icon-check"></use></svg>
                         </span>
                         <span class="visa-home-feature-text">توجيه مباشر وآمن لبوابة EMGS الرسمية للتتبع.</span>
                     </li>
                     <li class="visa-home-feature-item">
                         <span class="visa-home-feature-icon">
-                            <i class="fas fa-check"></i>
+                            <svg class="svg-icon w-4 h-4 text-white"><use href="{% static 'images/icons.svg' %}#icon-check"></use></svg>
                         </span>
                         <span class="visa-home-feature-text">شرح وتفسير تفصيلي لكل نسبة مئوية باللغة العربية.</span>
                     </li>
                     <li class="visa-home-feature-item">
                         <span class="visa-home-feature-icon">
-                            <i class="fas fa-check"></i>
+                            <svg class="svg-icon w-4 h-4 text-white"><use href="{% static 'images/icons.svg' %}#icon-check"></use></svg>
                         </span>
                         <span class="visa-home-feature-text">دعم واستشارات مجانية عند توقف أو تأخر إصدار تأشيرتك.</span>
                     </li>
@@ -356,8 +354,8 @@
 
                 <div style="margin-top: 2rem;">
                     <a href="{% url 'visa_tracking' %}" class="btn btn--primary btn--lg">
-                        تتبع فيزتك وافهم حالتها الآن
-                        <i class="fas fa-arrow-left" aria-hidden="true" style="margin-right: 8px;"></i>
+                        تتبع تأشيرتك وافهم حالتها الآن
+                        <svg class="svg-icon w-4 h-4" style="margin-right: 8px;"><use href="{% static 'images/icons.svg' %}#icon-arrow-left"></use></svg>
                     </a>
                 </div>
             </div>
@@ -365,7 +363,7 @@
             <!-- Left side: Image and visual effect -->
             <div class="visa-home-images">
                 <div class="visa-home-image-wrapper">
-                    <img src="{% static 'images/visa_portal_status.png' %}" alt="تتبع تأشيرة الطالب EMGS ماليزيا" class="visa-home-img">
+                    <img src="{% static 'images/visa_portal_status.webp' %}" alt="تتبع تأشيرة الطالب EMGS ماليزيا" class="visa-home-img" width="1024" height="1024" loading="lazy" decoding="async">
                 </div>
             </div>
 
@@ -390,7 +388,7 @@
                 <div class="step-card__icon-wrap">
                     <div class="step-card__badge">01</div>
                     <div class="step-card__icon">
-                        <i class="fas fa-comments" aria-hidden="true"></i>
+                        <svg class="svg-icon w-8 h-8 text-primary"><use href="{% static 'images/icons.svg' %}#icon-comments"></use></svg>
                     </div>
                 </div>
                 <div class="step-card__body">
@@ -405,7 +403,7 @@
                 <div class="step-card__icon-wrap">
                     <div class="step-card__badge">02</div>
                     <div class="step-card__icon">
-                        <i class="fas fa-file-alt" aria-hidden="true"></i>
+                        <svg class="svg-icon w-8 h-8 text-primary"><use href="{% static 'images/icons.svg' %}#icon-file-text"></use></svg>
                     </div>
                 </div>
                 <div class="step-card__body">
@@ -420,7 +418,7 @@
                 <div class="step-card__icon-wrap">
                     <div class="step-card__badge">03</div>
                     <div class="step-card__icon">
-                        <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                        <svg class="svg-icon w-8 h-8 text-primary"><use href="{% static 'images/icons.svg' %}#icon-graduation-cap"></use></svg>
                     </div>
                 </div>
                 <div class="step-card__body">
@@ -435,7 +433,7 @@
                 <div class="step-card__icon-wrap">
                     <div class="step-card__badge">04</div>
                     <div class="step-card__icon step-card__icon--accent">
-                        <i class="fas fa-plane-departure" aria-hidden="true"></i>
+                        <svg class="svg-icon w-8 h-8 text-primary"><use href="{% static 'images/icons.svg' %}#icon-plane"></use></svg>
                     </div>
                 </div>
                 <div class="step-card__body">
@@ -449,7 +447,7 @@
         <!-- CTA -->
         <div class="steps-section__cta">
             <a href="{% url 'leads:submit' %}" class="btn steps-cta-btn">
-                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                <svg class="svg-icon w-4 h-4"><use href="{% static 'images/icons.svg' %}#icon-arrow-left"></use></svg>
                 ابدأ رحلتك الآن
             </a>
         </div>

@@ -1571,6 +1571,11 @@ only screen and (min-width: 768px) and (max-width: 991px),
     font-size: 18px;
     font-weight: 700;
     color: var(--it-common-black);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
 }
 
 .it-header-2-button {
@@ -1610,8 +1615,8 @@ only screen and (min-width: 768px) and (max-width: 991px),
 }
 
 .it-header-2-bar button {
-    height: 42px;
-    width: 42px;
+    height: 48px;
+    width: 48px;
     color: var(--it-common-white);
     background-color: var(--it-theme-1);
     border-radius: 5px;
@@ -1642,8 +1647,8 @@ only screen and (min-width: 768px) and (max-width: 991px),
     transition: 0.4s;
     border-radius: 5px;
     z-index: 1;
-    color: var(--it-common-white);
-    background-color: var(--it-theme-1);
+    color: var(--white);
+    background-color: var(--primary);
     text-decoration: none;
     border: none;
 }
@@ -1655,8 +1660,8 @@ only screen and (min-width: 768px) and (max-width: 991px),
 }
 
 .it-btn:hover {
-    color: var(--it-common-white);
-    background-color: var(--it-theme-teal-hover);
+    color: var(--primary);
+    background-color: var(--secondary);
 }
 
 .it-btn:hover span svg path {
@@ -2452,7 +2457,7 @@ only screen and (min-width: 992px) and (max-width: 1199px) {
 }
 
 .it-hero-2-funfact .theme {
-    color: var(--it-theme-1);
+    color: var(--primary);
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 8px;
@@ -2833,7 +2838,7 @@ only screen and (min-width: 992px) and (max-width: 1199px) {
     align-items: center;
     padding: 6px 16px;
     background-color: var(--secondary-muted);
-    color: var(--secondary);
+    color: var(--primary);
     border: 1px solid var(--secondary-20);
     border-radius: var(--radius-full);
     font-size: 0.8rem;
@@ -3987,7 +3992,7 @@ only screen and (min-width: 992px) and (max-width: 1199px) {
 
 .site-footer__contact-label {
     font-size: 0.75rem;
-    color: var(--white-30);
+    color: var(--white-65);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -4412,4 +4417,26 @@ a.site-footer__contact-value:hover {
     }
 }
 
+/* Stretched link utility for card touch targets optimization */
+.stretched-link::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    content: "";
+}
 
+.it-course-item {
+    position: relative;
+}
+
+/* SVG Sprite Icon Base Styling */
+.svg-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+    pointer-events: none;
+}

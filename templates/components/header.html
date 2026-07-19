@@ -10,7 +10,7 @@
       </div>
       <div class="itoffcanvas__logo">
          <a href="/">
-            <img src="{% static 'images/logo.png' %}" alt="بوابات العلوم">
+            <img src="{% static 'images/logo.webp' %}" alt="بوابات العلوم" width="236" height="72" loading="lazy" decoding="async">
          </a>
       </div>
       <div class="itoffcanvas__text">
@@ -47,7 +47,7 @@
             </div>
             <div class="itoffcanvas__info-address">
                <span>تتبع التأشيرة</span>
-               <a href="{% url 'visa_tracking' %}">متابعة حالة الفيزا (EMGS)</a>
+               <a href="{% url 'visa_tracking' %}">متابعة حالة التأشيرة (EMGS)</a>
             </div>
          </div>
       </div>
@@ -96,7 +96,7 @@
                            <span>
                               <i class="fas fa-passport" aria-hidden="true" style="color: var(--secondary); font-size: 1rem;"></i>
                            </span>
-                           متابعة الفيزا (EMGS)
+                           متابعة التأشيرة (EMGS)
                         </a>
                      </li>
                   </ul>
@@ -135,7 +135,7 @@
                               aria-label="فيسبوك"><i class="fab fa-facebook-f"></i></a>
                            <a href="{{ site_settings.instagram|default:'#' }}" target="_blank" rel="noopener"
                               aria-label="انستغرام"><i class="fab fa-instagram"></i></a>
-                            <a href="https://wa.me/{{ site_settings.whatsapp_primary|default:'60123456789'|cut:'+'|cut:' ' }}"
+                            <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60123456789' }}"
                                target="_blank" rel="noopener" aria-label="واتساب"><i class="fab fa-whatsapp"></i></a>
                         </div>
                      </li>
@@ -178,7 +178,7 @@
                <div class="row align-items-center">
                   <div class="col-xl-2 col-6">
                      <div class="it-header-2-logo">
-                        <a href="/"><img src="{% static 'images/logo.png' %}" alt="بوابات العلوم"></a>
+                         <a href="/"><img src="{% static 'images/logo.webp' %}" alt="بوابات العلوم" width="236" height="72" fetchpriority="high" loading="eager" decoding="async"></a>
                      </div>
                   </div>
                   <div class="col-xl-7 d-none d-xl-block">
@@ -246,7 +246,7 @@
                                                     <span>سجل طلبك الآن</span>
                                                  </a>
                                                  <div class="cta-whatsapp">
-                                                    <a href="https://wa.me/{{ site_settings.whatsapp_primary|default:'60123456789'|cut:'+'|cut:' ' }}" target="_blank">
+                                                    <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60123456789' }}" target="_blank">
                                                        <i class="fab fa-whatsapp"></i>
                                                        <span>تواصل معنا عبر واتساب</span>
                                                     </a>
@@ -361,7 +361,7 @@
                                                     <span>استشر خبيراً أكاديمياً</span>
                                                  </a>
                                                  <div class="cta-whatsapp">
-                                                     <a href="https://wa.me/{{ site_settings.whatsapp_primary|default:'60123456789'|cut:'+'|cut:' ' }}" target="_blank">
+                                                     <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60123456789' }}" target="_blank">
                                                        <i class="fab fa-whatsapp"></i>
                                                        <span>تواصل معنا عبر واتساب</span>
                                                     </a>
@@ -400,9 +400,9 @@
                                  طلب تسجيل
                                  <svg width="17" height="14" viewBox="0 0 17 14" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M11 1.24023L16 7.24023L11 13.2402" stroke="white" stroke-width="1.5"
+                                    <path d="M11 1.24023L16 7.24023L11 13.2402" stroke="currentColor" stroke-width="1.5"
                                        stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"></path>
-                                    <path d="M1 7.24023H16" stroke="white" stroke-width="1.5" stroke-miterlimit="10"
+                                    <path d="M1 7.24023H16" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10"
                                        stroke-linecap="round" stroke-linejoin="round"></path>
                                  </svg>
                               </span>

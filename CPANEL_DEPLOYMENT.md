@@ -64,3 +64,25 @@ To safely populate the missing `best_universities` and `cheap_universities` rela
      python manage.py populate_missing_universities --commit
      ```
 
+## Cloudflare Safe Caching Policy
+
+To achieve optimal performance (TTFB < 100ms) without compromising security or session data, configure Cloudflare Caching as follows:
+
+### 1. Cache Rules (Allowlist)
+Create Cache Rules to enable **Cache Everything** (Edge Cache TTL: 1 Day) strictly for the following public, read-only paths:
+- Home page: `sciencesgates.com/` (exact match or empty path)
+- Universities: `sciencesgates.com/universities/*`
+- Institutes: `sciencesgates.com/institutes/*`
+- Majors: `sciencesgates.com/majors/*`
+- Articles: `sciencesgates.com/articles/*`
+
+### 2. Bypass Configuration (Exclusions)
+Ensure any caching is strictly bypassed under the following conditions:
+- **Cookie Match:** Bypass cache if the request contains `sessionid`, `csrftoken`, `messages`, or `admin`.
+- **Paths:** Never cache the following routes:
+  - `/admin/*`
+  - `*dashboard*`
+  - `/search/*`
+  - `/leads/*` (including contact forms and form submission views)
+- **Headers:** Ensure Django dynamic views explicitly send headers:
+  `Cache-Control: private, no-store, must-revalidate` to prevent CDN intermediaries from storing private response states.

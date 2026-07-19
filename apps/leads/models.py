@@ -8,6 +8,16 @@ class LeadType(models.TextChoices):
     CONTACT = 'contact', 'استفسار'
 
 
+class LeadStatus(models.TextChoices):
+    """Lead pipeline status choices."""
+    NEW = 'new', 'جديد'
+    CONTACTED = 'contacted', 'تم التواصل'
+    IN_PROGRESS = 'in_progress', 'قيد المتابعة'
+    REGISTERED = 'registered', 'تم التسجيل'
+    CANCELLED = 'cancelled', 'ملغي / غير مهتم'
+
+
+
 class Lead(TimestampedModel):
     """Lead model for storing form submissions."""
     lead_type = models.CharField(
@@ -32,6 +42,38 @@ class Lead(TimestampedModel):
         blank=True,
         verbose_name='الرسالة'
     )
+    
+    # New fields matching Fluent Forms export
+    nationality = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name='الجنسية'
+    )
+    institution_name = models.CharField(
+        max_length=250,
+        blank=True,
+        null=True,
+        verbose_name='اسم المؤسسة (الجامعة/المعهد)'
+    )
+    residence_country = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name='دولة الإقامة'
+    )
+    study_level = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='المرحلة الدراسية'
+    )
+    address = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='عنوان الإقامة'
+    )
+
     
     # Tracking fields
     source_page = models.URLField(
@@ -73,6 +115,13 @@ class Lead(TimestampedModel):
     )
     
     # Status fields
+    status = models.CharField(
+        max_length=30,
+        choices=LeadStatus.choices,
+        default=LeadStatus.NEW,
+        verbose_name='حالة المتابعة',
+        db_index=True
+    )
     is_read = models.BooleanField(
         default=False,
         verbose_name='تم قراءتها',

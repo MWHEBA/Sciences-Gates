@@ -45,7 +45,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="detail-page-container" x-data="{ openRegModal: false, regStep: 1 }">
+<div class="detail-page-container" x-data="{ openRegModal: false, regStep: 1, showCustomNationality: false }">
 
     <!-- University Hero Header Section -->
     <div class="detail-header">
@@ -729,7 +729,7 @@
                         <button type="button" @click="openRegModal = true; regStep = 1" class="reg-card__cta-btn reg-card__cta-btn--primary">
                             سجل الآن
                         </button>
-                        <a href="https://wa.me/{{ site_settings.whatsapp_primary|default:'60182638888'|cut:'+'|cut:' ' }}" target="_blank" rel="noopener noreferrer" class="reg-card__cta-btn reg-card__cta-btn--secondary">
+                        <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60182638888' }}" target="_blank" rel="noopener noreferrer" class="reg-card__cta-btn reg-card__cta-btn--secondary">
                             تواصل مع مستشار
                         </a>
                     </div>
@@ -812,11 +812,11 @@
                 <input type="hidden" name="source_page" value="{{ request.build_absolute_uri }}">
                 
                 <!-- Entity details for dynamic JS handling -->
-                <input type="hidden" id="reg_entity_name" value="{{ university.name }}">
+                <input type="hidden" name="institution_name" id="reg_entity_name" value="{{ university.name }}">
                 <input type="hidden" id="reg_entity_type" value="جامعة">
 
-                <!-- Combined field for Django Lead form submission -->
-                <textarea name="message" id="reg_combined_message" class="inl-s-224b51a7b4" style="display: none;"></textarea>
+                <!-- Combined field for Django Lead form submission (kept as virtual container for client JS fallback) -->
+                <textarea id="reg_combined_message" class="inl-s-224b51a7b4" style="display: none;"></textarea>
                 <!-- Honeypot -->
                 <input type="text" name="website" class="inl-s-93b8ea5b2f" tabindex="-1" autocomplete="off" style="display: none;">
 
@@ -832,9 +832,10 @@
                         </div>
 
                         <div class="reg-form-group">
-                            <label for="reg_email">البريد الإلكتروني</label>
+                            <label for="reg_email">البريد الإلكتروني <span
+                                    class="inl-s-973ad1998f">*</span></label>
                             <input type="email" id="reg_email" name="email" class="reg-input"
-                                placeholder="name@example.com" dir="ltr">
+                                placeholder="name@example.com" dir="ltr" required>
                         </div>
 
                         <div class="reg-form-group">
@@ -876,7 +877,8 @@
 
                         <div class="reg-form-group">
                             <label for="reg_nationality">الجنسية <span class="inl-s-973ad1998f">*</span></label>
-                            <select id="reg_nationality" class="reg-select" required>
+                            <select id="reg_nationality" name="nationality" class="reg-select" required
+                                @change="showCustomNationality = ($event.target.value === 'دولة اخرى غير موجودة')">
                                 <option value="" disabled selected>اختر الجنسية...</option>
                                 <option value="سعودي">سعودي</option>
                                 <option value="إماراتي">إماراتي</option>
@@ -900,8 +902,15 @@
                                 <option value="صومالي">صومالي</option>
                                 <option value="جيبوتي">جيبوتي</option>
                                 <option value="ماليزي">ماليزي</option>
-                                <option value="أخرى">أخرى</option>
+                                <option value="دولة اخرى غير موجودة">دولة أخرى</option>
                             </select>
+                        </div>
+
+                        <!-- Custom Nationality Conditional Input -->
+                        <div class="reg-form-group" x-show="showCustomNationality" x-cloak style="margin-top: 12px;">
+                            <label for="reg_custom_nationality">اكتب اسم الدولة/الجنسية الأخرى <span class="inl-s-973ad1998f">*</span></label>
+                            <input type="text" id="reg_custom_nationality" name="custom_nationality" class="reg-input"
+                                placeholder="اكتب اسم الدولة/الجنسية">
                         </div>
                     </div>
 
@@ -909,18 +918,18 @@
                     <div x-show="regStep === 2" class="space-y-4">
                         <div class="reg-form-group">
                             <label for="reg_level">المرحلة الدراسية <span class="inl-s-973ad1998f">*</span></label>
-                            <select id="reg_level" class="reg-select" required>
+                            <select id="reg_level" name="study_level" class="reg-select" required>
                                 <option value="" disabled selected>اختر المرحلة الدراسية...</option>
                                 <option value="بكالوريوس">بكالوريوس (Bachelor's)</option>
                                 <option value="ماجستير">ماجستير (Master's)</option>
                                 <option value="دكتوراه">دكتوراه (PhD)</option>
-                                <option value="معهد لغة">معهد لغة</option>
+                                <option value="معهد اللغة">معهد اللغة</option>
                             </select>
                         </div>
 
                         <div class="reg-form-group">
                             <label for="reg_residence">دولة الإقامة <span class="inl-s-973ad1998f">*</span></label>
-                            <select id="reg_residence" class="reg-select" required>
+                            <select id="reg_residence" name="residence_country" class="reg-select" required>
                                 <option value="" disabled selected>اختر دولة الإقامة...</option>
                                 {% for iso, name, code, placeholder in phone_countries %}
                                 <option value="{{ name }}">{{ name }}</option>
@@ -930,13 +939,13 @@
 
                         <div class="reg-form-group">
                             <label for="reg_address">عنوان الإقامة <span class="inl-s-973ad1998f">*</span></label>
-                            <input type="text" id="reg_address" class="reg-input" placeholder="المدينة، المنطقة، الشارع"
+                            <input type="text" id="reg_address" name="address" class="reg-input" placeholder="المدينة، المنطقة، الشارع"
                                 required>
                         </div>
 
                         <div class="reg-form-group">
                             <label for="reg_notes">ملاحظات</label>
-                            <textarea id="reg_notes" class="reg-textarea"
+                            <textarea id="reg_notes" name="message" class="reg-textarea"
                                 placeholder="أدخل أي تفاصيل أو متطلبات خاصة..."></textarea>
                         </div>
                     </div>

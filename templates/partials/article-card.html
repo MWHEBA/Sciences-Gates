@@ -1,10 +1,8 @@
-{% load static %}
+{% load static image_tags %}
 <article class="it-course-item cursor-pointer">
     <!-- صورة المقال -->
     <div class="it-course-thumb mb-4 p-relative">
-        <a href="{{ article.get_absolute_url }}">
-            <img src="{% if article.featured_image %}{{ article.featured_image.url }}{% else %}https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800{% endif %}" alt="{{ article.title }}" loading="lazy">
-        </a>
+        <img src="{% if article.featured_image %}{{ article.featured_image.url|thumbnail_url:'360x240' }}{% else %}https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=360&h=240{% endif %}" alt="{{ article.title }}" width="360" height="240" loading="lazy" decoding="async">
         {% if article.category %}
         <div class="it-course-thumb-text">
             <span>{{ article.category.name }}</span>
@@ -15,9 +13,9 @@
     <!-- محتوى الكرت -->
     <div class="it-course-content">
         <!-- عنوان المقال -->
-        <h4 class="it-course-title">
-            <a href="{{ article.get_absolute_url }}">{{ article.title }}</a>
-        </h4>
+        <h3 class="it-course-title">
+            <a href="{{ article.get_absolute_url }}" class="stretched-link">{{ article.title }}</a>
+        </h3>
         
         <!-- وصف مختصر -->
         <p class="card__desc text-text-secondary text-sm leading-relaxed mb-15 flex-grow" style="font-size: 0.875rem; color: var(--text-body); line-height: 1.6; margin-bottom: 15px;">
@@ -27,21 +25,21 @@
         <!-- معلومات المقال -->
         <div class="it-course-info">
             <span>
-                <i class="fa-solid fa-calendar-days ml-2 text-secondary"></i>
+                <svg class="svg-icon ml-2 text-secondary"><use href="{% static 'images/icons.svg' %}#icon-calendar"></use></svg>
                 {{ article.publish_date|date:"d F Y" }}
             </span>
             <span>
-                <i class="fa-solid fa-user ml-2 text-secondary"></i>
+                <svg class="svg-icon ml-2 text-secondary"><use href="{% static 'images/icons.svg' %}#icon-user"></use></svg>
                 {{ article.author_display_name }}
             </span>
         </div>
         
         <!-- رابط قراءة المقال -->
         <div class="it-course-price-box">
-            <a href="{{ article.get_absolute_url }}">
+            <div class="it-course-action-link" style="color: var(--primary); font-weight: 500;">
                 <span>اقرأ المقال</span>
-                <i class="fa-solid fa-arrow-left mr-2"></i>
-            </a>
+                <svg class="svg-icon mr-2"><use href="{% static 'images/icons.svg' %}#icon-arrow-left"></use></svg>
+            </div>
         </div>
     </div>
 </article>

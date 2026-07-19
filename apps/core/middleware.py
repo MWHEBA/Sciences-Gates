@@ -90,11 +90,24 @@ class MaintenanceModeMiddleware:
             else:
                 # Minimum Inline Fallback if template is deleted
                 template_content = "<html><body><h1>Site Under Maintenance</h1><p>{{ message }}</p></body></html>"
-            
+            whatsapp_num = state.get('whatsapp')
+            cleaned_whatsapp = ""
+            if whatsapp_num:
+                import re
+                cleaned_whatsapp = re.sub(r'\D', '', whatsapp_num)
+                if cleaned_whatsapp.startswith('00'):
+                    cleaned_whatsapp = cleaned_whatsapp[2:]
+                if cleaned_whatsapp.startswith('2001'):
+                    cleaned_whatsapp = '20' + cleaned_whatsapp[3:]
+                elif cleaned_whatsapp.startswith('96605'):
+                    cleaned_whatsapp = '966' + cleaned_whatsapp[4:]
+                elif cleaned_whatsapp.startswith('6001'):
+                    cleaned_whatsapp = '60' + cleaned_whatsapp[3:]
+
             context_data = {
                 'title': state.get('maintenance_title', 'صيانة مجدولة'),
                 'message': state.get('maintenance_message', 'الموقع قيد الصيانة حالياً. سنعود قريباً.'),
-                'whatsapp': state.get('whatsapp'),
+                'whatsapp': cleaned_whatsapp,
                 'email': state.get('email'),
                 'phone': state.get('phone'),
                 'estimated_end': state.get('maintenance_estimated_end'),

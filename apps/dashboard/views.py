@@ -3629,17 +3629,19 @@ class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
 
     def get_breadcrumbs(self):
         """Build breadcrumb trail for lead list page."""
+        lead_type = self.request.GET.get('lead_type', 'registration').strip()
+        current_name = 'طلبات التسجيل' if lead_type == 'registration' else 'إدارة الرسائل والاستفسارات'
         return (BreadcrumbTrail()
             .add_section('dashboard')
-            .current('الرسائل')
+            .current(current_name)
             .build())
 
     def get_queryset(self):
         """Get leads with optional filtering."""
         queryset = Lead.objects.all().order_by('-created_at')
         
-        # Filter by lead_type
-        lead_type_filter = self.request.GET.get('lead_type', '').strip()
+        # Filter by lead_type (default to registration)
+        lead_type_filter = self.request.GET.get('lead_type', 'registration').strip()
         if lead_type_filter in [LeadType.REGISTRATION, LeadType.CONTACT]:
             queryset = queryset.filter(lead_type=lead_type_filter)
         
@@ -3665,13 +3667,19 @@ class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
             except ValueError:
                 pass
         
-        # Search by name, email, or phone
+        # Search by name, email, phone, nationality, institution_name, residence_country, study_level, address, message
         search_query = self.request.GET.get('search', '').strip()
         if search_query:
             queryset = queryset.filter(
                 Q(name__icontains=search_query) |
                 Q(email__icontains=search_query) |
-                Q(phone__icontains=search_query)
+                Q(phone__icontains=search_query) |
+                Q(nationality__icontains=search_query) |
+                Q(institution_name__icontains=search_query) |
+                Q(residence_country__icontains=search_query) |
+                Q(study_level__icontains=search_query) |
+                Q(address__icontains=search_query) |
+                Q(message__icontains=search_query)
             )
         
         # Filter by read status
@@ -3681,21 +3689,57 @@ class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
         elif read_status == 'unread':
             queryset = queryset.filter(is_read=False)
         
+        # Filter by registration specific fields
+        nationality_val = self.request.GET.get('nationality', '').strip()
+        if nationality_val:
+            queryset = queryset.filter(nationality=nationality_val)
+
+        study_level_val = self.request.GET.get('study_level', '').strip()
+        if study_level_val:
+            queryset = queryset.filter(study_level=study_level_val)
+
+        residence_country_val = self.request.GET.get('residence_country', '').strip()
+        if residence_country_val:
+            queryset = queryset.filter(residence_country=residence_country_val)
+
+        institution_name_val = self.request.GET.get('institution_name', '').strip()
+        if institution_name_val:
+            queryset = queryset.filter(institution_name=institution_name_val)
+            
         return queryset
 
     def get_context_data(self, **kwargs):
         """Add page title, filters, and statistics to context."""
         context = super().get_context_data(**kwargs)
         
-        # Add page title
-        context['page_title'] = 'إدارة الرسائل والاستفسارات'
-        
         # Add filter values for form
-        context['lead_type_filter'] = self.request.GET.get('lead_type', '')
+        lead_type_filter = self.request.GET.get('lead_type', 'registration').strip()
+        context['lead_type_filter'] = lead_type_filter
+        
+        # Add page title dynamically
+        if lead_type_filter == 'registration':
+            context['page_title'] = 'طلبات التسجيل'
+        else:
+            context['page_title'] = 'إدارة الرسائل والاستفسارات'
+        
         context['from_date'] = self.request.GET.get('from_date', '')
         context['to_date'] = self.request.GET.get('to_date', '')
         context['search_query'] = self.request.GET.get('search', '')
         context['read_status'] = self.request.GET.get('read_status', '')
+        
+        context['nationality_val'] = self.request.GET.get('nationality', '')
+        context['study_level_val'] = self.request.GET.get('study_level', '')
+        context['residence_country_val'] = self.request.GET.get('residence_country', '')
+        context['institution_name_val'] = self.request.GET.get('institution_name', '')
+
+        # Get existing unique filter choices from DB for registrations
+        context['existing_nationalities'] = Lead.objects.filter(lead_type=LeadType.REGISTRATION).exclude(nationality='').values_list('nationality', flat=True).distinct().order_by('nationality')
+        context['existing_residences'] = Lead.objects.filter(lead_type=LeadType.REGISTRATION).exclude(residence_country='').values_list('residence_country', flat=True).distinct().order_by('residence_country')
+        context['existing_institutions'] = Lead.objects.filter(lead_type=LeadType.REGISTRATION).exclude(institution_name='').values_list('institution_name', flat=True).distinct().order_by('institution_name')
+        
+        # Predefined study levels
+        from apps.leads.forms import STUDY_LEVEL_CHOICES
+        context['study_levels'] = [c[0] for c in STUDY_LEVEL_CHOICES if c[0]]
         
         # Add lead type choices
         context['lead_types'] = LeadType.choices
@@ -3715,6 +3759,14 @@ class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
             query_params.append(f'search={context["search_query"]}')
         if context['read_status']:
             query_params.append(f'read_status={context["read_status"]}')
+        if context['nationality_val']:
+            query_params.append(f'nationality={context["nationality_val"]}')
+        if context['study_level_val']:
+            query_params.append(f'study_level={context["study_level_val"]}')
+        if context['residence_country_val']:
+            query_params.append(f'residence_country={context["residence_country_val"]}')
+        if context['institution_name_val']:
+            query_params.append(f'institution_name={context["institution_name_val"]}')
         
         context['export_url'] = f'?{"&".join(query_params)}' if query_params else ''
         
@@ -3800,7 +3852,7 @@ class LeadExportView(ContentAdminRequiredMixin, View):
         queryset = Lead.objects.all().order_by('-created_at')
         
         # Apply same filters as LeadListView
-        lead_type_filter = request.GET.get('lead_type', '').strip()
+        lead_type_filter = request.GET.get('lead_type', 'registration').strip()
         if lead_type_filter in [LeadType.REGISTRATION, LeadType.CONTACT]:
             queryset = queryset.filter(lead_type=lead_type_filter)
         
@@ -3828,7 +3880,13 @@ class LeadExportView(ContentAdminRequiredMixin, View):
             queryset = queryset.filter(
                 Q(name__icontains=search_query) |
                 Q(email__icontains=search_query) |
-                Q(phone__icontains=search_query)
+                Q(phone__icontains=search_query) |
+                Q(nationality__icontains=search_query) |
+                Q(institution_name__icontains=search_query) |
+                Q(residence_country__icontains=search_query) |
+                Q(study_level__icontains=search_query) |
+                Q(address__icontains=search_query) |
+                Q(message__icontains=search_query)
             )
         
         read_status = request.GET.get('read_status', '').strip()
@@ -3836,10 +3894,28 @@ class LeadExportView(ContentAdminRequiredMixin, View):
             queryset = queryset.filter(is_read=True)
         elif read_status == 'unread':
             queryset = queryset.filter(is_read=False)
+            
+        # Filter by registration specific fields
+        nationality_val = request.GET.get('nationality', '').strip()
+        if nationality_val:
+            queryset = queryset.filter(nationality=nationality_val)
+
+        study_level_val = request.GET.get('study_level', '').strip()
+        if study_level_val:
+            queryset = queryset.filter(study_level=study_level_val)
+
+        residence_country_val = request.GET.get('residence_country', '').strip()
+        if residence_country_val:
+            queryset = queryset.filter(residence_country=residence_country_val)
+
+        institution_name_val = request.GET.get('institution_name', '').strip()
+        if institution_name_val:
+            queryset = queryset.filter(institution_name=institution_name_val)
         
         # Create CSV response
         response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-        response['Content-Disposition'] = f'attachment; filename="leads_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        filename_prefix = "registrations" if lead_type_filter == LeadType.REGISTRATION else "contacts"
+        response['Content-Disposition'] = f'attachment; filename="{filename_prefix}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
         
         # Add BOM for proper UTF-8 encoding in Excel
         response.write('\ufeff')
@@ -3847,44 +3923,87 @@ class LeadExportView(ContentAdminRequiredMixin, View):
         # Create CSV writer
         writer = csv.writer(response)
         
-        # Write header row in Arabic
-        writer.writerow([
-            'الاسم',
-            'البريد الإلكتروني',
-            'رقم الهاتف',
-            'نوع الرسالة',
-            'الرسالة',
-            'صفحة المصدر',
-            'المرجع',
-            'UTM Source',
-            'UTM Medium',
-            'UTM Campaign',
-            'UTM Term',
-            'UTM Content',
-            'تاريخ الإرسال',
-            'تم قراءتها',
-            'الملاحظات',
-        ])
-        
-        # Write data rows
-        for lead in queryset:
+        # Write header and rows depending on lead_type
+        if lead_type_filter == LeadType.REGISTRATION:
             writer.writerow([
-                lead.name,
-                lead.email,
-                lead.phone,
-                lead.get_lead_type_display(),
-                lead.message,
-                lead.source_page,
-                lead.referrer,
-                lead.utm_source,
-                lead.utm_medium,
-                lead.utm_campaign,
-                lead.utm_term,
-                lead.utm_content,
-                lead.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                'نعم' if lead.is_read else 'لا',
-                lead.notes,
+                'الاسم',
+                'البريد الإلكتروني',
+                'رقم الهاتف',
+                'الجنسية',
+                'المؤسسة التعليمية',
+                'دولة الإقامة',
+                'المرحلة الدراسية',
+                'عنوان الإقامة',
+                'ملاحظات إضافية',
+                'صفحة المصدر',
+                'المرجع',
+                'UTM Source',
+                'UTM Medium',
+                'UTM Campaign',
+                'UTM Term',
+                'UTM Content',
+                'تاريخ الإرسال',
+                'تم قراءتها',
+                'الملاحظات (الإدارة)',
             ])
+            for lead in queryset:
+                writer.writerow([
+                    lead.name,
+                    lead.email,
+                    lead.phone,
+                    lead.nationality,
+                    lead.institution_name,
+                    lead.residence_country,
+                    lead.study_level,
+                    lead.address,
+                    lead.message,
+                    lead.source_page,
+                    lead.referrer,
+                    lead.utm_source,
+                    lead.utm_medium,
+                    lead.utm_campaign,
+                    lead.utm_term,
+                    lead.utm_content,
+                    lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
+                    'نعم' if lead.is_read else 'لا',
+                    lead.notes,
+                ])
+        else:
+            writer.writerow([
+                'الاسم',
+                'البريد الإلكتروني',
+                'رقم الهاتف',
+                'الجنسية',
+                'الرسالة الاستفسارية',
+                'صفحة المصدر',
+                'المرجع',
+                'UTM Source',
+                'UTM Medium',
+                'UTM Campaign',
+                'UTM Term',
+                'UTM Content',
+                'تاريخ الإرسال',
+                'تم قراءتها',
+                'الملاحظات (الإدارة)',
+            ])
+            for lead in queryset:
+                writer.writerow([
+                    lead.name,
+                    lead.email,
+                    lead.phone,
+                    lead.nationality,
+                    lead.message,
+                    lead.source_page,
+                    lead.referrer,
+                    lead.utm_source,
+                    lead.utm_medium,
+                    lead.utm_campaign,
+                    lead.utm_term,
+                    lead.utm_content,
+                    lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
+                    'نعم' if lead.is_read else 'لا',
+                    lead.notes,
+                ])
         
         messages.success(
             request,

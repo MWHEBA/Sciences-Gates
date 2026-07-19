@@ -3,7 +3,7 @@ Context processors for global template context.
 معالجات السياق للسياق العام للقوالب
 """
 from django.conf import settings
-from apps.leads.models import Lead
+from apps.leads.models import Lead, LeadType
 from apps.leads.countries import ALL_COUNTRIES, DEFAULT_COUNTRY, DEFAULT_CODE, DEFAULT_PLACEHOLDER
 from apps.core.models import SiteSettings
 
@@ -15,6 +15,8 @@ def dashboard_context(request):
     
     Provides:
     - unread_leads_count: Number of unread leads for badge display
+    - unread_registrations_count: Number of unread registration requests
+    - unread_contacts_count: Number of unread general inquiries
     """
     context = {}
     
@@ -24,8 +26,12 @@ def dashboard_context(request):
     if request.user.is_authenticated and is_dashboard:
         unread_leads_count = Lead.objects.filter(is_read=False).count()
         context['unread_leads_count'] = unread_leads_count
+        context['unread_registrations_count'] = Lead.objects.filter(lead_type=LeadType.REGISTRATION, is_read=False).count()
+        context['unread_contacts_count'] = Lead.objects.filter(lead_type=LeadType.CONTACT, is_read=False).count()
     else:
         context['unread_leads_count'] = 0
+        context['unread_registrations_count'] = 0
+        context['unread_contacts_count'] = 0
     
     return context
 

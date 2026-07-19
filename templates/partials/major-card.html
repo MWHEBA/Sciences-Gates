@@ -1,10 +1,8 @@
-{% load static major_tags %}
-<article class="it-course-item cursor-pointer" onclick="window.location.href='{{ major.get_absolute_url }}'">
+{% load static major_tags image_tags %}
+<article class="it-course-item cursor-pointer">
     <!-- صورة التخصص -->
     <div class="it-course-thumb mb-4 p-relative">
-        <a href="{{ major.get_absolute_url }}" onclick="event.stopPropagation();">
-            <img src="{% if major.main_image %}{{ major.main_image.url }}{% else %}https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800{% endif %}" alt="{{ major.main_image_alt|default:major.name }}" loading="lazy">
-        </a>
+        <img src="{% if major.main_image %}{{ major.main_image.url|thumbnail_url:'360x240' }}{% else %}https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=360&h=240{% endif %}" alt="{{ major.main_image_alt|default:major.name }}" width="360" height="240" loading="lazy" decoding="async">
         <div class="it-course-thumb-text">
             <span>{% if major.category %}{{ major.category.name }}{% else %}تخصص{% endif %}</span>
         </div>
@@ -13,9 +11,9 @@
     <!-- محتوى الكرت -->
     <div class="it-course-content">
         <!-- اسم التخصص -->
-        <h4 class="it-course-title">
-            <a href="{{ major.get_absolute_url }}" onclick="event.stopPropagation();">{{ major.name }}</a>
-        </h4>
+        <h3 class="it-course-title">
+            <a href="{{ major.get_absolute_url }}" class="stretched-link">{{ major.name }}</a>
+        </h3>
         
         <!-- وصف مختصر -->
         <p class="card__desc text-text-secondary text-sm leading-relaxed mb-15 flex-grow" style="font-size: 0.875rem; color: var(--text-body); line-height: 1.6; margin-bottom: 15px;">
@@ -25,21 +23,21 @@
         <!-- معلومات التخصص -->
         <div class="it-course-info">
             <span>
-                <i class="fa-solid fa-clock ml-2 text-secondary"></i>
+                <svg class="svg-icon ml-2 text-secondary"><use href="{% static 'images/icons.svg' %}#icon-clock"></use></svg>
                 {{ major.study_duration|default:major.bachelor_duration|default:"3-4 سنوات" }}
             </span>
             <span>
-                <i class="fa-solid fa-language ml-2 text-secondary"></i>
+                <svg class="svg-icon ml-2 text-secondary"><use href="{% static 'images/icons.svg' %}#icon-language"></use></svg>
                 {{ major.study_language|default:"الإنجليزية" }}
             </span>
         </div>
         
         <!-- رابط التفاصيل -->
         <div class="it-course-price-box justify-end">
-            <a href="{{ major.get_absolute_url }}" onclick="event.stopPropagation();">
+            <div class="it-course-action-link" style="color: var(--primary); font-weight: 500;">
                 <span>التفاصيل والجامعات</span>
-                <i class="fa-solid fa-arrow-left mr-2"></i>
-            </a>
+                <svg class="svg-icon mr-2"><use href="{% static 'images/icons.svg' %}#icon-arrow-left"></use></svg>
+            </div>
         </div>
     </div>
 </article>

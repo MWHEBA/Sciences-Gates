@@ -22,6 +22,8 @@
     <div style="background-color: var(--surface); border: 1px solid var(--border);
                 border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-card);">
         <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <!-- Hidden Lead Type Filter -->
+            <input type="hidden" name="lead_type" value="{{ lead_type_filter }}">
             
             <!-- Search -->
             <div>
@@ -36,35 +38,88 @@
                        onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
             </div>
 
-            <!-- Lead Type Filter -->
+            {% if lead_type_filter == 'registration' %}
+            <!-- Nationality Filter -->
             <div>
                 <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
-                    نوع الرسالة
+                    الجنسية
                 </label>
-                <select name="lead_type" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
-                                               border-radius: var(--radius); font-size: 13px;
-                                               background-color: var(--surface); color: var(--text-primary);"
+                <select name="nationality" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+                                             border-radius: var(--radius); font-size: 13px;
+                                             background-color: var(--surface); color: var(--text-primary);"
                         onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
                         onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
-                    <option value="">كل الأنواع</option>
-                    <option value="registration" {% if lead_type_filter == 'registration' %}selected{% endif %}>طلبات التسجيل</option>
-                    <option value="contact" {% if lead_type_filter == 'contact' %}selected{% endif %}>الاستفسارات</option>
+                    <option value="">كل الجنسيات</option>
+                    {% for nat in existing_nationalities %}
+                    <option value="{{ nat }}" {% if nationality_val == nat %}selected{% endif %}>{{ nat }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
+            <!-- Residence Country Filter -->
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                    بلد الإقامة
+                </label>
+                <select name="residence_country" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+                                             border-radius: var(--radius); font-size: 13px;
+                                             background-color: var(--surface); color: var(--text-primary);"
+                        onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
+                        onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                    <option value="">كل بلدان الإقامة</option>
+                    {% for res in existing_residences %}
+                    <option value="{{ res }}" {% if residence_country_val == res %}selected{% endif %}>{{ res }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Study Level Filter -->
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                    المرحلة الدراسية
+                </label>
+                <select name="study_level" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+                                             border-radius: var(--radius); font-size: 13px;
+                                             background-color: var(--surface); color: var(--text-primary);"
+                        onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
+                        onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                    <option value="">كل المراحل</option>
+                    {% for level in study_levels %}
+                    <option value="{{ level }}" {% if study_level_val == level %}selected{% endif %}>{{ level }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Institution Name Filter (Selection dropdown) -->
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+                    المؤسسة التعليمية
+                </label>
+                <select name="institution_name" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+                                             border-radius: var(--radius); font-size: 13px;
+                                             background-color: var(--surface); color: var(--text-primary);"
+                        onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
+                        onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                    <option value="">كل المؤسسات</option>
+                    {% for inst in existing_institutions %}
+                    <option value="{{ inst }}" {% if institution_name_val == inst %}selected{% endif %}>{{ inst }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% else %}
             <!-- Read Status Filter -->
             <div>
                 <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
                     حالة القراءة
                 </label>
-                <select name="is_read" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+                <select name="read_status" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border);
                                              border-radius: var(--radius); font-size: 13px;
                                              background-color: var(--surface); color: var(--text-primary);"
                         onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
                         onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
                     <option value="">كل الحالات</option>
-                    <option value="0" {% if request.GET.is_read == '0' %}selected{% endif %}>غير مقروءة</option>
-                    <option value="1" {% if request.GET.is_read == '1' %}selected{% endif %}>مقروءة</option>
+                    <option value="unread" {% if read_status == 'unread' %}selected{% endif %}>جديدة (غير مقروءة)</option>
+                    <option value="read" {% if read_status == 'read' %}selected{% endif %}>مقروءة</option>
                 </select>
             </div>
 
@@ -93,6 +148,7 @@
                        onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px var(--primary-light)'"
                        onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
             </div>
+            {% endif %}
 
             <!-- Buttons -->
             <div style="display: flex; gap: 8px; align-items: flex-end;">
@@ -104,7 +160,7 @@
                         onmouseout="this.style.backgroundColor='var(--primary)'">
                     بحث
                 </button>
-                <a href="{% url 'dashboard:lead_list' %}" style="flex: 1; padding: 8px 12px; background-color: var(--surface-2);
+                <a href="{% url 'dashboard:lead_list' %}?lead_type={{ lead_type_filter }}" style="flex: 1; padding: 8px 12px; background-color: var(--surface-2);
                                                                  color: var(--text-secondary); border: 1px solid var(--border);
                                                                  border-radius: var(--radius); font-size: 13px; font-weight: 600;
                                                                  cursor: pointer; text-align: center; text-decoration: none;
@@ -133,9 +189,16 @@
                         <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
                                    color: var(--text-muted); text-transform: uppercase;">الهاتف</th>
                         <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
-                                   color: var(--text-muted); text-transform: uppercase;">النوع</th>
+                                   color: var(--text-muted); text-transform: uppercase;">الجنسية</th>
+                        {% if lead_type_filter == 'registration' %}
+                        <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                   color: var(--text-muted); text-transform: uppercase;">المؤسسة</th>
+                        <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
+                                   color: var(--text-muted); text-transform: uppercase;">المرحلة</th>
+                        {% else %}
                         <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
                                    color: var(--text-muted); text-transform: uppercase;">المصدر</th>
+                        {% endif %}
                         <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
                                    color: var(--text-muted); text-transform: uppercase;">التاريخ</th>
                         <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
@@ -160,24 +223,25 @@
                         <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
                             {{ lead.phone|default:"-" }}
                         </td>
+                        <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
+                            {{ lead.nationality|default:"-" }}
+                        </td>
+                        {% if lead_type_filter == 'registration' %}
+                        <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
+                            {{ lead.institution_name|default:"-" }}
+                        </td>
                         <td style="padding: 12px 16px; font-size: 11px;">
-                            {% if lead.lead_type == 'registration' %}
                             <span style="display: inline-flex; align-items: center; padding: 3px 10px;
                                        border-radius: 999px; font-weight: 600;
                                        background-color: var(--success-light); color: var(--success);">
-                                تسجيل
+                                {{ lead.study_level|default:"-" }}
                             </span>
-                            {% else %}
-                            <span style="display: inline-flex; align-items: center; padding: 3px 10px;
-                                       border-radius: 999px; font-weight: 600;
-                                       background-color: var(--info-light); color: var(--info);">
-                                استفسار
-                            </span>
-                            {% endif %}
                         </td>
+                        {% else %}
                         <td style="padding: 12px 16px; font-size: 11px; color: var(--text-muted);">
                             {{ lead.source_page|truncatechars:20|default:"-" }}
                         </td>
+                        {% endif %}
                         <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
                             {{ lead.created_at|date:"d/m/Y H:i" }}
                         </td>
@@ -224,23 +288,24 @@
     {% else %}
     <!-- Empty State -->
     <div style="background-color: var(--surface); border: 1px solid var(--border);
-                border-radius: var(--radius-lg); padding: 48px 20px; text-align: center;">
-        <svg class="w-12 h-12" style="margin: 0 auto 16px; color: var(--text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                border-radius: var(--radius-lg); padding: 48px 20px;
+                display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+        <svg class="w-12 h-12" style="margin-bottom: 16px; color: var(--text-muted); display: block;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
         </svg>
         <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px 0;">
             لا توجد رسائل
         </h3>
         <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
-            {% if search_query or from_date or to_date or lead_type_filter %}
+            {% if search_query or from_date or to_date or read_status or nationality_val or study_level_val or residence_country_val or institution_name_val %}
                 حاول تغيير معايير البحث أو التصفية
             {% else %}
                 لم تصل أي رسائل حتى الآن
             {% endif %}
         </p>
-        {% if search_query or from_date or to_date or lead_type_filter %}
+        {% if search_query or from_date or to_date or read_status or nationality_val or study_level_val or residence_country_val or institution_name_val %}
         <div style="margin-top: 14px;">
-            <a href="{% url 'dashboard:lead_list' %}" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; border-radius: var(--radius); background-color: var(--primary); color: #fff; text-decoration: none; font-size: 12px; font-weight: 600;">
+            <a href="{% url 'dashboard:lead_list' %}?lead_type={{ lead_type_filter }}" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; border-radius: var(--radius); background-color: var(--primary); color: #fff; text-decoration: none; font-size: 12px; font-weight: 600;">
                 مسح الفلاتر
             </a>
         </div>

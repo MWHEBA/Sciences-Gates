@@ -10,7 +10,7 @@
                 <!-- العمود 1: الهوية والوصف -->
                 <div class="site-footer__col site-footer__col--brand">
                     <a href="/" class="site-footer__logo" aria-label="بوابات العلوم - الصفحة الرئيسية">
-                        <img src="{% static 'images/logo.png' %}" alt="بوابات العلوم" class="site-footer__logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <img src="{% static 'images/logo.webp' %}" alt="بوابات العلوم" class="site-footer__logo-img" width="236" height="72" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <span class="site-footer__logo-fallback" style="display:none;">
                             <i class="fas fa-graduation-cap" aria-hidden="true"></i>
                             بوابات العلوم
@@ -76,7 +76,7 @@
                         <li>
                             <a href="{% url 'visa_tracking' %}" class="site-footer__link">
                                 <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
-                                متابعة الفيزا (EMGS)
+                                متابعة التأشيرة (EMGS)
                             </a>
                         </li>
                         <li>
@@ -151,7 +151,7 @@
                             </span>
                             <div class="site-footer__contact-text">
                                 <span class="site-footer__contact-label">واتساب</span>
-                                <a href="https://wa.me/{{ site_settings.whatsapp_primary|default:'60123456789'|cut:' ' }}" class="site-footer__contact-value" dir="ltr" target="_blank" rel="noopener">{{ site_settings.whatsapp_primary|default:'+60 12 345 6789' }}</a>
+                                <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60123456789' }}" class="site-footer__contact-value" dir="ltr" target="_blank" rel="noopener">{{ site_settings.whatsapp_primary|default:'+60 12 345 6789' }}</a>
                             </div>
                         </li>
                         <li class="site-footer__contact-item">

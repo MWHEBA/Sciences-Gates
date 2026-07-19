@@ -17,14 +17,8 @@ class LazyLoadingManager {
      * Initialize lazy loading
      */
     init() {
-        // Check if browser supports native lazy loading
-        if ('loading' in HTMLImageElement.prototype) {
-            // Native lazy loading is supported, no need for intersection observer
-            this.setupNativeLazyLoading();
-        } else {
-            // Use intersection observer as fallback
-            this.setupIntersectionObserver();
-        }
+        // Force IntersectionObserver for strict deferring on all browsers
+        this.setupIntersectionObserver();
     }
 
     /**
@@ -34,7 +28,10 @@ class LazyLoadingManager {
         const images = document.querySelectorAll(this.imageSelector);
         images.forEach(img => {
             this.setupImageErrorHandling(img);
-            this.addPlaceholder(img);
+            if (img.complete) {
+                img.classList.add(this.loadedClass);
+                img.classList.remove(this.placeholderClass);
+            }
         });
     }
 
@@ -59,8 +56,13 @@ class LazyLoadingManager {
 
         const images = document.querySelectorAll(this.imageSelector);
         images.forEach(img => {
-            this.addPlaceholder(img);
-            observer.observe(img);
+            if (img.complete) {
+                img.classList.add(this.loadedClass);
+                img.classList.remove(this.placeholderClass);
+            } else {
+                this.addPlaceholder(img);
+                observer.observe(img);
+            }
         });
     }
 
@@ -106,9 +108,13 @@ class LazyLoadingManager {
         // Create placeholder element
         const placeholder = document.createElement('div');
         placeholder.className = `${this.placeholderClass} bg-gray-200 animate-pulse`;
-        placeholder.style.width = img.width || '100%';
-        placeholder.style.height = img.height || 'auto';
-        placeholder.style.aspectRatio = img.getAttribute('data-aspect-ratio') || 'auto';
+        
+        const width = img.getAttribute('width');
+        const height = img.getAttribute('height');
+        
+        placeholder.style.width = width ? `${width}px` : '100%';
+        placeholder.style.height = height ? `${height}px` : 'auto';
+        placeholder.style.aspectRatio = img.getAttribute('data-aspect-ratio') || (width && height ? `${width}/${height}` : 'auto');
 
         // Insert placeholder before image
         img.parentElement?.insertBefore(placeholder, img);
@@ -131,6 +137,7 @@ class LazyLoadingManager {
     setupImageErrorHandling(img) {
         img.addEventListener('error', () => {
             img.classList.add(this.errorClass);
+            img.classList.remove(this.placeholderClass);
             this.removePlaceholder(img);
             // Optionally show a fallback image or message
             console.warn('Failed to load image:', img.src);
@@ -138,6 +145,7 @@ class LazyLoadingManager {
 
         img.addEventListener('load', () => {
             img.classList.add(this.loadedClass);
+            img.classList.remove(this.placeholderClass);
             this.removePlaceholder(img);
         });
     }

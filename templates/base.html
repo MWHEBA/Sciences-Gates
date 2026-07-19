@@ -50,23 +50,13 @@
     <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
     <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
 
-    <!-- Google Fonts — Alexandria -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Preload Local Fonts (Zero Layout Shift) -->
+    <link rel="preload" href="{% static 'fonts/alexandria-arabic.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{% static 'fonts/alexandria-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
 
-    <!-- Font Awesome 6 CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Public Frontend CSS - Design System -->
-    <link rel="stylesheet" href="{% static 'public/css/public.css' %}">
-    
-    <!-- Legacy CSS (for dashboard compatibility) -->
-    <link rel="stylesheet" href="{% static 'css/tailwind.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <link rel="stylesheet" href="{% static 'css/inline-styles-registry.css' %}">
-    <link rel="stylesheet" href="{% static 'css/lazy-loading.css' %}">
-    <link rel="stylesheet" href="{% static 'css/seo-image.css' %}">
+    <!-- Consolidated Public CSS Bundle -->
+    <link rel="preload" href="{% static 'css/public-bundle.min.css' %}" as="style">
+    <link rel="stylesheet" href="{% static 'css/public-bundle.min.css' %}">
     
     <!-- JSON-LD Schema Markup -->
     {% block schema_markup %}
@@ -135,16 +125,16 @@
     <!-- Global Scripts -->
     {% if DEBUG %}
         <!-- Development: Use unminified files for debugging -->
-        <script src="{% static 'public/js/public.js' %}"></script>
-        <script src="{% static 'js/main.js' %}"></script>
-        <script src="{% static 'js/lazy-loading.js' %}"></script>
-        <script src="{% static 'js/intl-phone.js' %}"></script>
+        <script defer src="{% static 'public/js/public.js' %}"></script>
+        <script defer src="{% static 'js/main.js' %}"></script>
+        <script defer src="{% static 'js/lazy-loading.js' %}"></script>
+        <script defer src="{% static 'js/intl-phone.js' %}"></script>
     {% else %}
         <!-- Production: Use minified files for performance -->
-        <script src="{% static 'public/js/public.js' %}"></script>
-        <script src="{% static 'js/main.min.js' %}"></script>
-        <script src="{% static 'js/lazy-loading.min.js' %}"></script>
-        <script src="{% static 'js/intl-phone.min.js' %}"></script>
+        <script defer src="{% static 'public/js/public.js' %}"></script>
+        <script defer src="{% static 'js/main.min.js' %}"></script>
+        <script defer src="{% static 'js/lazy-loading.min.js' %}"></script>
+        <script defer src="{% static 'js/intl-phone.min.js' %}"></script>
     {% endif %}
     {% block extra_js %}{% endblock %}
 
@@ -206,7 +196,7 @@
             </div>
             
             <!-- Popup Footer / Form -->
-            <form @submit.prevent="if(message.trim()) { window.open('https://wa.me/{{ site_settings.whatsapp_primary|default:'60123456789'|cut:' ' }}?text=' + encodeURIComponent(message.trim()), '_blank'); open = false; message = ''; }" class="whatsapp-popup-footer">
+            <form @submit.prevent="if(message.trim()) { window.open('https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60123456789' }}?text=' + encodeURIComponent(message.trim()), '_blank'); open = false; message = ''; }" class="whatsapp-popup-footer">
                 <input type="text" 
                        x-model="message" 
                        placeholder="اكتب استفسارك هنا..." 

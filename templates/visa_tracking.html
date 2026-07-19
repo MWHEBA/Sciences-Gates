@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}متابعة حالة الفيزا الدراسية في ماليزيا (EMGS) - بوابات العلوم{% endblock %}
-{% block meta_description %}دليلك المتكامل لمتابعة وتتبع طلب الفيزا الدراسية لماليزيا عبر موقع EMGS الرسمي. افهم تفاصيل النسب المئوية وخطوات الحصول على تأشيرة الطالب بسهولة.{% endblock %}
+{% block title %}متابعة حالة التأشيرة الدراسية في ماليزيا (EMGS) - بوابات العلوم{% endblock %}
+{% block meta_description %}دليلك المتكامل لمتابعة وتتبع طلب التأشيرة الدراسية لماليزيا عبر موقع EMGS الرسمي. افهم تفاصيل النسب المئوية وخطوات الحصول على تأشيرة الطالب بسهولة.{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/visa-tracking.css' %}">
 {% endblock %}
 
 {% block content %}
-{% include "components/page_hero.html" with title="متابعة حالة الفيزا (EMGS)" subtitle="تتبع تأشيرة الطالب وافهم كل تحديث ونسبة مئوية خطوة بخطوة" %}
+{% include "components/page_hero.html" with title="متابعة حالة التأشيرة (EMGS)" subtitle="تتبع تأشيرة الطالب وافهم كل تحديث ونسبة مئوية خطوة بخطوة" %}
 
 <section class="section section-bg-gray">
     <div class="container">
@@ -25,7 +25,7 @@
             </div>
         {% endif %}
 
-        <!-- شبكة تتبع الفيزا (Visa tracking page grid layout) -->
+        <!-- شبكة تتبع التأشيرة (Visa tracking page grid layout) -->
         <div class="visa-tracking-layout">
             
             <!-- العمود الأيمن: دليل النسب المئوية التفاعلي (Interactive Percentage Guide) -->
@@ -63,7 +63,7 @@
                                 <span class="accordion-percentage">15%</span>
                                 <span class="accordion-label">مراجعة وتدقيق المستندات (Document Review)</span>
                             </div>
-                            <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
+                            <span class="accordion-icon"><svg class="svg-icon"><use href="{% static 'images/icons.svg' %}#icon-chevron-down"></use></svg></span>
                         </button>
                         <div class="accordion-content" x-show="active === 15" x-collapse>
                             <p>تقوم هيئة EMGS بفحص وتدقيق المستندات التي قدمتها جامعتك للتأكد من اكتمالها وصحتها.</p>
@@ -80,7 +80,7 @@
                                 <span class="accordion-percentage">32%</span>
                                 <span class="accordion-label">تجهيز طلب التأشيرة داخلياً (Processing)</span>
                             </div>
-                            <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
+                            <span class="accordion-icon"><svg class="svg-icon"><use href="{% static 'images/icons.svg' %}#icon-chevron-down"></use></svg></span>
                         </button>
                         <div class="accordion-content" x-show="active === 32" x-collapse>
                             <p>تم الانتهاء من مراجعة المستندات وتدقيقها بنجاح، ويقوم النظام حالياً بإعداد الملف بصيغته الرسمية لتقديمه إلى الجوازات الماليزية.</p>
@@ -97,7 +97,7 @@
                                 <span class="accordion-percentage">35%</span>
                                 <span class="accordion-label">قيد الدراسة لدى الهجرة والجوازات (Immigration Vetting)</span>
                             </div>
-                            <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
+                            <span class="accordion-icon"><svg class="svg-icon"><use href="{% static 'images/icons.svg' %}#icon-chevron-down"></use></svg></span>
                         </button>
                         <div class="accordion-content" x-show="active === 35" x-collapse>
                             <p>تم تسليم ملفك بالكامل إلى مصلحة الهجرة والجوازات الماليزية، وهي الجهة الحكومية الرسمية التي تقوم بالدراسة الأمنية والأكاديمية لطلبك لإصدار خطاب الموافقة.</p>
@@ -112,12 +112,12 @@
                         <button class="accordion-trigger" @click="active = (active === 60 ? null : 60)" aria-expanded="active === 60">
                             <div class="accordion-trigger-left">
                                 <span class="accordion-percentage accordion-percentage--success">60%</span>
-                                <span class="accordion-label">الموافقة الرسمية على الفيزا (VAL Approved)</span>
+                                <span class="accordion-label">الموافقة الرسمية على التأشيرة (VAL Approved)</span>
                             </div>
-                            <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
+                            <span class="accordion-icon"><svg class="svg-icon"><use href="{% static 'images/icons.svg' %}#icon-chevron-down"></use></svg></span>
                         </button>
                         <div class="accordion-content" x-show="active === 60" x-collapse>
-                            <p>وافقت مصلحة الهجرة والجوازات الماليزية رسمياً على إصدار خطاب الموافقة على الفيزا (Visa Approval Letter - VAL) لطلبك الدراسي.</p>
+                            <p>وافقت مصلحة الهجرة والجوازات الماليزية رسمياً على إصدار خطاب الموافقة على التأشيرة (Visa Approval Letter - VAL) لطلبك الدراسي.</p>
                             <div class="accordion-advice">
                                 <strong>💡 الإجراء المطلوب:</strong> تهانينا! تمت الموافقة، ويقوم النظام الآن بتجهيز الخطاب للتحميل والطباعة.
                             </div>
@@ -131,7 +131,7 @@
                                 <span class="accordion-percentage accordion-percentage--success">70%</span>
                                 <span class="accordion-label">خطاب الموافقة جاهز للتحميل (eVAL Issued)</span>
                             </div>
-                            <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
+                            <span class="accordion-icon"><svg class="svg-icon"><use href="{% static 'images/icons.svg' %}#icon-chevron-down"></use></svg></span>
                         </button>
                         <div class="accordion-content" x-show="active === 70" x-collapse>
                             <p>صدر خطاب الـ VAL الإلكتروني بالكامل. يمكنك الآن تنزيله وطباعته ملوناً لبدء إجراءات السفر الرسمية.</p>
@@ -148,7 +148,7 @@
                                 <span class="accordion-percentage">80%</span>
                                 <span class="accordion-label">الفحص الطبي بعد الوصول لماليزيا (Post-Arrival Medical)</span>
                             </div>
-                            <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
+                            <span class="accordion-icon"><svg class="svg-icon"><use href="{% static 'images/icons.svg' %}#icon-chevron-down"></use></svg></span>
                         </button>
                         <div class="accordion-content" x-show="active === 80" x-collapse>
                             <p>لقد وصلت إلى ماليزيا بسلام. هذه الخطوة تعني إجراء الفحص الطبي الإجباري داخل العيادات المعتمدة من EMGS خلال 7 أيام من وصولك.</p>
@@ -165,7 +165,7 @@
                                 <span class="accordion-percentage">85%</span>
                                 <span class="accordion-label">تقديم الجواز للتثبيت والملصق (Passport Submitted)</span>
                             </div>
-                            <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
+                            <span class="accordion-icon"><svg class="svg-icon"><use href="{% static 'images/icons.svg' %}#icon-chevron-down"></use></svg></span>
                         </button>
                         <div class="accordion-content" x-show="active === 85" x-collapse>
                             <p>تم استلام جواز سفرك الأصلي وإرساله رسمياً لمصلحة الهجرة في ماليزيا لوضع ملصق إقامة الطالب (Student Pass Sticker) عليه.</p>
@@ -175,14 +175,14 @@
                         </div>
                     </div>
 
-                    <!-- 100% - صدور الفيزا كاملة -->
+                    <!-- 100% - صدور التأشيرة كاملة -->
                     <div class="accordion-item" :class="{ 'accordion-item--active': active === 100 }">
                         <button class="accordion-trigger" @click="active = (active === 100 ? null : 100)" aria-expanded="active === 100">
                             <div class="accordion-trigger-left">
                                 <span class="accordion-percentage accordion-percentage--success">100%</span>
                                 <span class="accordion-label">اكتمال العملية وصدور إقامة الطالب (Student Pass Issued)</span>
                             </div>
-                            <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
+                            <span class="accordion-icon"><svg class="svg-icon"><use href="{% static 'images/icons.svg' %}#icon-chevron-down"></use></svg></span>
                         </button>
                         <div class="accordion-content" x-show="active === 100" x-collapse>
                             <p>اكتملت العملية بنسبة 100% وصدر ملصق إقامة الطالب على جواز سفرك بنجاح.</p>
@@ -200,11 +200,11 @@
                 <div class="visa-tracking-card direct-track-card">
                     <h2 class="direct-track-title">تتبع حالة تأشيرتك الآن</h2>
                     <p class="direct-track-desc">
-                        يمكنك التحقق من حالة طلب الفيزا الدراسية الخاصة بك مباشرة وبشكل فوري عبر البوابة الرسمية لهيئة التعليم العالي الماليزي (EMGS).
+                        يمكنك التحقق من حالة طلب التأشيرة الدراسية الخاصة بك مباشرة وبشكل فوري عبر البوابة الرسمية لهيئة التعليم العالي الماليزي (EMGS).
                     </p>
                     
                     <a href="https://visa.educationmalaysia.gov.my/emgs/application/searchForm/" target="_blank" rel="noopener" class="direct-track-btn">
-                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                        <svg class="svg-icon" aria-hidden="true"><use href="{% static 'images/icons.svg' %}#icon-external-link"></use></svg>
                         الذهاب لموقع التتبع الرسمي EMGS
                     </a>
                     
@@ -220,7 +220,7 @@
         <div class="visa-help-section" id="visa-support-form">
             <div class="visa-help-card">
                 <div class="visa-help-header">
-                    <h2 class="visa-help-title">هل تواجه مشكلة في الفيزا أو أن النسبة معلقة؟</h2>
+                    <h2 class="visa-help-title">هل تواجه مشكلة في التأشيرة أو أن النسبة معلقة؟</h2>
                     <p class="visa-help-desc">أرسل لنا بياناتك وسيقوم أحد مستشاري "بوابات العلوم" بمراجعة طلبك ومساعدتك في حل المشكلة مجاناً.</p>
                 </div>
 
