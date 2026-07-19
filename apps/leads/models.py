@@ -177,26 +177,18 @@ class Lead(TimestampedModel):
     @property
     def referrer_name(self):
         """Extract a readable website name from referrer URL."""
-        def clean_url(url):
-            if not url:
-                return ""
-            url = url.strip().lower().replace('https://', '').replace('http://', '')
-            if url.startswith('www.'):
-                url = url[4:]
-            if url.endswith('/'):
-                url = url[:-1]
-            return url
-
-        if not self.referrer or clean_url(self.referrer) == clean_url(self.source_page):
+        if not self.referrer:
             return "رابط مباشر"
         try:
             parsed = urlparse(self.referrer)
-            domain = parsed.netloc
-            if not domain:
-                return self.referrer
+            domain = parsed.netloc.lower()
             if domain.startswith('www.'):
                 domain = domain[4:]
             
+            # Treat internal domains as "Direct Link" (رابط مباشر)
+            if not domain or domain == 'sciencesgates.com' or domain == 'localhost' or domain == '127.0.0.1':
+                return "رابط مباشر"
+                
             common_sources = {
                 'google.com': 'بحث جوجل (Google)',
                 'facebook.com': 'فيسبوك (Facebook)',
@@ -211,4 +203,4 @@ class Lead(TimestampedModel):
                     return val
             return domain
         except Exception:
-            return self.referrer
+            return "رابط مباشر"
