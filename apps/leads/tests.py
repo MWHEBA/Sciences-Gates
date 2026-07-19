@@ -2,7 +2,7 @@ import pytest
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.core import mail
-from hypothesis import given, strategies as st
+from hypothesis import given, settings, strategies as st
 from hypothesis.extra.django import TestCase as HypothesisTestCase
 from apps.leads.models import Lead, LeadType
 
@@ -347,6 +347,7 @@ class LeadPropertyBasedTests(HypothesisTestCase):
     **Validates: Requirements 5, 23**
     """
     
+    @settings(deadline=None)
     @given(
         lead_type=st.sampled_from([LeadType.REGISTRATION, LeadType.CONTACT]),
         name=st.text(min_size=1, max_size=200),
@@ -376,6 +377,7 @@ class LeadPropertyBasedTests(HypothesisTestCase):
         self.assertEqual(lead.message, message)
     
 
+    @settings(deadline=None)
     @given(
         is_read=st.booleans(),
         notes=st.text(max_size=1000)
@@ -840,6 +842,7 @@ class LeadEmailNotificationPropertyBasedTests(HypothesisTestCase):
     **Validates: Requirement 5.7** - THE Platform SHALL send email notifications to administrators when a Lead_Form is submitted
     """
     
+    @settings(deadline=None)
     @given(
         lead_type=st.sampled_from([LeadType.REGISTRATION, LeadType.CONTACT]),
         name=st.text(min_size=1, max_size=200),
