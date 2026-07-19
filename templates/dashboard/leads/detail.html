@@ -268,7 +268,9 @@
                         <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
                             المرجع (Referrer)
                         </p>
-                        {% if lead.referrer and lead.referrer != lead.source_page %}
+                        {% if lead.referrer_name == "رابط مباشر" or not lead.referrer %}
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">رابط مباشر</p>
+                        {% else %}
                         <a href="{{ lead.referrer }}" target="_blank"
                            style="font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; cursor: pointer;
                                   word-break: break-all;"
@@ -276,8 +278,6 @@
                            onmouseout="this.style.textDecoration='none'">
                             {{ lead.referrer_name }}
                         </a>
-                        {% else %}
-                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">رابط مباشر</p>
                         {% endif %}
                     </div>
 
