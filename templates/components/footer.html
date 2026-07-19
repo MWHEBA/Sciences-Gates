@@ -12,7 +12,10 @@
                     <a href="/" class="site-footer__logo" aria-label="بوابات العلوم - الصفحة الرئيسية">
                         <img src="{% static 'images/logo.webp' %}" alt="بوابات العلوم" class="site-footer__logo-img" width="236" height="72" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <span class="site-footer__logo-fallback" style="display:none;">
-                            <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; margin-left: 8px;">
+                               <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                               <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path>
+                            </svg>
                             بوابات العلوم
                         </span>
                     </a>
@@ -22,16 +25,26 @@
                     <!-- أيقونات التواصل الاجتماعي -->
                     <div class="site-footer__social" aria-label="روابط التواصل الاجتماعي">
                         <a href="#" class="site-footer__social-btn" aria-label="فيسبوك" title="فيسبوك">
-                            <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                               <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/>
+                            </svg>
                         </a>
                         <a href="#" class="site-footer__social-btn" aria-label="انستغرام" title="انستغرام">
-                            <i class="fab fa-instagram" aria-hidden="true"></i>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                               <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                               <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                               <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                            </svg>
                         </a>
                         <a href="#" class="site-footer__social-btn" aria-label="يوتيوب" title="يوتيوب">
-                            <i class="fab fa-youtube" aria-hidden="true"></i>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                               <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.108C19.516 3.5 12 3.5 12 3.5s-7.516 0-9.388.555A3.002 3.002 0 0 0 .502 6.163C0 8.07 0 12 0 12s0 3.93.502 5.837a3.003 3.003 0 0 0 2.11 2.108C4.484 20.5 12 20.5 12 20.5s7.516 0 9.388-.555a3.002 3.002 0 0 0 2.11-2.108C24 15.93 24 12 24 12s0-3.93-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
                         </a>
                         <a href="#" class="site-footer__social-btn site-footer__social-btn--whatsapp" aria-label="واتساب" title="واتساب">
-                            <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                               <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.458L0 24zm6.59-4.846c1.6.95 3.167 1.45 4.81 1.452 5.518 0 10.01-4.48 10.014-9.982.002-2.664-1.03-5.167-2.906-7.045C16.69 1.701 14.19.668 11.53.668c-5.524 0-10.017 4.478-10.021 9.98-.001 1.748.459 3.454 1.332 4.966L1.83 20.354l5.068-1.328-.251.128zm10.707-7.464c-.302-.15-1.786-.88-2.062-.98-.276-.1-.476-.15-.677.15-.2.3-.777.98-.95 1.18-.175.2-.35.225-.653.075-.302-.15-1.276-.47-2.43-1.5-.898-.8-1.503-1.79-1.68-2.09-.176-.3-.02-.462.13-.61.137-.135.303-.35.454-.525.152-.175.202-.3.303-.5.101-.2.05-.375-.025-.525-.075-.15-.677-1.63-.927-2.23-.244-.587-.492-.507-.677-.517-.174-.01-.375-.012-.576-.012-.2 0-.527.075-.804.375-.276.3-1.055 1.03-1.055 2.515s1.08 2.916 1.23 3.116c.15.2 2.128 3.25 5.156 4.56.72.31 1.28.497 1.72.637.724.23 1.38.197 1.902.12.58-.087 1.787-.73 2.037-1.435.25-.705.25-1.31.176-1.435-.074-.125-.275-.2-.577-.35z"/>
+                            </svg>
                         </a>
                     </div>
                 </div>
@@ -45,43 +58,57 @@
                     <ul class="site-footer__links" role="list">
                         <li>
                             <a href="{% url 'about_us' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 عن الشركة
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'universities:list' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 الجامعات الماليزية
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'institutes:list' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 المعاهد في ماليزيا
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'majors:list' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 التخصصات الدراسية
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'articles:list' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 المدونة والأخبار
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'visa_tracking' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 متابعة التأشيرة (EMGS)
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'leads:submit' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 تواصل معنا
                             </a>
                         </li>
@@ -98,31 +125,41 @@
                     <ul class="site-footer__links" role="list">
                         <li>
                             <a href="{% url 'universities:list' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 جامعة مالايا (UM)
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'universities:list' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 جامعة تايلورز
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'universities:list' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 جامعة APU
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'universities:list' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 جامعة سيجي
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'universities:list' %}" class="site-footer__link">
-                                <i class="fas fa-chevron-left site-footer__link-icon" aria-hidden="true"></i>
+                                <svg class="site-footer__link-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; display: inline-block;">
+   <polyline points="15 18 9 12 15 6"></polyline>
+</svg>
                                 جامعة UCSI
                             </a>
                         </li>
@@ -136,27 +173,38 @@
                         تواصل معنا
                     </h3>
                     <ul class="site-footer__contact-list" role="list">
+                        {% if site_settings.phone %}
                         <li class="site-footer__contact-item">
                             <span class="site-footer__contact-icon" aria-hidden="true">
-                                <i class="fas fa-phone-alt"></i>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                </svg>
                             </span>
                             <div class="site-footer__contact-text">
                                 <span class="site-footer__contact-label">هاتف</span>
-                                <a href="tel:{{ site_settings.phone|default:'+60123456789'|cut:' ' }}" class="site-footer__contact-value" dir="ltr">{{ site_settings.phone|default:'+60 12 345 6789' }}</a>
+                                <a href="tel:{{ site_settings.phone_clean }}" class="site-footer__contact-value" dir="ltr" style="unicode-bidi: plaintext; display: inline-flex !important; align-items: center;">{{ site_settings.phone_formatted }}</a>
                             </div>
                         </li>
+                        {% endif %}
+                        {% if site_settings.whatsapp_primary_clean %}
                         <li class="site-footer__contact-item">
                             <span class="site-footer__contact-icon" aria-hidden="true">
-                                <i class="fab fa-whatsapp"></i>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.458L0 24zm6.59-4.846c1.6.95 3.167 1.45 4.81 1.452 5.518 0 10.01-4.48 10.014-9.982.002-2.664-1.03-5.167-2.906-7.045C16.69 1.701 14.19.668 11.53.668c-5.524 0-10.017 4.478-10.021 9.98-.001 1.748.459 3.454 1.332 4.966L1.83 20.354l5.068-1.328-.251.128zm10.707-7.464c-.302-.15-1.786-.88-2.062-.98-.276-.1-.476-.15-.677.15-.2.3-.777.98-.95 1.18-.175.2-.35.225-.653.075-.302-.15-1.276-.47-2.43-1.5-.898-.8-1.503-1.79-1.68-2.09-.176-.3-.02-.462.13-.61.137-.135.303-.35.454-.525.152-.175.202-.3.303-.5.101-.2.05-.375-.025-.525-.075-.15-.677-1.63-.927-2.23-.244-.587-.492-.507-.677-.517-.174-.01-.375-.012-.576-.012-.2 0-.527.075-.804.375-.276.3-1.055 1.03-1.055 2.515s1.08 2.916 1.23 3.116c.15.2 2.128 3.25 5.156 4.56.72.31 1.28.497 1.72.637.724.23 1.38.197 1.902.12.58-.087 1.787-.73 2.037-1.435.25-.705.25-1.31.176-1.435-.074-.125-.275-.2-.577-.35z"/>
+                                </svg>
                             </span>
                             <div class="site-footer__contact-text">
                                 <span class="site-footer__contact-label">واتساب</span>
-                                <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60123456789' }}" class="site-footer__contact-value" dir="ltr" target="_blank" rel="noopener">{{ site_settings.whatsapp_primary|default:'+60 12 345 6789' }}</a>
+                                <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean }}" class="site-footer__contact-value" dir="ltr" target="_blank" rel="noopener" style="unicode-bidi: plaintext; display: inline-flex !important; align-items: center;">{{ site_settings.whatsapp_primary_formatted }}</a>
                             </div>
                         </li>
+                        {% endif %}
                         <li class="site-footer__contact-item">
                             <span class="site-footer__contact-icon" aria-hidden="true">
-                                <i class="fas fa-envelope"></i>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                   <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
                             </span>
                             <div class="site-footer__contact-text">
                                 <span class="site-footer__contact-label">البريد الإلكتروني</span>
@@ -165,7 +213,10 @@
                         </li>
                         <li class="site-footer__contact-item">
                             <span class="site-footer__contact-icon" aria-hidden="true">
-                                <i class="fas fa-map-marker-alt"></i>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                   <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
                             </span>
                             <div class="site-footer__contact-text">
                                 <span class="site-footer__contact-label">الموقع</span>

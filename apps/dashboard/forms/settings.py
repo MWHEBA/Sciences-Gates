@@ -35,6 +35,14 @@ class SiteSettingsForm(forms.ModelForm):
             'maintenance_estimated_end',
             'maintenance_bypass_ips',
             'maintenance_bypass_staff',
+            'email_smtp_use_dynamic',
+            'email_smtp_host',
+            'email_smtp_port',
+            'email_smtp_user',
+            'email_smtp_password',
+            'email_smtp_use_tls',
+            'email_smtp_use_ssl',
+            'email_from_address',
         ]
         widgets = {
             'site_name': forms.TextInput(attrs={
@@ -89,6 +97,41 @@ class SiteSettingsForm(forms.ModelForm):
             'maintenance_bypass_staff': forms.CheckboxInput(attrs={
                 'class': 'w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
             }),
+            'email_smtp_use_dynamic': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
+            }),
+            'email_smtp_host': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'smtp.gmail.com',
+                'dir': 'ltr',
+            }),
+            'email_smtp_port': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': '587',
+                'dir': 'ltr',
+            }),
+            'email_smtp_user': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'username@gmail.com',
+                'dir': 'ltr',
+            }),
+            'email_smtp_password': forms.PasswordInput(render_value=True, attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': '••••••••',
+                'dir': 'ltr',
+                'autocomplete': 'new-password',
+            }),
+            'email_smtp_use_tls': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
+            }),
+            'email_smtp_use_ssl': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
+            }),
+            'email_from_address': forms.EmailInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'noreply@sciencesgates.com',
+                'dir': 'ltr',
+            }),
         }
         labels = {
             'site_name': 'اسم الموقع',
@@ -103,6 +146,14 @@ class SiteSettingsForm(forms.ModelForm):
             'maintenance_message': 'رسالة صفحة الصيانة',
             'maintenance_bypass_ips': 'عناوين IP المستثناة',
             'maintenance_bypass_staff': 'السماح لمدراء الموقع بالتصفح (Staff)',
+            'email_smtp_use_dynamic': 'تفعيل إعدادات SMTP مخصصة',
+            'email_smtp_host': 'خادم SMTP',
+            'email_smtp_port': 'منفذ SMTP',
+            'email_smtp_user': 'اسم مستخدم SMTP',
+            'email_smtp_password': 'كلمة مرور SMTP',
+            'email_smtp_use_tls': 'تفعيل TLS',
+            'email_smtp_use_ssl': 'تفعيل SSL',
+            'email_from_address': 'عنوان البريد الإلكتروني للمرسل (From Address)',
         }
         help_texts = {
             'site_name': 'الاسم الأساسي الذي يظهر في أعلى الموقع وعنوان الصفحات',
@@ -117,7 +168,62 @@ class SiteSettingsForm(forms.ModelForm):
             'maintenance_message': 'الرسالة التفصيلية التي ستظهر للزوار لشرح سبب الصيانة',
             'maintenance_bypass_ips': 'عناوين IP المسموح لها بتخطي الصيانة وتصفح الموقع بشكل طبيعي (كل عنوان في سطر)',
             'maintenance_bypass_staff': 'عند التفعيل، يمكن للمشرفين والمسؤولين المسجلين دخولهم تصفح الموقع بشكل طبيعي',
+            'email_smtp_use_dynamic': 'عند التفعيل، سيقوم النظام بإرسال رسائل البريد الإلكتروني باستخدام هذه الإعدادات بدلاً من الإعدادات الافتراضية في ملف .env.',
+            'email_smtp_host': 'عنوان خادم SMTP الخاص بمزود الخدمة (لمساحة عمل جوجل استخدم: smtp.gmail.com)',
+            'email_smtp_port': 'المنفذ المستخدم للإرسال (لمساحة عمل جوجل استخدم 587 مع TLS أو 465 مع SSL)',
+            'email_smtp_user': 'البريد الإلكتروني بالكامل المستخدم لتسجيل الدخول، مثال: noreply@sciencesgates.com',
+            'email_smtp_password': 'كلمة مرور الحساب. في حالة استخدام Google Workspace، يجب إنشاء واستخدام كلمة مرور تطبيق (App Password) وليس كلمة مرور الحساب العادية.',
+            'email_smtp_use_tls': 'تأمين الاتصال باستخدام TLS (مستحسن ومطلوب للمنفذ 587)',
+            'email_smtp_use_ssl': 'تأمين الاتصال باستخدام SSL (مستحسن ومطلوب للمنفذ 465)',
+            'email_from_address': 'البريد الذي سيظهر للمستلمين كمستلم للرسالة، يجب أن يكون معتمداً من Google Workspace للإرسال بالنيابة عنه أو يطابق اسم المستخدم أعلاه لتفادي حظر الرسائل.',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.email_smtp_password:
+            # We pre-fill the password field with a dummy value to indicate it is set
+            self.initial['email_smtp_password'] = '••••••••'
+            self.fields['email_smtp_password'].initial = '••••••••'
+            self.fields['email_smtp_password'].required = False
+
+    def clean_email_smtp_password(self):
+        password = self.cleaned_data.get('email_smtp_password')
+        if password == '••••••••' and self.instance and self.instance.pk:
+            return self.instance.email_smtp_password
+        if password and password != '••••••••':
+            from apps.core.utils import SMTPCryptography
+            return SMTPCryptography.encrypt(password)
+        return ""
+
+    def clean(self):
+        cleaned_data = super().clean()
+        use_tls = cleaned_data.get('email_smtp_use_tls')
+        use_ssl = cleaned_data.get('email_smtp_use_ssl')
+        use_dynamic = cleaned_data.get('email_smtp_use_dynamic')
+
+        if use_dynamic:
+            host = cleaned_data.get('email_smtp_host')
+            port = cleaned_data.get('email_smtp_port')
+            user = cleaned_data.get('email_smtp_user')
+            password = cleaned_data.get('email_smtp_password')
+            from_email = cleaned_data.get('email_from_address')
+
+            if not host:
+                self.add_error('email_smtp_host', 'خادم SMTP مطلوب عند تفعيل SMTP مخصص.')
+            if not port:
+                self.add_error('email_smtp_port', 'منفذ SMTP مطلوب عند تفعيل SMTP مخصص.')
+            if not user:
+                self.add_error('email_smtp_user', 'اسم مستخدم SMTP مطلوب عند تفعيل SMTP مخصص.')
+            if not password:
+                self.add_error('email_smtp_password', 'كلمة مرور SMTP مطلوبة عند تفعيل SMTP مخصص.')
+            if not from_email:
+                self.add_error('email_from_address', 'بريد المرسل الافتراضي مطلوب عند تفعيل SMTP مخصص.')
+
+            # Check for TLS/SSL exclusivity
+            if use_tls and use_ssl:
+                raise forms.ValidationError('لا يمكن تفعيل TLS و SSL معاً في نفس الوقت. يرجى اختيار نوع تشفير واحد فقط.')
+
+        return cleaned_data
 
 class SiteSEOSettingsForm(forms.ModelForm):
     """

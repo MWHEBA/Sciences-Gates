@@ -44,7 +44,7 @@ class HomeView(TemplateView):
         """
         context = super().get_context_data(**kwargs)
         
-        # Fetch featured universities (published only)
+        # Fetch featured universities (published only) - Limited to 3 items per user request
         universities = University.objects.filter(
             publish_status=PublishStatus.PUBLISHED
         ).prefetch_related(
@@ -52,17 +52,17 @@ class HomeView(TemplateView):
             'faqs',
             'related_majors',
             'related_articles'
-        )[:6]
+        )[:3]
         
-        # Fetch featured institutes (published only) - Limited to 4 items per user request
+        # Fetch featured institutes (published only) - Limited to 2 items per user request
         institutes = Institute.objects.filter(
             publish_status=PublishStatus.PUBLISHED
         ).prefetch_related(
             'courses',
             'related_articles'
-        )[:4]
+        )[:2]
         
-        # Fetch featured majors (published only) - Limited to 4 items per user request
+        # Fetch featured majors (published only) - Limited to 2 items per user request
         majors = Major.objects.filter(
             publish_status=PublishStatus.PUBLISHED
         ).prefetch_related(
@@ -72,7 +72,7 @@ class HomeView(TemplateView):
             'subjects_tables',
             'salary_tables',
             'countries_tables'
-        )[:4]
+        )[:2]
         
         # Fetch recent articles (published only)
         articles = Article.objects.filter(

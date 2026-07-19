@@ -5,6 +5,7 @@ Dashboard forms package.
 from django import forms
 from django.contrib.auth.models import User
 from apps.core.models import UserProfile, UserRole
+from django.contrib.auth.forms import PasswordResetForm
 from .university import UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet
 from .institute import InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet
 from .major import MajorForm, MajorCategoryForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet, MajorFAQFormSet, MajorAttachmentFormSet
@@ -47,6 +48,7 @@ class UserCreateForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             'placeholder': 'كلمة المرور',
+            'autocomplete': 'new-password',
         }),
         label='كلمة المرور',
         help_text='يجب أن تكون قوية وتحتوي على أحرف وأرقام'
@@ -55,6 +57,7 @@ class UserCreateForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             'placeholder': 'تأكيد كلمة المرور',
+            'autocomplete': 'new-password',
         }),
         label='تأكيد كلمة المرور'
     )
@@ -66,6 +69,24 @@ class UserCreateForm(forms.ModelForm):
         label='الدور',
         help_text='اختر دور المستخدم في لوحة التحكم'
     )
+    receive_registration_emails = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
+        }),
+        label='استقبال إيميلات التسجيل',
+        help_text='تفعيل استقبال إشعارات طلبات التسجيل الجديدة عبر البريد الإلكتروني'
+    )
+    receive_inquiry_emails = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
+        }),
+        label='استقبال إيميلات الاستفسارات',
+        help_text='تفعيل استقبال إشعارات الاستفسارات الجديدة عبر البريد الإلكتروني'
+    )
 
     class Meta:
         model = User
@@ -75,19 +96,23 @@ class UserCreateForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'اسم المستخدم',
                 'required': True,
+                'autocomplete': 'username',
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'البريد الإلكتروني',
                 'required': True,
+                'autocomplete': 'email',
             }),
             'first_name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'الاسم الأول',
+                'autocomplete': 'given-name',
             }),
             'last_name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'الاسم الأخير',
+                'autocomplete': 'family-name',
             }),
         }
         labels = {
@@ -120,15 +145,17 @@ class UserCreateForm(forms.ModelForm):
         return cleaned_data
 
     def save(self, commit=True):
-        """Save user and create profile with role."""
+        """Save user and create profile with role and email preferences."""
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password'])
         user.is_staff = True  # Allow dashboard access
         if commit:
             user.save()
-            # Create or update profile with role
+            # Create or update profile with role and preferences
             profile, created = UserProfile.objects.get_or_create(user=user)
             profile.role = self.cleaned_data['role']
+            profile.receive_registration_emails = self.cleaned_data.get('receive_registration_emails', True)
+            profile.receive_inquiry_emails = self.cleaned_data.get('receive_inquiry_emails', True)
             profile.save()
         return user
 
@@ -150,6 +177,7 @@ class UserUpdateForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             'placeholder': 'كلمة المرور الجديدة (اختياري)',
+            'autocomplete': 'new-password',
         }),
         label='كلمة المرور الجديدة',
         required=False,
@@ -159,9 +187,29 @@ class UserUpdateForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
             'placeholder': 'تأكيد كلمة المرور الجديدة',
+            'autocomplete': 'new-password',
         }),
         label='تأكيد كلمة المرور الجديدة',
         required=False
+    )
+
+    receive_registration_emails = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
+        }),
+        label='استقبال إيميلات التسجيل',
+        help_text='تفعيل استقبال إشعارات طلبات التسجيل الجديدة عبر البريد الإلكتروني'
+    )
+    receive_inquiry_emails = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
+        }),
+        label='استقبال إيميلات الاستفسارات',
+        help_text='تفعيل استقبال إشعارات الاستفسارات الجديدة عبر البريد الإلكتروني'
     )
 
     class Meta:
@@ -171,14 +219,17 @@ class UserUpdateForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'البريد الإلكتروني',
+                'autocomplete': 'email',
             }),
             'first_name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'الاسم الأول',
+                'autocomplete': 'given-name',
             }),
             'last_name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'الاسم الأخير',
+                'autocomplete': 'family-name',
             }),
         }
         labels = {
@@ -188,10 +239,12 @@ class UserUpdateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Initialize form with current role."""
+        """Initialize form with current role and email preferences."""
         super().__init__(*args, **kwargs)
         if self.instance and hasattr(self.instance, 'profile'):
             self.fields['role'].initial = self.instance.profile.role
+            self.fields['receive_registration_emails'].initial = self.instance.profile.receive_registration_emails
+            self.fields['receive_inquiry_emails'].initial = self.instance.profile.receive_inquiry_emails
 
     def clean(self):
         """Validate form data."""
@@ -211,7 +264,7 @@ class UserUpdateForm(forms.ModelForm):
         return cleaned_data
 
     def save(self, commit=True):
-        """Save user and update profile role."""
+        """Save user and update profile role and email preferences."""
         user = super().save(commit=False)
         password = self.cleaned_data.get('password')
         if password:
@@ -220,6 +273,8 @@ class UserUpdateForm(forms.ModelForm):
             user.save()
             profile = user.profile
             profile.role = self.cleaned_data['role']
+            profile.receive_registration_emails = self.cleaned_data.get('receive_registration_emails', True)
+            profile.receive_inquiry_emails = self.cleaned_data.get('receive_inquiry_emails', True)
             profile.save()
         return user
 
@@ -301,8 +356,29 @@ class RedirectForm(forms.ModelForm):
         return redirect_obj
 
 
+class DashboardPasswordResetForm(PasswordResetForm):
+    """
+    Custom password reset form that restricts password resets to staff/superuser accounts only.
+    """
+    email = forms.EmailField(
+        label="البريد الإلكتروني",
+        max_length=254,
+        widget=forms.EmailInput(attrs={
+            'class': 'login-input',
+            'placeholder': 'أدخل بريدك الإلكتروني المسجل',
+            'autocomplete': 'email',
+            'required': True,
+        })
+    )
+
+    def get_users(self, email):
+        active_users = super().get_users(email)
+        return [u for u in active_users if u.is_staff or u.is_superuser]
+
+
 __all__ = [
     'DashboardLoginForm',
+    'DashboardPasswordResetForm',
     'UserCreateForm',
     'UserUpdateForm',
     'RedirectForm',

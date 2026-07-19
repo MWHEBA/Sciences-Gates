@@ -71,13 +71,7 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         # Extract referrer from request headers
         lead.referrer = self.request.META.get('HTTP_REFERER', '')
         
-        # Extract UTM parameters from GET query string
-        lead.utm_source = self.request.GET.get('utm_source', '')
-        lead.utm_medium = self.request.GET.get('utm_medium', '')
-        lead.utm_campaign = self.request.GET.get('utm_campaign', '')
-        lead.utm_term = self.request.GET.get('utm_term', '')
-        lead.utm_content = self.request.GET.get('utm_content', '')
-        
+
         # Save lead to database
         lead.save()
         

@@ -18,6 +18,12 @@ from django.utils import timezone
 from django.urls import reverse, reverse_lazy
 from datetime import timedelta
 from django.db import transaction
+from django.contrib.auth.views import (
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView
+)
 from apps.leads.models import Lead, LeadType
 from apps.redirects.models import Redirect
 from apps.universities.models import University, Faculty, Program
@@ -31,7 +37,8 @@ from apps.dashboard.forms import (
     UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet,
     InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet,
     MajorForm, MajorCategoryForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet, MajorFAQFormSet, MajorAttachmentFormSet,
-    ArticleForm, ArticleFAQFormSet, ArticleAttachmentFormSet, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm
+    ArticleForm, ArticleFAQFormSet, ArticleAttachmentFormSet, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm,
+    DashboardPasswordResetForm
 )
 from apps.articles.models import Category, Tag
 from apps.seo.mixins import DashboardBreadcrumbMixin
@@ -97,6 +104,55 @@ class DashboardLogoutView(View):
         logout(request)
         messages.success(request, 'تم تسجيل الخروج بنجاح')
         return redirect('dashboard:login')
+
+
+class DashboardPasswordResetView(PasswordResetView):
+    """
+    طلب استعادة كلمة المرور للمستخدمين الإداريين
+    """
+    template_name = 'dashboard/auth/password_reset_form.html'
+    form_class = DashboardPasswordResetForm
+    email_template_name = 'dashboard/auth/password_reset_email.txt'
+    html_email_template_name = 'dashboard/auth/password_reset_email.html'
+    subject_template_name = 'dashboard/auth/password_reset_subject.txt'
+    success_url = reverse_lazy('dashboard:password_reset_done')
+
+    def form_valid(self, form):
+        opts = {
+            'use_https': self.request.is_secure(),
+            'token_generator': self.token_generator,
+            'from_email': self.from_email,
+            'email_template_name': self.email_template_name,
+            'subject_template_name': self.subject_template_name,
+            'request': self.request,
+            'html_email_template_name': self.html_email_template_name,
+            'extra_email_context': self.extra_email_context,
+            'domain_override': self.request.get_host(),
+        }
+        form.save(**opts)
+        return redirect(self.get_success_url())
+
+
+class DashboardPasswordResetDoneView(PasswordResetDoneView):
+    """
+    تأكيد إرسال رابط استعادة كلمة المرور للبريد الإلكتروني
+    """
+    template_name = 'dashboard/auth/password_reset_done.html'
+
+
+class DashboardPasswordResetConfirmView(PasswordResetConfirmView):
+    """
+    إدخال كلمة المرور الجديدة وتأكيدها باستخدام الرابط المرسل
+    """
+    template_name = 'dashboard/auth/password_reset_confirm.html'
+    success_url = reverse_lazy('dashboard:password_reset_complete')
+
+
+class DashboardPasswordResetCompleteView(PasswordResetCompleteView):
+    """
+    تأكيد إتمام تعيين كلمة المرور الجديدة بنجاح
+    """
+    template_name = 'dashboard/auth/password_reset_complete.html'
 
 
 class DashboardHomeView(LoginRequiredMixin, View):
@@ -411,6 +467,8 @@ class UserUpdateView(SuperAdminRequiredMixin, UpdateView):
                 'first_name': self.object.first_name,
                 'last_name': self.object.last_name,
                 'role': self.object.profile.role if hasattr(self.object, 'profile') else '',
+                'receive_registration_emails': self.object.profile.receive_registration_emails if hasattr(self.object, 'profile') else True,
+                'receive_inquiry_emails': self.object.profile.receive_inquiry_emails if hasattr(self.object, 'profile') else True,
             })
         return redirect(self.success_url)
 
@@ -3706,6 +3764,18 @@ class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
         if institution_name_val:
             queryset = queryset.filter(institution_name=institution_name_val)
             
+        # Store base filtered queryset (without archive filter) to count active/archived counts correctly
+        self.base_filtered_queryset = queryset
+
+        # Filter by archive status
+        archive_status = self.request.GET.get('archive_status', 'active').strip()
+        if archive_status == 'archived':
+            queryset = queryset.filter(is_archived=True)
+        elif archive_status == 'all':
+            pass
+        else: # active (default)
+            queryset = queryset.filter(is_archived=False)
+
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -3732,6 +3802,17 @@ class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
         context['residence_country_val'] = self.request.GET.get('residence_country', '')
         context['institution_name_val'] = self.request.GET.get('institution_name', '')
 
+        # Add archive status filter
+        archive_status = self.request.GET.get('archive_status', 'active').strip()
+        context['archive_status'] = archive_status
+
+        # Calculate counts for active and archived tabs
+        base_qs = getattr(self, 'base_filtered_queryset', Lead.objects.filter(lead_type=lead_type_filter))
+        # Ensure count matches the current lead type
+        base_qs = base_qs.filter(lead_type=lead_type_filter)
+        context['active_count'] = base_qs.filter(is_archived=False).count()
+        context['archived_count'] = base_qs.filter(is_archived=True).count()
+
         # Get existing unique filter choices from DB for registrations
         context['existing_nationalities'] = Lead.objects.filter(lead_type=LeadType.REGISTRATION).exclude(nationality='').values_list('nationality', flat=True).distinct().order_by('nationality')
         context['existing_residences'] = Lead.objects.filter(lead_type=LeadType.REGISTRATION).exclude(residence_country='').values_list('residence_country', flat=True).distinct().order_by('residence_country')
@@ -3744,8 +3825,8 @@ class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
         # Add lead type choices
         context['lead_types'] = LeadType.choices
         
-        # Add unread count
-        context['unread_count'] = Lead.objects.filter(is_read=False).count()
+        # Add unread count (only active/unarchived leads)
+        context['unread_count'] = Lead.objects.filter(is_read=False, is_archived=False).count()
         
         # Build query string for export
         query_params = []
@@ -3767,6 +3848,8 @@ class LeadListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
             query_params.append(f'residence_country={context["residence_country_val"]}')
         if context['institution_name_val']:
             query_params.append(f'institution_name={context["institution_name_val"]}')
+        if context['archive_status']:
+            query_params.append(f'archive_status={context["archive_status"]}')
         
         context['export_url'] = f'?{"&".join(query_params)}' if query_params else ''
         
@@ -3912,6 +3995,15 @@ class LeadExportView(ContentAdminRequiredMixin, View):
         if institution_name_val:
             queryset = queryset.filter(institution_name=institution_name_val)
         
+        # Filter by archive status
+        archive_status = request.GET.get('archive_status', 'active').strip()
+        if archive_status == 'archived':
+            queryset = queryset.filter(is_archived=True)
+        elif archive_status == 'all':
+            pass
+        else: # active (default)
+            queryset = queryset.filter(is_archived=False)
+        
         # Create CSV response
         response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
         filename_prefix = "registrations" if lead_type_filter == LeadType.REGISTRATION else "contacts"
@@ -3937,13 +4029,9 @@ class LeadExportView(ContentAdminRequiredMixin, View):
                 'ملاحظات إضافية',
                 'صفحة المصدر',
                 'المرجع',
-                'UTM Source',
-                'UTM Medium',
-                'UTM Campaign',
-                'UTM Term',
-                'UTM Content',
                 'تاريخ الإرسال',
                 'تم قراءتها',
+                'مؤرشفة',
                 'الملاحظات (الإدارة)',
             ])
             for lead in queryset:
@@ -3959,13 +4047,9 @@ class LeadExportView(ContentAdminRequiredMixin, View):
                     lead.message,
                     lead.source_page,
                     lead.referrer,
-                    lead.utm_source,
-                    lead.utm_medium,
-                    lead.utm_campaign,
-                    lead.utm_term,
-                    lead.utm_content,
                     lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
                     'نعم' if lead.is_read else 'لا',
+                    'نعم' if lead.is_archived else 'لا',
                     lead.notes,
                 ])
         else:
@@ -3977,13 +4061,9 @@ class LeadExportView(ContentAdminRequiredMixin, View):
                 'الرسالة الاستفسارية',
                 'صفحة المصدر',
                 'المرجع',
-                'UTM Source',
-                'UTM Medium',
-                'UTM Campaign',
-                'UTM Term',
-                'UTM Content',
                 'تاريخ الإرسال',
                 'تم قراءتها',
+                'مؤرشفة',
                 'الملاحظات (الإدارة)',
             ])
             for lead in queryset:
@@ -3995,13 +4075,9 @@ class LeadExportView(ContentAdminRequiredMixin, View):
                     lead.message,
                     lead.source_page,
                     lead.referrer,
-                    lead.utm_source,
-                    lead.utm_medium,
-                    lead.utm_campaign,
-                    lead.utm_term,
-                    lead.utm_content,
                     lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else '',
                     'نعم' if lead.is_read else 'لا',
+                    'نعم' if lead.is_archived else 'لا',
                     lead.notes,
                 ])
         
@@ -4011,6 +4087,93 @@ class LeadExportView(ContentAdminRequiredMixin, View):
         )
         
         return response
+
+
+class LeadToggleArchiveView(ContentAdminRequiredMixin, View):
+    """
+    Toggle is_archived status of a lead.
+    تعديل حالة الأرشفة لرسالة محددة
+    """
+    def post(self, request, pk):
+        lead = get_object_or_404(Lead, pk=pk)
+        
+        # Toggle archive status
+        if lead.is_archived:
+            lead.unarchive()
+            action_msg = 'إلغاء أرشفة'
+        else:
+            lead.archive()
+            action_msg = 'أرشفة'
+            
+        success_message = f'تم {action_msg} الرسالة "{lead.name}" بنجاح'
+        
+        # Check if requested via AJAX
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Recalculate counts
+            lead_type = lead.lead_type
+            active_count = Lead.objects.filter(lead_type=lead_type, is_archived=False).count()
+            archived_count = Lead.objects.filter(lead_type=lead_type, is_archived=True).count()
+            unread_count = Lead.objects.filter(is_read=False, is_archived=False).count()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': success_message,
+                'is_archived': lead.is_archived,
+                'active_count': active_count,
+                'archived_count': archived_count,
+                'unread_count': unread_count,
+            })
+            
+        messages.success(request, success_message)
+        # Redirect back to lead list (with correct lead_type)
+        return redirect(f"{reverse_lazy('dashboard:lead_list')}?lead_type={lead.lead_type}")
+
+
+class LeadBulkArchiveView(ContentAdminRequiredMixin, View):
+    """
+    Bulk archive/unarchive leads.
+    أرشفة أو إلغاء أرشفة مجموعة رسائل دفعة واحدة
+    """
+    def post(self, request):
+        lead_ids = request.POST.getlist('lead_ids[]')
+        action = request.POST.get('action', '').strip() # 'archive' or 'unarchive'
+        
+        if not lead_ids:
+            return JsonResponse({'status': 'error', 'message': 'لم يتم تحديد أي رسائل'}, status=400)
+            
+        leads = Lead.objects.filter(id__in=lead_ids)
+        count = leads.count()
+        
+        if action == 'archive':
+            leads.update(is_archived=True)
+            action_msg = 'أرشفة'
+        elif action == 'unarchive':
+            leads.update(is_archived=False)
+            action_msg = 'إلغاء أرشفة'
+        else:
+            return JsonResponse({'status': 'error', 'message': 'إجراء غير معروف'}, status=400)
+            
+        success_message = f'تم {action_msg} {count} رسالة بنجاح'
+        
+        # Get lead_type from the first lead if exists to return relevant counts
+        first_lead = leads.first()
+        lead_type = first_lead.lead_type if first_lead else 'registration'
+        
+        active_count = Lead.objects.filter(lead_type=lead_type, is_archived=False).count()
+        archived_count = Lead.objects.filter(lead_type=lead_type, is_archived=True).count()
+        unread_count = Lead.objects.filter(is_read=False, is_archived=False).count()
+        
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'success',
+                'message': success_message,
+                'active_count': active_count,
+                'archived_count': archived_count,
+                'unread_count': unread_count,
+            })
+            
+        messages.success(request, success_message)
+        return redirect(f"{reverse_lazy('dashboard:lead_list')}?lead_type={lead_type}")
 
 
 # ============================================================================
@@ -4300,11 +4463,58 @@ class SiteSettingsUpdateView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, 
             .current('الإعدادات العامة')
             .build())
 
-    def form_valid(self, form):
-        """Add success message upon successful saving."""
-        response = super().form_valid(form)
-        messages.success(self.request, 'تم حفظ الإعدادات العامة بنجاح')
-        return response
+    def post(self, request, *args, **kwargs):
+        """Handle settings saving per tab, supporting AJAX submissions."""
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+            self.object = self.get_object()
+            submit_tab = request.POST.get('submit_tab')
+            
+            # Map of tabs to their corresponding fields
+            tab_fields = {
+                'general': ['site_name', 'site_description'],
+                'contact': ['phone', 'email', 'whatsapp'],
+                'steps': ['registration_steps_title', 'registration_steps_content'],
+                'maintenance': [
+                    'maintenance_mode', 'maintenance_title', 'maintenance_message',
+                    'maintenance_estimated_end', 'maintenance_bypass_ips', 'maintenance_bypass_staff'
+                ],
+                'email': [
+                    'email_smtp_use_dynamic', 'email_smtp_host', 'email_smtp_port',
+                    'email_smtp_user', 'email_smtp_password', 'email_smtp_use_tls',
+                    'email_smtp_use_ssl', 'email_from_address'
+                ],
+            }
+            
+            fields_to_validate = tab_fields.get(submit_tab)
+            if not fields_to_validate:
+                return JsonResponse({'success': False, 'message': 'إجراء غير صالح'}, status=400)
+                
+            form = SiteSettingsForm(request.POST, request.FILES, instance=self.object)
+            
+            # Clean fields dynamically by removing unneeded fields from the form
+            for field_name in list(form.fields.keys()):
+                if field_name not in fields_to_validate:
+                    del form.fields[field_name]
+                    
+            if form.is_valid():
+                form.save()
+                return JsonResponse({
+                    'success': True,
+                    'message': 'تم حفظ التعديلات بنجاح'
+                })
+            else:
+                # Return validation errors as JSON
+                errors = {}
+                for field, err_list in form.errors.items():
+                    label = form.fields[field].label or field
+                    errors[field] = f"{label}: {err_list[0]}"
+                return JsonResponse({
+                    'success': False,
+                    'errors': errors
+                }, status=400)
+                
+        # Fallback to standard generic form submission if not AJAX
+        return super().post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         """Add custom variables for page rendering."""
@@ -4312,6 +4522,96 @@ class SiteSettingsUpdateView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, 
         context['page_title'] = 'الإعدادات العامة للموقع'
         context['cancel_url'] = reverse_lazy('dashboard:home')
         return context
+
+
+class SMTPTestView(SuperAdminRequiredMixin, View):
+    """
+    View for testing SMTP credentials via AJAX before saving.
+    عرض لاختبار إعدادات الـ SMTP عبر AJAX قبل الحفظ.
+    """
+    def post(self, request, *args, **kwargs):
+        from django.core.mail import get_connection, EmailMessage
+        from apps.core.utils import SMTPCryptography
+        from apps.core.models import SiteSettings
+        import traceback
+
+        host = request.POST.get('email_smtp_host')
+        port_str = request.POST.get('email_smtp_port')
+        user = request.POST.get('email_smtp_user')
+        password = request.POST.get('email_smtp_password')
+        use_tls = request.POST.get('email_smtp_use_tls') == 'true'
+        use_ssl = request.POST.get('email_smtp_use_ssl') == 'true'
+        from_email = request.POST.get('email_from_address')
+        test_recipient = request.POST.get('test_recipient')
+
+        if not test_recipient:
+            return JsonResponse({'success': False, 'error': 'البريد الإلكتروني للمستلم مطلوب لإجراء الاختبار.'})
+
+        # If password is dot placeholders, retrieve from DB and decrypt
+        if password == '••••••••' or not password:
+            site_settings = SiteSettings.get_settings()
+            encrypted = site_settings.email_smtp_password
+            password = SMTPCryptography.decrypt(encrypted) if encrypted else ""
+
+        try:
+            port = int(port_str) if port_str else 587
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'منفذ SMTP غير صالح.'})
+
+        try:
+            # Create connection using standard Django EmailBackend
+            connection = get_connection(
+                backend='django.core.mail.backends.smtp.EmailBackend',
+                host=host,
+                port=port,
+                username=user,
+                password=password,
+                use_tls=use_tls,
+                use_ssl=use_ssl,
+                timeout=30,
+            )
+            
+            # Open connection
+            connection.open()
+            
+            # Send test email
+            email = EmailMessage(
+                subject='Sciences Gates - اختبار إعدادات الـ SMTP',
+                body=(
+                    'مرحباً،\n\n'
+                    'هذه رسالة تلقائية لتأكيد نجاح اتصال وإعدادات خادم البريد (SMTP) الخاص بموقع بوابات العلوم (Sciences Gates).\n\n'
+                    f'الإعدادات المستخدمة:\n'
+                    f'- الخادم: {host}\n'
+                    f'- المنفذ: {port}\n'
+                    f'- المستخدم: {user}\n'
+                    f'- نوع التشفير: {"TLS" if use_tls else "SSL" if use_ssl else "بلا تشفير"}\n\n'
+                    'إذا استلمت هذه الرسالة، فهذا يعني أن الإعدادات تعمل بنجاح 100%! ويمكنك حفظ التغييرات الآن بأمان.'
+                ),
+                from_email=from_email or user,
+                to=[test_recipient],
+                connection=connection
+            )
+            email.send(fail_silently=False)
+            
+            return JsonResponse({'success': True})
+        except Exception as e:
+            error_msg = str(e)
+            
+            # Friendly messaging for common errors
+            if "Authentication failed" in error_msg or "Username and Password not accepted" in error_msg or "535" in error_msg:
+                friendly_msg = "فشل في تسجيل الدخول. يرجى التأكد من اسم المستخدم وكلمة المرور. إذا كنت تستخدم Google Workspace، تأكد من استخدام كلمة مرور التطبيق (App Password) بدلاً من كلمة مرور الحساب العادية، وتأكد من تفعيل التحقق بخطوتين في حساب جوجل."
+            elif "Connection refused" in error_msg or "Timeout" in error_msg or "timed out" in error_msg or "unreachable" in error_msg or "101" in error_msg:
+                friendly_msg = "فشل الاتصال بالخادم (الشبكة غير متاحة). يرجى التحقق من خادم SMTP والمنفذ المستخدمين، والتأكد من أن الاستضافة لا تفرض قيوداً على الاتصالات الخارجية (SMTP Restrictions) تمنع الاتصال الخارجي عبر المنفذ المحدد."
+            elif "starttls" in error_msg or "SSL" in error_msg or "TLS" in error_msg:
+                friendly_msg = "فشل تأمين الاتصال. يرجى التحقق من توافق خيارات التشفير (TLS/SSL) مع المنفذ المحدد (مثال: TLS للمنفذ 587، أو SSL للمنفذ 465)."
+            else:
+                friendly_msg = f"حدث خطأ أثناء الاتصال بالخادم: {error_msg}"
+                
+            return JsonResponse({
+                'success': False,
+                'error': friendly_msg,
+                'technical_details': traceback.format_exc()
+            })
 
 
 class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):

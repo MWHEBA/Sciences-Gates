@@ -140,11 +140,7 @@
             </header>
 
             <!-- رسائل النظام -->
-            {% if messages %}
-            <div class="space-y-2">
-                {% include 'dashboard/components/messages.html' %}
-            </div>
-            {% endif %}
+            {% include 'dashboard/components/messages.html' %}
 
             <!-- محتوى الصفحة -->
             {% block content_wrapper %}

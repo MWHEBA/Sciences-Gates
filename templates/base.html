@@ -196,7 +196,7 @@
             </div>
             
             <!-- Popup Footer / Form -->
-            <form @submit.prevent="if(message.trim()) { window.open('https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60123456789' }}?text=' + encodeURIComponent(message.trim()), '_blank'); open = false; message = ''; }" class="whatsapp-popup-footer">
+            <form @submit.prevent="if(message.trim()) { window.open('https://wa.me/{{ site_settings.whatsapp_primary_clean }}?text=' + encodeURIComponent(message.trim()), '_blank'); open = false; message = ''; }" class="whatsapp-popup-footer">
                 <input type="text" 
                        x-model="message" 
                        placeholder="اكتب استفسارك هنا..." 

@@ -8,19 +8,60 @@
 {% block page_description %}عرض تفاصيل الرسالة والمعلومات المرتبطة بها{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'dashboard:lead_list' %}"
-   style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
-          background-color: var(--surface-2); color: var(--text-secondary);
-          border: 1px solid var(--border); border-radius: var(--radius-lg);
-          text-decoration: none; font-size: 13px; font-weight: 600;
-          transition: background-color 0.2s; cursor: pointer;"
-   onmouseover="this.style.backgroundColor='var(--border)'"
-   onmouseout="this.style.backgroundColor='var(--surface-2)'">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
-    </svg>
-    العودة
-</a>
+<style>
+.detail-archive-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-lg);
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.detail-archive-btn.is-archived {
+    background-color: var(--warning-light);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+</style>
+
+<div style="display: flex; gap: 8px; align-items: center;">
+    <form method="post" action="{% url 'dashboard:lead_toggle_archive' lead.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="detail-archive-btn {% if lead.is_archived %}is-archived{% endif %}">
+            {% if lead.is_archived %}
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+            </svg>
+            إلغاء الأرشفة
+            {% else %}
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+            </svg>
+            أرشفة الرسالة
+            {% endif %}
+        </button>
+    </form>
+
+    <a href="{% url 'dashboard:lead_list' %}?lead_type={{ lead.lead_type }}&archive_status={% if lead.is_archived %}archived{% else %}active{% endif %}"
+       style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+              background-color: var(--surface-2); color: var(--text-secondary);
+              border: 1px solid var(--border); border-radius: var(--radius-lg);
+              text-decoration: none; font-size: 13px; font-weight: 600;
+              transition: background-color 0.2s; cursor: pointer;"
+       onmouseover="this.style.backgroundColor='var(--border)'"
+       onmouseout="this.style.backgroundColor='var(--surface-2)'">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        العودة
+    </a>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -69,7 +110,7 @@
                         <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
                             رقم الهاتف
                         </p>
-                        <a href="tel:{{ lead.phone }}"
+                        <a href="tel:{{ lead.phone }}" class="phone-text"
                            style="font-size: 13px; color: var(--primary); text-decoration: none; cursor: pointer;"
                            onmouseover="this.style.textDecoration='underline'"
                            onmouseout="this.style.textDecoration='none'">
@@ -191,7 +232,7 @@
                 <div style="background-color: var(--bg-light); border: 1px solid var(--border);
                            border-radius: var(--radius); padding: 16px; font-size: 13px;
                            color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
-                    {{ lead.message }}
+                    {{ lead.message|default:"(لا توجد رسالة أو تفاصيل إضافية مرفقة مع هذا الطلب)" }}
                 </div>
             </div>
 
@@ -211,11 +252,11 @@
                         </p>
                         {% if lead.source_page %}
                         <a href="{{ lead.source_page }}" target="_blank"
-                           style="font-size: 12px; color: var(--primary); text-decoration: none; cursor: pointer;
+                           style="font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; cursor: pointer;
                                   word-break: break-all;"
                            onmouseover="this.style.textDecoration='underline'"
                            onmouseout="this.style.textDecoration='none'">
-                            {{ lead.source_page|truncatechars:40 }}
+                            {{ lead.source_page_name }}
                         </a>
                         {% else %}
                         <p style="font-size: 12px; color: var(--text-muted); margin: 0;">-</p>
@@ -227,68 +268,20 @@
                         <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
                             المرجع (Referrer)
                         </p>
-                        {% if lead.referrer %}
+                        {% if lead.referrer and lead.referrer != lead.source_page %}
                         <a href="{{ lead.referrer }}" target="_blank"
-                           style="font-size: 12px; color: var(--primary); text-decoration: none; cursor: pointer;
+                           style="font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; cursor: pointer;
                                   word-break: break-all;"
                            onmouseover="this.style.textDecoration='underline'"
                            onmouseout="this.style.textDecoration='none'">
-                            {{ lead.referrer|truncatechars:40 }}
+                            {{ lead.referrer_name }}
                         </a>
                         {% else %}
-                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">-</p>
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">رابط مباشر</p>
                         {% endif %}
                     </div>
 
-                    <!-- UTM Source -->
-                    <div>
-                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
-                            UTM Source
-                        </p>
-                        <p style="font-size: 12px; color: var(--text-primary); margin: 0;">
-                            {{ lead.utm_source|default:"-" }}
-                        </p>
-                    </div>
 
-                    <!-- UTM Medium -->
-                    <div>
-                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
-                            UTM Medium
-                        </p>
-                        <p style="font-size: 12px; color: var(--text-primary); margin: 0;">
-                            {{ lead.utm_medium|default:"-" }}
-                        </p>
-                    </div>
-
-                    <!-- UTM Campaign -->
-                    <div>
-                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
-                            UTM Campaign
-                        </p>
-                        <p style="font-size: 12px; color: var(--text-primary); margin: 0;">
-                            {{ lead.utm_campaign|default:"-" }}
-                        </p>
-                    </div>
-
-                    <!-- UTM Term -->
-                    <div>
-                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
-                            UTM Term
-                        </p>
-                        <p style="font-size: 12px; color: var(--text-primary); margin: 0;">
-                            {{ lead.utm_term|default:"-" }}
-                        </p>
-                    </div>
-
-                    <!-- UTM Content -->
-                    <div>
-                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
-                            UTM Content
-                        </p>
-                        <p style="font-size: 12px; color: var(--text-primary); margin: 0;">
-                            {{ lead.utm_content|default:"-" }}
-                        </p>
-                    </div>
                 </div>
             </div>
 

@@ -1,0 +1,31 @@
+{% autoescape off %}بوابات العلوم - إخطار إداري جديد
+==================================
+
+نوع الرسالة: {{ lead_type_display }}
+الاسم: {{ lead.name }}
+رقم الهاتف: {{ lead.phone }}
+{% if lead.email %}البريد الإلكتروني: {{ lead.email }}{% endif %}
+{% if lead.nationality %}الجنسية: {{ lead.nationality }}{% endif %}
+{% if lead.residence_country %}دولة الإقامة: {{ lead.residence_country }}{% endif %}
+{% if lead.study_level %}المرحلة الدراسية: {{ lead.study_level }}{% endif %}
+{% if lead.institution_name %}المؤسسة التعليمية: {{ lead.institution_name }}{% endif %}
+{% if lead.address %}العنوان: {{ lead.address }}{% endif %}
+
+{% if lead.message %}
+محتوى الرسالة:
+------------------
+{{ lead.message }}
+------------------
+{% endif %}
+
+معلومات التتبع والمصدر:
+------------------
+صفحة الإرسال: {{ lead.source_page|default:"غير محدد" }}
+المرجع: {{ lead.referrer|default:"غير محدد" }}
+
+وقت الإرسال: {{ lead.created_at|date:"Y-m-d H:i:s" }}
+
+---
+© {{ current_year }} بوابات العلوم (Science Gates). جميع الحقوق محفوظة.
+هذا بريد إلكتروني تلقائي للمسؤولين.
+{% endautoescape %}

@@ -11,6 +11,10 @@ app_name = 'dashboard'
 urlpatterns = [
     path('login/', views.DashboardLoginView.as_view(), name='login'),
     path('logout/', views.DashboardLogoutView.as_view(), name='logout'),
+    path('password-reset/', views.DashboardPasswordResetView.as_view(), name='password_reset'),
+    path('password-reset/done/', views.DashboardPasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('password-reset/confirm/<uidb64>/<token>/', views.DashboardPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('password-reset/complete/', views.DashboardPasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('', views.DashboardHomeView.as_view(), name='home'),
     
     # User management (Super Admin only)
@@ -87,7 +91,9 @@ urlpatterns = [
     # Lead management (Content Admin)
     path('leads/', views.LeadListView.as_view(), name='lead_list'),
     path('leads/export/', views.LeadExportView.as_view(), name='lead_export'),
+    path('leads/bulk-archive/', views.LeadBulkArchiveView.as_view(), name='lead_bulk_archive'),
     path('leads/<int:pk>/', views.LeadDetailView.as_view(), name='lead_detail'),
+    path('leads/<int:pk>/archive/', views.LeadToggleArchiveView.as_view(), name='lead_toggle_archive'),
     
     # SEO management (SEO Admin)
     path('seo/overview/', RedirectView.as_view(pattern_name='dashboard:seo_management', permanent=True), name='seo_overview'),
@@ -102,6 +108,7 @@ urlpatterns = [
     
     # General Settings (Super Admin)
     path('settings/', views.SiteSettingsUpdateView.as_view(), name='settings'),
+    path('settings/test-smtp/', views.SMTPTestView.as_view(), name='test_smtp'),
     path('seo/', views.SEOManagementView.as_view(), name='seo_management'),
     
     # Editor uploads

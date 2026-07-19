@@ -40,10 +40,12 @@
                         <strong class="error-support-label">البريد الإلكتروني:</strong><br>
                         <a href="mailto:info@sciencesgates.com" class="error-support-link" title="أرسل لنا بريد إلكتروني">info@sciencesgates.com</a>
                     </div>
+                    {% if site_settings.phone_clean %}
                     <div class="error-support-contact">
                         <strong class="error-support-label">الهاتف:</strong><br>
-                        <a href="tel:+60123456789" class="error-support-link" title="اتصل بنا">+60 12 345 6789</a>
+                        <a href="tel:{{ site_settings.phone_clean }}" class="error-support-link" title="اتصل بنا">{{ site_settings.phone_formatted }}</a>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -175,7 +175,7 @@ function initializeVideoPopups() {
             const videoUrl = link.getAttribute('href');
             if (!videoUrl) return;
             
-            const embedUrl = getYouTubeEmbedUrl(videoUrl);
+            const isLocalVideo = videoUrl.endsWith('.mp4') || videoUrl.includes('.mp4');
             
             // Create modal overlay
             const modalOverlay = document.createElement('div');
@@ -220,17 +220,29 @@ function initializeVideoPopups() {
             closeBtn.style.outline = 'none';
             closeBtn.setAttribute('aria-label', 'إغلاق الفيديو');
             
-            // Create iframe
-            const iframe = document.createElement('iframe');
-            iframe.src = embedUrl;
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.border = 'none';
-            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-            iframe.allowFullscreen = true;
+            // Create media element
+            let mediaElement;
+            if (isLocalVideo) {
+                mediaElement = document.createElement('video');
+                mediaElement.src = videoUrl;
+                mediaElement.controls = true;
+                mediaElement.autoplay = true;
+                mediaElement.style.width = '100%';
+                mediaElement.style.height = '100%';
+                mediaElement.style.outline = 'none';
+            } else {
+                const embedUrl = getYouTubeEmbedUrl(videoUrl);
+                mediaElement = document.createElement('iframe');
+                mediaElement.src = embedUrl;
+                mediaElement.style.width = '100%';
+                mediaElement.style.height = '100%';
+                mediaElement.style.border = 'none';
+                mediaElement.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                mediaElement.allowFullscreen = true;
+            }
             
             modalContent.appendChild(closeBtn);
-            modalContent.appendChild(iframe);
+            modalContent.appendChild(mediaElement);
             modalOverlay.appendChild(modalContent);
             document.body.appendChild(modalOverlay);
             

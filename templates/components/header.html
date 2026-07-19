@@ -6,7 +6,12 @@
    <div class="itoffcanvas">
       <div class="it-offcanva-bottom-shape d-none d-xxl-block"></div>
       <div class="itoffcanvas__close-btn">
-         <button class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+         <button class="close-btn" aria-label="إغلاق">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+               <line x1="18" y1="6" x2="6" y2="18"></line>
+               <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+         </button>
       </div>
       <div class="itoffcanvas__logo">
          <a href="/">
@@ -24,26 +29,43 @@
          <h3 class="offcanva-title">تواصل معنا</h3>
          <div class="it-info-wrapper mb-20 d-flex align-items-center">
             <div class="itoffcanvas__info-icon">
-               <a href="mailto:{{ site_settings.email|default:'info@sciencegates.com' }}"><i
-                     class="fa-regular fa-envelope"></i></a>
+               <a href="mailto:{{ site_settings.email|default:'info@sciencegates.com' }}" aria-label="البريد الإلكتروني">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="vertical-align: middle;">
+                     <path d="M19.8627 11.5702L15.509 7.21652C15.326 7.03352 15.0291 7.03352 14.8461 7.21652C14.663 7.39956 14.663 7.69638 14.8461 7.87947L18.3022 11.3356H10.0604C9.37673 11.3356 8.82055 10.7794 8.82055 10.0957V1.85397L12.1573 5.19063C12.3403 5.37363 12.6371 5.37363 12.8202 5.19063C13.0033 5.00758 13.0033 4.71077 12.8202 4.52767L8.58599 0.2935C8.40294 0.1105 8.10613 0.1105 7.92308 0.2935L0.450273 7.76645C0.267227 7.9495 0.267227 8.24631 0.450273 8.42941L11.7269 19.706C11.8148 19.7939 11.9341 19.8433 12.0584 19.8433C12.1827 19.8433 12.302 19.7939 12.3898 19.706L19.8627 12.2331C19.9506 12.1452 20 12.026 20 11.9017C20 11.7774 19.9506 11.6581 19.8627 11.5702ZM7.88315 1.65939V7.6292H1.91334L7.88315 1.65939ZM11.5896 18.2429L1.91334 8.56666H7.88315V10.0957C7.88315 11.2963 8.85993 12.2731 10.0605 12.2731H11.5896V18.2429ZM12.5271 18.2429V12.2731H18.4969L12.5271 18.2429Z" fill="currentColor" />
+                  </svg>
+               </a>
             </div>
             <div class="itoffcanvas__info-address">
                <span>البريد الإلكتروني</span>
                <a href="mailto:{{ site_settings.email|default:'info@sciencegates.com' }}">{{ site_settings.email|default:'info@sciencegates.com' }}</a>
             </div>
          </div>
+         {% if site_settings.phone %}
          <div class="it-info-wrapper mb-20 d-flex align-items-center">
             <div class="itoffcanvas__info-icon">
-               <a href="tel:{{ site_settings.phone|default:'+60 123 456 789' }}"><i class="fa-solid fa-phone"></i></a>
+               <a href="tel:{{ site_settings.phone_clean }}" aria-label="الهاتف">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="vertical-align: middle;">
+                     <path d="M15.8064 12.3892C15.397 11.9628 14.9031 11.7349 14.3797 11.7349C13.8605 11.7349 13.3624 11.9586 12.936 12.385L11.6021 13.7146C11.4924 13.6555 11.3827 13.6006 11.2771 13.5458C11.1252 13.4698 10.9816 13.398 10.8592 13.3221C9.60978 12.5285 8.47429 11.4943 7.38524 10.1562C6.85759 9.48926 6.50302 8.92785 6.24553 8.358C6.59166 8.04141 6.91247 7.71216 7.22483 7.39558C7.34303 7.27739 7.46122 7.15497 7.57941 7.03678C8.46585 6.15034 8.46585 5.00219 7.57941 4.11576L6.42704 2.96338C6.29618 2.83253 6.16111 2.69745 6.03447 2.56238C5.7812 2.30067 5.51527 2.03051 5.2409 1.77725C4.83145 1.37202 4.3418 1.15674 3.82682 1.15674C3.31184 1.15674 2.81375 1.37202 2.39163 1.77725C2.38741 1.78147 2.38741 1.78147 2.38319 1.78569L0.948004 3.23354C0.407699 3.77384 0.099556 4.43234 0.0320178 5.19637C-0.0692895 6.42894 0.293728 7.57709 0.572323 8.32845C1.25615 10.1731 2.27766 11.8826 3.80149 13.7146C5.65035 15.9223 7.87489 17.6656 10.416 18.894C11.3869 19.3541 12.6828 19.8986 14.1306 19.9914C14.2193 19.9957 14.3121 19.9999 14.3965 19.9999C15.3716 19.9999 16.1905 19.6495 16.8321 18.9531C16.8364 18.9446 16.8448 18.9404 16.849 18.9319C17.0685 18.666 17.3218 18.4254 17.5877 18.1679C17.7692 17.9949 17.955 17.8133 18.1365 17.6234C18.5544 17.1886 18.7739 16.6821 18.7739 16.1629C18.7739 15.6395 18.5501 15.1371 18.1238 14.715L15.8064 12.3892ZM17.3176 16.834C17.3133 16.834 17.3133 16.8383 17.3176 16.834C17.1529 17.0113 16.9841 17.1717 16.8026 17.349C16.5282 17.6107 16.2496 17.8851 15.9879 18.1932C15.5616 18.6491 15.0593 18.8644 14.4008 18.8644C14.3374 18.8644 14.2699 18.8644 14.2066 18.8602C12.9529 18.78 11.7879 18.2903 10.9141 17.8724C8.52494 16.7158 6.42704 15.0738 4.68371 12.9928C3.2443 11.2579 2.28188 9.65389 1.64449 7.93166C1.25193 6.8806 1.10841 6.0617 1.17172 5.28923C1.21394 4.79536 1.40389 4.38591 1.75424 4.03555L3.19365 2.59615C3.40048 2.40197 3.61998 2.29645 3.83526 2.29645C4.10119 2.29645 4.31647 2.45685 4.45155 2.59192C4.45577 2.59615 4.45999 2.60037 4.46421 2.60459C4.7217 2.84519 4.96653 3.09424 5.22401 3.36017C5.35487 3.49525 5.48995 3.63032 5.62502 3.76962L6.77739 4.92199C7.22483 5.36943 7.22483 5.7831 6.77739 6.23055C6.65498 6.35296 6.53679 6.47537 6.41437 6.59356C6.0598 6.95658 5.72211 7.29427 5.35487 7.62352C5.34643 7.63196 5.33799 7.63618 5.33376 7.64463C4.97075 8.00764 5.03828 8.36222 5.11427 8.60282C5.11849 8.61549 5.12271 8.62815 5.12693 8.64081C5.42663 9.36685 5.84874 10.0507 6.49036 10.8654L6.49458 10.8696C7.65961 12.3048 8.88796 13.4234 10.2429 14.2803C10.416 14.39 10.5933 14.4786 10.7621 14.5631C10.9141 14.639 11.0576 14.7108 11.18 14.7868C11.1969 14.7952 11.2138 14.8079 11.2307 14.8163C11.3742 14.8881 11.5093 14.9219 11.6486 14.9219C11.9989 14.9219 12.2184 14.7024 12.2902 14.6306L13.7338 13.187C13.8773 13.0435 14.1053 12.8704 14.3712 12.8704C14.6329 12.8704 14.8482 13.035 14.9791 13.1785C14.9833 13.1828 14.9833 13.1828 14.9875 13.187L17.3133 15.5128C17.7481 15.9434 17.7481 16.3866 17.3176 16.834Z" fill="currentColor" />
+                  </svg>
+               </a>
             </div>
             <div class="itoffcanvas__info-address">
                <span>الهاتف</span>
-               <a href="tel:{{ site_settings.phone|default:'+60 123 456 789' }}">{{ site_settings.phone|default:'+60 123 456 789' }}</a>
+               <a href="tel:{{ site_settings.phone_clean }}" dir="ltr" style="unicode-bidi: plaintext; display: inline-flex !important; align-items: center;">{{ site_settings.phone_formatted }}</a>
             </div>
          </div>
+         {% endif %}
          <div class="it-info-wrapper mb-20 d-flex align-items-center">
             <div class="itoffcanvas__info-icon">
-               <a href="{% url 'visa_tracking' %}"><i class="fa-solid fa-passport"></i></a>
+               <a href="{% url 'visa_tracking' %}" aria-label="تتبع التأشيرة">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                     <rect width="16" height="20" x="4" y="2" rx="2"></rect>
+                     <circle cx="12" cy="7" r="2"></circle>
+                     <path d="M4 12h16"></path>
+                     <path d="M4 16h16"></path>
+                     <path d="M4 20h16"></path>
+                  </svg>
+               </a>
             </div>
             <div class="itoffcanvas__info-address">
                <span>تتبع التأشيرة</span>
@@ -65,8 +87,9 @@
             <div class="col-xl-8 col-lg-8">
                <div class="it-header-2-top-left">
                   <ul>
+                     {% if site_settings.phone %}
                      <li class="d-none d-lg-inline-block">
-                        <a href="tel:{{ site_settings.phone|default:'+60 123 456 789' }}">
+                        <a href="tel:{{ site_settings.phone_clean }}" dir="ltr" style="unicode-bidi: plaintext; display: inline-flex !important; align-items: center;">
                            <span>
                               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -75,9 +98,10 @@
                                     fill="currentColor" />
                               </svg>
                            </span>
-                           {{ site_settings.phone|default:'+60 123 456 789' }}
+                           {{ site_settings.phone_formatted }}
                         </a>
                      </li>
+                     {% endif %}
                      <li>
                         <a href="mailto:{{ site_settings.email|default:'info@sciencegates.com' }}">
                            <span>
@@ -94,7 +118,13 @@
                      <li class="d-none d-xl-inline-block">
                         <a href="{% url 'visa_tracking' %}">
                            <span>
-                              <i class="fas fa-passport" aria-hidden="true" style="color: var(--secondary); font-size: 1rem;"></i>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--secondary); vertical-align: middle;">
+                                 <rect width="16" height="20" x="4" y="2" rx="2"></rect>
+                                 <circle cx="12" cy="7" r="2"></circle>
+                                 <path d="M4 12h16"></path>
+                                 <path d="M4 16h16"></path>
+                                 <path d="M4 20h16"></path>
+                              </svg>
                            </span>
                            متابعة التأشيرة (EMGS)
                         </a>
@@ -132,23 +162,41 @@
                      <li class="topbar-social-item">
                         <div class="it-header-2-top-social">
                            <a href="{{ site_settings.facebook|default:'#' }}" target="_blank" rel="noopener"
-                              aria-label="فيسبوك"><i class="fab fa-facebook-f"></i></a>
+                              aria-label="فيسبوك"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                 <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/>
+                              </svg></a>
                            <a href="{{ site_settings.instagram|default:'#' }}" target="_blank" rel="noopener"
-                              aria-label="انستغرام"><i class="fab fa-instagram"></i></a>
-                            <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60123456789' }}"
-                               target="_blank" rel="noopener" aria-label="واتساب"><i class="fab fa-whatsapp"></i></a>
+                              aria-label="انستغرام"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                              </svg></a>
+                            {% if site_settings.whatsapp_primary_clean %}
+                            <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean }}"
+                               target="_blank" rel="noopener" aria-label="واتساب"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.458L0 24zm6.59-4.846c1.6.95 3.167 1.45 4.81 1.452 5.518 0 10.01-4.48 10.014-9.982.002-2.664-1.03-5.167-2.906-7.045C16.69 1.701 14.19.668 11.53.668c-5.524 0-10.017 4.478-10.021 9.98-.001 1.748.459 3.454 1.332 4.966L1.83 20.354l5.068-1.328-.251.128zm10.707-7.464c-.302-.15-1.786-.88-2.062-.98-.276-.1-.476-.15-.677.15-.2.3-.777.98-.95 1.18-.175.2-.35.225-.653.075-.302-.15-1.276-.47-2.43-1.5-.898-.8-1.503-1.79-1.68-2.09-.176-.3-.02-.462.13-.61.137-.135.303-.35.454-.525.152-.175.202-.3.303-.5.101-.2.05-.375-.025-.525-.075-.15-.677-1.63-.927-2.23-.244-.587-.492-.507-.677-.517-.174-.01-.375-.012-.576-.012-.2 0-.527.075-.804.375-.276.3-1.055 1.03-1.055 2.515s1.08 2.916 1.23 3.116c.15.2 2.128 3.25 5.156 4.56.72.31 1.28.497 1.72.637.724.23 1.38.197 1.902.12.58-.087 1.787-.73 2.037-1.435.25-.705.25-1.31.176-1.435-.074-.125-.275-.2-.577-.35z"/>
+                               </svg></a>
+                            {% endif %}
                         </div>
                      </li>
                      <li class="topbar-separator-item">|</li>
                      <li class="topbar-login-item">
                         {% if user.is_authenticated %}
                         <a href="{% url 'dashboard:home' %}" class="topbar-login-btn">
-                           <i class="fa-solid fa-tachometer-alt"></i>
+                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; margin-left: 4px;">
+                              <rect x="3" y="3" width="7" height="9"></rect>
+                              <rect x="14" y="3" width="7" height="5"></rect>
+                              <rect x="14" y="12" width="7" height="9"></rect>
+                              <rect x="3" y="16" width="7" height="5"></rect>
+                           </svg>
                            لوحة التحكم
                         </a>
                         {% else %}
                         <a href="{% url 'dashboard:login' %}" class="topbar-login-btn">
-                           <i class="fa-regular fa-user"></i>
+                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; margin-left: 4px;">
+                              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                              <circle cx="12" cy="7" r="4"></circle>
+                           </svg>
                            تسجيل الدخول
                         </a>
                         {% endif %}
@@ -157,7 +205,11 @@
                      <li class="topbar-separator-item">|</li>
                      <li class="topbar-login-item">
                         <a href="{% url 'dashboard:logout' %}" class="topbar-login-btn">
-                           <i class="fa-solid fa-sign-out-alt"></i>
+                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle; margin-left: 4px;">
+                              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                              <polyline points="16 17 21 12 16 7"></polyline>
+                              <line x1="21" y1="12" x2="9" y2="12"></line>
+                           </svg>
                            تسجيل الخروج
                         </a>
                      </li>
@@ -245,12 +297,14 @@
                                                  <a href="{% url 'leads:submit' %}" class="it-btn cta-btn">
                                                     <span>سجل طلبك الآن</span>
                                                  </a>
+                                                 {% if site_settings.whatsapp_primary_clean %}
                                                  <div class="cta-whatsapp">
-                                                    <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60123456789' }}" target="_blank">
+                                                    <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean }}" target="_blank">
                                                        <i class="fab fa-whatsapp"></i>
                                                        <span>تواصل معنا عبر واتساب</span>
                                                     </a>
                                                  </div>
+                                                 {% endif %}
                                               </div>
                                            </div>
                                         </div>
@@ -295,7 +349,12 @@
                                                        {% if inst.logo %}
                                                        <img src="{{ inst.logo.url }}" alt="{{ inst.name }}" class="mega-menu-logo">
                                                        {% else %}
-                                                       <span class="mega-menu-logo-fallback"><i class="fa-solid fa-book"></i></span>
+                                                       <span class="mega-menu-logo-fallback">
+                                                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                                                             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                                             <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                                          </svg>
+                                                       </span>
                                                        {% endif %}
                                                        <span>{{ inst.name }}</span>
                                                     </a>
@@ -342,7 +401,12 @@
                                                  {% for category in menu_major_categories %}
                                                  <li>
                                                     <a href="{{ category.get_absolute_url }}" style="white-space: nowrap;">
-                                                       <span class="mega-menu-logo-fallback"><i class="fa-solid fa-graduation-cap"></i></span>
+                                                       <span class="mega-menu-logo-fallback">
+                                                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                                                             <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                                                             <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path>
+                                                          </svg>
+                                                       </span>
                                                        <span>{{ category.name }} <span style="font-size: 0.75rem; color: var(--text-body); font-weight: normal; opacity: 0.8;">({{ category.num_majors }} تخصص)</span></span>
                                                     </a>
                                                  </li>
@@ -360,12 +424,16 @@
                                                  <a href="{% url 'leads:submit' %}" class="it-btn cta-btn">
                                                     <span>استشر خبيراً أكاديمياً</span>
                                                  </a>
+                                                 {% if site_settings.whatsapp_primary_clean %}
                                                  <div class="cta-whatsapp">
-                                                     <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60123456789' }}" target="_blank">
-                                                       <i class="fab fa-whatsapp"></i>
-                                                       <span>تواصل معنا عبر واتساب</span>
+                                                     <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean }}" target="_blank">
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle; margin-left: 6px;">
+                                                           <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.458L0 24zm6.59-4.846c1.6.95 3.167 1.45 4.81 1.452 5.518 0 10.01-4.48 10.014-9.982.002-2.664-1.03-5.167-2.906-7.045C16.69 1.701 14.19.668 11.53.668c-5.524 0-10.017 4.478-10.021 9.98-.001 1.748.459 3.454 1.332 4.966L1.83 20.354l5.068-1.328-.251.128zm10.707-7.464c-.302-.15-1.786-.88-2.062-.98-.276-.1-.476-.15-.677.15-.2.3-.777.98-.95 1.18-.175.2-.35.225-.653.075-.302-.15-1.276-.47-2.43-1.5-.898-.8-1.503-1.79-1.68-2.09-.176-.3-.02-.462.13-.61.137-.135.303-.35.454-.525.152-.175.202-.3.303-.5.101-.2.05-.375-.025-.525-.075-.15-.677-1.63-.927-2.23-.244-.587-.492-.507-.677-.517-.174-.01-.375-.012-.576-.012-.2 0-.527.075-.804.375-.276.3-1.055 1.03-1.055 2.515s1.08 2.916 1.23 3.116c.15.2 2.128 3.25 5.156 4.56.72.31 1.28.497 1.72.637.724.23 1.38.197 1.902.12.58-.087 1.787-.73 2.037-1.435.25-.705.25-1.31.176-1.435-.074-.125-.275-.2-.577-.35z"/>
+                                                        </svg>
+                                                        <span>تواصل معنا عبر واتساب</span>
                                                     </a>
                                                  </div>
+                                                 {% endif %}
                                               </div>
                                            </div>
                                         </div>
@@ -390,8 +458,11 @@
                   <div class="col-xl-3 col-6">
                      <div class="it-header-2-right d-flex align-items-center justify-content-end">
                         <div class="it-header-2-icon">
-                           <a href="{% url 'search:results' %}" @click.prevent="searchOpen = true" aria-label="بحث">
-                              <i class="fa-solid fa-magnifying-glass"></i>
+                           <a href="{% url 'search:results' %}" @click.prevent="searchOpen = true" aria-label="بحث" style="display: inline-flex; align-items: center; justify-content: center;">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                                 <circle cx="11" cy="11" r="8"></circle>
+                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                              </svg>
                            </a>
                         </div>
                         <div class="it-header-2-button d-none d-md-block">
@@ -409,8 +480,13 @@
                            </a>
                         </div>
                         <div class="it-header-2-bar d-xl-none">
-                           <button class="it-menu-bar" id="mobile-menu-btn" aria-label="فتح القائمة"><i
-                                 class="fa-solid fa-bars"></i></button>
+                           <button class="it-menu-bar" id="mobile-menu-btn" aria-label="فتح القائمة" style="display: inline-flex; align-items: center; justify-content: center;">
+                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                                 <line x1="4" y1="12" x2="20" y2="12"></line>
+                                 <line x1="4" y1="6" x2="20" y2="6"></line>
+                                 <line x1="4" y1="18" x2="20" y2="18"></line>
+                              </svg>
+                           </button>
                         </div>
                      </div>
                   </div>
@@ -447,8 +523,11 @@
            x-transition:leave-end="opacity-0 scale-98 translate-y-[-8px]">
            
          <!-- Close Button -->
-         <button type="button" class="search-popup-close" @click="searchOpen = false" aria-label="إغلاق">
-            <i class="fa-solid fa-xmark"></i>
+         <button type="button" class="search-popup-close" @click="searchOpen = false" aria-label="إغلاق" style="display: inline-flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+               <line x1="18" y1="6" x2="6" y2="18"></line>
+               <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
          </button>
          
          <!-- Search Form -->
@@ -461,8 +540,11 @@
                       placeholder="ابحث عن جامعات، معاهد، تخصصات..." 
                       autocomplete="off"
                       x-ref="searchInput">
-               <button type="submit" class="search-popup-submit-btn" aria-label="بحث">
-                  <i class="fa-solid fa-magnifying-glass"></i>
+               <button type="submit" class="search-popup-submit-btn" aria-label="بحث" style="display: inline-flex; align-items: center; justify-content: center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                     <circle cx="11" cy="11" r="8"></circle>
+                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
                </button>
             </div>
             <p class="search-popup-hint">اضغط على Enter للبحث</p>

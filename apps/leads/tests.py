@@ -80,29 +80,7 @@ class LeadModelCreationTests(TestCase):
         self.assertEqual(lead.source_page, 'https://example.com/universities/cairo')
         self.assertEqual(lead.referrer, 'https://google.com')
     
-    def test_lead_creation_with_utm_parameters(self):
-        """Test that lead can be created with UTM parameters."""
-        from .models import Lead, LeadType
-        
-        lead = Lead.objects.create(
-            lead_type=LeadType.REGISTRATION,
-            name='محمود حسن',
-            email='mahmoud@example.com',
-            phone='+201234567892',
-            message='تسجيل جديد',
-            utm_source='facebook',
-            utm_medium='social',
-            utm_campaign='summer_2024',
-            utm_term='universities',
-            utm_content='banner_ad'
-        )
-        
-        self.assertEqual(lead.utm_source, 'facebook')
-        self.assertEqual(lead.utm_medium, 'social')
-        self.assertEqual(lead.utm_campaign, 'summer_2024')
-        self.assertEqual(lead.utm_term, 'universities')
-        self.assertEqual(lead.utm_content, 'banner_ad')
-    
+
     def test_lead_creation_with_status_fields(self):
         """Test that lead can be created with status fields."""
         from .models import Lead, LeadType
@@ -356,20 +334,7 @@ class LeadModelFieldsTests(TestCase):
         field = Lead._meta.get_field('referrer')
         self.assertTrue(field.blank)
     
-    def test_utm_fields_blank(self):
-        """Test all UTM fields are blank=True."""
-        utm_fields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
-        for field_name in utm_fields:
-            field = Lead._meta.get_field(field_name)
-            self.assertTrue(field.blank, f'{field_name} should be blank=True')
-    
-    def test_utm_fields_max_length(self):
-        """Test all UTM fields have max_length=100."""
-        utm_fields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
-        for field_name in utm_fields:
-            field = Lead._meta.get_field(field_name)
-            self.assertEqual(field.max_length, 100, f'{field_name} should have max_length=100')
-    
+
     def test_notes_field_blank(self):
         """Test notes field is blank=True."""
         field = Lead._meta.get_field('notes')
@@ -410,39 +375,7 @@ class LeadPropertyBasedTests(HypothesisTestCase):
         self.assertEqual(lead.phone, phone)
         self.assertEqual(lead.message, message)
     
-    @given(
-        utm_source=st.text(max_size=100),
-        utm_medium=st.text(max_size=100),
-        utm_campaign=st.text(max_size=100),
-        utm_term=st.text(max_size=100),
-        utm_content=st.text(max_size=100)
-    )
-    def test_lead_utm_parameters_storage(self, utm_source, utm_medium, utm_campaign, utm_term, utm_content):
-        """Property: Lead can store any combination of UTM parameters.
-        
-        **Validates: Requirement 5.6** - WHEN a user submits a Lead_Form, THE Platform SHALL record UTM parameters if present in the URL
-        """
-        from .models import Lead, LeadType
-        
-        lead = Lead.objects.create(
-            lead_type=LeadType.REGISTRATION,
-            name='اختبار',
-            email='test@example.com',
-            phone='+201234567890',
-            message='رسالة',
-            utm_source=utm_source,
-            utm_medium=utm_medium,
-            utm_campaign=utm_campaign,
-            utm_term=utm_term,
-            utm_content=utm_content
-        )
-        
-        self.assertEqual(lead.utm_source, utm_source)
-        self.assertEqual(lead.utm_medium, utm_medium)
-        self.assertEqual(lead.utm_campaign, utm_campaign)
-        self.assertEqual(lead.utm_term, utm_term)
-        self.assertEqual(lead.utm_content, utm_content)
-    
+
     @given(
         is_read=st.booleans(),
         notes=st.text(max_size=1000)
@@ -650,10 +583,7 @@ class LeadEmailNotificationSignalTests(TestCase):
             phone='+201234567891',
             message='استفسار عن البرامج',
             source_page='https://example.com/universities',
-            referrer='https://google.com',
-            utm_source='google',
-            utm_medium='organic',
-            utm_campaign='summer_2024'
+            referrer='https://google.com'
         )
         
         # Check email content
@@ -664,9 +594,6 @@ class LeadEmailNotificationSignalTests(TestCase):
         self.assertIn('استفسار عن البرامج', email.body)
         self.assertIn('https://example.com/universities', email.body)
         self.assertIn('https://google.com', email.body)
-        self.assertIn('google', email.body)
-        self.assertIn('organic', email.body)
-        self.assertIn('summer_2024', email.body)
     
     def test_email_subject_in_arabic(self):
         """Test that email subject is in Arabic."""
@@ -943,34 +870,4 @@ class LeadEmailNotificationPropertyBasedTests(HypothesisTestCase):
         sanitized_name = name.replace('\n', ' ').replace('\r', ' ')
         self.assertIn(sanitized_name, email_obj.subject)
     
-    @given(
-        utm_source=st.text(max_size=100),
-        utm_medium=st.text(max_size=100),
-        utm_campaign=st.text(max_size=100)
-    )
-    def test_email_includes_utm_parameters(self, utm_source, utm_medium, utm_campaign):
-        """Property: Email includes UTM parameters when present.
-        
-        **Validates: Requirement 5.6** - WHEN a user submits a Lead_Form, THE Platform SHALL record UTM parameters if present in the URL
-        """
-        mail.outbox = []
-        
-        lead = Lead.objects.create(
-            lead_type=LeadType.REGISTRATION,
-            name='اختبار',
-            email='test@example.com',
-            phone='+201234567890',
-            message='رسالة',
-            utm_source=utm_source,
-            utm_medium=utm_medium,
-            utm_campaign=utm_campaign
-        )
-        
-        email_obj = mail.outbox[0]
-        # Email should contain UTM parameters
-        if utm_source:
-            self.assertIn(utm_source, email_obj.body)
-        if utm_medium:
-            self.assertIn(utm_medium, email_obj.body)
-        if utm_campaign:
-            self.assertIn(utm_campaign, email_obj.body)
+

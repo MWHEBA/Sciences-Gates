@@ -722,3 +722,22 @@ html[dir="rtl"] main {
     text-align: right !important;
     font-family: 'Alexandria', sans-serif !important;
 }
+
+/* ═══════════════════════════════════
+   Phone Fields & Numbers — LTR Format
+   ═══════════════════════════════════ */
+input[type="tel"],
+input[name*="phone"],
+input[name*="telephone"],
+input[id*="phone"],
+input[id*="telephone"] {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+.phone-text,
+a[href^="tel:"] {
+    direction: ltr !important;
+    unicode-bidi: embed !important;
+    display: inline-block;
+}

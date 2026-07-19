@@ -32,11 +32,6 @@ class LeadAdmin(admin.ModelAdmin):
         'updated_at',
         'source_page',
         'referrer',
-        'utm_source',
-        'utm_medium',
-        'utm_campaign',
-        'utm_term',
-        'utm_content',
     )
     
     fieldsets = (
@@ -58,16 +53,7 @@ class LeadAdmin(admin.ModelAdmin):
             ),
             'classes': ('collapse',)
         }),
-        ('معاملات UTM', {
-            'fields': (
-                'utm_source',
-                'utm_medium',
-                'utm_campaign',
-                'utm_term',
-                'utm_content',
-            ),
-            'classes': ('collapse',)
-        }),
+
         ('التواريخ', {
             'fields': (
                 'created_at',

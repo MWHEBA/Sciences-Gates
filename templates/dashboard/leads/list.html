@@ -16,14 +16,78 @@
 {% endblock %}
 
 {% block content %}
+<style>
+.lead-tab {
+    padding: 8px 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.lead-tab.active {
+    font-weight: 600;
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+}
+.lead-badge {
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+    margin-right: 6px;
+}
+.lead-badge.active {
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+.archive-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius);
+    border: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    background-color: var(--surface-2);
+    color: var(--text-secondary);
+}
+.archive-btn.archived {
+    background-color: var(--warning-light);
+    color: var(--warning);
+}
+</style>
+
 <div style="display: flex; flex-direction: column; gap: var(--shell-gap);">
     
+    <!-- Tabs -->
+    <div style="display: flex; border-bottom: 1px solid var(--border); gap: 24px; margin-bottom: 4px; padding-bottom: 2px;">
+        <a href="?lead_type={{ lead_type_filter }}&archive_status=active" 
+           class="lead-tab {% if archive_status != 'archived' %}active{% endif %}"
+           id="tab-active">
+            {% if lead_type_filter == 'registration' %}الطلبات النشطة{% else %}الرسائل النشطة{% endif %}
+            <span id="badge-active" class="px-2 py-0.5 text-xs rounded-full lead-badge {% if archive_status != 'archived' %}active{% endif %}">
+                {{ active_count }}
+            </span>
+        </a>
+        <a href="?lead_type={{ lead_type_filter }}&archive_status=archived" 
+           class="lead-tab {% if archive_status == 'archived' %}active{% endif %}"
+           id="tab-archived">
+            الأرشيف
+            <span id="badge-archived" class="px-2 py-0.5 text-xs rounded-full lead-badge {% if archive_status == 'archived' %}active{% endif %}">
+                {{ archived_count }}
+            </span>
+        </a>
+    </div>
+
     <!-- Filter Bar -->
     <div style="background-color: var(--surface); border: 1px solid var(--border);
                 border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-card);">
         <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-            <!-- Hidden Lead Type Filter -->
+            <!-- Hidden Lead Type and Archive Status Filter -->
             <input type="hidden" name="lead_type" value="{{ lead_type_filter }}">
+            <input type="hidden" name="archive_status" value="{{ archive_status }}">
             
             <!-- Search -->
             <div>
@@ -153,14 +217,14 @@
             <!-- Buttons -->
             <div style="display: flex; gap: 8px; align-items: flex-end;">
                 <button type="submit" style="flex: 1; padding: 8px 12px; background-color: var(--primary);
-                                            color: #ffffff; border: none; border-radius: var(--radius);
-                                            font-size: 13px; font-weight: 600; cursor: pointer;
-                                            transition: background-color 0.2s;"
+                                             color: #ffffff; border: none; border-radius: var(--radius);
+                                             font-size: 13px; font-weight: 600; cursor: pointer;
+                                             transition: background-color 0.2s;"
                         onmouseover="this.style.backgroundColor='var(--primary-hover)'"
                         onmouseout="this.style.backgroundColor='var(--primary)'">
                     بحث
                 </button>
-                <a href="{% url 'dashboard:lead_list' %}?lead_type={{ lead_type_filter }}" style="flex: 1; padding: 8px 12px; background-color: var(--surface-2);
+                <a href="{% url 'dashboard:lead_list' %}?lead_type={{ lead_type_filter }}&archive_status={{ archive_status }}" style="flex: 1; padding: 8px 12px; background-color: var(--surface-2);
                                                                  color: var(--text-secondary); border: 1px solid var(--border);
                                                                  border-radius: var(--radius); font-size: 13px; font-weight: 600;
                                                                  cursor: pointer; text-align: center; text-decoration: none;
@@ -173,6 +237,26 @@
         </form>
     </div>
 
+    <!-- Bulk Actions Bar -->
+    <div id="leads-bulk-bar" style="display: none; align-items: center; justify-content: space-between; padding: 12px 16px;
+                background-color: var(--surface); border: 1px solid var(--border);
+                border-radius: var(--radius-lg); box-shadow: var(--shadow-card);">
+        <div style="font-size: 13px; color: var(--text-primary);">
+            تم تحديد <span id="selected-leads-count" style="font-weight: 600; color: var(--primary);">0</span> عنصر
+        </div>
+        <div style="display: flex; gap: 8px;">
+            {% if archive_status == 'archived' %}
+            <button type="button" id="bulk-unarchive-btn" class="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-warning hover:bg-warning-hover transition-colors duration-200 cursor-pointer" style="border: none;">
+                إلغاء أرشفة المحدد
+            </button>
+            {% else %}
+            <button type="button" id="bulk-archive-btn" class="px-4 py-2 rounded-lg text-xs font-semibold text-white transition-colors duration-200 cursor-pointer" style="background-color: var(--primary); border: none;">
+                أرشفة المحدد
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Leads Table -->
     {% if leads %}
     <div style="background-color: var(--surface); border: 1px solid var(--border);
@@ -182,6 +266,9 @@
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                        <th style="padding: 12px 16px; text-align: center; width: 40px;">
+                            <input type="checkbox" id="select-all-leads" class="w-4 h-4 rounded focus:ring-2 focus:ring-primary" style="cursor: pointer;">
+                        </th>
                         <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
                                    color: var(--text-muted); text-transform: uppercase;">الاسم</th>
                         <th style="padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 600;
@@ -209,18 +296,22 @@
                 </thead>
                 <tbody>
                     {% for lead in leads %}
-                    <tr class="cursor-pointer"
+                    <tr class="cursor-pointer lead-row"
+                        id="lead-row-{{ lead.pk }}"
                         style="border-bottom: 1px solid var(--border); transition: background-color 0.2s; cursor: pointer;"
                         onmouseover="this.style.backgroundColor='var(--bg-light)'"
                         onmouseout="this.style.backgroundColor='transparent'"
                         data-row-url="{% url 'dashboard:lead_detail' lead.pk %}">
+                        <td style="padding: 12px 16px; text-align: center;" onclick="event.stopPropagation();">
+                            <input type="checkbox" name="lead_ids" value="{{ lead.pk }}" class="lead-checkbox w-4 h-4 rounded focus:ring-2 focus:ring-primary" style="cursor: pointer;">
+                        </td>
                         <td style="padding: 12px 16px; font-size: 13px; color: var(--text-primary); font-weight: 600;">
                             {{ lead.name }}
                         </td>
                         <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
                             {{ lead.email|truncatechars:25 }}
                         </td>
-                        <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
+                        <td class="phone-text" style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
                             {{ lead.phone|default:"-" }}
                         </td>
                         <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
@@ -260,7 +351,7 @@
                             </span>
                             {% endif %}
                         </td>
-                        <td style="padding: 12px 16px; text-align: center;">
+                        <td style="padding: 12px 16px; text-align: center; display: flex; justify-content: center; gap: 8px;">
                             <a href="{% url 'dashboard:lead_detail' lead.pk %}"
                                style="display: inline-flex; align-items: center; justify-content: center;
                                       width: 32px; height: 32px; border-radius: var(--radius);
@@ -274,6 +365,21 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                 </svg>
                             </a>
+                            <button type="button" 
+                                    class="archive-btn {% if lead.is_archived %}archived{% endif %}"
+                                    data-lead-id="{{ lead.pk }}"
+                                    data-archive-url="{% url 'dashboard:lead_toggle_archive' lead.pk %}"
+                                    title="{% if lead.is_archived %}إلغاء الأرشفة{% else %}أرشفة الرسالة{% endif %}">
+                                {% if lead.is_archived %}
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                </svg>
+                                {% else %}
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                                </svg>
+                                {% endif %}
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -305,7 +411,7 @@
         </p>
         {% if search_query or from_date or to_date or read_status or nationality_val or study_level_val or residence_country_val or institution_name_val %}
         <div style="margin-top: 14px;">
-            <a href="{% url 'dashboard:lead_list' %}?lead_type={{ lead_type_filter }}" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; border-radius: var(--radius); background-color: var(--primary); color: #fff; text-decoration: none; font-size: 12px; font-weight: 600;">
+            <a href="{% url 'dashboard:lead_list' %}?lead_type={{ lead_type_filter }}&archive_status={{ archive_status }}" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; border-radius: var(--radius); background-color: var(--primary); color: #fff; text-decoration: none; font-size: 12px; font-weight: 600;">
                 مسح الفلاتر
             </a>
         </div>
@@ -314,4 +420,256 @@
     {% endif %}
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all-leads');
+    const rowCheckboxes = document.querySelectorAll('.lead-checkbox');
+    const bulkBar = document.getElementById('leads-bulk-bar');
+    const selectedCountSpan = document.getElementById('selected-leads-count');
+    
+    // Multi-select functionality
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            rowCheckboxes.forEach(cb => {
+                cb.checked = selectAllCheckbox.checked;
+            });
+            updateBulkBar();
+        });
+
+        rowCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                updateBulkBar();
+            });
+        });
+    }
+
+    function updateBulkBar() {
+        const checkedCount = document.querySelectorAll('.lead-checkbox:checked').length;
+        if (selectedCountSpan) selectedCountSpan.textContent = checkedCount;
+        
+        if (bulkBar) {
+            if (checkedCount > 0) {
+                bulkBar.style.display = 'flex';
+            } else {
+                bulkBar.style.display = 'none';
+            }
+        }
+        
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = (checkedCount === rowCheckboxes.length && rowCheckboxes.length > 0);
+        }
+    }
+
+    // CSRF helper
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Update dynamic badges in tabs
+    function updateBadges(data) {
+        const badgeActive = document.getElementById('badge-active');
+        const badgeArchived = document.getElementById('badge-archived');
+        const headerUnreadBadge = document.querySelector('.unread-badge'); // if exists in main template
+        
+        if (badgeActive && data.active_count !== undefined) badgeActive.textContent = data.active_count;
+        if (badgeArchived && data.archived_count !== undefined) badgeArchived.textContent = data.archived_count;
+        if (headerUnreadBadge && data.unread_count !== undefined) headerUnreadBadge.textContent = data.unread_count;
+    }
+
+    // Toast notification and Undo using global system toaster
+    function showToast(message, undoAction) {
+        window.dispatchEvent(new CustomEvent('show-toast', {
+            detail: {
+                message: message,
+                level: 'success',
+                undoEvent: undoAction ? 'leads-undo-event' : null,
+                undoData: undoAction || null
+            }
+        }));
+    }
+
+    // Global toaster Undo event listener
+    window.addEventListener('leads-undo-event', function(e) {
+        const lastAction = e.detail;
+        if (!lastAction) return;
+        
+        const formData = new FormData();
+        if (lastAction.bulk) {
+            lastAction.leadIds.forEach(id => formData.append('lead_ids[]', id));
+            formData.append('action', lastAction.action === 'archive' ? 'unarchive' : 'archive');
+            
+            fetch("{% url 'dashboard:lead_bulk_archive' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload page to restore elements since bulk was hidden
+                    location.reload();
+                }
+            });
+        } else {
+            fetch(lastAction.url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Restore row in DOM
+                    const row = document.getElementById(`lead-row-${lastAction.leadId}`);
+                    if (row) {
+                        row.style.display = '';
+                        row.style.opacity = '1';
+                    }
+                    updateBadges(data);
+                }
+            });
+        }
+    });
+
+    // Handle Archive click
+    document.querySelectorAll('.archive-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const leadId = btn.getAttribute('data-lead-id');
+            const url = btn.getAttribute('data-archive-url');
+            const row = document.getElementById(`lead-row-${leadId}`);
+            
+            // Visual fade out
+            if (row) {
+                row.style.transition = 'opacity 0.3s ease';
+                row.style.opacity = '0';
+                setTimeout(() => {
+                    row.style.display = 'none';
+                }, 300);
+            }
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateBadges(data);
+                    
+                    const isArchived = data.is_archived;
+                    const typeLabel = "{{ lead_type_filter }}" === "registration" ? "الطلب" : "الرسالة";
+                    const msg = isArchived ? `تم أرشفة ${typeLabel} بنجاح` : `تم إلغاء أرشفة ${typeLabel} بنجاح`;
+                    
+                    showToast(msg, {
+                        url: url,
+                        leadId: leadId,
+                        bulk: false,
+                        action: isArchived ? 'archive' : 'unarchive'
+                    });
+                } else {
+                    if (row) {
+                        row.style.display = '';
+                        row.style.opacity = '1';
+                    }
+                    alert('حدث خطأ أثناء تنفيذ الإجراء.');
+                }
+            })
+            .catch(err => {
+                if (row) {
+                    row.style.display = '';
+                    row.style.opacity = '1';
+                }
+                console.error(err);
+            });
+        });
+    });
+
+    // Handle Bulk Archive
+    const bulkArchiveBtn = document.getElementById('bulk-archive-btn');
+    const bulkUnarchiveBtn = document.getElementById('bulk-unarchive-btn');
+
+    function executeBulkAction(actionType) {
+        const selectedCheckboxes = document.querySelectorAll('.lead-checkbox:checked');
+        const leadIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+        
+        if (leadIds.length === 0) return;
+        
+        const formData = new FormData();
+        leadIds.forEach(id => formData.append('lead_ids[]', id));
+        formData.append('action', actionType);
+
+        // Hide rows in DOM
+        leadIds.forEach(id => {
+            const row = document.getElementById(`lead-row-${id}`);
+            if (row) row.style.display = 'none';
+        });
+        
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        rowCheckboxes.forEach(cb => cb.checked = false);
+        updateBulkBar();
+
+        fetch("{% url 'dashboard:lead_bulk_archive' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateBadges(data);
+                const typeLabel = "{{ lead_type_filter }}" === "registration" ? "طلب" : "رسالة";
+                const msg = actionType === 'archive' ? `تم أرشفة ${leadIds.length} ${typeLabel} بنجاح` : `تم إلغاء أرشفة ${leadIds.length} ${typeLabel} بنجاح`;
+                
+                showToast(msg, {
+                    leadIds: leadIds,
+                    bulk: true,
+                    action: actionType
+                });
+            } else {
+                location.reload();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            location.reload();
+        });
+    }
+
+    if (bulkArchiveBtn) {
+        bulkArchiveBtn.addEventListener('click', () => executeBulkAction('archive'));
+    }
+    if (bulkUnarchiveBtn) {
+        bulkUnarchiveBtn.addEventListener('click', () => executeBulkAction('unarchive'));
+    }
+});
+</script>
 {% endblock %}

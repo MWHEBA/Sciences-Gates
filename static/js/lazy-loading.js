@@ -1,172 +1,58 @@
 /**
  * Lazy Loading Module
- * Implements intersection observer for below-fold images
- * Provides fallback for browsers without native lazy loading support
+ * Lightweight helper to apply fade-in transitions for native lazy loading
  */
 
 class LazyLoadingManager {
     constructor() {
-        this.imageSelector = 'img[loading="lazy"]';
-        this.placeholderClass = 'lazy-placeholder';
-        this.loadedClass = 'lazy-loaded';
-        this.errorClass = 'lazy-error';
         this.init();
     }
 
-    /**
-     * Initialize lazy loading
-     */
     init() {
-        // Force IntersectionObserver for strict deferring on all browsers
-        this.setupIntersectionObserver();
-    }
-
-    /**
-     * Setup native lazy loading with error handling
-     */
-    setupNativeLazyLoading() {
-        const images = document.querySelectorAll(this.imageSelector);
-        images.forEach(img => {
-            this.setupImageErrorHandling(img);
-            if (img.complete) {
-                img.classList.add(this.loadedClass);
-                img.classList.remove(this.placeholderClass);
-            }
-        });
-    }
-
-    /**
-     * Setup intersection observer for lazy loading
-     */
-    setupIntersectionObserver() {
-        const options = {
-            root: null,
-            rootMargin: '50px', // Start loading 50px before image enters viewport
-            threshold: 0.01
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    this.loadImage(entry.target);
-                    observer.unobserve(entry.target);
+        // Handle images already in the DOM and completed (or cached)
+        const checkExisting = () => {
+            const images = document.querySelectorAll('img[loading="lazy"]');
+            images.forEach(img => {
+                if (img.complete) {
+                    img.classList.add('lazy-loaded');
                 }
             });
-        }, options);
-
-        const images = document.querySelectorAll(this.imageSelector);
-        images.forEach(img => {
-            if (img.complete) {
-                img.classList.add(this.loadedClass);
-                img.classList.remove(this.placeholderClass);
-            } else {
-                this.addPlaceholder(img);
-                observer.observe(img);
-            }
-        });
-    }
-
-    /**
-     * Load image and handle errors
-     */
-    loadImage(img) {
-        const src = img.getAttribute('data-src') || img.getAttribute('src');
-        const srcset = img.getAttribute('data-srcset');
-
-        if (!src) return;
-
-        // Create a new image to preload
-        const tempImg = new Image();
-
-        tempImg.onload = () => {
-            img.src = src;
-            if (srcset) {
-                img.srcset = srcset;
-            }
-            img.classList.add(this.loadedClass);
-            img.classList.remove(this.placeholderClass);
-            this.removePlaceholder(img);
         };
 
-        tempImg.onerror = () => {
-            img.classList.add(this.errorClass);
-            this.removePlaceholder(img);
-        };
-
-        tempImg.src = src;
-    }
-
-    /**
-     * Add placeholder to image
-     */
-    addPlaceholder(img) {
-        // Only add placeholder if image doesn't have one already
-        if (img.parentElement && img.parentElement.classList.contains(this.placeholderClass)) {
-            return;
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkExisting);
+        } else {
+            checkExisting();
         }
 
-        // Create placeholder element
-        const placeholder = document.createElement('div');
-        placeholder.className = `${this.placeholderClass} bg-gray-200 animate-pulse`;
-        
-        const width = img.getAttribute('width');
-        const height = img.getAttribute('height');
-        
-        placeholder.style.width = width ? `${width}px` : '100%';
-        placeholder.style.height = height ? `${height}px` : 'auto';
-        placeholder.style.aspectRatio = img.getAttribute('data-aspect-ratio') || (width && height ? `${width}/${height}` : 'auto');
+        // Capture load/error events globally to support dynamically added images (AJAX/Alpine.js)
+        // Since load/error events do not bubble, we must use the capturing phase (third parameter = true)
+        document.addEventListener('load', (event) => {
+            const target = event.target;
+            if (target.tagName === 'IMG' && target.getAttribute('loading') === 'lazy') {
+                target.classList.add('lazy-loaded');
+            }
+        }, true);
 
-        // Insert placeholder before image
-        img.parentElement?.insertBefore(placeholder, img);
-        img.classList.add(this.placeholderClass);
-    }
-
-    /**
-     * Remove placeholder from image
-     */
-    removePlaceholder(img) {
-        const placeholder = img.parentElement?.querySelector(`.${this.placeholderClass}`);
-        if (placeholder && placeholder !== img) {
-            placeholder.remove();
-        }
-    }
-
-    /**
-     * Setup error handling for images
-     */
-    setupImageErrorHandling(img) {
-        img.addEventListener('error', () => {
-            img.classList.add(this.errorClass);
-            img.classList.remove(this.placeholderClass);
-            this.removePlaceholder(img);
-            // Optionally show a fallback image or message
-            console.warn('Failed to load image:', img.src);
-        });
-
-        img.addEventListener('load', () => {
-            img.classList.add(this.loadedClass);
-            img.classList.remove(this.placeholderClass);
-            this.removePlaceholder(img);
-        });
+        document.addEventListener('error', (event) => {
+            const target = event.target;
+            if (target.tagName === 'IMG' && target.getAttribute('loading') === 'lazy') {
+                target.classList.add('lazy-error');
+            }
+        }, true);
     }
 }
 
-/**
- * Initialize lazy loading when DOM is ready
- */
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     new LazyLoadingManager();
 });
 
-/**
- * Re-initialize lazy loading for dynamically added images
- * Useful for AJAX-loaded content
- */
+// Fallback functions to prevent breaking references
 function reinitializeLazyLoading() {
     new LazyLoadingManager();
 }
 
-// Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = LazyLoadingManager;
 }

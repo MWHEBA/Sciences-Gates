@@ -1,5 +1,6 @@
 from django.db import models
 from apps.core.models import TimestampedModel
+from urllib.parse import unquote, urlparse
 
 
 class LeadType(models.TextChoices):
@@ -86,34 +87,7 @@ class Lead(TimestampedModel):
         verbose_name='المرجع',
         help_text='رابط المرجع (HTTP Referrer)'
     )
-    
-    # UTM parameters
-    utm_source = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='UTM Source'
-    )
-    utm_medium = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='UTM Medium'
-    )
-    utm_campaign = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='UTM Campaign'
-    )
-    utm_term = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='UTM Term'
-    )
-    utm_content = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='UTM Content'
-    )
-    
+
     # Status fields
     status = models.CharField(
         max_length=30,
@@ -125,6 +99,11 @@ class Lead(TimestampedModel):
     is_read = models.BooleanField(
         default=False,
         verbose_name='تم قراءتها',
+        db_index=True
+    )
+    is_archived = models.BooleanField(
+        default=False,
+        verbose_name='مؤرشفة',
         db_index=True
     )
     notes = models.TextField(
@@ -140,9 +119,11 @@ class Lead(TimestampedModel):
             models.Index(fields=['created_at']),
             models.Index(fields=['lead_type']),
             models.Index(fields=['is_read']),
+            models.Index(fields=['is_archived']),
             models.Index(fields=['-created_at']),
             models.Index(fields=['lead_type', '-created_at']),
             models.Index(fields=['is_read', '-created_at']),
+            models.Index(fields=['is_archived', 'lead_type', '-created_at']),
         ]
     
     def __str__(self):
@@ -152,3 +133,82 @@ class Lead(TimestampedModel):
         """Mark lead as read."""
         self.is_read = True
         self.save(update_fields=['is_read'])
+
+    def archive(self):
+        """Archive the lead."""
+        self.is_archived = True
+        self.save(update_fields=['is_archived'])
+
+    def unarchive(self):
+        """Unarchive the lead."""
+        self.is_archived = False
+        self.save(update_fields=['is_archived'])
+
+    @property
+    def source_page_name(self):
+        """Extract a readable page name from source_page URL."""
+        if not self.source_page:
+            return ""
+        try:
+            decoded_url = unquote(self.source_page)
+            parsed = urlparse(decoded_url)
+            path = parsed.path.strip('/')
+            if not path:
+                return "الصفحة الرئيسية"
+            
+            parts = path.split('/')
+            last_part = parts[-1]
+            page_name = last_part.replace('-', ' ').replace('_', ' ')
+            
+            # Map categories to readable names
+            if len(parts) > 1:
+                category = parts[0]
+                if category == 'universities':
+                    return f"جامعة: {page_name}"
+                elif category == 'institutes':
+                    return f"معهد: {page_name}"
+                elif category == 'courses':
+                    return f"تخصص: {page_name}"
+            
+            return page_name
+        except Exception:
+            return self.source_page
+
+    @property
+    def referrer_name(self):
+        """Extract a readable website name from referrer URL."""
+        def clean_url(url):
+            if not url:
+                return ""
+            url = url.strip().lower().replace('https://', '').replace('http://', '')
+            if url.startswith('www.'):
+                url = url[4:]
+            if url.endswith('/'):
+                url = url[:-1]
+            return url
+
+        if not self.referrer or clean_url(self.referrer) == clean_url(self.source_page):
+            return "رابط مباشر"
+        try:
+            parsed = urlparse(self.referrer)
+            domain = parsed.netloc
+            if not domain:
+                return self.referrer
+            if domain.startswith('www.'):
+                domain = domain[4:]
+            
+            common_sources = {
+                'google.com': 'بحث جوجل (Google)',
+                'facebook.com': 'فيسبوك (Facebook)',
+                'instagram.com': 'إنستغرام (Instagram)',
+                'linkedin.com': 'لينكد إن (LinkedIn)',
+                'twitter.com': 'تويتر (Twitter/X)',
+                't.co': 'تويتر (Twitter/X)',
+                'youtube.com': 'يوتيوب (YouTube)',
+            }
+            for key, val in common_sources.items():
+                if key in domain:
+                    return val
+            return domain
+        except Exception:
+            return self.referrer

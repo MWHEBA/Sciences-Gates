@@ -591,3 +591,65 @@ def cleanup_attachment_file_on_delete(instance):
             )
 
 
+class SMTPCryptography:
+    """
+    Symmetric encryption/decryption helper for SMTP passwords stored in the database.
+    Uses CTR mode with HMAC-SHA256 derived from settings.SECRET_KEY to ensure password confidentiality.
+    """
+    @staticmethod
+    def _get_key():
+        import hashlib
+        return hashlib.sha256(settings.SECRET_KEY.encode('utf-8')).digest()
+
+    @classmethod
+    def encrypt(cls, plaintext):
+        if not plaintext:
+            return ""
+        import base64
+        import hmac
+        import hashlib
+        import os
+        
+        key = cls._get_key()
+        iv = os.urandom(16)
+        
+        plaintext_bytes = plaintext.encode('utf-8')
+        keystream = bytearray()
+        counter = 0
+        while len(keystream) < len(plaintext_bytes):
+            h = hmac.new(key, iv + str(counter).encode('utf-8'), hashlib.sha256).digest()
+            keystream.extend(h)
+            counter += 1
+            
+        ciphertext = bytes([p ^ k for p, k in zip(plaintext_bytes, keystream)])
+        return base64.b64encode(iv + ciphertext).decode('utf-8')
+
+    @classmethod
+    def decrypt(cls, ciphertext_b64):
+        if not ciphertext_b64:
+            return ""
+        import base64
+        import hmac
+        import hashlib
+        
+        try:
+            data = base64.b64decode(ciphertext_b64.encode('utf-8'))
+            if len(data) < 16:
+                return ""
+            iv = data[:16]
+            ciphertext = data[16:]
+            
+            key = cls._get_key()
+            keystream = bytearray()
+            counter = 0
+            while len(keystream) < len(ciphertext):
+                h = hmac.new(key, iv + str(counter).encode('utf-8'), hashlib.sha256).digest()
+                keystream.extend(h)
+                counter += 1
+                
+            plaintext_bytes = bytes([c ^ k for c, k in zip(ciphertext, keystream)])
+            return plaintext_bytes.decode('utf-8')
+        except Exception:
+            return ""
+
+

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if lead.lead_type == 'registration' %}طلب تسجيل جديد{% else %}استفسار جديد{% endif %}</title>
+</head>
+<body style="margin: 0; padding: 0; width: 100%; background-color: #F7FAFC; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; font-family: 'Alexandria', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F7FAFC; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <!-- Card Container -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #D0DAE4; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(11, 45, 77, 0.05);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background-color: #0B2D4D; padding: 30px 40px; text-align: center; border-bottom: 3px solid #C8A041;">
+                            <h1 style="color: #FFFFFF; font-size: 24px; margin: 0; font-weight: 600; letter-spacing: 0.5px;">بوابات العلوم</h1>
+                            <p style="color: #C8A041; font-size: 13px; margin: 5px 0 0 0; font-weight: 600; text-transform: uppercase;">لوحة التحكم الإدارية</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 40px 30px 40px;">
+                            <h2 style="color: #11243A; font-size: 20px; margin-top: 0; margin-bottom: 20px; font-weight: 600;">
+                                {% if lead.lead_type == 'registration' %}
+                                    📋 إخطار بطلب تسجيل جديد
+                                {% else %}
+                                    💬 إخطار باستفسار جديد
+                                {% endif %}
+                            </h2>
+                            
+                            <p style="color: #43576B; font-size: 15px; line-height: 1.8; margin-bottom: 25px;">
+                                مرحباً، تم استقبال رسالة جديدة عبر الموقع الإلكتروني. فيما يلي تفاصيل الرسالة المستلمة:
+                            </p>
+                            
+                            <!-- Lead Fields Table -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; margin-bottom: 30px;">
+                                <tr>
+                                    <td width="35%" style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">نوع الرسالة</td>
+                                    <td width="65%" style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead_type_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">الاسم الكامل</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">رقم الهاتف</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px; direction: ltr; text-align: right;">{{ lead.phone }}</td>
+                                </tr>
+                                {% if lead.email %}
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">البريد الإلكتروني</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #0B2D4D; font-size: 14px;">
+                                        <a href="mailto:{{ lead.email }}" style="color: #0B2D4D; text-decoration: none;">{{ lead.email }}</a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if lead.nationality %}
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">الجنسية</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead.nationality }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if lead.residence_country %}
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">دولة الإقامة</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead.residence_country }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if lead.study_level %}
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">المرحلة الدراسية</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead.study_level }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if lead.institution_name %}
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">المؤسسة التعليمية</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead.institution_name }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if lead.address %}
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">العنوان</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead.address }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if lead.message %}
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px; vertical-align: top;">محتوى الرسالة</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px; line-height: 1.6; white-space: pre-line;">{{ lead.message }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+
+                            <!-- Metadata Section -->
+                            <div style="background-color: #F8FAFC; border: 1px solid #EAF0F7; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+                                <h3 style="color: #0B2D4D; font-size: 14px; margin-top: 0; margin-bottom: 12px; font-weight: 600;">معلومات التتبع والمصدر:</h3>
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 12px; color: #6B7C8F; line-height: 1.6;">
+                                    {% if lead.source_page %}
+                                    <tr>
+                                        <td width="30%" style="padding: 4px 0; font-weight: bold;">صفحة الإرسال:</td>
+                                        <td width="70%" style="padding: 4px 0; word-break: break-all; direction: ltr; text-align: left;">
+                                            <a href="{{ lead.source_page }}" style="color: #C8A041; text-decoration: none;">{{ lead.source_page }}</a>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if lead.referrer %}
+                                    <tr>
+                                        <td style="padding: 4px 0; font-weight: bold;">المرجع (Referrer):</td>
+                                        <td style="padding: 4px 0; word-break: break-all; direction: ltr; text-align: left;">{{ lead.referrer }}</td>
+                                    </tr>
+                                    {% endif %}
+
+                                    <tr>
+                                        <td style="padding: 4px 0; font-weight: bold;">تاريخ الإرسال:</td>
+                                        <td style="padding: 4px 0; direction: ltr; text-align: left;">{{ lead.created_at|date:"Y-m-d H:i:s" }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Action Notice -->
+                            <p style="color: #6B7C8F; font-size: 13px; line-height: 1.6; padding: 15px; background-color: #FDF6E3; border-right: 4px solid #C8A041; border-radius: 4px; margin: 0;">
+                                <strong>تلميح إداري:</strong> يمكنك الرد مباشرة على هذا البريد للرد على مرسل الرسالة عبر بريده الإلكتروني.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #F7FAFC; padding: 25px 40px; text-align: center; border-top: 1px solid #EAF0F7;">
+                            <p style="color: #6B7C8F; font-size: 12px; margin: 0 0 5px 0; line-height: 1.5;">
+                                © {{ current_year }} بوابات العلوم (Science Gates). جميع الحقوق محفوظة.
+                            </p>
+                            <p style="color: #A0AEC0; font-size: 11px; margin: 0; line-height: 1.5;">
+                                هذا البريد مرسل تلقائياً للمسؤولين المفعلين لاستقبال إشعارات الرسائل.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

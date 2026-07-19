@@ -124,6 +124,20 @@
                             {{ create_form.role }}
                             <span id="create-error-role" class="text-xs text-red-600 mt-1 block"></span>
                         </div>
+                        <div class="col-span-2 space-y-3 pt-2">
+                            <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">تفضيلات الإشعارات بالبريد</label>
+                            <div class="flex items-center gap-2">
+                                {{ create_form.receive_registration_emails }}
+                                <label for="id_create-receive_registration_emails" class="text-sm font-normal" style="color: var(--text-secondary);">استقبال إيميلات طلبات التسجيل</label>
+                            </div>
+                            <span id="create-error-receive_registration_emails" class="text-xs text-red-600 block"></span>
+                            
+                            <div class="flex items-center gap-2">
+                                {{ create_form.receive_inquiry_emails }}
+                                <label for="id_create-receive_inquiry_emails" class="text-sm font-normal" style="color: var(--text-secondary);">استقبال إيميلات الاستفسارات</label>
+                            </div>
+                            <span id="create-error-receive_inquiry_emails" class="text-xs text-red-600 block"></span>
+                        </div>
                     </div>
                 </div>
 
@@ -190,6 +204,20 @@
                             <label for="id_edit-role" class="block text-sm font-normal mb-1" style="color: var(--text-secondary);">الدور <span class="text-red-500">*</span></label>
                             {{ update_form.role }}
                             <span id="edit-error-role" class="text-xs text-red-600 mt-1 block"></span>
+                        </div>
+                        <div class="col-span-2 space-y-3 pt-2">
+                            <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">تفضيلات الإشعارات بالبريد</label>
+                            <div class="flex items-center gap-2">
+                                {{ update_form.receive_registration_emails }}
+                                <label for="id_edit-receive_registration_emails" class="text-sm font-normal" style="color: var(--text-secondary);">استقبال إيميلات طلبات التسجيل</label>
+                            </div>
+                            <span id="edit-error-receive_registration_emails" class="text-xs text-red-600 block"></span>
+                            
+                            <div class="flex items-center gap-2">
+                                {{ update_form.receive_inquiry_emails }}
+                                <label for="id_edit-receive_inquiry_emails" class="text-sm font-normal" style="color: var(--text-secondary);">استقبال إيميلات الاستفسارات</label>
+                            </div>
+                            <span id="edit-error-receive_inquiry_emails" class="text-xs text-red-600 block"></span>
                         </div>
                     </div>
                 </div>
@@ -299,6 +327,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('id_edit-first_name').value = data.first_name;
                 document.getElementById('id_edit-last_name').value = data.last_name;
                 document.getElementById('id_edit-role').value = data.role;
+                document.getElementById('id_edit-receive_registration_emails').checked = data.receive_registration_emails;
+                document.getElementById('id_edit-receive_inquiry_emails').checked = data.receive_inquiry_emails;
                 editModal.style.display = 'flex';
             }
         });

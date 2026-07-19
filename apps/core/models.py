@@ -212,6 +212,16 @@ class UserProfile(models.Model):
         verbose_name='الدور',
         help_text='دور المستخدم في لوحة التحكم'
     )
+    receive_registration_emails = models.BooleanField(
+        default=True,
+        verbose_name='استقبال إيميلات التسجيل',
+        help_text='تفعيل استقبال إشعارات طلبات التسجيل الجديدة عبر البريد الإلكتروني'
+    )
+    receive_inquiry_emails = models.BooleanField(
+        default=True,
+        verbose_name='استقبال إيميلات الاستفسارات',
+        help_text='تفعيل استقبال إشعارات الاستفسارات الجديدة عبر البريد الإلكتروني'
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name='تاريخ الإنشاء'
@@ -359,6 +369,53 @@ class SiteSettings(models.Model):
         help_text='عند التفعيل، يمكن للمستخدمين المسجلين دخولهم كـ Staff تصفح الموقع بشكل طبيعي'
     )
     
+    # Dynamic SMTP Settings
+    email_smtp_use_dynamic = models.BooleanField(
+        default=False,
+        verbose_name='تفعيل إعدادات SMTP مخصصة',
+        help_text='عند التفعيل، سيقوم النظام بإرسال رسائل البريد الإلكتروني باستخدام هذه الإعدادات بدلاً من الإعدادات الافتراضية في ملف .env'
+    )
+    email_smtp_host = models.CharField(
+        max_length=255,
+        default='smtp.gmail.com',
+        blank=True,
+        verbose_name='خادم SMTP',
+        help_text='عنوان خادم SMTP الخاص بمزود الخدمة (مثال لـ Google Workspace: smtp.gmail.com)'
+    )
+    email_smtp_port = models.PositiveIntegerField(
+        default=587,
+        verbose_name='منفذ SMTP',
+        help_text='المنفذ المستخدم للإرسال (مثال: 587 للـ TLS أو 465 للـ SSL)'
+    )
+    email_smtp_user = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name='اسم مستخدم SMTP',
+        help_text='البريد الإلكتروني بالكامل المستخدم لتسجيل الدخول (مثال: mail@sciencesgates.com)'
+    )
+    email_smtp_password = models.CharField(
+        max_length=1000,
+        blank=True,
+        verbose_name='كلمة مرور SMTP',
+        help_text='كلمة مرور الحساب. في حالة استخدام Google Workspace، يرجى إنشاء واستخدام كلمة مرور تطبيق (App Password).'
+    )
+    email_smtp_use_tls = models.BooleanField(
+        default=True,
+        verbose_name='تفعيل TLS',
+        help_text='تأمين الاتصال باستخدام TLS (مستحسن ومطلوب للمنفذ 587)'
+    )
+    email_smtp_use_ssl = models.BooleanField(
+        default=False,
+        verbose_name='تفعيل SSL',
+        help_text='تأمين الاتصال باستخدام SSL (مستحسن ومطلوب للمنفذ 465)'
+    )
+    email_from_address = models.EmailField(
+        default='noreply@example.com',
+        blank=True,
+        verbose_name='بريد المرسل الافتراضي',
+        help_text='البريد الذي سيظهر للمستلمين كمستلم للرسالة (مثال: noreply@sciencesgates.com)'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -401,12 +458,39 @@ class SiteSettings(models.Model):
         with open(cache_file, 'w', encoding='utf-8') as f:
             json.dump(data, f, cls=DjangoJSONEncoder, ensure_ascii=False, indent=2)
 
+    def update_smtp_cache(self):
+        """Write current SMTP settings to a local JSON file to prevent DB hits."""
+        import json
+        from django.conf import settings
+        
+        cache_dir = settings.BASE_DIR / 'cache'
+        cache_dir.mkdir(exist_ok=True)
+        cache_file = cache_dir / 'smtp_config.json'
+        
+        data = {
+            'email_smtp_use_dynamic': self.email_smtp_use_dynamic,
+            'email_smtp_host': self.email_smtp_host,
+            'email_smtp_port': self.email_smtp_port,
+            'email_smtp_user': self.email_smtp_user,
+            'email_smtp_password': self.email_smtp_password,  # Stored encrypted
+            'email_smtp_use_tls': self.email_smtp_use_tls,
+            'email_smtp_use_ssl': self.email_smtp_use_ssl,
+            'email_from_address': self.email_from_address,
+        }
+        
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
     def save(self, *args, **kwargs):
         """Ensure only one instance exists (singleton pattern)."""
         self.pk = 1
         super().save(*args, **kwargs)
         try:
             self.update_maintenance_cache()
+        except Exception:
+            pass
+        try:
+            self.update_smtp_cache()
         except Exception:
             pass
 
@@ -476,6 +560,59 @@ class SiteSettings(models.Model):
         """Get the primary WhatsApp number cleaned for use in API links (digits only, no leading + or 00)."""
         primary = self.whatsapp_primary
         return self.clean_whatsapp_number(primary)
+
+    @property
+    def phone_clean(self):
+        """Get the phone number cleaned for use in tel: links."""
+        if not self.phone:
+            return ""
+        import re
+        cleaned = re.sub(r'[^\d+]', '', self.phone.strip())
+        return cleaned
+
+    @staticmethod
+    def format_display_number(number):
+        """Format a phone number cleanly with spaces (e.g. +60 12 345 6789 or +20 122 960 9292)."""
+        if not number:
+            return ""
+        import re
+        cleaned = re.sub(r'[^\d+]', '', number.strip())
+        if not cleaned.startswith('+'):
+            if cleaned.startswith('00'):
+                cleaned = '+' + cleaned[2:]
+            else:
+                cleaned = '+' + cleaned
+        
+        if cleaned.startswith('+60'):
+            digits = cleaned[3:]
+            if len(digits) == 9:
+                return f"+60 {digits[0:2]} {digits[2:5]} {digits[5:]}"
+            elif len(digits) == 10:
+                return f"+60 {digits[0:2]} {digits[2:6]} {digits[6:]}"
+        
+        if cleaned.startswith('+20'):
+            digits = cleaned[3:]
+            if len(digits) == 10:
+                return f"+20 {digits[0:3]} {digits[3:6]} {digits[6:]}"
+            elif len(digits) == 9:
+                return f"+20 {digits[0:2]} {digits[2:5]} {digits[5:]}"
+
+        return cleaned
+
+    @property
+    def phone_formatted(self):
+        """Get the phone number formatted for display."""
+        if not self.phone:
+            return ""
+        return self.format_display_number(self.phone)
+
+    @property
+    def whatsapp_primary_formatted(self):
+        """Get the primary WhatsApp number formatted for display."""
+        primary = self.whatsapp_primary
+        if not primary:
+            return ""
+        return self.format_display_number(primary)
 
     @property
     def whatsapp_list_parsed(self):
