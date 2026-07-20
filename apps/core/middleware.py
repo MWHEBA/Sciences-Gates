@@ -22,7 +22,7 @@ class MaintenanceModeMiddleware:
         self.cache_file = settings.BASE_DIR / 'cache' / 'maintenance_state.json'
 
     def __call__(self, request):
-        state = self.get_maintenance_state()
+        state = self.get_maintenance_state(request)
         if not state or not state.get('maintenance_mode', False):
             return self.get_response(request)
 
@@ -59,12 +59,15 @@ class MaintenanceModeMiddleware:
         # 4. Render using Django Template without Context Processors
         return self.render_maintenance_response(state)
 
-    def get_maintenance_state(self):
+    def get_maintenance_state(self, request=None):
         """Reads maintenance config from local JSON file; regenerates from DB if missing."""
-        import sys
-        if 'test' in sys.argv or 'pytest' in sys.modules:
+        from django.conf import settings
+        if getattr(settings, 'TESTING', False) or 'test' in sys.argv or 'pytest' in sys.modules:
             try:
                 db_settings = SiteSettings.get_settings()
+                # Cache on request to avoid duplicate DB hit from site_settings_context
+                if request is not None:
+                    request._site_settings = db_settings
                 return {
                     'maintenance_mode': db_settings.maintenance_mode,
                     'maintenance_bypass_staff': db_settings.maintenance_bypass_staff,

@@ -107,100 +107,17 @@ function sg_init_importer() {
                                     });
                                 }
                                 
-                                const compiledPrompt = finalData.mapped_data.compiled_prompt;
-                                if (compiledPrompt) {
-                                    document.getElementById('import-success-message').textContent = 'تم تجهيز البيانات والبرومبت بنجاح. يمكنك نسخ البرومبت وتطبيق استجابة الـ JSON أدناه أو الانتقال مباشرة.';
-                                    
-                                    const promptSection = document.getElementById('import-success-prompt-section');
-                                    if (promptSection) {
-                                        promptSection.style.display = 'flex';
-                                        document.getElementById('sg-success-prompt-text').value = compiledPrompt;
-                                        
-                                        document.getElementById('sg-success-copy-prompt-btn').onclick = () => {
-                                            const textarea = document.getElementById('sg-success-prompt-text');
-                                            textarea.select();
-                                            document.execCommand('copy');
-                                            const btn = document.getElementById('sg-success-copy-prompt-btn');
-                                            btn.textContent = 'تم النسخ! ✓';
-                                            setTimeout(() => {
-                                                btn.textContent = 'نسخ البرومبت 📋';
-                                            }, 2000);
-                                        };
-
-                                        document.getElementById('sg-success-apply-json-btn').onclick = () => {
-                                            const pasteArea = document.getElementById('sg-success-json-paste');
-                                            const errorDiv = document.getElementById('sg-success-json-error');
-                                            errorDiv.style.display = 'none';
-                                            errorDiv.textContent = '';
-
-                                            let rawVal = pasteArea.value.trim();
-                                            if (!rawVal) {
-                                                errorDiv.textContent = '⚠️ يرجى لصق كود JSON أولاً أو النقر على الزر الآخر للمتابعة مباشرة.';
-                                                errorDiv.style.display = 'block';
-                                                return;
-                                            }
-
-                                            if (rawVal.includes('```')) {
-                                                const match = rawVal.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-                                                if (match && match[1]) {
-                                                    rawVal = match[1].trim();
-                                                }
-                                            }
-
-                                            try {
-                                                const parsed = JSON.parse(rawVal);
-                                                
-                                                // Merge parsed fields into finalData.mapped_data
-                                                if (!finalData.mapped_data.form_initial) {
-                                                    finalData.mapped_data.form_initial = {};
-                                                }
-                                                // Copy all flat fields dynamically
-                                                for (const [key, val] of Object.entries(parsed)) {
-                                                    if (val !== null && typeof val !== 'object') {
-                                                        finalData.mapped_data.form_initial[key] = val;
-                                                    }
-                                                }
-                                                // Copy all formsets dynamically
-                                                const arrayFields = [
-                                                    'subjects_tables', 'salary_tables', 'countries_tables',
-                                                    'faqs_data', 'faculties_data', 'courses_data', 'tuition_fees',
-                                                    'best_universities', 'cheap_universities'
-                                                ];
-                                                arrayFields.forEach(arr => {
-                                                    if (parsed[arr] !== undefined) {
-                                                        finalData.mapped_data[arr] = parsed[arr];
-                                                    }
-                                                });
-
-                                                // Update sessionStorage with updated data
-                                                sessionStorage.setItem('sg_import_data', JSON.stringify(finalData.mapped_data));
-
-                                                // Redirect immediately
-                                                window.location.href = finalData.redirect_url;
-                                            } catch (err) {
-                                                console.error(err);
-                                                errorDiv.textContent = `❌ فشل تحليل الـ JSON: ${err.message}`;
-                                                errorDiv.style.display = 'block';
-                                            }
-                                        };
-
-                                        document.getElementById('sg-success-skip-json-btn').onclick = () => {
-                                            window.location.href = finalData.redirect_url;
-                                        };
-                                    }
+                                // Redirect after successful fetch (no prompt needed)
+                                const warnings = finalData.mapped_data.image_warnings || [];
+                                if (warnings.length > 0) {
+                                    proceedBtn.style.display = 'inline-block';
+                                    proceedBtn.onclick = () => {
+                                        window.location.href = finalData.redirect_url;
+                                    };
                                 } else {
-                                    // Default behavior with auto redirect or warnings
-                                    const warnings = finalData.mapped_data.image_warnings || [];
-                                    if (warnings.length > 0) {
-                                        proceedBtn.style.display = 'inline-block';
-                                        proceedBtn.onclick = () => {
-                                            window.location.href = finalData.redirect_url;
-                                        };
-                                    } else {
-                                        setTimeout(() => {
-                                            window.location.href = finalData.redirect_url;
-                                        }, 1500);
-                                    }
+                                    setTimeout(() => {
+                                        window.location.href = finalData.redirect_url;
+                                    }, 1500);
                                 }
                             },
                             (errorMsg) => {
@@ -255,7 +172,7 @@ function sg_init_importer() {
                 } catch (err) { console.error('Error in sg_fill_formsets', err); }
                 
                 try {
-                    sg_show_import_banner(importData.image_warnings, importData.compiled_prompt);
+                    sg_show_import_banner(importData.image_warnings);
                 } catch (err) { console.error('Error in sg_show_import_banner', err); }
                 
                 // Scroll back to the top of the page after autofilling completes
@@ -982,7 +899,6 @@ function triggerFetchAndPoll(slug, callback) {
                             clearInterval(pollInterval);
                             cacheEntry.status = 'READY';
                             cacheEntry.data = resData.result_data;
-                            cacheEntry.prompt = resData.result_data.mapped_data.compiled_prompt;
                             if (callback) callback();
                         } else if (resData.status === 'FAILED') {
                             clearInterval(pollInterval);

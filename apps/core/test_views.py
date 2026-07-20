@@ -50,6 +50,10 @@ class VisaTrackingViewTestCase(TestCase):
     """
     اختبارات صفحة متابعة الفيزا ونموذج طلب المساعدة
     """
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
 
     def test_visa_tracking_page_loads_successfully(self):
         """التحقق من تحميل صفحة تتبع الفيزا بنجاح مع القالب الصحيح"""
@@ -67,6 +71,7 @@ class VisaTrackingViewTestCase(TestCase):
             'name': 'أحمد علي',
             'email': 'ahmed.ali@example.com',
             'phone': '+201234567890',
+            'nationality': 'مصر',
             'message': 'أريد مساعدة في تتبع طلبي الموقف عند 35%',
             'website': '',  # حقل الهوني بوت فارغ
         }
@@ -95,6 +100,7 @@ class VisaTrackingViewTestCase(TestCase):
             'name': 'سبامر',
             'email': 'spam@example.com',
             'phone': '+201234567890',
+            'nationality': 'مصر',
             'message': 'رسالة سبام',
             'website': 'http://spambot.com',  # حقل الهوني بوت مملوء
         }

@@ -50,7 +50,12 @@ def site_settings_context(request):
     from django.conf import settings
     
     try:
-        site_settings = SiteSettings.get_settings()
+        # Use request-level cache to avoid duplicate DB query when middleware already fetched it
+        if hasattr(request, '_site_settings'):
+            site_settings = request._site_settings
+        else:
+            site_settings = SiteSettings.get_settings()
+            request._site_settings = site_settings
         
         # Priority: Database > Environment Variable
         ga4_id = site_settings.ga4_measurement_id or getattr(settings, 'GA4_MEASUREMENT_ID', '')

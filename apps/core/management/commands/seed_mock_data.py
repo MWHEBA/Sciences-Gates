@@ -67,11 +67,11 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING('بدء عملية حقن البيانات التجريبية الموسعة...'))
 
         # مسارات الصور المخصصة التي ولدناها
-        uni_campus_path = r"C:\Users\MohYousif\.gemini\antigravity-ide\brain\6c174246-eb91-4e3a-a6c0-c54a18fdf00b\university_campus_1780243035011.png"
-        se_path = r"C:\Users\MohYousif\.gemini\antigravity-ide\brain\6c174246-eb91-4e3a-a6c0-c54a18fdf00b\software_engineering_1780243049608.png"
-        meeting_path = r"C:\Users\MohYousif\.gemini\antigravity-ide\brain\6c174246-eb91-4e3a-a6c0-c54a18fdf00b\business_meeting_1780243073353.png"
-        classroom_path = r"C:\Users\MohYousif\.gemini\antigravity-ide\brain\6c174246-eb91-4e3a-a6c0-c54a18fdf00b\language_classroom_1780243088409.png"
-        studying_path = r"C:\Users\MohYousif\.gemini\antigravity-ide\brain\6c174246-eb91-4e3a-a6c0-c54a18fdf00b\student_studying_1780243102831.png"
+        uni_campus_path = r"C:\Users\MohYousif\.antigravity-ide\brain\6c174246-eb91-4e3a-a6c0-c54a18fdf00b\university_campus_1780243035011.png"
+        se_path = r"C:\Users\MohYousif\.antigravity-ide\brain\6c174246-eb91-4e3a-a6c0-c54a18fdf00b\software_engineering_1780243049608.png"
+        meeting_path = r"C:\Users\MohYousif\.antigravity-ide\brain\6c174246-eb91-4e3a-a6c0-c54a18fdf00b\business_meeting_1780243073353.png"
+        classroom_path = r"C:\Users\MohYousif\.antigravity-ide\brain\6c174246-eb91-4e3a-a6c0-c54a18fdf00b\language_classroom_1780243088409.png"
+        studying_path = r"C:\Users\MohYousif\.antigravity-ide\brain\6c174246-eb91-4e3a-a6c0-c54a18fdf00b\student_studying_1780243102831.png"
 
         # 1. مسح البيانات القديمة لو المستخدم حدد خيار --clean
         if options['clean']:

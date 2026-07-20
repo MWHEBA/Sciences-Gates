@@ -150,8 +150,8 @@ class LeadBaseForm(forms.ModelForm):
             raise ValidationError('Invalid submission')
 
         # Cloudflare Turnstile Verification
-        import sys
-        is_testing = 'test' in sys.argv or any('pytest' in arg for arg in sys.argv)
+        from django.conf import settings
+        is_testing = getattr(settings, 'TESTING', False)
         
         from django.conf import settings
         turnstile_secret = getattr(settings, 'TURNSTILE_SECRET_KEY', None)

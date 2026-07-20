@@ -7,7 +7,7 @@ from apps.core.models import UserProfile, UserRole
 
 @pytest.fixture
 def content_admin_client(client, db):
-    user = User.objects.create_user(username='admin', password='password')
+    user = User.objects.create_user(username='admin', password='password', is_staff=True)
     profile = user.profile
     profile.role = UserRole.CONTENT_ADMIN
     profile.save()

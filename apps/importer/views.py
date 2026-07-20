@@ -20,7 +20,6 @@ from apps.articles.models import Article
 from .services.wp_client import WPImporterClient, WPImporterError, WPNotFoundError, WPAuthError, WPConnectionError
 from .services.image_downloader import download_and_optimize_image
 from .services.content_mapper import ContentMapper
-from .services.gemini_service import GeminiService
 
 def update_env_file(key, value):
     env_path = os.path.join(settings.BASE_DIR, '.env')
@@ -324,42 +323,13 @@ def import_fetch_worker(job_id, url, competitor_url, content_type_override, user
                 close_old_connections()
             return None
 
-        def competitor_task():
-            if content_type != 'major':
-                return None
-            from django.db import close_old_connections
-            close_old_connections()
-            try:
-                cleaned_name = ContentMapper()._clean_importer_name(wp_data.get('name', ''))
-                gemini = GeminiService()
-                
-                local_comp_url = comp_url
-                local_warnings = []
-                if not local_comp_url:
-                    if auto_search_competitor:
-                        local_comp_url = gemini.search_competitor(cleaned_name)
-                        if local_comp_url:
-                            local_warnings.append(f"تم العثور على التخصص المطابق عند المنافس ودمجه تلقائياً: {local_comp_url}")
-                else:
-                    local_warnings.append(f"تم دمج محتوى المنافس من الرابط المدخل: {local_comp_url}")
-                
-                local_html = None
-                if local_comp_url:
-                    local_html = gemini.fetch_competitor_content(local_comp_url)
-                
-                return ('competitor', local_html, local_comp_url, local_warnings)
-            except Exception as e:
-                return ('competitor_error', str(e))
-            finally:
-                close_old_connections()
-
-        # Execute parallel tasks
+        # Execute parallel tasks (images only)
         if lazy_images:
-            tasks = [competitor_task]
+            tasks = []
         else:
-            tasks = [download_logo_task, download_main_image_task, download_og_image_task, competitor_task]
+            tasks = [download_logo_task, download_main_image_task, download_og_image_task]
 
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        with ThreadPoolExecutor(max_workers=3) as executor:
             futures = [executor.submit(t) for t in tasks]
             for future in futures:
                 res = future.result()
@@ -371,14 +341,9 @@ def import_fetch_worker(job_id, url, competitor_url, content_type_override, user
                         downloaded_images[res[0]] = media_file
                     if warning:
                         image_warnings.append(warning)
-                elif res[0] == 'competitor':
-                    _, competitor_html, comp_url, local_warnings = res
-                    image_warnings.extend(local_warnings)
-                elif res[0] == 'competitor_error':
-                    image_warnings.append(f"فشل جلب بيانات المنافس: {res[1]}")
 
         job.progress = 85
-        job.status_message = 'جاري دمج وتنسيق البيانات وتوليد البرومبت...'
+        job.status_message = 'جاري دمج وتنسيق البيانات...'
         job.save()
 
         # 4. Map content schema
@@ -392,11 +357,6 @@ def import_fetch_worker(job_id, url, competitor_url, content_type_override, user
             if comp_url:
                 mapped_data['competitor_url'] = comp_url
                 mapped_data['form_initial']['competitor_url'] = comp_url
-            
-            gemini = GeminiService()
-            # Always compile the prompt and save it in mapped_data
-            compiled_prompt = gemini.build_prompt(mapped_data, competitor_html)
-            mapped_data['compiled_prompt'] = compiled_prompt
 
         job.progress = 100
         job.status = 'SUCCESS'
@@ -569,38 +529,9 @@ def import_bulk_save_worker(job_id, url, competitor_url, content_type_override, 
                 close_old_connections()
             return None
 
-        def competitor_task():
-            if content_type != 'major':
-                return None
-            from django.db import close_old_connections
-            close_old_connections()
-            try:
-                cleaned_name = ContentMapper()._clean_importer_name(wp_data.get('name', ''))
-                gemini = GeminiService()
-                
-                local_comp_url = comp_url
-                local_warnings = []
-                if not local_comp_url:
-                    if auto_search_competitor:
-                        local_comp_url = gemini.search_competitor(cleaned_name)
-                        if local_comp_url:
-                            local_warnings.append(f"تم العثور على التخصص المطابق عند المنافس ودمجه تلقائياً: {local_comp_url}")
-                else:
-                    local_warnings.append(f"تم دمج محتوى المنافس من الرابط المدخل: {local_comp_url}")
-                
-                local_html = None
-                if local_comp_url:
-                    local_html = gemini.fetch_competitor_content(local_comp_url)
-                
-                return ('competitor', local_html, local_comp_url, local_warnings)
-            except Exception as e:
-                return ('competitor_error', str(e))
-            finally:
-                close_old_connections()
-
-        # Execute parallel tasks
-        tasks = [download_logo_task, download_main_image_task, download_og_image_task, competitor_task]
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        # Execute parallel tasks (images only)
+        tasks = [download_logo_task, download_main_image_task, download_og_image_task]
+        with ThreadPoolExecutor(max_workers=3) as executor:
             futures = [executor.submit(t) for t in tasks]
             for future in futures:
                 res = future.result()
@@ -612,14 +543,9 @@ def import_bulk_save_worker(job_id, url, competitor_url, content_type_override, 
                         downloaded_images[res[0]] = media_file
                     if warning:
                         image_warnings.append(warning)
-                elif res[0] == 'competitor':
-                    _, competitor_html, comp_url, local_warnings = res
-                    image_warnings.extend(local_warnings)
-                elif res[0] == 'competitor_error':
-                    image_warnings.append(f"فشل جلب بيانات المنافس: {res[1]}")
 
         job.progress = 80
-        job.status_message = 'جاري دمج وتنسيق البيانات وتوليد البرومبت...'
+        job.status_message = 'جاري دمج وتنسيق البيانات...'
         job.save()
 
         # 4. Map content schema
@@ -630,11 +556,6 @@ def import_bulk_save_worker(job_id, url, competitor_url, content_type_override, 
             if comp_url:
                 mapped_data['competitor_url'] = comp_url
                 mapped_data['form_initial']['competitor_url'] = comp_url
-            
-            gemini = GeminiService()
-            # Always compile the prompt and save it in mapped_data
-            compiled_prompt = gemini.build_prompt(mapped_data, competitor_html)
-            mapped_data['compiled_prompt'] = compiled_prompt
             # Force Draft status
             mapped_data['form_initial']['publish_status'] = 'unpublished'
 

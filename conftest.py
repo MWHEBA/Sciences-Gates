@@ -20,6 +20,14 @@ django.setup()
 from django.conf import settings
 settings.TESTING = True
 
+# Use LocMemCache for testing to speed up tests and avoid disk cache pollution
+settings.CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake-cache-test',
+    }
+}
+
 import pytest
 
 
