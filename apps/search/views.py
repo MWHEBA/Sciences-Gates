@@ -64,7 +64,7 @@ class SearchView(BreadcrumbMixin, FormView):
                     'name': uni.name,
                     'slug': uni.slug,
                     'excerpt': get_excerpt(uni.description),
-                    'url': f"/universities/{uni.slug}/",
+                    'url': uni.get_absolute_url(),
                 })
             
             # Add institutes with type label
@@ -75,7 +75,7 @@ class SearchView(BreadcrumbMixin, FormView):
                     'name': inst.name,
                     'slug': inst.slug,
                     'excerpt': get_excerpt(inst.description),
-                    'url': f"/institutes/{inst.slug}/",
+                    'url': inst.get_absolute_url(),
                 })
             
             # Add majors with type label
@@ -86,7 +86,7 @@ class SearchView(BreadcrumbMixin, FormView):
                     'name': major.name,
                     'slug': major.slug,
                     'excerpt': get_excerpt(major.description),
-                    'url': f"/majors/{major.slug}/",
+                    'url': major.get_absolute_url(),
                 })
             
             # Add articles with type label
@@ -98,7 +98,7 @@ class SearchView(BreadcrumbMixin, FormView):
                     'slug': article.slug,
                     'excerpt': get_excerpt(article.content),
                     'category': article.category.name if article.category else '',
-                    'url': f"/articles/{article.slug}/",
+                    'url': article.get_absolute_url(),
                 })
             
             # Paginate results

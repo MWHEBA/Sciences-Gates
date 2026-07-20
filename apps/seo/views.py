@@ -16,26 +16,14 @@ from apps.seo.services import AnalyzerError, PageSEOAnalyzer
 @require_http_methods(["GET"])
 def robots_txt(request):
     """
-    Serve robots.txt file.
-    First tries to serve static robots.txt, falls back to dynamic generation.
+    Serve robots.txt file dynamically to ensure admin and dashboard URLs
+    reflect any changes in settings.ADMIN_URL and settings.DASHBOARD_URL.
     """
-    # Try to serve static robots.txt first
-    static_robots_path = os.path.join(settings.STATIC_ROOT, 'robots.txt')
-    
-    if os.path.exists(static_robots_path):
-        try:
-            with open(static_robots_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            return HttpResponse(content, content_type='text/plain')
-        except Exception:
-            pass  # Fall back to dynamic if file read fails
-    
-    # Fallback to dynamic robots.txt
     admin_url = settings.ADMIN_URL.strip('/')
     dashboard_url = settings.DASHBOARD_URL.strip('/')
     
-    robots_content = """# Science Gates Platform - robots.txt
-# Generated for search engine optimization
+    robots_content = """# robots.txt for Science Gates - Study in Malaysia
+# Generated dynamically for Search Engine Optimization
 
 User-agent: *
 Allow: /
@@ -46,6 +34,7 @@ Disallow: /*.json$
 Disallow: /*?*page=
 Disallow: /*&
 
+# Crawl delay for main search engines
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 1
@@ -54,10 +43,23 @@ User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
 
+# Block AI crawlers from scraping content
 User-agent: GPTBot
 Disallow: /
 
-# Sitemap location
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+# Sitemap
 Sitemap: {sitemap_url}
 """.format(
         admin_url=admin_url,

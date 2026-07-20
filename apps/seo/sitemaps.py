@@ -14,7 +14,7 @@ from apps.articles.models import Article
 
 
 class BaseSitemap(Sitemap):
-    """Base sitemap class with common configuration."""
+    """Base sitemap class with common configuration and caching."""
     
     changefreq = 'weekly'
     priority = 0.8
@@ -22,9 +22,17 @@ class BaseSitemap(Sitemap):
     
     def get_urls(self, page=1, site=None, protocol=None):
         """
-        Override to ensure only published content is included.
+        Override to add caching and ensure only published content is included.
         """
+        from django.core.cache import cache
+        cache_key = f"sitemap_{self.__class__.__name__.lower()}_page_{page}"
+        cached_urls = cache.get(cache_key)
+        if cached_urls is not None:
+            return cached_urls
+            
         urls = super().get_urls(page=page, site=site, protocol=protocol)
+        # Cache for 24 hours
+        cache.set(cache_key, urls, 86400)
         return urls
 
 
@@ -129,21 +137,42 @@ class ArticleSitemap(BaseSitemap):
 
 
 class StaticSitemap(BaseSitemap):
-    """Sitemap for static pages.
+    """Sitemap for static pages and listing pages.
     
-    Includes static pages like home.
+    Includes main pages like home, about us, visa tracking, and main section list pages.
     """
     
-    priority = 0.5
-    changefreq = 'monthly'
-    
     def items(self):
-        """Return static page URLs."""
-        return ['home']
+        """Return static and list page URL names."""
+        return [
+            'home',
+            'about_us',
+            'visa_tracking',
+            'universities:list',
+            'institutes:list',
+            'majors:list',
+            'articles:list',
+        ]
     
     def location(self, item):
         """Return the URL for a static page."""
         return reverse(item)
+
+    def priority(self, item):
+        """Return priority per page type."""
+        if item == 'home':
+            return 1.0
+        elif item in ['universities:list', 'institutes:list', 'majors:list', 'articles:list']:
+            return 0.8
+        return 0.5
+
+    def changefreq(self, item):
+        """Return change frequency per page type."""
+        if item == 'home':
+            return 'daily'
+        elif item in ['universities:list', 'institutes:list', 'majors:list', 'articles:list']:
+            return 'weekly'
+        return 'monthly'
 
 
 # Sitemap index configuration

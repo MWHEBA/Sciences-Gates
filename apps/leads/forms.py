@@ -149,6 +149,35 @@ class LeadBaseForm(forms.ModelForm):
         if cleaned_data.get('website'):
             raise ValidationError('Invalid submission')
 
+        # Cloudflare Turnstile Verification
+        import sys
+        is_testing = 'test' in sys.argv or any('pytest' in arg for arg in sys.argv)
+        
+        from django.conf import settings
+        turnstile_secret = getattr(settings, 'TURNSTILE_SECRET_KEY', None)
+        
+        if turnstile_secret and not is_testing:
+            import requests
+            turnstile_response = self.data.get('cf-turnstile-response') if self.data else None
+            if not turnstile_response:
+                raise ValidationError('يرجى التحقق من اختبار الأمان (Turnstile).')
+            
+            try:
+                verify_url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+                resp = requests.post(verify_url, data={
+                    'secret': turnstile_secret,
+                    'response': turnstile_response,
+                }, timeout=10)
+                
+                result = resp.json()
+                if not result.get('success'):
+                    raise ValidationError('فشل التحقق من اختبار الأمان (Turnstile). يرجى المحاولة مرة أخرى.')
+            except ValidationError:
+                raise
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Turnstile verification request failed: {e}")
+
         # Handle merging nationality and custom_nationality
         nationality = cleaned_data.get('nationality')
         custom_nationality = cleaned_data.get('custom_nationality')

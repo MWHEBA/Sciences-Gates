@@ -3,335 +3,318 @@
 
 {% block title %}إدارة SEO - لوحة التحكم{% endblock %}
 
+{% block page_title %}إدارة SEO{% endblock %}
+
+{% block page_description %}
+<p class="text-sm mt-0.5" style="color: var(--text-muted);">مركز التحكم الشامل لتحسين محركات البحث</p>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-6" x-data="{ activeTab: '{{ active_tab|default:'overview' }}' }">
-    <!-- Page Header -->
-    <div class="flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-bold flex items-center" style="color: var(--text-primary);">
-                <svg class="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+<div class="flex flex-col gap-4" x-data="{ activeTab: '{{ active_tab|default:'overview' }}' }">
+
+    <!-- Tab Navigation -->
+    <div class="rounded-2xl border overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+        <nav class="flex border-b" style="border-color: var(--border);" aria-label="تبويبات إدارة SEO">
+            <button @click="activeTab = 'overview'"
+                    :class="activeTab === 'overview' ? 'tab-active' : 'tab-inactive'"
+                    class="flex items-center gap-2 px-5 py-3 text-sm border-b-2 transition-colors duration-150 cursor-pointer focus:outline-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
-                إدارة SEO
-            </h1>
-            <p class="mt-1 text-sm" style="color: var(--text-muted);">
-                مركز التحكم الشامل لتحسين محركات البحث
-            </p>
-        </div>
+                نظرة عامة
+            </button>
+
+            <button @click="activeTab = 'settings'"
+                    :class="activeTab === 'settings' ? 'tab-active' : 'tab-inactive'"
+                    class="flex items-center gap-2 px-5 py-3 text-sm border-b-2 transition-colors duration-150 cursor-pointer focus:outline-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                إعدادات Google
+            </button>
+
+            <button @click="activeTab = 'health'"
+                    :class="activeTab === 'health' ? 'tab-active' : 'tab-inactive'"
+                    class="flex items-center gap-2 px-5 py-3 text-sm border-b-2 transition-colors duration-150 cursor-pointer focus:outline-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+                صحة المحتوى
+                {% if health_needs_attention > 0 %}
+                <span class="text-xs font-bold px-1.5 py-0.5 rounded-full" style="background-color: var(--warning); color: white;">
+                    {{ health_needs_attention }}
+                </span>
+                {% endif %}
+            </button>
+
+            <button @click="activeTab = 'tools'"
+                    :class="activeTab === 'tools' ? 'tab-active' : 'tab-inactive'"
+                    class="flex items-center gap-2 px-5 py-3 text-sm border-b-2 transition-colors duration-150 cursor-pointer focus:outline-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
+                </svg>
+                أدوات
+            </button>
+        </nav>
     </div>
 
-    <!-- Tabs Navigation -->
-    <div class="rounded-lg shadow-sm border" style="border-color: var(--border); background-color: var(--surface);">
-        <div class="border-b" style="border-color: var(--border);">
-            <nav class="flex -mb-px">
-                <!-- Tab 1: Overview -->
-                <button @click="activeTab = 'overview'" 
-                        :style="activeTab === 'overview' ? 'border-color: var(--primary); color: var(--primary); font-weight: 600;' : 'border-color: transparent; color: var(--text-muted);'"
-                        class="flex items-center px-6 py-3 border-b-2 text-sm transition-colors duration-200 cursor-pointer focus:outline-none">
-                    <i class="fas fa-chart-line mr-2"></i>
-                    نظرة عامة
-                </button>
-                
-                <!-- Tab 2: Settings -->
-                <button @click="activeTab = 'settings'" 
-                        :style="activeTab === 'settings' ? 'border-color: var(--primary); color: var(--primary); font-weight: 600;' : 'border-color: transparent; color: var(--text-muted);'"
-                        class="flex items-center px-6 py-3 border-b-2 text-sm transition-colors duration-200 cursor-pointer focus:outline-none">
-                    <i class="fas fa-cog mr-2"></i>
-                    الإعدادات
-                </button>
-                
-                <!-- Tab 3: Health -->
-                <button @click="activeTab = 'health'" 
-                        :style="activeTab === 'health' ? 'border-color: var(--primary); color: var(--primary); font-weight: 600;' : 'border-color: transparent; color: var(--text-muted);'"
-                        class="flex items-center px-6 py-3 border-b-2 text-sm transition-colors duration-200 cursor-pointer focus:outline-none">
-                    <i class="fas fa-heartbeat mr-2"></i>
-                    الصحة التفصيلية
-                </button>
-            </nav>
-        </div>
-    </div>
+    <!-- ═══════════════════════ Tab 1: Overview ═══════════════════════ -->
+    <div x-show="activeTab === 'overview'" x-transition class="flex flex-col gap-4">
 
-    <!-- Tab 1: Overview Content -->
-    <div x-show="activeTab === 'overview'" x-transition class="space-y-6">
-        
-        <!-- SEO Status Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- KPI Cards Row -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+
             <!-- GA4 Status -->
-            <div class="bg-white rounded-lg shadow-sm border p-6" style="border-color: var(--border);">
-                <div class="flex items-center justify-between">
+            <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+                <div class="absolute top-0 right-0 left-0 h-1 {% if ga4_configured and ga4_enabled %}status-success-bg{% elif ga4_configured %}status-warning-bg{% else %}status-danger-bg{% endif %}"></div>
+                <div class="flex items-start justify-between gap-2">
                     <div>
-                        <p class="text-sm font-medium" style="color: var(--text-muted);">جوجل أناليتكس 4</p>
-                        <div class="mt-2 font-bold">
-                            {% if ga4_configured and ga4_enabled %}
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--success);" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            {% elif ga4_configured %}
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--warning);" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            {% else %}
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--danger);" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            {% endif %}
-                        </div>
+                        <p class="text-xs font-semibold mb-2" style="color: var(--text-muted);">Google Analytics</p>
+                        <p class="text-sm font-bold m-0 {% if ga4_configured and ga4_enabled %}status-success-text{% elif ga4_configured %}status-warning-text{% else %}status-danger-text{% endif %}">
+                            {% if ga4_configured and ga4_enabled %}مُفعَّل{% elif ga4_configured %}مُعطَّل{% else %}غير مُعدّ{% endif %}
+                        </p>
                     </div>
-                    <div class="p-3 rounded-full" style="background-color: var(--primary-light);">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
+                    <a href="{% url 'dashboard:analytics' %}" class="text-xs shrink-0" style="color: var(--primary);">التفاصيل ←</a>
                 </div>
-                <p class="mt-4 text-xs" style="color: var(--text-muted);">
-                    الحالة: {% if ga4_configured and ga4_enabled %}مُفعّل{% elif ga4_configured %}مُعطّل{% else %}غير مُعدّ{% endif %}
-                </p>
+                {% if ga4_configured %}
+                <p class="text-xs mt-2 m-0 font-mono truncate" style="color: var(--text-muted);">{{ ga4_measurement_id }}</p>
+                {% endif %}
             </div>
 
             <!-- GSC Status -->
-            <div class="bg-white rounded-lg shadow-sm border p-6" style="border-color: var(--border);">
-                <div class="flex items-center justify-between">
+            <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+                <div class="absolute top-0 right-0 left-0 h-1 {% if gsc_api_connected %}status-success-bg{% elif gsc_configured %}status-warning-bg{% else %}status-danger-bg{% endif %}"></div>
+                <div class="flex items-start justify-between gap-2">
                     <div>
-                        <p class="text-sm font-medium" style="color: var(--text-muted);">جوجل سيرش كونسول</p>
-                        <div class="mt-2 font-bold">
-                            {% if gsc_configured %}
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--success);" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            {% else %}
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--danger);" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            {% endif %}
-                        </div>
+                        <p class="text-xs font-semibold mb-2" style="color: var(--text-muted);">Search Console</p>
+                        <p class="text-sm font-bold m-0 {% if gsc_api_connected %}status-success-text{% elif gsc_configured %}status-warning-text{% else %}status-danger-text{% endif %}">
+                            {% if gsc_api_connected %}API متصل{% elif gsc_configured %}Verified فقط{% else %}غير مُعدّ{% endif %}
+                        </p>
                     </div>
-                    <div class="p-3 rounded-full" style="background-color: var(--primary-light);">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
+                    <a href="{% url 'dashboard:search_console' %}" class="text-xs shrink-0" style="color: var(--primary);">التفاصيل ←</a>
                 </div>
-                <p class="mt-4 text-xs" style="color: var(--text-muted);">
-                    الحالة: {% if gsc_configured %}مُحقّق{% else %}غير مُحقّق{% endif %}
+            </div>
+
+            <!-- Total Indexed Pages -->
+            <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+                <div class="absolute top-0 right-0 left-0 h-1" style="background-color: var(--primary);"></div>
+                <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">إجمالي الصفحات</p>
+                <p class="text-3xl font-bold m-0" style="color: var(--text-primary);">{{ total_pages }}</p>
+                <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">
+                    {{ total_universities }} جامعة · {{ total_majors }} تخصص · {{ total_articles }} مقال
                 </p>
             </div>
 
-            <!-- Total Pages -->
-            <div class="bg-white rounded-lg shadow-sm border p-6" style="border-color: var(--border);">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium" style="color: var(--text-muted);">إجمالي الصفحات</p>
-                        <p class="mt-2 text-3xl font-bold" style="color: var(--text-primary);">{{ total_pages }}</p>
-                    </div>
-                    <div class="p-3 rounded-full" style="background-color: var(--primary-light);">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                    </div>
-                </div>
-                <p class="mt-4 text-xs" style="color: var(--text-muted);">
-                    {{ total_universities }} جامعة، {{ total_majors }} تخصص، {{ total_articles }} مقال
+            <!-- SEO Health Score -->
+            <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+                <div class="absolute top-0 right-0 left-0 h-1 {% if health_needs_attention == 0 %}status-success-bg{% elif health_needs_attention < 5 %}status-warning-bg{% else %}status-danger-bg{% endif %}"></div>
+                <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">يحتاج اهتمام</p>
+                <p class="text-3xl font-bold m-0 {% if health_needs_attention == 0 %}status-success-text{% elif health_needs_attention < 5 %}status-warning-text{% else %}status-danger-text{% endif %}">
+                    {{ health_needs_attention }}
                 </p>
+                <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">من {{ health_total }} عنصر منشور</p>
             </div>
 
-            <!-- Sitemap Status -->
-            <div class="bg-white rounded-lg shadow-sm border p-6" style="border-color: var(--border);">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium" style="color: var(--text-muted);">خريطة الموقع</p>
-                        <div class="mt-2">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="p-3 rounded-full" style="background-color: var(--primary-light);">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+        </div>
+
+        <!-- Quick Access: Analytics Pages -->
+        <div class="rounded-2xl border overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-3 border-b" style="border-color: var(--border);">
+                <h2 class="text-sm font-bold m-0" style="color: var(--text-primary);">🔗 الوصول السريع</h2>
+            </div>
+            <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+                <a href="{% url 'dashboard:analytics' %}"
+                   class="flex items-center gap-3 p-3 rounded-xl border transition-colors no-underline"
+                   style="border-color: var(--border);"
+                   onmouseover="this.style.backgroundColor='var(--bg-light)'" onmouseout="this.style.backgroundColor='transparent'">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background-color: var(--primary-light);">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--primary);">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>
                     </div>
-                </div>
-                <p class="mt-4 text-xs" style="color: var(--text-muted);">
-                    توليد: {% if sitemap_last_generated %}{{ sitemap_last_generated|date:"Y-m-d H:i" }}{% else %}لم يتم التوليد بعد{% endif %}
-                </p>
+                    <div>
+                        <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">Analytics</p>
+                        <p class="text-xs m-0" style="color: var(--text-muted);">سلوك الزوار</p>
+                    </div>
+                </a>
+
+                <a href="{% url 'dashboard:search_console' %}"
+                   class="flex items-center gap-3 p-3 rounded-xl border transition-colors no-underline"
+                   style="border-color: var(--border);"
+                   onmouseover="this.style.backgroundColor='var(--bg-light)'" onmouseout="this.style.backgroundColor='transparent'">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background-color: var(--primary-light);">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--primary);">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">Search Console</p>
+                        <p class="text-xs m-0" style="color: var(--text-muted);">أداء البحث</p>
+                    </div>
+                </a>
+
+                <a href="/sitemap.xml" target="_blank" rel="noopener"
+                   class="flex items-center gap-3 p-3 rounded-xl border transition-colors no-underline"
+                   style="border-color: var(--border);"
+                   onmouseover="this.style.backgroundColor='var(--bg-light)'" onmouseout="this.style.backgroundColor='transparent'">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background-color: var(--primary-light);">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--primary);">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">Sitemap</p>
+                        <p class="text-xs m-0" style="color: var(--text-muted);">sitemap.xml ↗</p>
+                    </div>
+                </a>
+
+                <a href="/robots.txt" target="_blank" rel="noopener"
+                   class="flex items-center gap-3 p-3 rounded-xl border transition-colors no-underline"
+                   style="border-color: var(--border);"
+                   onmouseover="this.style.backgroundColor='var(--bg-light)'" onmouseout="this.style.backgroundColor='transparent'">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background-color: var(--primary-light);">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--primary);">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">Robots.txt</p>
+                        <p class="text-xs m-0" style="color: var(--text-muted);">robots.txt ↗</p>
+                    </div>
+                </a>
+
             </div>
         </div>
 
-        <!-- SEO Tools -->
-        <div class="bg-white rounded-lg shadow-sm border" style="border-color: var(--border);">
-            <div class="px-6 py-4 border-b" style="border-color: var(--border);">
-                <h2 class="text-lg font-semibold flex items-center" style="color: var(--text-primary);">
-                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                    أدوات SEO المتاحة
-                </h2>
+        <!-- SEO Coverage by Content Type -->
+        <div class="rounded-2xl border overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-3 border-b" style="border-color: var(--border);">
+                <h2 class="text-sm font-bold m-0" style="color: var(--text-primary);">📊 تغطية Meta Data</h2>
             </div>
-            <div class="p-6">
-                <form method="post" class="space-y-6">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="tools">
-                    
-                    <div>
-                        <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
-                            الإجراء المطلوب تنفيذه
-                        </label>
-                        {{ form.action }}
+            <div class="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+                <div class="p-3 rounded-xl" style="background-color: var(--bg-light);">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold m-0" style="color: var(--text-secondary);">الجامعات</p>
+                        <p class="text-xs font-bold m-0" style="color: var(--text-primary);">{{ universities_with_meta }}/{{ total_universities }}</p>
                     </div>
-
-                    <button type="submit"
-                            class="px-6 py-2 text-sm font-medium text-white rounded-lg transition-colors duration-200 cursor-pointer"
-                            style="background-color: var(--primary);">
-                        <svg class="w-4 h-4 ml-2 inline" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M8 5v14l11-7z"></path>
-                        </svg>
-                        تنفيذ الإجراء
-                    </button>
-                </form>
-
-                <!-- Quick Links -->
-                <div class="mt-8 pt-6 border-t" style="border-color: var(--border);">
-                    <h3 class="text-sm font-semibold mb-4" style="color: var(--text-primary);">روابط سريعة ومهمة</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <a href="/sitemap.xml" target="_blank"
-                           class="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                           style="border-color: var(--border);">
-                            <div class="p-2 rounded-full ml-3" style="background-color: var(--primary-light);">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold" style="color: var(--text-primary);">عرض Sitemap</p>
-                                <p class="text-xs" style="color: var(--text-muted);">فتح ملف sitemap.xml</p>
-                            </div>
-                        </a>
-                        
-                        <a href="/robots.txt" target="_blank"
-                           class="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                           style="border-color: var(--border);">
-                            <div class="p-2 rounded-full ml-3" style="background-color: var(--primary-light);">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold" style="color: var(--text-primary);">عرض robots.txt</p>
-                                <p class="text-xs" style="color: var(--text-muted);">فتح ملف robots.txt</p>
-                            </div>
-                        </a>
-                        
-                        <a href="https://search.google.com/search-console" target="_blank"
-                           class="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                           style="border-color: var(--border);">
-                            <div class="p-2 rounded-full ml-3" style="background-color: var(--primary-light);">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                                    <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.328 0-6.035-2.707-6.035-6.035 0-3.328 2.707-6.036 6.035-6.036 1.493 0 2.861.547 3.927 1.45L20.89 4.88A10.01 10.01 0 0012.24 2C6.585 2 2 6.585 2 12.24s4.585 10.24 10.24 10.24c5.795 0 10.254-4.174 10.254-10.24 0-.583-.053-1.14-.148-1.684H12.24z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold" style="color: var(--text-primary);">Search Console</p>
-                                <p class="text-xs" style="color: var(--text-muted);">فتح لوحة GSC</p>
-                            </div>
-                        </a>
+                    <div class="h-1.5 rounded-full overflow-hidden" style="background-color: var(--border);">
+                        <div class="h-full rounded-full progress-bar"
+                             style="background-color: var(--primary);"
+                             data-pct="{% if total_universities > 0 %}{% widthratio universities_with_meta total_universities 100 %}{% else %}0{% endif %}"></div>
                     </div>
                 </div>
+
+                <div class="p-3 rounded-xl" style="background-color: var(--bg-light);">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold m-0" style="color: var(--text-secondary);">التخصصات</p>
+                        <p class="text-xs font-bold m-0" style="color: var(--text-primary);">{{ majors_with_meta }}/{{ total_majors }}</p>
+                    </div>
+                    <div class="h-1.5 rounded-full overflow-hidden" style="background-color: var(--border);">
+                        <div class="h-full rounded-full progress-bar"
+                             style="background-color: var(--secondary);"
+                             data-pct="{% if total_majors > 0 %}{% widthratio majors_with_meta total_majors 100 %}{% else %}0{% endif %}"></div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl" style="background-color: var(--bg-light);">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold m-0" style="color: var(--text-secondary);">المقالات</p>
+                        <p class="text-xs font-bold m-0" style="color: var(--text-primary);">{{ articles_with_meta }}/{{ total_articles }}</p>
+                    </div>
+                    <div class="h-1.5 rounded-full overflow-hidden" style="background-color: var(--border);">
+                        <div class="h-full rounded-full progress-bar"
+                             style="background-color: var(--info);"
+                             data-pct="{% if total_articles > 0 %}{% widthratio articles_with_meta total_articles 100 %}{% else %}0{% endif %}"></div>
+                    </div>
+                </div>
+
             </div>
         </div>
+
     </div>
 
-    <!-- Tab 2: Settings Content -->
-    <div x-show="activeTab === 'settings'" x-transition class="space-y-6">
-        <div class="bg-white rounded-lg shadow-sm border" style="border-color: var(--border);">
-            <div class="px-6 py-4 border-b" style="border-color: var(--border);">
-                <h2 class="text-lg font-semibold flex items-center" style="color: var(--text-primary);">
-                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                    إعدادات محركات البحث والتحليلات
-                </h2>
-                <p class="mt-1 text-sm" style="color: var(--text-muted);">
-                    إدارة إعدادات Google Analytics وSearch Console للموقع بالكامل
-                </p>
+    <!-- ═══════════════════════ Tab 2: Settings ═══════════════════════ -->
+    <div x-show="activeTab === 'settings'" x-transition>
+        <div class="rounded-2xl border overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-3 border-b" style="border-color: var(--border);">
+                <h2 class="text-sm font-bold m-0" style="color: var(--text-primary);">إعدادات Google — التتبع والتحقق</h2>
+                <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">هذه الإعدادات تؤثر على الـ meta tags في الموقع بالكامل</p>
             </div>
-            <div class="p-6">
-                <form method="post" action="{% url 'dashboard:seo_management' %}" class="space-y-6">
+            <div class="p-5">
+                <form method="post" action="{% url 'dashboard:seo_management' %}" class="space-y-5">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="settings">
-                    
-                    <!-- Google Analytics 4 Section -->
-                    <div class="space-y-4">
-                        <h3 class="text-md font-semibold flex items-center" style="color: var(--text-primary);">
-                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+
+                    <!-- GA4 Section -->
+                    <div class="p-4 rounded-xl border" style="border-color: var(--border); background-color: var(--bg-light);">
+                        <h3 class="text-sm font-semibold flex items-center gap-2 mb-4" style="color: var(--text-primary);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--primary);">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                             </svg>
                             Google Analytics 4
                         </h3>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
-                                Measurement ID
-                                <span class="text-xs" style="color: var(--text-muted);">(مثال: G-XXXXXXXXXX)</span>
-                            </label>
-                            <input type="text" 
-                                   name="ga4_measurement_id" 
-                                   value="{{ settings_form.ga4_measurement_id.value|default:'' }}"
-                                   placeholder="G-XXXXXXXXXX"
-                                   dir="ltr">
-                            <p class="mt-1 text-xs" style="color: var(--text-muted);">
-                                احصل عليه من Google Analytics 4 → Admin → Data Streams
-                            </p>
-                        </div>
-
-                        <div class="flex items-center">
-                            <input type="checkbox" 
-                                   name="enable_ga4" 
-                                   id="enable_ga4"
-                                   {% if settings_form.enable_ga4.value %}checked{% endif %}>
-                            <label for="enable_ga4" class="mr-2 text-sm font-medium" style="color: var(--text-secondary);">
-                                تفعيل Google Analytics 4
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color: var(--text-secondary);">
+                                    Measurement ID
+                                    <span class="font-normal" style="color: var(--text-muted);">(مثال: G-XXXXXXXXXX)</span>
+                                </label>
+                                <input type="text"
+                                       name="ga4_measurement_id"
+                                       value="{{ settings_form.ga4_measurement_id.value|default:'' }}"
+                                       placeholder="G-XXXXXXXXXX"
+                                       dir="ltr"
+                                       class="w-full"
+                                       style="border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text-primary); background-color: var(--surface);">
+                                <p class="text-xs mt-1" style="color: var(--text-muted);">
+                                    من Google Analytics 4 → Admin → Data Streams
+                                </p>
+                            </div>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox"
+                                       name="enable_ga4"
+                                       id="enable_ga4"
+                                       {% if settings_form.enable_ga4.value %}checked{% endif %}
+                                       class="w-4 h-4 rounded">
+                                <span class="text-xs font-medium" style="color: var(--text-secondary);">تفعيل تتبع GA4</span>
                             </label>
                         </div>
                     </div>
 
-                    <hr style="border-color: var(--border);">
-
-                    <!-- Google Search Console Section -->
-                    <div class="space-y-4">
-                        <h3 class="text-md font-semibold flex items-center" style="color: var(--text-primary);">
-                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary);" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    <!-- GSC Verification Section -->
+                    <div class="p-4 rounded-xl border" style="border-color: var(--border); background-color: var(--bg-light);">
+                        <h3 class="text-sm font-semibold flex items-center gap-2 mb-4" style="color: var(--text-primary);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--primary);">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
-                            Google Search Console
+                            Google Search Console — التحقق من الملكية
                         </h3>
-                        
                         <div>
-                            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
+                            <label class="block text-xs font-semibold mb-1" style="color: var(--text-secondary);">
                                 Verification Code
                             </label>
-                            <input type="text" 
-                                   name="google_site_verification" 
+                            <input type="text"
+                                   name="google_site_verification"
                                    value="{{ settings_form.google_site_verification.value|default:'' }}"
                                    placeholder="your_verification_code_here"
-                                   dir="ltr">
-                            <p class="mt-1 text-xs" style="color: var(--text-muted);">
-                                احصل عليه من Google Search Console → Settings → Verification
+                                   dir="ltr"
+                                   class="w-full"
+                                   style="border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text-primary); background-color: var(--surface);">
+                            <p class="text-xs mt-1" style="color: var(--text-muted);">
+                                من Google Search Console → Settings → Verification → HTML tag
                             </p>
                         </div>
                     </div>
 
-                    <hr style="border-color: var(--border);">
-
-                    <!-- Save Button -->
                     <div class="flex justify-end">
                         <button type="submit"
-                                class="px-6 py-2 text-sm font-medium text-white rounded-lg transition-colors duration-200 cursor-pointer"
+                                class="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white transition-colors cursor-pointer"
                                 style="background-color: var(--primary);">
-                            <svg class="w-4 h-4 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
                             </svg>
                             حفظ الإعدادات
                         </button>
@@ -341,189 +324,99 @@
         </div>
     </div>
 
-    <!-- Tab 3: Health Content -->
-    <div x-show="activeTab === 'health'" x-transition class="space-y-6">
-        
-        <!-- Filter Bar -->
-        <div class="bg-white rounded-lg shadow-sm border p-4" style="border-color: var(--border);">
-            <form method="get" class="flex items-end gap-3">
+    <!-- ═══════════════════════ Tab 3: Health ═══════════════════════ -->
+    <div x-show="activeTab === 'health'" x-transition class="flex flex-col gap-3">
+
+        <!-- Filter -->
+        <div class="rounded-2xl border p-4" style="border-color: var(--border); background-color: var(--surface);">
+            <form method="get" class="flex items-center gap-3 flex-wrap">
                 <input type="hidden" name="tab" value="health">
-                <div class="flex-1">
-                    <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">
-                        نوع المحتوى
+                <label class="text-xs font-semibold" style="color: var(--text-secondary);">نوع المحتوى:</label>
+                <div class="flex items-center gap-2 flex-wrap">
+                    {% for val, label in health_content_type_choices %}
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="content_type" value="{{ val }}"
+                               {% if health_content_type == val %}checked{% endif %}
+                               class="w-3.5 h-3.5">
+                        <span class="text-xs" style="color: var(--text-secondary);">{{ label }}</span>
                     </label>
-                    <select name="content_type">
-                        <option value="all" {% if health_content_type == 'all' %}selected{% endif %}>الكل</option>
-                        <option value="universities" {% if health_content_type == 'universities' %}selected{% endif %}>الجامعات</option>
-                        <option value="institutes" {% if health_content_type == 'institutes' %}selected{% endif %}>المعاهد</option>
-                        <option value="majors" {% if health_content_type == 'majors' %}selected{% endif %}>التخصصات</option>
-                        <option value="articles" {% if health_content_type == 'articles' %}selected{% endif %}>المقالات</option>
-                    </select>
+                    {% endfor %}
                 </div>
                 <button type="submit"
-                        class="px-6 py-2 text-sm font-medium text-white rounded-lg transition-colors duration-200 cursor-pointer"
+                        class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-colors cursor-pointer"
                         style="background-color: var(--primary);">
-                    <i class="fas fa-filter mr-2"></i>
                     تصفية
                 </button>
             </form>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Total Items -->
-            <div class="bg-white rounded-lg shadow-sm border p-6" style="border-color: var(--border);">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium" style="color: var(--text-muted);">إجمالي العناصر</p>
-                        <p class="mt-2 text-3xl font-bold" style="color: var(--text-primary);">{{ health_total }}</p>
-                    </div>
-                    <div class="p-3 rounded-full" style="background-color: var(--primary-light);">
-                        <i class="fas fa-list text-2xl" style="color: var(--primary);"></i>
-                    </div>
-                </div>
+        <!-- Stats -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-2xl border p-4" style="border-color: var(--border); background-color: var(--surface);">
+                <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">إجمالي العناصر</p>
+                <p class="text-3xl font-bold m-0" style="color: var(--text-primary);">{{ health_total }}</p>
             </div>
-
-            <!-- Needs Attention -->
-            <div class="bg-white rounded-lg shadow-sm border p-6" style="border-color: var(--border);">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium" style="color: var(--text-muted);">يحتاج اهتمام</p>
-                        <p class="mt-2 text-3xl font-bold" style="color: var(--warning);">{{ health_needs_attention }}</p>
-                    </div>
-                    <div class="p-3 rounded-full" style="background-color: var(--warning-light);">
-                        <i class="fas fa-exclamation-triangle text-2xl" style="color: var(--warning);"></i>
-                    </div>
-                </div>
-                <p class="mt-2 text-xs" style="color: var(--text-muted);">
-                    عناصر بنسبة اكتمال أقل من 60%
+            <div class="rounded-2xl border p-4" style="border-color: var(--border); background-color: var(--surface);">
+                <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">يحتاج اهتمام (أقل من 60%)</p>
+                <p class="text-3xl font-bold m-0 {% if health_needs_attention == 0 %}status-success-text{% else %}status-warning-text{% endif %}">
+                    {{ health_needs_attention }}
                 </p>
             </div>
         </div>
 
-        <!-- SEO Health Table -->
+        <!-- Health Table -->
         {% if health_items %}
-        <div class="overflow-x-auto">
-            <div class="bg-white rounded-lg shadow-sm border" style="border-color: var(--border);">
-                <table class="w-full text-sm">
+        <div class="rounded-2xl border overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-sm">
                     <thead>
-                        <tr class="bg-gray-50 border-b" style="border-color: var(--border);">
-                            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase" style="color: var(--text-muted);">
-                                العنوان
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-center text-xs font-semibold uppercase" style="color: var(--text-muted);">
-                                عنوان الميتا
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-center text-xs font-semibold uppercase" style="color: var(--text-muted);">
-                                وصف الميتا
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-center text-xs font-semibold uppercase" style="color: var(--text-muted);">
-                                الكلمة المفتاحية
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-center text-xs font-semibold uppercase" style="color: var(--text-muted);">
-                                عنوان OG
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-center text-xs font-semibold uppercase" style="color: var(--text-muted);">
-                                وصف OG
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-center text-xs font-semibold uppercase" style="color: var(--text-muted);">
-                                النسبة
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-center text-xs font-semibold uppercase" style="color: var(--text-muted);">
-                                الإجراء
-                            </th>
+                        <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                            <th class="px-4 py-3 text-right text-xs font-semibold" style="color: var(--text-muted);">العنصر</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold" style="color: var(--text-muted);">Meta Title</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold" style="color: var(--text-muted);">Meta Desc</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold" style="color: var(--text-muted);">Keyword</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold" style="color: var(--text-muted);">OG Title</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold" style="color: var(--text-muted);">OG Desc</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold" style="color: var(--text-muted);">النسبة</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold" style="color: var(--text-muted);"></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y" style="border-color: var(--border);">
+                    <tbody>
                         {% for item in health_items %}
-                        <tr class="border-b hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                        <tr class="border-b cursor-pointer"
                             style="border-color: var(--border);"
-                            data-row-url="{{ item.edit_url }}">
-                            <td class="px-6 py-4" style="color: var(--text-primary);">
-                                {% if item.content_type == 'articles' %}
-                                    {{ item.obj.title|truncatewords:3 }}
-                                {% else %}
-                                    {{ item.obj.name|truncatewords:3 }}
-                                {% endif %}
-                                <div class="text-xs mt-1" style="color: var(--text-muted);">
-                                    {{ item.type_label }}
-                                </div>
+                            data-row-url="{{ item.edit_url }}"
+                            onmouseover="this.style.backgroundColor='var(--bg-light)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td class="px-4 py-3">
+                                <p class="text-xs font-medium m-0 truncate max-w-[160px]" style="color: var(--text-primary);">
+                                    {% if item.content_type == 'articles' %}{{ item.obj.title|truncatewords:4 }}{% else %}{{ item.obj.name|truncatewords:4 }}{% endif %}
+                                </p>
+                                <p class="text-xs mt-0.5 m-0" style="color: var(--text-muted);">{{ item.type_label }}</p>
                             </td>
-                            <td class="px-6 py-4 text-center">
-                                {% if item.obj.meta_title %}
-                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--success);" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                {% else %}
-                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--danger);" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                {% if item.obj.meta_description %}
-                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--success);" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                {% else %}
-                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--danger);" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                {% if item.obj.focus_keyword %}
-                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--success);" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                {% else %}
-                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--danger);" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                {% if item.obj.og_title %}
-                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--success);" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                {% else %}
-                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--danger);" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                {% if item.obj.og_description %}
-                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--success);" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                {% else %}
-                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--danger);" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4">
+                            {% for field in item.obj.meta_title|default:""|make_list %}{% endfor %}
+                            <td class="px-4 py-3 text-center">{% include 'dashboard/components/_seo_check.html' with val=item.obj.meta_title %}</td>
+                            <td class="px-4 py-3 text-center">{% include 'dashboard/components/_seo_check.html' with val=item.obj.meta_description %}</td>
+                            <td class="px-4 py-3 text-center">{% include 'dashboard/components/_seo_check.html' with val=item.obj.focus_keyword %}</td>
+                            <td class="px-4 py-3 text-center">{% include 'dashboard/components/_seo_check.html' with val=item.obj.og_title %}</td>
+                            <td class="px-4 py-3 text-center">{% include 'dashboard/components/_seo_check.html' with val=item.obj.og_description %}</td>
+                            <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
-                                    <div class="flex-1 rounded-full h-2" style="min-width: 150px; background-color: var(--primary-light);">
-                                        <div class="h-2 rounded-full transition-all duration-500" 
-                                             style="width: {{ item.score }}%; background-color: {{ item.score_color }};"></div>
+                                    <div class="flex-1 h-1.5 rounded-full overflow-hidden" style="background-color: var(--border); min-width: 60px;">
+                                        <div class="h-full rounded-full progress-bar {% if item.score < 40 %}status-danger-bg{% elif item.score < 80 %}status-warning-bg{% else %}status-success-bg{% endif %}"
+                                             data-pct="{{ item.score }}"></div>
                                     </div>
-                                    <span class="text-sm font-semibold min-w-[35px]" style="color: {{ item.score_color }};">
-                                        {{ item.score }}%
-                                    </span>
+                                    <span class="text-xs font-bold min-w-[32px] {% if item.score < 40 %}status-danger-text{% elif item.score < 80 %}status-warning-text{% else %}status-success-text{% endif %}">{{ item.score }}%</span>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-4 py-3 text-center">
                                 <a href="{{ item.edit_url }}"
-                                   class="inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
-                                   style="background-color: var(--primary-light); color: var(--primary); --tw-ring-color: var(--primary);"
-                                   title="تعديل"
-                                   aria-label="تعديل">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                   class="inline-flex items-center justify-center w-7 h-7 rounded-lg no-underline transition-colors"
+                                   style="background-color: var(--primary-light); color: var(--primary);"
+                                   aria-label="تعديل"
+                                   onclick="event.stopPropagation()">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </a>
                             </td>
@@ -534,33 +427,73 @@
             </div>
         </div>
         {% else %}
-        <!-- Empty State -->
-        <div class="bg-white rounded-lg shadow-sm border p-12 text-center" style="border-color: var(--border);">
-            <i class="fas fa-check-circle text-5xl mb-4" style="color: var(--success);"></i>
-            <h3 class="text-lg font-semibold mb-2" style="color: var(--text-primary);">
-                لا توجد عناصر منشورة
-            </h3>
-            <p class="text-sm" style="color: var(--text-muted);">
-                لا يوجد محتوى منشور من هذا النوع حتى الآن
-            </p>
+        <div class="rounded-2xl border p-10 text-center" style="border-color: var(--border); background-color: var(--surface);">
+            <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" style="color: var(--success);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-sm font-semibold m-0" style="color: var(--text-primary);">لا توجد عناصر منشورة من هذا النوع</p>
         </div>
         {% endif %}
+
+    </div>
+
+    <!-- ═══════════════════════ Tab 4: Tools ═══════════════════════ -->
+    <div x-show="activeTab === 'tools'" x-transition>
+        <div class="rounded-2xl border overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-3 border-b" style="border-color: var(--border);">
+                <h2 class="text-sm font-bold m-0" style="color: var(--text-primary);">أدوات SEO</h2>
+            </div>
+            <div class="p-5">
+                <form method="post" class="flex items-end gap-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="tools">
+                    <div class="flex-1">
+                        <label class="block text-xs font-semibold mb-1" style="color: var(--text-secondary);">الإجراء</label>
+                        {{ form.action }}
+                    </div>
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
+                            style="background-color: var(--primary);">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        تنفيذ
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 
 </div>
+{% endblock %}
 
+{% block extra_css %}
+<style>
+    .tab-active   { border-color: var(--primary); color: var(--primary); font-weight: 600; }
+    .tab-inactive { border-color: transparent; color: var(--text-muted); }
+    .tab-inactive:hover { color: var(--text-secondary); }
+    
+    /* Status helpers to avoid VS Code CSS linting issues */
+    .status-success-bg { background-color: var(--success); }
+    .status-warning-bg { background-color: var(--warning); }
+    .status-danger-bg  { background-color: var(--danger); }
+    .status-success-text { color: var(--success); }
+    .status-warning-text { color: var(--warning); }
+    .status-danger-text  { color: var(--danger); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-// Make table rows clickable
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('tr[data-row-url]').forEach(row => {
-        row.style.cursor = 'pointer';
+    // Progress bars
+    document.querySelectorAll('.progress-bar[data-pct]').forEach(function(el) {
+        el.style.width = (el.dataset.pct || 0) + '%';
+    });
+    // Clickable rows
+    document.querySelectorAll('tr[data-row-url]').forEach(function(row) {
         row.addEventListener('click', function(e) {
-            // Ignore clicks on action buttons
-            if (!e.target.closest('a')) {
-                window.location.href = this.getAttribute('data-row-url');
-            }
+            if (!e.target.closest('a')) window.location.href = this.dataset.rowUrl;
         });
     });
-});
 </script>
 {% endblock %}

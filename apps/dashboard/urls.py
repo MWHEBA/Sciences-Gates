@@ -110,6 +110,11 @@ urlpatterns = [
     path('settings/', views.SiteSettingsUpdateView.as_view(), name='settings'),
     path('settings/test-smtp/', views.SMTPTestView.as_view(), name='test_smtp'),
     path('seo/', views.SEOManagementView.as_view(), name='seo_management'),
+
+    # Analytics & Search Console (SEO Admin + Super Admin)
+    path('analytics/', views.AnalyticsView.as_view(), name='analytics'),
+    path('search-console/', views.SearchConsoleView.as_view(), name='search_console'),
+
     
     # Editor uploads
     path('editor/upload-image/', views.EditorImageUploadView.as_view(), name='editor_upload_image'),

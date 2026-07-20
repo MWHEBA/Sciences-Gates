@@ -192,6 +192,22 @@ GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 GA4_MEASUREMENT_ID = config('GA4_MEASUREMENT_ID', default='')
 GOOGLE_SITE_VERIFICATION = config('GOOGLE_SITE_VERIFICATION', default='')
 
+GOOGLE_SERVICE_ACCOUNT_JSON = config('GOOGLE_SERVICE_ACCOUNT_JSON', default='')
+if GOOGLE_SERVICE_ACCOUNT_JSON and not os.path.isabs(GOOGLE_SERVICE_ACCOUNT_JSON):
+    GOOGLE_SERVICE_ACCOUNT_JSON = os.path.join(BASE_DIR, GOOGLE_SERVICE_ACCOUNT_JSON)
+
+# Load GSC credentials dict from JSON string env var if available
+import json
+GSC_CREDENTIALS_DICT = None
+gsc_credentials_raw = config('GOOGLE_SERVICE_ACCOUNT_JSON_STRING', default='')
+if gsc_credentials_raw:
+    try:
+        GSC_CREDENTIALS_DICT = json.loads(gsc_credentials_raw)
+    except Exception:
+        pass
+
+GSC_SITE_URL = config('GSC_SITE_URL', default='https://sciencesgates.com/')
+
 # Increase maximum number of GET/POST fields for large forms (e.g. university form with many nested programs)
 DATA_UPLOAD_MAX_NUMBER_FIELDS = config('DATA_UPLOAD_MAX_NUMBER_FIELDS', default=10000, cast=int)
 
@@ -204,4 +220,8 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+
+# Cloudflare Turnstile Settings
+TURNSTILE_SITE_KEY = config('TURNSTILE_SITE_KEY', default='')
+TURNSTILE_SECRET_KEY = config('TURNSTILE_SECRET_KEY', default='')
 

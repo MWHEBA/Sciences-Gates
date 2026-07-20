@@ -37,6 +37,14 @@ class DashboardMixin(LoginRequiredMixin):
             next_url = request.get_full_path()
             return redirect(f'{login_url}?next={next_url}')
 
+        # Check if user is staff (access control)
+        if not request.user.is_staff:
+            messages.error(request, 'ليس لديك صلاحيات للوصول إلى لوحة التحكم.')
+            from django.urls import reverse
+            login_url = reverse('dashboard:login')
+            next_url = request.get_full_path()
+            return redirect(f'{login_url}?next={next_url}')
+
         return super().dispatch(request, *args, **kwargs)
 
 

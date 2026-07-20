@@ -303,6 +303,14 @@
                         {% endif %}
                     </div>
 
+                    {% if TURNSTILE_SITE_KEY %}
+                    <!-- Cloudflare Turnstile -->
+                    <div class="form-group" style="display: flex; justify-content: center; margin-bottom: 20px;">
+                        <div class="cf-turnstile" data-sitekey="{{ TURNSTILE_SITE_KEY }}" data-theme="light"></div>
+                    </div>
+                    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                    {% endif %}
+
                     <!-- زر الإرسال -->
                     <div class="form-group text-center">
                         <button type="submit" class="btn btn--primary btn--lg" style="min-width: 200px;">

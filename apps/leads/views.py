@@ -36,6 +36,20 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
     template_name = 'leads/submit.html'
     success_url = reverse_lazy('leads:thank_you')
 
+    def post(self, request, *args, **kwargs):
+        from django.core.cache import cache
+        ip_address = request.META.get('REMOTE_ADDR')
+        rate_key = f"lead_rate_limit_{ip_address}"
+        submissions = cache.get(rate_key, 0)
+        
+        if submissions >= 3:
+            messages.error(request, 'تم تجاوز الحد الأقصى للطلبات المسموحة في الساعة. يرجى المحاولة لاحقاً.')
+            form = self.get_form()
+            return self.form_invalid(form)
+            
+        cache.set(rate_key, submissions + 1, 3600)
+        return super().post(request, *args, **kwargs)
+
     def get_form_class(self):
         lead_type = self.request.POST.get('lead_type') or self.request.GET.get('lead_type') or 'contact'
         if lead_type == 'registration':

@@ -120,9 +120,16 @@ class TestSitemapClasses:
         from apps.seo.sitemaps import StaticSitemap
         
         sitemap = StaticSitemap()
-        assert sitemap.priority == 0.5
-        assert sitemap.changefreq == 'monthly'
-        assert sitemap.items() == ['home']
+        assert sitemap.priority('home') == 1.0
+        assert sitemap.priority('about_us') == 0.5
+        assert sitemap.priority('universities:list') == 0.8
+        
+        assert sitemap.changefreq('home') == 'daily'
+        assert sitemap.changefreq('about_us') == 'monthly'
+        assert sitemap.changefreq('universities:list') == 'weekly'
+        
+        assert 'home' in sitemap.items()
+        assert 'about_us' in sitemap.items()
     
     def test_sitemaps_dictionary_contains_all_sitemaps(self):
         """Test that sitemaps dictionary contains all sitemap classes."""

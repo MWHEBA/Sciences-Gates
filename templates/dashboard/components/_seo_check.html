@@ -1,0 +1,13 @@
+{% comment %}
+Micro-component: renders ✓ or ✗ based on whether val is truthy.
+Usage: {% include 'dashboard/components/_seo_check.html' with val=item.obj.meta_title %}
+{% endcomment %}
+{% if val %}
+<svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" style="color: var(--success);" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+</svg>
+{% else %}
+<svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" style="color: var(--danger);" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+</svg>
+{% endif %}

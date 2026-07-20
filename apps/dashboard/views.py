@@ -31,7 +31,7 @@ from apps.institutes.models import Institute, Course
 from apps.majors.models import Major, MajorCategory
 from apps.articles.models import Article, Category, Tag, IgnoredSimilarity
 from apps.core.models import SiteSettings, ContentLock, UserProfile, UserRole
-from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin
+from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin, DashboardMixin
 from apps.dashboard.forms import (
     UserCreateForm, UserUpdateForm, RedirectForm, 
     UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet,
@@ -63,10 +63,20 @@ class DashboardLoginView(View):
     def post(self, request):
         """Handle login form submission."""
         from django.utils.http import url_has_allowed_host_and_scheme
+        from django.core.cache import cache
         
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
         next_url = request.POST.get('next', request.GET.get('next', ''))
+
+        # Lockout check by IP
+        ip_address = request.META.get('REMOTE_ADDR')
+        lockout_key = f"login_lockout_{ip_address}"
+        attempts_key = f"login_attempts_{ip_address}"
+        
+        if cache.get(lockout_key):
+            messages.error(request, 'تم قفل محاولات تسجيل الدخول مؤقتاً بسبب عدد كبير من المحاولات الخاطئة. يرجى المحاولة بعد قليل.')
+            return render(request, self.template_name, {'next': next_url})
 
         if not username or not password:
             messages.error(request, 'يرجى إدخال اسم المستخدم وكلمة المرور')
@@ -80,6 +90,10 @@ class DashboardLoginView(View):
                 messages.error(request, 'ليس لديك صلاحيات للوصول إلى لوحة التحكم')
                 return render(request, self.template_name, {'next': next_url})
 
+            # Clear attempts on successful login
+            cache.delete(attempts_key)
+            cache.delete(lockout_key)
+
             login(request, user)
             messages.success(request, f'أهلاً وسهلاً {user.first_name or user.username}')
             
@@ -88,7 +102,14 @@ class DashboardLoginView(View):
                 return redirect(next_url)
             return redirect('dashboard:home')
         else:
-            messages.error(request, 'اسم المستخدم أو كلمة المرور غير صحيحة')
+            # Increment attempts
+            attempts = cache.get(attempts_key, 0) + 1
+            cache.set(attempts_key, attempts, 300)  # Reset attempts after 5 minutes
+            if attempts >= 5:
+                cache.set(lockout_key, True, 900)  # Lockout for 15 minutes
+                messages.error(request, 'تم قفل محاولات تسجيل الدخول مؤقتاً بسبب محاولات خاطئة متتالية. يرجى المحاولة بعد 15 دقيقة.')
+            else:
+                messages.error(request, f'اسم المستخدم أو كلمة المرور غير صحيحة. المحاولات المتبقية: {5 - attempts}')
             return render(request, self.template_name, {'username': username, 'next': next_url})
 
 
@@ -155,7 +176,7 @@ class DashboardPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'dashboard/auth/password_reset_complete.html'
 
 
-class DashboardHomeView(LoginRequiredMixin, View):
+class DashboardHomeView(DashboardMixin, View):
     """
     Dashboard home page with statistics.
     صفحة لوحة التحكم الرئيسية مع الإحصائيات
@@ -277,11 +298,25 @@ class DashboardHomeView(LoginRequiredMixin, View):
         # Calculate total pending (unpublished) content
         total_pending = sum(v['unpublished'] for v in content_stats.values())
         
+        # Build a list of pending content text summaries (excluding 0 counts)
+        pending_breakdown = []
+        if content_stats.get('universities', {}).get('unpublished', 0) > 0:
+            pending_breakdown.append(f"{content_stats['universities']['unpublished']} جامعات")
+        if content_stats.get('institutes', {}).get('unpublished', 0) > 0:
+            pending_breakdown.append(f"{content_stats['institutes']['unpublished']} معاهد")
+        if content_stats.get('majors', {}).get('unpublished', 0) > 0:
+            pending_breakdown.append(f"{content_stats['majors']['unpublished']} تخصصات")
+        if content_stats.get('articles', {}).get('unpublished', 0) > 0:
+            pending_breakdown.append(f"{content_stats['articles']['unpublished']} مقالات")
+            
+        pending_breakdown_str = "، و".join(pending_breakdown)
+        
         context = {
             'page_title': 'لوحة التحكم',
             'lead_stats': lead_stats,
             'content_stats': content_stats,
             'total_pending': total_pending,
+            'pending_breakdown_str': pending_breakdown_str,
             'recent_leads': recent_leads,
             'trend': trend,
             'trend_abs': trend_abs,
@@ -291,6 +326,89 @@ class DashboardHomeView(LoginRequiredMixin, View):
             'contact_leads': lead_stats['contact'],
             'current_month_leads': lead_stats['this_month'],
         }
+
+        # Quick Wins from GSC — shown on home page if GSC is connected
+        try:
+            from apps.seo.services.gsc_client import GSCClient
+            gsc = GSCClient()
+            if gsc.is_connected():
+                context['gsc_quick_wins'] = gsc.get_quick_wins(days=28)
+                context['gsc_connected'] = True
+            else:
+                context['gsc_quick_wins'] = []
+                context['gsc_connected'] = False
+        except Exception:
+            context['gsc_quick_wins'] = []
+            context['gsc_connected'] = False
+
+        return render(request, self.template_name, context)
+
+
+class AnalyticsView(SEOAdminRequiredMixin, View):
+    """
+    Google Analytics overview page for SEO/Super admins.
+    صفحة Analytics — تعرض حالة GA4 وروابط للأدوات الخارجية.
+    """
+    template_name = 'dashboard/analytics.html'
+
+    def get(self, request):
+        """Display analytics page."""
+        from apps.core.models import SiteSettings
+        try:
+            site_settings = SiteSettings.get_settings()
+            ga4_id = site_settings.ga4_measurement_id
+            ga4_enabled = site_settings.enable_ga4
+        except Exception:
+            ga4_id = ''
+            ga4_enabled = False
+
+        context = {
+            'ga4_measurement_id': ga4_id,
+            'ga4_enabled': ga4_enabled,
+            'ga4_configured': bool(ga4_id),
+        }
+        return render(request, self.template_name, context)
+
+
+class SearchConsoleView(SEOAdminRequiredMixin, View):
+    """
+    Google Search Console data page for SEO/Super admins.
+    صفحة Search Console — تعرض بيانات GSC API مباشرة في الداشبورد.
+    """
+    template_name = 'dashboard/search_console.html'
+
+    def get(self, request):
+        """Display Search Console data."""
+        from apps.seo.services.gsc_client import GSCClient
+
+        days = int(request.GET.get('days', 28))
+        if days not in (7, 14, 28, 90):
+            days = 28
+
+        gsc = GSCClient()
+        connected = gsc.is_connected()
+
+        context = {
+            'gsc_connected': connected,
+            'selected_days': days,
+            'summary': {},
+            'top_pages': [],
+            'top_queries': [],
+            'quick_wins': [],
+            'clicks_trend': [],
+        }
+
+        if connected:
+            try:
+                context['summary'] = gsc.get_summary(days)
+                context['top_pages'] = gsc.get_top_pages(days, limit=10)
+                context['top_queries'] = gsc.get_top_queries(days, limit=10)
+                context['quick_wins'] = gsc.get_quick_wins(days)
+                context['clicks_trend'] = gsc.get_clicks_trend(days)
+            except Exception as exc:
+                logger.warning("SearchConsoleView: %s", exc)
+                context['gsc_error'] = str(exc)
+
         return render(request, self.template_name, context)
 
 
@@ -901,7 +1019,8 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
             {'label': 'النوع', 'key': 'university_type_display', 'type': 'text'},
             {'label': 'الكليات', 'key': 'faculties_count', 'type': 'text'},
             {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
-            {'label': 'التاريخ', 'key': 'created_at', 'type': 'date'},
+            {'label': 'تاريخ النشر', 'key': 'created_at', 'type': 'date'},
+            {'label': 'تاريخ التحديث', 'key': 'updated_at', 'type': 'date'},
         ]
         
         context['edit_url_name'] = 'dashboard:university_edit'
@@ -1841,7 +1960,8 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
             {'label': 'الموقع', 'key': 'city_display', 'type': 'text'},
             {'label': 'الدورات', 'key': 'courses_count', 'type': 'text'},
             {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
-            {'label': 'التاريخ', 'key': 'created_at', 'type': 'date'},
+            {'label': 'تاريخ النشر', 'key': 'created_at', 'type': 'date'},
+            {'label': 'تاريخ التحديث', 'key': 'updated_at', 'type': 'date'},
         ]
         
         context['edit_url_name'] = 'dashboard:institute_edit'
@@ -2285,7 +2405,8 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
             {'label': 'اسم التخصص', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:major_edit', 'link_param': 'pk'},
             {'label': 'التصنيف', 'key': 'major_category_display', 'type': 'text'},
             {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
-            {'label': 'التاريخ', 'key': 'created_at', 'type': 'date'},
+            {'label': 'تاريخ النشر', 'key': 'created_at', 'type': 'date'},
+            {'label': 'تاريخ التحديث', 'key': 'updated_at', 'type': 'date'},
         ]
         
         # Row actions
@@ -3320,6 +3441,7 @@ class ArticleListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListV
             {'label': 'الكاتب', 'key': 'author_name', 'type': 'text'},
             {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
             {'label': 'تاريخ النشر', 'key': 'publish_date', 'type': 'date'},
+            {'label': 'تاريخ التحديث', 'key': 'updated_at', 'type': 'date'},
         ]
         
         context['edit_url_name'] = 'dashboard:article_edit'
@@ -4376,11 +4498,13 @@ def editor_image_upload(request):
         if img.width > max_width or img.height > max_height:
             img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
 
-        # Convert to RGB if necessary (for JPEG)
-        if img.mode in ('RGBA', 'LA', 'P'):
-            rgb_img = Image.new('RGB', img.size, (255, 255, 255))
-            rgb_img.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
-            img = rgb_img
+        # Convert to RGB and strip all EXIF/GPS metadata (by pasting onto a new clean RGB image)
+        rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+        if img.mode == 'RGBA':
+            rgb_img.paste(img, mask=img.split()[-1])
+        else:
+            rgb_img.paste(img)
+        img = rgb_img
 
         # Save optimized image
         output = io.BytesIO()
@@ -4434,7 +4558,7 @@ def editor_image_upload(request):
         return JsonResponse({'error': f'خطأ في الرفع: {str(e)}'}, status=500)
 
 
-class EditorImageUploadView(LoginRequiredMixin, View):
+class EditorImageUploadView(DashboardMixin, View):
     """
     Class-based view for image upload (alternative to function-based view).
     """
@@ -4707,22 +4831,31 @@ class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
         form = SEOSettingsForm()
         settings_form = SiteSEOSettingsForm(instance=settings)
 
+        # GSC API connection status
+        try:
+            from apps.seo.services.gsc_client import GSCClient
+            gsc_api_connected = GSCClient().is_connected()
+        except Exception:
+            gsc_api_connected = False
+
         # Build context
         context = {
             'page_title': 'إدارة SEO',
             'cancel_url': reverse_lazy('dashboard:home'),
             'active_tab': active_tab,
-            
+
             # Forms
             'form': form,
             'settings_form': settings_form,
-            
+
             # Settings stats
             'ga4_configured': bool(settings.ga4_measurement_id),
+            'ga4_measurement_id': settings.ga4_measurement_id or '',
             'gsc_configured': bool(settings.google_site_verification),
+            'gsc_api_connected': gsc_api_connected,
             'ga4_enabled': settings.enable_ga4,
             'sitemap_last_generated': settings.sitemap_last_generated,
-            
+
             # Content stats
             'total_universities': University.objects.filter(publish_status='published').count(),
             'total_institutes': Institute.objects.filter(publish_status='published').count(),
@@ -4735,20 +4868,28 @@ class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
                 Article.objects.filter(publish_status='published').count() +
                 3  # Home, Universities List, Majors List, Articles List
             ),
-            
-            # SEO health overview
+
+            # SEO health overview — coverage bars
             'universities_with_meta': University.objects.filter(publish_status='published').exclude(meta_title='').count(),
             'majors_with_meta': Major.objects.filter(publish_status='published').exclude(meta_title='').count(),
             'articles_with_meta': Article.objects.filter(publish_status='published').exclude(meta_title='').count(),
-            
+
             # Detailed SEO health
             'health_items': health_items,
             'health_total': health_total,
             'health_needs_attention': health_needs_attention,
             'health_content_type': health_content_type,
+            'health_content_type_choices': [
+                ('all', 'الكل'),
+                ('universities', 'الجامعات'),
+                ('institutes', 'المعاهد'),
+                ('majors', 'التخصصات'),
+                ('articles', 'المقالات'),
+            ],
         }
 
         return render(request, self.template_name, context)
+
 
     def post(self, request):
         """Handle POST actions for both SEO settings and tools."""
@@ -4798,6 +4939,10 @@ class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
             settings = SiteSettings.get_settings()
             settings.sitemap_last_generated = timezone.now()
             settings.save(update_fields=['sitemap_last_generated'])
+            
+            # Clear sitemap cache to force regeneration
+            self._clear_seo_cache()
+            
             return {
                 'success': True,
                 'message': 'تم تحديث خريطة الموقع بنجاح. يمكن الوصول إليها من: /sitemap.xml'
@@ -4812,12 +4957,12 @@ class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
         """Clear SEO-related cache."""
         try:
             from django.core.cache import cache
-            cache_keys = [
-                'sitemap_universities',
-                'sitemap_majors',
-                'sitemap_articles',
-                'sitemap_static',
-            ]
+            cache_keys = []
+            sitemap_classes = ['universitysitemap', 'institutesitemap', 'majorsitemap', 'articlesitemap', 'staticsitemap']
+            for cls in sitemap_classes:
+                for page in range(1, 11):
+                    cache_keys.append(f"sitemap_{cls}_page_{page}")
+            
             for key in cache_keys:
                 cache.delete(key)
             return {

@@ -117,10 +117,10 @@ class HTMLSanitizationTestCase(TestCase):
     
     def test_sanitize_removes_disallowed_tags(self):
         """Test that disallowed tags are removed."""
-        html = '<p>Text</p><div>Div content</div><span>Span</span>'
+        html = '<p>Text</p><section>Section content</section><aside>Aside</aside>'
         result = sanitize_html(html)
-        self.assertNotIn('<div>', result)
-        self.assertNotIn('<span>', result)
+        self.assertNotIn('<section>', result)
+        self.assertNotIn('<aside>', result)
     
     def test_sanitize_javascript_protocol(self):
         """Test that javascript: protocol is removed."""

@@ -78,7 +78,7 @@ Based on an audit comparing our target SEO strategy against the active Django co
 
 | Optimization Area | Coded/Implemented | Missing/Pending | Implementation Level |
 | :--- | :--- | :--- | :--- |
-| **GA4 & GSC Integration** | Yes (Context Processor & base.html) | Environment variable values | 95% |
+| **GA4 & GSC Integration** | Yes (Context Processor, base.html & GSC Service Account) | None (Active in Production) | 100% |
 | **Structured Data (Schema)** | Yes (7 Schema Types) | None | 100% |
 | **robots.txt / crawler rules**| Yes (Static & Fallback View) | None | 100% |
 | **Performance Basics (WebP)** | Yes (signals.py + utils.py) | None (pre-existing) | 100% |
@@ -95,10 +95,10 @@ Based on an audit comparing our target SEO strategy against the active Django co
 
 ### 1. Google Analytics 4 & Search Console
 * **Files Modified:**
-  * [base.py](file:///c:/Users/MohYousif/Desktop/Sciences%20Gates/config/settings/base.py) - Added config settings.
+  * [base.py](file:///c:/Users/MohYousif/Desktop/Sciences%20Gates/config/settings/base.py) - Added config settings for GSC and Analytics.
   * [context_processors.py](file:///c:/Users/MohYousif/Desktop/Sciences%20Gates/apps/core/context_processors.py) - Injected settings globally.
   * [base.html](file:///c:/Users/MohYousif/Desktop/Sciences%20Gates/templates/base.html) - Rendered meta tags and async gtag scripts.
-* **Status:** Fully functional. Awaiting active production IDs in `.env`.
+* **Status:** Fully functional and live. Integrated with Google Service Account (`sciences-gates-a4408786e662.json`) to programmatically access GSC API (`sc-domain:sciencesgates.com`).
 
 ### 2. Structured Data (Schema Markup)
 * **Files Created/Modified:**

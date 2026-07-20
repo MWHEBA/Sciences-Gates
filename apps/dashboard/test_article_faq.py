@@ -60,6 +60,12 @@ class TestArticleFAQDashboard:
             'faqs-MIN_NUM_FORMS': '0',
             'faqs-MAX_NUM_FORMS': '1000',
             
+            # Attachment Formset fields
+            'attachments-TOTAL_FORMS': '0',
+            'attachments-INITIAL_FORMS': '0',
+            'attachments-MIN_NUM_FORMS': '0',
+            'attachments-MAX_NUM_FORMS': '1000',
+            
             'faqs-0-id': '',
             'faqs-0-question': 'Question 1?',
             'faqs-0-answer': 'Answer 1.',
@@ -115,6 +121,12 @@ class TestArticleFAQDashboard:
             'faqs-INITIAL_FORMS': '2',
             'faqs-MIN_NUM_FORMS': '0',
             'faqs-MAX_NUM_FORMS': '1000',
+            
+            # Attachment Formset fields
+            'attachments-TOTAL_FORMS': '0',
+            'attachments-INITIAL_FORMS': '0',
+            'attachments-MIN_NUM_FORMS': '0',
+            'attachments-MAX_NUM_FORMS': '1000',
             
             # Form 0: Modify existing
             'faqs-0-id': str(faq_to_modify.id),
@@ -222,6 +234,12 @@ class TestArticleFAQDashboard:
             'faqs-INITIAL_FORMS': '0',
             'faqs-MIN_NUM_FORMS': '0',
             'faqs-MAX_NUM_FORMS': '1000',
+            
+            # Attachment Formset fields
+            'attachments-TOTAL_FORMS': '0',
+            'attachments-INITIAL_FORMS': '0',
+            'attachments-MIN_NUM_FORMS': '0',
+            'attachments-MAX_NUM_FORMS': '1000',
         }
         
         response = self.client.post(url, data)

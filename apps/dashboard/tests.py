@@ -468,7 +468,7 @@ class DashboardMessagesComponentTests(TestCase):
         from django.contrib.messages.storage.base import Message
         messages = [Message(25, 'تم الحفظ بنجاح', extra_tags='success')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        self.assertIn('role="status"', rendered)
+        self.assertIn("addToast('تم الحفظ بنجاح', 'success')", rendered)
 
     def test_error_message_renders_correctly(self):
         """Test that error messages render with correct styling."""
@@ -476,7 +476,7 @@ class DashboardMessagesComponentTests(TestCase):
         from django.contrib.messages.storage.base import Message
         messages = [Message(40, 'خطأ في الحفظ', extra_tags='error')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        self.assertIn('role="alert"', rendered)
+        self.assertIn("addToast('خطأ في الحفظ', 'error')", rendered)
 
     def test_warning_message_renders_correctly(self):
         """Test that warning messages render with correct styling."""
@@ -484,7 +484,7 @@ class DashboardMessagesComponentTests(TestCase):
         from django.contrib.messages.storage.base import Message
         messages = [Message(30, 'تحذير هام', extra_tags='warning')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        self.assertIn('role="alert"', rendered)
+        self.assertIn("addToast('تحذير هام', 'warning')", rendered)
 
     def test_info_message_renders_correctly(self):
         """Test that info messages render with correct styling."""
@@ -492,7 +492,7 @@ class DashboardMessagesComponentTests(TestCase):
         from django.contrib.messages.storage.base import Message
         messages = [Message(20, 'معلومات عامة', extra_tags='info')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        self.assertIn('role="status"', rendered)
+        self.assertIn("addToast('معلومات عامة', 'info')", rendered)
 
     def test_messages_component_has_alpine_js_state(self):
         """Test that messages component includes Alpine.js state."""
@@ -500,7 +500,7 @@ class DashboardMessagesComponentTests(TestCase):
         from django.contrib.messages.storage.base import Message
         messages = [Message(20, 'معلومات عامة', extra_tags='info')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        self.assertIn('x-data="{ show: true }"', rendered)
+        self.assertIn('toasts: []', rendered)
 
     def test_messages_component_has_dismiss_button(self):
         """Test that messages component includes dismiss button."""
@@ -508,7 +508,7 @@ class DashboardMessagesComponentTests(TestCase):
         from django.contrib.messages.storage.base import Message
         messages = [Message(20, 'معلومات عامة', extra_tags='info')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        self.assertIn('@click="show = false"', rendered)
+        self.assertIn('@click="toast.show = false"', rendered)
         self.assertIn('aria-label="إغلاق الرسالة"', rendered)
 
     def test_messages_component_has_correct_padding(self):
@@ -517,7 +517,7 @@ class DashboardMessagesComponentTests(TestCase):
         from django.contrib.messages.storage.base import Message
         messages = [Message(20, 'معلومات عامة', extra_tags='info')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        self.assertIn('px-5 py-3', rendered)
+        self.assertIn('padding: 16px;', rendered)
 
     def test_messages_component_has_correct_border_radius(self):
         """Test that messages component has correct border radius."""
@@ -525,7 +525,7 @@ class DashboardMessagesComponentTests(TestCase):
         from django.contrib.messages.storage.base import Message
         messages = [Message(20, 'معلومات عامة', extra_tags='info')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        self.assertIn('rounded-lg', rendered)
+        self.assertIn('border-radius: var(--radius-xl);', rendered)
 
     def test_messages_component_has_correct_text_size(self):
         """Test that messages component has correct text size."""
@@ -545,12 +545,12 @@ class DashboardMessagesComponentTests(TestCase):
         self.assertIn('viewBox="0 0 24 24"', rendered)
 
     def test_messages_component_has_correct_aria_roles(self):
-        """Test that messages component has correct ARIA roles."""
+        """Test that messages component has correct ARIA roles dynamic binding."""
         from django.template.loader import render_to_string
         from django.contrib.messages.storage.base import Message
         messages = [Message(40, 'خطأ', extra_tags='error')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        self.assertIn('role="alert"', rendered)
+        self.assertIn(":role=\"['error', 'warning'].includes(toast.level) ? 'alert' : 'status'\"", rendered)
 
     def test_messages_component_has_flex_layout(self):
         """Test that messages component uses flex layout."""
@@ -566,7 +566,7 @@ class DashboardMessagesComponentTests(TestCase):
         from django.contrib.messages.storage.base import Message
         messages = [Message(20, 'معلومات عامة', extra_tags='info')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
-        button_pos = rendered.find('@click="show = false"')
+        button_pos = rendered.find('@click="toast.show = false"')
         text_pos = rendered.find('flex-1')
         self.assertLess(button_pos, text_pos, "Dismiss button should come before text in RTL layout")
 
@@ -577,6 +577,7 @@ class DashboardMessagesComponentTests(TestCase):
         messages = [Message(20, 'معلومات عامة', extra_tags='info')]
         rendered = render_to_string('dashboard/components/messages.html', {'messages': messages})
         self.assertIn('gap-3', rendered)
+
 
 
 class DashboardMobileSidebarOverlayTests(TestCase):

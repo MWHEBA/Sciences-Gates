@@ -56,7 +56,7 @@ class VisaTrackingViewTestCase(TestCase):
         response = self.client.get(reverse('visa_tracking'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'visa_tracking.html')
-        self.assertContains(response, 'متابعة حالة الفيزا')
+        self.assertContains(response, 'متابعة حالة التأشيرة')
         self.assertContains(response, 'EMGS')
 
     def test_visa_tracking_form_submission_success(self):

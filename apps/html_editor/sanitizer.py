@@ -273,3 +273,7 @@ def get_safe_html(html_content):
     """
     sanitized = sanitize_article_html(html_content)
     return mark_safe(sanitized)
+
+
+# Alias for backward compatibility
+sanitize_html = sanitize_article_html

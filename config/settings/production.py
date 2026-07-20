@@ -13,6 +13,18 @@ from .base import *
 from decouple import config, Csv
 from pathlib import Path
 
+# Secure SECRET_KEY check for production environment
+if SECRET_KEY in (
+    'django-insecure-change-me-in-production',
+    'your-secret-key-here-change-in-production',
+    ''
+):
+    raise ValueError("يجب تعيين مفتاح أمان (SECRET_KEY) فريد وقوي في ملف .env للإنتاج!")
+
+# Session settings for hardening
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 3600  # 1 hour session lifetime
+
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='sciencesgates.com,localhost,127.0.0.1', cast=Csv())
 if 'sciencesgates.com' not in ALLOWED_HOSTS:

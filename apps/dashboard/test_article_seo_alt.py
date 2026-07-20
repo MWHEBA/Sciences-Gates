@@ -100,6 +100,12 @@ class TestArticleSEOAltDashboard:
             'faqs-INITIAL_FORMS': '0',
             'faqs-MIN_NUM_FORMS': '0',
             'faqs-MAX_NUM_FORMS': '1000',
+            
+            # Attachment Formset fields
+            'attachments-TOTAL_FORMS': '0',
+            'attachments-INITIAL_FORMS': '0',
+            'attachments-MIN_NUM_FORMS': '0',
+            'attachments-MAX_NUM_FORMS': '1000',
         }
         
         response = self.client.post(url, data)
@@ -139,6 +145,12 @@ class TestArticleSEOAltDashboard:
             'faqs-INITIAL_FORMS': '0',
             'faqs-MIN_NUM_FORMS': '0',
             'faqs-MAX_NUM_FORMS': '1000',
+            
+            # Attachment Formset fields
+            'attachments-TOTAL_FORMS': '0',
+            'attachments-INITIAL_FORMS': '0',
+            'attachments-MIN_NUM_FORMS': '0',
+            'attachments-MAX_NUM_FORMS': '1000',
         }
         
         response = self.client.post(url, data)

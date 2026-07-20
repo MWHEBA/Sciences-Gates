@@ -82,7 +82,7 @@
              x-transition:leave-end="opacity-0"
              class="django-msg-toast flex items-center gap-3 pointer-events-auto"
              :data-level="toast.level"
-             role="status"
+             :role="['error', 'warning'].includes(toast.level) ? 'alert' : 'status'"
          >
              <!-- Dismiss button on left side (RTL) -->
              <button
@@ -103,7 +103,7 @@
                  <button
                      @click="$dispatch(toast.undoEvent, toast.undoData); toast.show = false"
                      class="px-2.5 py-1 text-xs font-semibold rounded-lg cursor-pointer transition-all duration-200 flex-shrink-0"
-                     style="background-color: var(--primary); color: #ffffff; border: none; font-family: 'Alexandria', sans-serif; margin-left: 4px;"
+                     style="background-color: var(--primary); color: var(--white); border: none; font-family: 'Alexandria', sans-serif; margin-left: 4px;"
                      onmouseover="this.style.filter='brightness(1.15)'"
                      onmouseout="this.style.filter='none'"
                  >

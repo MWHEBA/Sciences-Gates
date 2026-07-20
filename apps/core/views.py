@@ -150,6 +150,20 @@ class VisaTrackingView(FormView):
     form_class = LeadForm
     success_url = reverse_lazy('visa_tracking')
 
+    def post(self, request, *args, **kwargs):
+        from django.core.cache import cache
+        ip_address = request.META.get('REMOTE_ADDR')
+        rate_key = f"visa_rate_limit_{ip_address}"
+        submissions = cache.get(rate_key, 0)
+        
+        if submissions >= 3:
+            messages.error(request, 'تم تجاوز الحد الأقصى للطلبات المسموحة في الساعة. يرجى المحاولة لاحقاً.')
+            form = self.get_form()
+            return self.form_invalid(form)
+            
+        cache.set(rate_key, submissions + 1, 3600)
+        return super().post(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         # بنجهز سياق الصفحة وبنمرر رابط الصفحة كـ source_page للموديل
         context = super().get_context_data(**kwargs)

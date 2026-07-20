@@ -1,0 +1,165 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Google Analytics - لوحة التحكم{% endblock %}
+
+{% block page_title %}Google Analytics{% endblock %}
+
+{% block page_description %}
+<p class="text-sm mt-0.5" style="color: var(--text-muted);">مراقبة سلوك الزوار وأداء الموقع</p>
+{% endblock %}
+
+{% block page_actions %}
+{% if ga4_configured %}
+<a href="https://analytics.google.com/analytics/web/#/p{{ ga4_measurement_id }}" target="_blank" rel="noopener"
+   class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+   style="background-color: var(--primary-light); color: var(--primary);">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+    </svg>
+    فتح GA4
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-4">
+
+    {% if not ga4_configured %}
+    <!-- حالة: GA4 غير مُفعَّل -->
+    <div class="rounded-2xl border p-8 text-center" style="border-color: var(--warning); background-color: var(--warning-light);">
+        <svg class="w-10 h-10 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" style="color: var(--warning);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+        </svg>
+        <h2 class="text-lg font-bold mb-2" style="color: var(--warning);">GA4 غير مُفعَّل</h2>
+        <p class="text-sm mb-4" style="color: var(--text-secondary);">
+            أضف الـ Measurement ID في إعدادات الموقع لتفعيل التتبع.
+        </p>
+        <a href="{% url 'dashboard:settings' %}#ga4"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
+           style="background-color: var(--primary); color: white;">
+            الذهاب للإعدادات
+        </a>
+    </div>
+
+    {% else %}
+
+    <!-- حالة GA4: متصل -->
+    <div class="rounded-2xl border p-4 flex items-center justify-between" style="border-color: var(--border); background-color: var(--surface);">
+        <div class="flex items-center gap-3">
+            <span class="w-2.5 h-2.5 rounded-full" style="background-color: var(--success);"></span>
+            <span class="text-sm font-semibold" style="color: var(--text-primary);">
+                GA4 مفعّل — <span style="color: var(--text-muted); font-weight: 400;">{{ ga4_measurement_id }}</span>
+            </span>
+        </div>
+        <span class="text-xs px-2 py-1 rounded-full" style="background-color: var(--success-light); color: var(--success);">
+            يتتبع الزوار الآن
+        </span>
+    </div>
+
+    <!-- بطاقات روابط سريعة -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+
+        <!-- GA4 Dashboard -->
+        <a href="https://analytics.google.com/" target="_blank" rel="noopener"
+           class="flex items-start gap-4 p-4 rounded-2xl border transition hover:shadow-md no-underline"
+           style="border-color: var(--border); background-color: var(--surface);">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                 style="background-color: var(--primary-light);">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--primary);">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm font-semibold m-0" style="color: var(--text-primary);">Google Analytics 4</p>
+                <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">لوحة التحكم الرئيسية</p>
+            </div>
+            <svg class="w-4 h-4 mr-auto shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--text-muted);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+        </a>
+
+        <!-- Realtime Report -->
+        <a href="https://analytics.google.com/analytics/web/#/realtime" target="_blank" rel="noopener"
+           class="flex items-start gap-4 p-4 rounded-2xl border transition hover:shadow-md no-underline"
+           style="border-color: var(--border); background-color: var(--surface);">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                 style="background-color: var(--success-light);">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--success);">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm font-semibold m-0" style="color: var(--text-primary);">الزوار الآن</p>
+                <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">Realtime Report</p>
+            </div>
+            <svg class="w-4 h-4 mr-auto shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--text-muted);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+        </a>
+
+        <!-- Looker Studio -->
+        <a href="https://lookerstudio.google.com/" target="_blank" rel="noopener"
+           class="flex items-start gap-4 p-4 rounded-2xl border transition hover:shadow-md no-underline"
+           style="border-color: var(--border); background-color: var(--surface);">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                 style="background-color: var(--info-light);">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--info);">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm font-semibold m-0" style="color: var(--text-primary);">Looker Studio</p>
+                <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">تقارير مرئية مخصصة</p>
+            </div>
+            <svg class="w-4 h-4 mr-auto shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--text-muted);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+        </a>
+
+    </div>
+
+    <!-- دليل التفسير -->
+    <div class="rounded-2xl border p-5" style="border-color: var(--border); background-color: var(--surface);">
+        <h2 class="text-sm font-bold mb-4" style="color: var(--text-primary);">📖 كيف تقرأ البيانات — دليل سريع</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+            <div class="flex items-start gap-3 p-3 rounded-xl" style="background-color: var(--bg-light);">
+                <span class="text-lg leading-none mt-0.5">📉</span>
+                <div>
+                    <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">Bounce Rate > 70%</p>
+                    <p class="text-xs mt-1" style="color: var(--text-muted);">مشكلة في محتوى الصفحة أو سرعة التحميل — راجع الصفحة وحسّنها</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 rounded-xl" style="background-color: var(--bg-light);">
+                <span class="text-lg leading-none mt-0.5">⏱</span>
+                <div>
+                    <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">Avg Session > 2 دقيقة</p>
+                    <p class="text-xs mt-1" style="color: var(--text-muted);">المحتوى ممتاز — الزوار بيقرؤوا ويتفاعلوا مع الصفحة</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 rounded-xl" style="background-color: var(--bg-light);">
+                <span class="text-lg leading-none mt-0.5">🆕</span>
+                <div>
+                    <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">New Users > 60%</p>
+                    <p class="text-xs mt-1" style="color: var(--text-muted);">زوار جدد كتير = الـ SEO شغّال — واصل إنتاج المحتوى</p>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 rounded-xl" style="background-color: var(--bg-light);">
+                <span class="text-lg leading-none mt-0.5">🗺</span>
+                <div>
+                    <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">أنهي صفحات بتجيب أكتر Leads</p>
+                    <p class="text-xs mt-1" style="color: var(--text-muted);">في GA4 → Conversions → ابحث عن Goals المرتبطة بالفورم</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

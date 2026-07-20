@@ -1,0 +1,279 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Search Console - لوحة التحكم{% endblock %}
+
+{% block page_title %}Google Search Console{% endblock %}
+
+{% block page_description %}
+<p class="text-sm mt-0.5" style="color: var(--text-muted);">أداء الموقع في نتائج بحث Google</p>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .days-active  { background-color: var(--primary); color: white; }
+    .days-inactive { color: var(--text-muted); }
+    .pos-warning  { background-color: var(--warning-light); color: var(--warning); }
+    .pos-muted    { background-color: var(--bg-light); color: var(--text-secondary); }
+</style>
+{% endblock %}
+
+{% block page_actions %}
+<!-- Date Range Selector -->
+<div class="flex items-center gap-1 p-1 rounded-xl border" style="border-color: var(--border); background-color: var(--bg-light);">
+    <a href="?days=7"
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors {% if selected_days == 7 %}days-active{% else %}days-inactive{% endif %}">
+        7 يوم
+    </a>
+    <a href="?days=14"
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors {% if selected_days == 14 %}days-active{% else %}days-inactive{% endif %}">
+        14 يوم
+    </a>
+    <a href="?days=28"
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors {% if selected_days == 28 %}days-active{% else %}days-inactive{% endif %}">
+        28 يوم
+    </a>
+    <a href="?days=90"
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors {% if selected_days == 90 %}days-active{% else %}days-inactive{% endif %}">
+        90 يوم
+    </a>
+</div>
+<a href="https://search.google.com/search-console" target="_blank" rel="noopener"
+   class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+   style="background-color: var(--primary-light); color: var(--primary);">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+    </svg>
+    فتح GSC
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-4">
+
+    {% if not gsc_connected %}
+    <!-- حالة: GSC API غير مُفعَّل -->
+    <div class="rounded-2xl border p-10 text-center" style="border-color: var(--border); background-color: var(--surface);">
+        <svg class="w-10 h-10 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" style="color: var(--text-muted);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/>
+        </svg>
+        <h2 class="text-lg font-bold mb-2" style="color: var(--text-primary);">GSC API غير مُفعَّل</h2>
+        <p class="text-sm mb-2 max-w-sm mx-auto" style="color: var(--text-secondary);">
+            لعرض بيانات Search Console هنا مباشرةً، تحتاج إعداد Service Account.
+        </p>
+        <div class="text-xs mb-6 max-w-sm mx-auto text-right p-4 rounded-xl" style="background-color: var(--bg-light); color: var(--text-secondary);">
+            <p class="font-semibold mb-2" style="color: var(--text-primary);">خطوات الإعداد:</p>
+            <ol class="list-decimal list-inside space-y-1">
+                <li>روح Google Cloud Console</li>
+                <li>فعّل Search Console API</li>
+                <li>ابعت Service Account ونزّل JSON key</li>
+                <li>أضف مساره في <code class="px-1 rounded" style="background-color: var(--border);">GOOGLE_SERVICE_ACCOUNT_JSON</code> في ملف .env</li>
+                <li>أضف الـ service account email كـ Owner في GSC</li>
+            </ol>
+        </div>
+        <div class="flex items-center justify-center gap-3">
+            <a href="{% url 'dashboard:settings' %}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
+               style="background-color: var(--primary); color: white;">
+                الإعدادات
+            </a>
+            <a href="https://search.google.com/search-console" target="_blank" rel="noopener"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border"
+               style="border-color: var(--border); color: var(--text-secondary);">
+                فتح GSC مباشرة ↗
+            </a>
+        </div>
+    </div>
+
+    {% else %}
+
+    <!-- ──────────────────── Summary KPIs ──────────────────── -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+
+        <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="absolute top-0 right-0 left-0 h-1" style="background-color: var(--primary);"></div>
+            <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">النقرات</p>
+            <p class="text-3xl font-bold m-0" style="color: var(--text-primary);">
+                {{ summary.total_clicks|default:"—" }}
+            </p>
+            <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">آخر {{ selected_days }} يوم</p>
+        </div>
+
+        <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="absolute top-0 right-0 left-0 h-1" style="background-color: var(--secondary);"></div>
+            <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">الظهورات</p>
+            <p class="text-3xl font-bold m-0" style="color: var(--text-primary);">
+                {{ summary.total_impressions|default:"—" }}
+            </p>
+            <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">Impressions</p>
+        </div>
+
+        <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="absolute top-0 right-0 left-0 h-1" style="background-color: var(--info);"></div>
+            <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">نسبة النقر</p>
+            <p class="text-3xl font-bold m-0" style="color: var(--text-primary);">
+                {{ summary.avg_ctr|default:"—" }}%
+            </p>
+            <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">CTR متوسط</p>
+        </div>
+
+        <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="absolute top-0 right-0 left-0 h-1" style="background-color: var(--success);"></div>
+            <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">متوسط المركز</p>
+            <p class="text-3xl font-bold m-0" style="color: var(--text-primary);">
+                {{ summary.avg_position|default:"—" }}
+            </p>
+            <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">Average Position</p>
+        </div>
+
+    </div>
+
+    <!-- ──────────────────── Quick Wins ──────────────────── -->
+    {% if quick_wins %}
+    <div class="rounded-2xl border overflow-hidden" style="border-color: var(--warning); background-color: var(--surface);">
+        <div class="px-5 py-3 border-b flex items-center gap-2" style="border-color: var(--warning); background-color: var(--warning-light);">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--warning);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <h2 class="text-sm font-bold m-0" style="color: var(--warning);">
+                فرص التحسين — Quick Wins (مراكز 6 إلى 15)
+            </h2>
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full mr-auto" style="background-color: var(--warning); color: white;">
+                {{ quick_wins|length }}
+            </span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                        <th class="p-3 px-4 text-right text-xs font-semibold" style="color: var(--text-muted);">الصفحة</th>
+                        <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">المركز</th>
+                        <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">الظهورات</th>
+                        <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">النقرات</th>
+                        <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">إجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page in quick_wins %}
+                    <tr class="border-b transition-colors hover:bg-opacity-50"
+                        style="border-color: var(--border);"
+                        onmouseover="this.style.backgroundColor='var(--bg-light)'"
+                        onmouseout="this.style.backgroundColor='transparent'">
+                        <td class="p-3 px-4">
+                            <p class="text-xs font-medium m-0 truncate max-w-xs" style="color: var(--text-primary);" title="{{ page.url }}">
+                                {{ page.path }}
+                            </p>
+                        </td>
+                        <td class="p-3 px-4 text-center">
+                            <span class="text-sm font-bold px-2 py-0.5 rounded-lg {% if page.position <= 10 %}pos-warning{% else %}pos-muted{% endif %}">
+                                {{ page.position }}
+                            </span>
+                        </td>
+                        <td class="p-3 px-4 text-center text-xs" style="color: var(--text-secondary);">{{ page.impressions }}</td>
+                        <td class="p-3 px-4 text-center text-xs" style="color: var(--text-secondary);">{{ page.clicks }}</td>
+                        <td class="p-3 px-4 text-center">
+                            <a href="{{ page.url }}" target="_blank" rel="noopener"
+                               class="text-xs px-2 py-1 rounded-lg border transition-colors no-underline"
+                               style="border-color: var(--border); color: var(--text-muted);">
+                                عرض ↗
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ──────────────────── Top Pages + Top Queries ──────────────────── -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <!-- Top Pages -->
+        <div class="rounded-2xl border overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-3 border-b" style="border-color: var(--border);">
+                <h2 class="text-sm font-bold m-0" style="color: var(--text-primary);">📄 أعلى صفحات بالنقرات</h2>
+            </div>
+            {% if top_pages %}
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                            <th class="p-3 px-4 text-right text-xs font-semibold" style="color: var(--text-muted);">الصفحة</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">نقرات</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">مركز</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for page in top_pages %}
+                        <tr class="border-b" style="border-color: var(--border);"
+                            onmouseover="this.style.backgroundColor='var(--bg-light)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td class="p-3 px-4">
+                                <a href="{{ page.url }}" target="_blank" rel="noopener"
+                                   class="text-xs truncate block max-w-[180px] no-underline"
+                                   style="color: var(--primary);" title="{{ page.url }}">
+                                    {{ page.path }}
+                                </a>
+                            </td>
+                            <td class="p-3 px-4 text-center text-sm font-bold" style="color: var(--text-primary);">{{ page.clicks }}</td>
+                            <td class="p-3 px-4 text-center text-xs" style="color: var(--text-muted);">{{ page.position }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-8 text-center">
+                <p class="text-sm m-0" style="color: var(--text-muted);">لا توجد بيانات بعد</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Top Queries -->
+        <div class="rounded-2xl border overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-3 border-b" style="border-color: var(--border);">
+                <h2 class="text-sm font-bold m-0" style="color: var(--text-primary);">🔍 أعلى كلمات مفتاحية</h2>
+            </div>
+            {% if top_queries %}
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                            <th class="p-3 px-4 text-right text-xs font-semibold" style="color: var(--text-muted);">الكلمة المفتاحية</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">نقرات</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">مركز</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for q in top_queries %}
+                        <tr class="border-b" style="border-color: var(--border);"
+                            onmouseover="this.style.backgroundColor='var(--bg-light)'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                            <td class="p-3 px-4 text-xs font-medium" style="color: var(--text-primary);">{{ q.query }}</td>
+                            <td class="p-3 px-4 text-center text-sm font-bold" style="color: var(--text-primary);">{{ q.clicks }}</td>
+                            <td class="p-3 px-4 text-center text-xs" style="color: var(--text-muted);">{{ q.position }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-8 text-center">
+                <p class="text-sm m-0" style="color: var(--text-muted);">لا توجد بيانات بعد</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    {% if gsc_error %}
+    <div class="rounded-xl border p-4 text-sm" style="border-color: var(--danger); color: var(--danger); background-color: var(--danger-light);">
+        خطأ في الاتصال بـ GSC API: {{ gsc_error }}
+    </div>
+    {% endif %}
+
+    {% endif %}{# end gsc_connected #}
+
+</div>
+{% endblock %}

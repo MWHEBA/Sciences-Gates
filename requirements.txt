@@ -36,11 +36,19 @@ crispy-tailwind==0.5.0
 # Query result caching for performance optimization
 django-cachalot==2.6.1
 
+# ============================================================================
 # SEO AND SITEMAP GENERATION
 # ============================================================================
 # Sitemap generation for SEO (Uses Django's built-in django.contrib.sitemaps, no external package needed)
 # django-sitemap==2.2.0
 beautifulsoup4==4.12.3
+
+# ============================================================================
+# GOOGLE APIS — Search Console Integration
+# ============================================================================
+google-auth==2.29.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.125.0
 
 # ============================================================================
 # EMAIL AND NOTIFICATIONS

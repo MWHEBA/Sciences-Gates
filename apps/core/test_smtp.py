@@ -66,4 +66,4 @@ def test_dynamic_email_backend_active(settings):
     from unittest.mock import patch
     with patch('django.core.mail.backends.smtp.EmailBackend.send_messages', return_value=1):
         backend.send_messages([msg])
-    assert msg.from_email == 'from@dynamic.com'
+    assert msg.from_email == 'شركة بوابات العلوم <from@dynamic.com>'

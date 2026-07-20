@@ -68,6 +68,7 @@ def site_settings_context(request):
         'GA4_MEASUREMENT_ID': ga4_id,
         'GOOGLE_SITE_VERIFICATION': gsc_code,
         'ENABLE_GA4': enable_ga4,
+        'TURNSTILE_SITE_KEY': getattr(settings, 'TURNSTILE_SITE_KEY', ''),
     }
 
 

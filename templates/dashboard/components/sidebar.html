@@ -606,10 +606,43 @@
         </div>
         {% endif %}
 
+        <!-- قسم التحليلات - مسؤول SEO والمدير العام -->
+        {% if user.is_authenticated and user.profile.is_seo_admin or user.is_authenticated and user.profile.is_super_admin %}
+        <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">التحليلات</h3>
+            <div class="space-y-1">
+
+                <!-- Google Analytics -->
+                <div :style="'{{ request.path }}'.includes('/sg/analytics') ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
+                    <a href="{% url 'dashboard:analytics' %}"
+                       class="flex items-center px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer sb-link {% if '/sg/analytics' in request.path %}active{% endif %}">
+                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>Google Analytics</span>
+                    </a>
+                </div>
+
+                <!-- Search Console -->
+                <div :style="'{{ request.path }}'.includes('/sg/search-console') ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
+                    <a href="{% url 'dashboard:search_console' %}"
+                       class="flex items-center px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer sb-link {% if '/sg/search-console' in request.path %}active{% endif %}">
+                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <span>Search Console</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+        {% endif %}
+
         <!-- قسم النظام - المدير العام فقط -->
         {% if user.is_authenticated and user.profile.is_super_admin %}
         <div>
             <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">النظام</h3>
+
             <div class="space-y-1">
                 <!-- سجل النشاط -->
                 <div
