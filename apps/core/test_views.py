@@ -46,6 +46,14 @@ class MegaMenuContextTestCase(TestCase):
             self.assertIn('menu_major_categories', context)
 
 
+from django.test import override_settings
+
+@override_settings(CACHES={
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake-cache-test',
+    }
+})
 class VisaTrackingViewTestCase(TestCase):
     """
     اختبارات صفحة متابعة الفيزا ونموذج طلب المساعدة
