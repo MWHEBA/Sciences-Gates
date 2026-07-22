@@ -135,6 +135,28 @@ class RedirectMiddlewareTests(TestCase):
         self.assertIsNotNone(response)
         self.assertEqual(response.status_code, 301)
 
+    def test_middleware_redirects_with_and_without_trailing_slash(self):
+        """Test that middleware matches path with or without trailing slash."""
+        # 1. Test slushed request for unslushed old_url
+        request_with_slash = self.factory.get('/old-university/')
+        response = self.middleware.process_request(request_with_slash)
+        self.assertIsNotNone(response)
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response.url, '/universities/new-university')
+
+        # 2. Create slushed old_url and test unslushed request
+        from .models import Redirect
+        Redirect.objects.create(
+            old_url='/slashed-path/',
+            new_url='/target-path',
+            is_active=True
+        )
+        request_without_slash = self.factory.get('/slashed-path')
+        response = self.middleware.process_request(request_without_slash)
+        self.assertIsNotNone(response)
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response.url, '/target-path')
+
     def test_multiple_redirects_same_old_url(self):
         """Test behavior when multiple redirects have the same old_url."""
         # Create another active redirect with same old_url
@@ -150,3 +172,140 @@ class RedirectMiddlewareTests(TestCase):
         
         self.assertIsNotNone(response)
         self.assertEqual(response.status_code, 301)
+
+
+import pytest
+from apps.universities.models import University
+from apps.articles.models import Article
+
+@pytest.mark.django_db
+class TestAutomaticRedirectSignals:
+    """Test automatic redirect creation via Django signals."""
+
+    def test_auto_redirect_on_published_slug_change(self):
+        """Test that changing slug of a published item automatically creates a Redirect."""
+        # 1. Create a published university
+        uni = University.objects.create(
+            name="الجامعة الوطنية",
+            slug="national-uni",
+            publish_status="published"
+        )
+        # Verify no redirect exists yet
+        assert not Redirect.objects.filter(old_url="/universities/national-uni/").exists()
+
+        # 2. Change slug
+        uni.slug = "new-national-uni"
+        uni.save()
+
+        # Verify redirect was automatically created
+        redirect = Redirect.objects.filter(old_url="/universities/national-uni/").first()
+        assert redirect is not None
+        assert redirect.new_url == "/universities/new-national-uni/"
+        assert redirect.is_active
+
+    def test_no_redirect_on_draft_slug_change(self):
+        """Test that changing slug of a draft item does NOT create a Redirect."""
+        uni = University.objects.create(
+            name="جامعة مسودة",
+            slug="draft-uni",
+            publish_status="draft"
+        )
+        uni.slug = "new-draft-uni"
+        uni.save()
+
+        assert not Redirect.objects.filter(old_url="/universities/draft-uni/").exists()
+
+    def test_chain_redirect_resolution(self):
+        """Test chain redirect resolving (A -> B, then B -> C updates to A -> C)."""
+        uni = University.objects.create(
+            name="جامعة السلسلة",
+            slug="uni-a",
+            publish_status="published"
+        )
+        
+        # Change slug A -> B
+        uni.slug = "uni-b"
+        uni.save()
+        assert Redirect.objects.filter(old_url="/universities/uni-a/", new_url="/universities/uni-b/").exists()
+
+        # Change slug B -> C
+        uni.slug = "uni-c"
+        uni.save()
+
+        # Verify A -> B was updated to A -> C
+        assert Redirect.objects.filter(old_url="/universities/uni-a/", new_url="/universities/uni-c/").exists()
+        # Verify B -> C also exists
+        assert Redirect.objects.filter(old_url="/universities/uni-b/", new_url="/universities/uni-c/").exists()
+
+    def test_circular_redirect_loop_prevention(self):
+        """Test circular redirect protection (A -> B, then B -> A deletes the reverse redirect)."""
+        uni = University.objects.create(
+            name="جامعة الحلقات",
+            slug="uni-x",
+            publish_status="published"
+        )
+        
+        # Change slug X -> Y (Creates X -> Y redirect)
+        uni.slug = "uni-y"
+        uni.save()
+        assert Redirect.objects.filter(old_url="/universities/uni-x/", new_url="/universities/uni-y/").exists()
+
+        # Change slug Y -> X (Should delete X -> Y redirect and create Y -> X)
+        uni.slug = "uni-x"
+        uni.save()
+
+        assert not Redirect.objects.filter(old_url="/universities/uni-x/", new_url="/universities/uni-y/").exists()
+        assert Redirect.objects.filter(old_url="/universities/uni-y/", new_url="/universities/uni-x/").exists()
+
+
+@pytest.mark.django_db
+class TestSEOMixinDuplicateMetaTitleValidation:
+    """Test the clean() validation rule for duplicate meta titles in SEOMixin."""
+
+    def test_duplicate_meta_title_on_different_published_items(self):
+        """Test that saving two published items with the same meta_title raises ValidationError."""
+        from django.core.exceptions import ValidationError
+
+        # Create first published university
+        University.objects.create(
+            name="الجامعة الأولى",
+            slug="uni-1",
+            meta_title="دراسة الهندسة في ماليزيا",
+            publish_status="published"
+        )
+
+        # Try to create second published university with same meta_title
+        uni2 = University(
+            name="الجامعة الثانية",
+            slug="uni-2",
+            meta_title="دراسة الهندسة في ماليزيا",
+            publish_status="published"
+        )
+
+        with pytest.raises(ValidationError) as exc_info:
+            uni2.clean()
+        
+        assert "meta_title" in exc_info.value.message_dict
+        assert "عنوان SEO هذا مستخدم بالفعل" in exc_info.value.message_dict["meta_title"][0]
+
+    def test_duplicate_meta_title_allowed_on_drafts(self):
+        """Test that duplicate meta_titles are allowed if one of them is a draft."""
+        # Create published university
+        University.objects.create(
+            name="الجامعة الأولى",
+            slug="uni-1",
+            meta_title="دراسة الطب في ماليزيا",
+            publish_status="published"
+        )
+
+        # Create draft university with same meta_title (should pass clean)
+        uni2 = University(
+            name="الجامعة الثانية",
+            slug="uni-2",
+            meta_title="دراسة الطب في ماليزيا",
+            publish_status="unpublished"
+        )
+        # Should not raise any validation error
+        uni2.clean()
+        uni2.save()
+        assert uni2.pk is not None

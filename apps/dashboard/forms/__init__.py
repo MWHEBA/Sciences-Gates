@@ -321,11 +321,23 @@ class RedirectForm(forms.ModelForm):
             'notes': 'ملاحظات إضافية عن سبب التوجيه',
         }
 
+    def clean_old_url(self):
+        from apps.redirects.models import Redirect
+        old_url = self.cleaned_data.get('old_url', '').strip()
+        return Redirect.normalize_path(old_url)
+
+    def clean_new_url(self):
+        from apps.redirects.models import Redirect
+        new_url = self.cleaned_data.get('new_url', '').strip()
+        if new_url.startswith(('http://', 'https://')):
+            return new_url
+        return Redirect.normalize_path(new_url)
+
     def clean(self):
         """Validate form data."""
         cleaned_data = super().clean()
-        old_url = cleaned_data.get('old_url', '').strip()
-        new_url = cleaned_data.get('new_url', '').strip()
+        old_url = cleaned_data.get('old_url', '')
+        new_url = cleaned_data.get('new_url', '')
 
         # Validate URLs are not empty
         if not old_url:
@@ -337,20 +349,11 @@ class RedirectForm(forms.ModelForm):
         if old_url == new_url:
             raise forms.ValidationError('الرابط القديم والجديد يجب أن يكونا مختلفين')
 
-        # Validate URLs start with /
-        if not old_url.startswith('/'):
-            raise forms.ValidationError('الرابط القديم يجب أن يبدأ بـ /')
-        if not new_url.startswith('/'):
-            raise forms.ValidationError('الرابط الجديد يجب أن يبدأ بـ /')
-
         return cleaned_data
 
     def save(self, commit=True):
         """Save redirect with normalized URLs."""
         redirect_obj = super().save(commit=False)
-        # Normalize URLs
-        redirect_obj.old_url = redirect_obj.old_url.strip()
-        redirect_obj.new_url = redirect_obj.new_url.strip()
         if commit:
             redirect_obj.save()
         return redirect_obj

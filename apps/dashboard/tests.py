@@ -325,38 +325,44 @@ class DashboardSidebarComponentTests(TestCase):
             self.client.logout()
 
     def test_seo_section_visible_to_seo_admin(self):
-        """Test that SEO section is visible to SEO_ADMIN."""
+        """Test that SEO settings are visible to SEO_ADMIN under Analytics."""
         self.client.login(username='seoadmin', password='testpass123')
         response = self.client.get(self.home_url)
         
-        # Verify SEO section is present
-        self.assertContains(response, 'SEO')
-        self.assertContains(response, 'إعادة التوجيه')
-        self.assertContains(response, 'إعدادات SEO')
-
-    def test_seo_section_visible_to_super_admin(self):
-        """Test that SEO section is visible to SUPER_ADMIN."""
-        self.client.login(username='superadmin', password='testpass123')
-        response = self.client.get(self.home_url)
-        
-        # Verify SEO section is present
-        self.assertContains(response, 'SEO')
-        self.assertContains(response, 'إعادة التوجيه')
-        self.assertContains(response, 'إعدادات SEO')
-
-    def test_seo_section_hidden_from_content_admin(self):
-        """Test that SEO section is hidden from CONTENT_ADMIN."""
-        self.client.login(username='contentadmin', password='testpass123')
-        response = self.client.get(self.home_url)
-        
-        # Verify SEO section is NOT present in sidebar
+        # Verify SEO settings (renamed to إعدادات الأرشفة) is present under Analytics
+        self.assertContains(response, 'التحليلات')
+        self.assertContains(response, 'إعدادات الأرشفة')
+        # Verify SEO section header is NOT present
+        self.assertNotIn('SEO</h3>', response.content.decode())
+        # Verify Redirect is not in sidebar for SEO_ADMIN (since it is in Content section)
         content = response.content.decode()
         sidebar_start = content.find('<aside')
         sidebar_end = content.find('</aside>')
         if sidebar_start != -1 and sidebar_end != -1:
             sidebar_content = content[sidebar_start:sidebar_end]
-            # The SEO section header should not be present in the sidebar
             self.assertNotIn('إعادة التوجيه', sidebar_content)
+
+    def test_seo_section_visible_to_super_admin(self):
+        """Test that SEO settings and Redirects are visible to SUPER_ADMIN."""
+        self.client.login(username='superadmin', password='testpass123')
+        response = self.client.get(self.home_url)
+        
+        # Verify both are present in the sidebar (under their respective sections)
+        self.assertContains(response, 'إعادة التوجيه')
+        self.assertContains(response, 'إعدادات الأرشفة')
+        # Verify SEO section header is NOT present
+        self.assertNotIn('SEO</h3>', response.content.decode())
+
+    def test_seo_section_hidden_from_content_admin(self):
+        """Test that Redirects is visible to CONTENT_ADMIN under Content section, but SEO settings is hidden."""
+        self.client.login(username='contentadmin', password='testpass123')
+        response = self.client.get(self.home_url)
+        
+        # Content admin should see Redirects (since it's in the Content section)
+        self.assertContains(response, 'إعادة التوجيه')
+        # Content admin should NOT see SEO settings (إعدادات الأرشفة) or SEO section header
+        self.assertNotContains(response, 'إعدادات الأرشفة')
+        self.assertNotIn('SEO</h3>', response.content.decode())
 
     def test_administration_section_visible_to_super_admin_only(self):
         """Test that Administration section is visible only to SUPER_ADMIN."""

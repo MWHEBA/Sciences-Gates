@@ -4,7 +4,7 @@ Views for lead form submissions.
 """
 from django.shortcuts import render, redirect
 from django.views.generic import FormView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
@@ -34,11 +34,17 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
     """
     form_class = ContactLeadForm
     template_name = 'leads/submit.html'
-    success_url = reverse_lazy('leads:thank_you')
+    
+    def get_success_url(self):
+        lead_type = self.request.POST.get('lead_type') or 'contact'
+        referer = self.request.META.get('HTTP_REFERER', '').lower()
+        subtype = 'institute' if 'institute' in referer else 'university'
+        return f"{reverse('leads:thank_you')}?lead_type={lead_type}&subtype={subtype}"
 
     def post(self, request, *args, **kwargs):
         from django.core.cache import cache
-        ip_address = request.META.get('REMOTE_ADDR')
+        from apps.core.utils import get_client_ip
+        ip_address = get_client_ip(request)
         rate_key = f"lead_rate_limit_{ip_address}"
         submissions = cache.get(rate_key, 0)
         

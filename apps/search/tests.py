@@ -135,6 +135,83 @@ class SearchUtilsTestCase(TestCase):
         
         results = build_search_query('غير منشورة')
         self.assertEqual(len(results['universities']), 0)
+        
+    def test_search_query_hamza_normalization(self):
+        """Test search query handles hamza normalization variations."""
+        from apps.search.utils import build_search_query
+        from apps.articles.models import Article
+        
+        # Create test article with 'ألمانيا'
+        Article.objects.create(
+            title='دراسة في ألمانيا',
+            slug='study-in-germany',
+            category=self.category,
+            author=self.user,
+            content='الدراسة في المانيا متميزة',
+            publish_status='published'
+        )
+        
+        # Searching for 'المانيا' (no hamza) should find 'دراسة في ألمانيا'
+        results = build_search_query('المانيا')
+        self.assertEqual(len(results['articles']), 1)
+        self.assertEqual(results['articles'][0].title, 'دراسة في ألمانيا')
+        
+        # Searching for 'ألمانيا' (with hamza) should also find 'دراسة في ألمانيا'
+        results = build_search_query('ألمانيا')
+        self.assertEqual(len(results['articles']), 1)
+        self.assertEqual(results['articles'][0].title, 'دراسة في ألمانيا')
+
+    def test_search_query_teh_marbuta_normalization(self):
+        """Test search query handles Teh Marbuta and Heh normalization."""
+        from apps.search.utils import build_search_query
+        
+        # Database has 'جامعة ماليزيا' (ends with ة)
+        # Searching for 'جامعه' (ends with ه) should match it
+        results = build_search_query('جامعه')
+        self.assertEqual(len(results['universities']), 1)
+        self.assertEqual(results['universities'][0].name, 'جامعة ماليزيا')
+
+    def test_search_query_yeh_normalization(self):
+        """Test search query handles Yeh and Alef Maksura normalization."""
+        from apps.search.utils import build_search_query
+        from apps.universities.models import University
+        
+        # Create a university with name containing 'علي'
+        University.objects.create(
+            name='جامعة علي بن أبي طالب',
+            slug='ali-university',
+            logo='test.jpg',
+            main_image='test.jpg',
+            description='جامعة علي بن أبي طالب',
+            location='كوالالمبور',
+            admission_requirements='متطلبات القبول',
+            publish_status='published'
+        )
+        
+        # Search with 'على' (Alef Maksura) should find 'جامعة علي بن أبي طالب' (with Yeh)
+        results = build_search_query('على')
+        self.assertEqual(len(results['universities']), 1)
+        self.assertEqual(results['universities'][0].name, 'جامعة علي بن أبي طالب')
+
+    def test_search_query_fuzzy_matching(self):
+        """Test search query handles spelling mistakes and typos."""
+        from apps.search.utils import build_search_query
+        
+        # Major name is: 'هندسة البرمجيات'
+        # Search for: 'البرمجبات' (typo: 'ج' instead of 'ي')
+        results = build_search_query('البرمجبات')
+        self.assertEqual(len(results['majors']), 1)
+        self.assertEqual(results['majors'][0].name, 'هندسة البرمجيات')
+
+    def test_search_query_stop_words_ignoring(self):
+        """Test search query ignores common stop words in score calculation."""
+        from apps.search.utils import build_search_query
+        
+        # Searching for 'دراسة في ماليزيا' (contains stop word 'في')
+        # should find 'جامعة ماليزيا'
+        results = build_search_query('دراسة في ماليزيا')
+        self.assertTrue(len(results['universities']) >= 1)
+        self.assertEqual(results['universities'][0].name, 'جامعة ماليزيا')
     
     def test_get_excerpt_short_text(self):
         """Test excerpt function with short text."""

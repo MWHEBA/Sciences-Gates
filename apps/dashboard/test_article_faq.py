@@ -3,7 +3,6 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from apps.articles.models import Article, ArticleFAQ, Category
-from apps.importer.services.bulk_saver import _save_article
 
 User = get_user_model()
 
@@ -190,7 +189,7 @@ class TestArticleFAQDashboard:
                 }
             ]
         }
-        
+        from apps.importer.services.bulk_saver import _save_article
         instance, action_type = _save_article(mapped_data, self.user)
         assert action_type == 'created'
         assert instance.slug == 'bulk-import-article'

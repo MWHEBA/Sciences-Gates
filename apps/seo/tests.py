@@ -575,3 +575,105 @@ class TestSEOHTMLParser:
         assert "الجامعة الوطنية الماليزية" in data["intro_text"]
 
 
+@pytest.mark.django_db
+class TestGetTitleForPath:
+    """Test get_title_for_path utility function."""
+    
+    def test_static_urls(self):
+        """Test resolving static URLs."""
+        from apps.seo.services.gsc_client import get_title_for_path
+        
+        assert get_title_for_path('/') == 'الرئيسية'
+        assert get_title_for_path('/about-us/') == 'من نحن'
+        assert get_title_for_path('/visa-tracking') == 'تتبع التأشيرة'
+        
+    def test_article_url(self):
+        """Test resolving article detail URLs."""
+        from apps.articles.models import Article
+        from apps.seo.services.gsc_client import get_title_for_path
+        
+        # Create article
+        article = Article.objects.create(
+            title="معلومات عامة عن ماليزيا",
+            slug="info-malaysia",
+            publish_status='published'
+        )
+        
+        # Test exact match
+        assert get_title_for_path('/articles/info-malaysia/') == 'معلومات عامة عن ماليزيا'
+        assert get_title_for_path('info-malaysia') == 'معلومات عامة عن ماليزيا'
+        assert get_title_for_path('/info-malaysia/') == 'معلومات عامة عن ماليزيا'
+
+
+@pytest.mark.django_db
+class TestSitemapEnhancements:
+    """Test sitemap performance improvements, GSC client url parsing, and rate limiting."""
+
+    def test_clear_sitemap_cache_targeted(self):
+        """Test targeted sitemap cache clearing and batch deletion."""
+        from django.core.cache import cache
+        from apps.seo.sitemaps import clear_sitemap_cache
+
+        # Set some dummy cache keys
+        cache.set("sitemap_universitysitemap_page_1", "dummy_uni")
+        cache.set("sitemap_articlesitemap_page_1", "dummy_art")
+
+        # Invalidate targeted to universities only
+        clear_sitemap_cache(sitemap_type="universities")
+
+        # Universities should be deleted, articles should remain
+        assert cache.get("sitemap_universitysitemap_page_1") is None
+        assert cache.get("sitemap_articlesitemap_page_1") == "dummy_art"
+
+        # Invalidate everything
+        clear_sitemap_cache()
+        assert cache.get("sitemap_articlesitemap_page_1") is None
+
+    def test_signals_crash_safety(self):
+        """Test signals catch exceptions from caching backend and fail silently."""
+        from unittest.mock import patch
+        from apps.articles.models import Article
+
+        # Mock clear_sitemap_cache to raise an error
+        with patch("apps.seo.signals.clear_sitemap_cache", side_effect=Exception("Cache connection failed")):
+            # Save an article - should succeed without raising any exceptions
+            article = Article.objects.create(
+                title="جديد الجامعات في ماليزيا",
+                slug="new-uni-malaysia",
+                publish_status='published'
+            )
+            assert article.pk is not None
+
+    def test_gsc_client_sitemap_url_parsing(self):
+        """Test GSC client parses sc-domain prefix and standard url prefixes correctly."""
+        from unittest.mock import patch
+        from apps.seo.services.gsc_client import GSCClient
+
+        with patch("apps.seo.services.gsc_client.settings") as mock_settings:
+            # 1. URL Prefix Property case
+            mock_settings.GSC_SITE_URL = "https://sciencesgates.com/"
+            mock_settings.GOOGLE_SERVICE_ACCOUNT_JSON = None
+            client1 = GSCClient()
+            client1._site_url = "https://sciencesgates.com/"
+            
+            with patch.object(client1, '_get_service') as mock_get_service:
+                mock_service = mock_get_service.return_value
+                client1.submit_sitemap()
+                mock_service.sitemaps().submit.assert_called_with(
+                    siteUrl="https://sciencesgates.com/",
+                    feedpath="https://sciencesgates.com/sitemap.xml"
+                )
+
+            # 2. Domain Property case (starts with sc-domain:)
+            client2 = GSCClient()
+            client2._site_url = "sc-domain:sciencesgates.com"
+            with patch.object(client2, '_get_service') as mock_get_service:
+                mock_service = mock_get_service.return_value
+                client2.submit_sitemap()
+                mock_service.sitemaps().submit.assert_called_with(
+                    siteUrl="sc-domain:sciencesgates.com",
+                    feedpath="https://sciencesgates.com/sitemap.xml"
+                )
+
+
+

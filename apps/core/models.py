@@ -189,6 +189,24 @@ class SEOMixin(models.Model):
         main_image = getattr(self, 'main_image', None) or getattr(self, 'featured_image', None)
         return main_image.url if main_image else None
 
+    def clean(self):
+        """Validate unique meta title among published records of the same model."""
+        super().clean()
+        if self.meta_title:
+            publish_status = getattr(self, 'publish_status', None)
+            if publish_status == 'published':
+                queryset = self.__class__.objects.filter(
+                    meta_title=self.meta_title,
+                    publish_status='published'
+                )
+                if self.pk:
+                    queryset = queryset.exclude(pk=self.pk)
+                if queryset.exists():
+                    from django.core.exceptions import ValidationError
+                    raise ValidationError({
+                        'meta_title': 'عنوان SEO هذا مستخدم بالفعل في صفحة أخرى منشورة. يرجى اختيار عنوان فريد لتجنب عقوبات المحتوى المكرر.'
+                    })
+
 
 class UserRole(models.TextChoices):
     """User role choices for dashboard access control."""
@@ -318,7 +336,13 @@ class SiteSettings(models.Model):
         max_length=50,
         blank=True,
         verbose_name='Google Analytics 4 Measurement ID',
-        help_text='معرف GA4 (مثال: G-XXXXXXXXXX) - يُستخدم لتتبع الزوار'
+        help_text='معرف GA4 (مثال: G-XXXXXXXXXX) - يُسخدم لتتبع الزوار'
+    )
+    ga4_property_id = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='Google Analytics 4 Property ID',
+        help_text='معرف الخاصية الرقمي في GA4 (مثال: 448834920) - يُسخدم لجلب بيانات التقارير'
     )
     google_site_verification = models.CharField(
         max_length=100,
@@ -335,6 +359,16 @@ class SiteSettings(models.Model):
         null=True,
         blank=True,
         verbose_name='آخر توليد لخريطة الموقع'
+    )
+    sitemap_last_submitted = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='آخر إرسال لخريطة الموقع لجوجل'
+    )
+    sitemap_gsc_status = models.CharField(
+        max_length=255,
+        default='لم يتم الإرسال بعد',
+        verbose_name='حالة الإرسال لمحرك بحث جوجل'
     )
     
     # Maintenance Settings
@@ -778,5 +812,22 @@ class ContentLock(models.Model):
 
     def __str__(self):
         return f"Lock on {self.content_type.model} #{self.object_id} by {self.user.username}"
+
+
+class GA4CachedReport(models.Model):
+    """
+    Model for caching Google Analytics 4 API reports locally.
+    """
+    days = models.IntegerField(unique=True, verbose_name="عدد الأيام")
+    payload = models.JSONField(verbose_name="بيانات التقرير")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاريخ التحديث")
+
+    class Meta:
+        verbose_name = "تقرير GA4 مخزن مؤقتاً"
+        verbose_name_plural = "تقارير GA4 مخزنة مؤقتاً"
+
+    def __str__(self):
+        return f"GA4 Report ({self.days} days) - {self.updated_at}"
+
 
 

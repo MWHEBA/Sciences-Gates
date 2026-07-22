@@ -456,4 +456,40 @@ class MediaFileTestCase(TestCase):
         self.assertEqual(media.completion_score, 4)
 
 
+class AttachmentFileValidationTestCase(TestCase):
+    """Test cases for validate_attachment_file."""
+    
+    def test_validate_attachment_file_valid(self):
+        from apps.core.utils import validate_attachment_file
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.core.exceptions import ValidationError
+        
+        # Valid files
+        valid_file = SimpleUploadedFile("document.pdf", b"pdf_content_bytes")
+        try:
+            validate_attachment_file(valid_file)
+        except ValidationError:
+            self.fail("validate_attachment_file raised ValidationError unexpectedly for valid file!")
+
+    def test_validate_attachment_file_invalid_extension(self):
+        from apps.core.utils import validate_attachment_file
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.core.exceptions import ValidationError
+        
+        # Invalid extension
+        invalid_file = SimpleUploadedFile("unsafe_file.exe", b"exe_content_bytes")
+        with self.assertRaises(ValidationError):
+            validate_attachment_file(invalid_file)
+
+    def test_validate_attachment_file_double_extension_bypasses(self):
+        from apps.core.utils import validate_attachment_file
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.core.exceptions import ValidationError
+        
+        # Unsafe double extension file
+        unsafe_double_ext_file = SimpleUploadedFile("payload.php.pdf", b"php_payload")
+        with self.assertRaises(ValidationError):
+            validate_attachment_file(unsafe_double_ext_file)
+
+
 

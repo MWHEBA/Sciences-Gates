@@ -1,165 +1,750 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
+{% load l10n %}
 
 {% block title %}Google Analytics - لوحة التحكم{% endblock %}
 
 {% block page_title %}Google Analytics{% endblock %}
 
 {% block page_description %}
-<p class="text-sm mt-0.5" style="color: var(--text-muted);">مراقبة سلوك الزوار وأداء الموقع</p>
+<p class="text-sm mt-0.5" style="color: var(--text-muted);">تحليل سلوك الزوار والزيارات الفعالة للموقع</p>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .days-active  { background-color: var(--primary); color: white; }
+    .days-inactive { color: var(--text-muted); }
+    .pulse-dot {
+        position: relative;
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--success);
+    }
+    .pulse-dot::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background-color: var(--success);
+        animation: pulse 1.8s infinite ease-in-out;
+        top: 0;
+        left: 0;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(2.8); opacity: 0; }
+    }
+</style>
 {% endblock %}
 
 {% block page_actions %}
 {% if ga4_configured %}
-<a href="https://analytics.google.com/analytics/web/#/p{{ ga4_measurement_id }}" target="_blank" rel="noopener"
-   class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-   style="background-color: var(--primary-light); color: var(--primary);">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-    </svg>
-    فتح GA4
-</a>
+<!-- Date Range Selector -->
+<div class="flex items-center gap-1 p-1 rounded-xl border" style="border-color: var(--border); background-color: var(--bg-light);">
+    <a href="?days=7"
+       class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors {% if selected_days == 7 %}days-active{% else %}days-inactive{% endif %}">
+        7 يوم
+    </a>
+    <a href="?days=14"
+       class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors {% if selected_days == 14 %}days-active{% else %}days-inactive{% endif %}">
+        14 يوم
+    </a>
+    <a href="?days=28"
+       class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors {% if selected_days == 28 %}days-active{% else %}days-inactive{% endif %}">
+        28 يوم
+    </a>
+    <a href="?days=90"
+       class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors {% if selected_days == 90 %}days-active{% else %}days-inactive{% endif %}">
+        90 يوم
+    </a>
+</div>
 {% endif %}
 {% endblock %}
 
 {% block content %}
+<!-- Global configuration values for Javascript -->
+<div id="analytics-config" class="hidden"
+     data-configured="{% if ga4_configured %}true{% else %}false{% endif %}"
+     data-has-report="{% if report_data %}true{% else %}false{% endif %}">
+</div>
+
+{% if report_data and report_data.daily_trend %}
+    {{ report_data.daily_trend|json_script:"daily-trend-data" }}
+{% endif %}
+
 <div class="flex flex-col gap-4">
 
     {% if not ga4_configured %}
-    <!-- حالة: GA4 غير مُفعَّل -->
-    <div class="rounded-2xl border p-8 text-center" style="border-color: var(--warning); background-color: var(--warning-light);">
-        <svg class="w-10 h-10 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" style="color: var(--warning);">
+    <!-- حالة: GA4 غير مُعدّ بالكامل -->
+    <div class="rounded-2xl border p-10 text-center" style="border-color: var(--border); background-color: var(--surface);">
+        <svg class="w-10 h-10 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" style="color: var(--text-muted);">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
         </svg>
-        <h2 class="text-lg font-bold mb-2" style="color: var(--warning);">GA4 غير مُفعَّل</h2>
-        <p class="text-sm mb-4" style="color: var(--text-secondary);">
-            أضف الـ Measurement ID في إعدادات الموقع لتفعيل التتبع.
+        <h2 class="text-lg font-bold mb-2" style="color: var(--text-primary);">Google Analytics غير مفعّل بالكامل</h2>
+        <p class="text-sm mb-2 max-w-sm mx-auto" style="color: var(--text-secondary);">
+            لتفعيل التقارير هنا، يرجى إضافة كل من Measurement ID و Property ID في الإعدادات.
         </p>
-        <a href="{% url 'dashboard:settings' %}#ga4"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
-           style="background-color: var(--primary); color: white;">
-            الذهاب للإعدادات
-        </a>
+        <div class="text-xs mb-6 max-w-sm mx-auto text-right p-4 rounded-xl" style="background-color: var(--bg-light); color: var(--text-secondary);">
+            <p class="font-semibold mb-2" style="color: var(--text-primary);">خطوات الربط:</p>
+            <ol class="list-decimal list-inside space-y-1">
+                <li>احصل على <code class="px-1 rounded" style="background-color: var(--border);">Measurement ID</code> (مثال: G-XXXXXXXXXX) من لوحة تحكم Analytics.</li>
+                <li>احصل على <code class="px-1 rounded" style="background-color: var(--border);">Property ID</code> (مثال: 448834920) من إعدادات الخاصية.</li>
+                <li>أضفهم في لوحة الإعدادات العامة للـ SEO.</li>
+                <li>تأكد من إضافة البريد الإلكتروني للـ Service Account كـ <span class="font-bold">Viewer</span> في حساب Google Analytics الخاص بك.</li>
+            </ol>
+        </div>
+        <div class="flex items-center justify-center gap-3">
+            <a href="{% url 'dashboard:seo_management' %}?tab=settings"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
+               style="background-color: var(--primary); color: white;">
+                الذهاب للإعدادات
+            </a>
+        </div>
     </div>
 
     {% else %}
 
-    <!-- حالة GA4: متصل -->
-    <div class="rounded-2xl border p-4 flex items-center justify-between" style="border-color: var(--border); background-color: var(--surface);">
-        <div class="flex items-center gap-3">
-            <span class="w-2.5 h-2.5 rounded-full" style="background-color: var(--success);"></span>
-            <span class="text-sm font-semibold" style="color: var(--text-primary);">
-                GA4 مفعّل — <span style="color: var(--text-muted); font-weight: 400;">{{ ga4_measurement_id }}</span>
+    <!-- شريط الحالة والزوار النشطين حالياً ومزامنة البيانات -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- حالة الاتصال -->
+        <div class="rounded-2xl border p-4 flex items-center justify-between" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="flex items-center gap-3">
+                <span class="w-2.5 h-2.5 rounded-full" style="background-color: var(--success);"></span>
+                <span class="text-sm font-semibold" style="color: var(--text-primary);">
+                    GA4 مفعّل وبانتظار التحديث
+                </span>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-full" style="background-color: var(--success-light); color: var(--success); font-weight: 500;">
+                نشط
             </span>
         </div>
-        <span class="text-xs px-2 py-1 rounded-full" style="background-color: var(--success-light); color: var(--success);">
-            يتتبع الزوار الآن
-        </span>
-    </div>
 
-    <!-- بطاقات روابط سريعة -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-
-        <!-- GA4 Dashboard -->
-        <a href="https://analytics.google.com/" target="_blank" rel="noopener"
-           class="flex items-start gap-4 p-4 rounded-2xl border transition hover:shadow-md no-underline"
-           style="border-color: var(--border); background-color: var(--surface);">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                 style="background-color: var(--primary-light);">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--primary);">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
+        <!-- الزوار في الوقت الفعلي -->
+        <div class="rounded-2xl border p-4 flex items-center justify-between" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="flex items-center gap-2.5">
+                <span class="pulse-dot"></span>
+                <span class="text-sm font-semibold" style="color: var(--text-primary);">
+                    نشطون الآن: <span id="realtime-user-count" class="font-bold text-base" style="color: var(--success);">—</span>
+                </span>
             </div>
-            <div>
-                <p class="text-sm font-semibold m-0" style="color: var(--text-primary);">Google Analytics 4</p>
-                <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">لوحة التحكم الرئيسية</p>
-            </div>
-            <svg class="w-4 h-4 mr-auto shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--text-muted);">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-            </svg>
-        </a>
-
-        <!-- Realtime Report -->
-        <a href="https://analytics.google.com/analytics/web/#/realtime" target="_blank" rel="noopener"
-           class="flex items-start gap-4 p-4 rounded-2xl border transition hover:shadow-md no-underline"
-           style="border-color: var(--border); background-color: var(--surface);">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                 style="background-color: var(--success-light);">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--success);">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <div>
-                <p class="text-sm font-semibold m-0" style="color: var(--text-primary);">الزوار الآن</p>
-                <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">Realtime Report</p>
-            </div>
-            <svg class="w-4 h-4 mr-auto shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--text-muted);">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-            </svg>
-        </a>
-
-        <!-- Looker Studio -->
-        <a href="https://lookerstudio.google.com/" target="_blank" rel="noopener"
-           class="flex items-start gap-4 p-4 rounded-2xl border transition hover:shadow-md no-underline"
-           style="border-color: var(--border); background-color: var(--surface);">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                 style="background-color: var(--info-light);">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--info);">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                </svg>
-            </div>
-            <div>
-                <p class="text-sm font-semibold m-0" style="color: var(--text-primary);">Looker Studio</p>
-                <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">تقارير مرئية مخصصة</p>
-            </div>
-            <svg class="w-4 h-4 mr-auto shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--text-muted);">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-            </svg>
-        </a>
-
-    </div>
-
-    <!-- دليل التفسير -->
-    <div class="rounded-2xl border p-5" style="border-color: var(--border); background-color: var(--surface);">
-        <h2 class="text-sm font-bold mb-4" style="color: var(--text-primary);">📖 كيف تقرأ البيانات — دليل سريع</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-
-            <div class="flex items-start gap-3 p-3 rounded-xl" style="background-color: var(--bg-light);">
-                <span class="text-lg leading-none mt-0.5">📉</span>
-                <div>
-                    <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">Bounce Rate > 70%</p>
-                    <p class="text-xs mt-1" style="color: var(--text-muted);">مشكلة في محتوى الصفحة أو سرعة التحميل — راجع الصفحة وحسّنها</p>
-                </div>
-            </div>
-
-            <div class="flex items-start gap-3 p-3 rounded-xl" style="background-color: var(--bg-light);">
-                <span class="text-lg leading-none mt-0.5">⏱</span>
-                <div>
-                    <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">Avg Session > 2 دقيقة</p>
-                    <p class="text-xs mt-1" style="color: var(--text-muted);">المحتوى ممتاز — الزوار بيقرؤوا ويتفاعلوا مع الصفحة</p>
-                </div>
-            </div>
-
-            <div class="flex items-start gap-3 p-3 rounded-xl" style="background-color: var(--bg-light);">
-                <span class="text-lg leading-none mt-0.5">🆕</span>
-                <div>
-                    <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">New Users > 60%</p>
-                    <p class="text-xs mt-1" style="color: var(--text-muted);">زوار جدد كتير = الـ SEO شغّال — واصل إنتاج المحتوى</p>
-                </div>
-            </div>
-
-            <div class="flex items-start gap-3 p-3 rounded-xl" style="background-color: var(--bg-light);">
-                <span class="text-lg leading-none mt-0.5">🗺</span>
-                <div>
-                    <p class="text-xs font-semibold m-0" style="color: var(--text-primary);">أنهي صفحات بتجيب أكتر Leads</p>
-                    <p class="text-xs mt-1" style="color: var(--text-muted);">في GA4 → Conversions → ابحث عن Goals المرتبطة بالفورم</p>
-                </div>
-            </div>
-
+            <button id="btn-refresh-realtime" onclick="refreshRealtime(true)" 
+                    class="text-xs px-2.5 py-1 rounded-lg border transition-colors cursor-pointer"
+                    style="border-color: var(--border); background-color: var(--bg-light); color: var(--text-secondary);">
+                تحديث الزوار 🔄
+            </button>
         </div>
+
+        <!-- حالة المزامنة اليدوية للبيانات التاريخية -->
+        <div class="rounded-2xl border p-4 flex items-center justify-between" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="flex flex-col gap-0.5 text-right">
+                <span class="text-xs text-muted">آخر تحديث للبيانات:</span>
+                <span class="text-xs font-semibold" id="sync-time-text" style="color: var(--text-primary);">
+                    {% if updated_at %}{{ updated_at|date:"Y-m-d H:i" }}{% else %}لا توجد بيانات مخزنة{% endif %}
+                </span>
+            </div>
+            <button id="btn-sync-now" onclick="triggerManualSync()" 
+                    class="text-xs px-2.5 py-1 rounded-lg border transition-colors cursor-pointer"
+                    style="border-color: var(--border); background-color: var(--bg-light); color: var(--text-secondary);">
+                مزامنة البيانات 🔄
+            </button>
+        </div>
+    </div>
+
+    <!-- رسائل الأخطاء إن وجدت -->
+    <div id="analytics-error-banner" class="hidden rounded-xl border p-4 text-sm flex items-center gap-3" 
+         style="border-color: var(--danger); color: var(--danger); background-color: var(--danger-light);">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span id="analytics-error-message" class="font-medium text-right"></span>
+    </div>
+
+    {% if not report_data %}
+    <!-- حالة البداية الباردة: لا توجد بيانات مخزنة بعد -->
+    <div class="rounded-2xl border p-10 text-center" style="border-color: var(--border); background-color: var(--surface);">
+        <svg class="w-10 h-10 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" style="color: var(--text-muted);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/>
+        </svg>
+        <h2 class="text-base font-bold mb-2" style="color: var(--text-primary);">لم نقم بمزامنة أي بيانات بعد</h2>
+        <p class="text-sm mb-6 max-w-sm mx-auto" style="color: var(--text-secondary);">
+            يرجى الضغط على زر المزامنة أعلاه لجلب البيانات التاريخية من Google Analytics 4 وحفظها محلياً في قاعدة البيانات لأول مرة.
+        </p>
+        <button onclick="triggerManualSync()" 
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer"
+                style="background-color: var(--primary); color: white;">
+            مزامنة البيانات التاريخية الآن 🔄
+        </button>
+    </div>
+
+    {% else %}
+
+    <!-- ──────────────────── Summary KPIs ──────────────────── -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+
+        <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="absolute top-0 right-0 left-0 h-1" style="background-color: var(--primary);"></div>
+            <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">المستخدمون النشطون</p>
+            <p class="text-3xl font-bold m-0" style="color: var(--text-primary);">
+                {{ report_data.summary.active_users|default:"0" }}
+            </p>
+            <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">Active Users</p>
+        </div>
+
+        <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="absolute top-0 right-0 left-0 h-1" style="background-color: var(--secondary);"></div>
+            <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">المستخدمون الجدد</p>
+            <p class="text-3xl font-bold m-0" style="color: var(--text-primary);">
+                {{ report_data.summary.new_users|default:"0" }}
+            </p>
+            <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">New Users</p>
+        </div>
+
+        <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="absolute top-0 right-0 left-0 h-1" style="background-color: var(--info);"></div>
+            <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">الجلسات</p>
+            <p class="text-3xl font-bold m-0" style="color: var(--text-primary);">
+                {{ report_data.summary.sessions|default:"0" }}
+            </p>
+            <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">Sessions</p>
+        </div>
+
+        <div class="rounded-2xl border p-4 relative overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="absolute top-0 right-0 left-0 h-1" style="background-color: var(--success);"></div>
+            <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">متوسط مدة الجلسة</p>
+            <p class="text-3xl font-bold m-0" style="color: var(--text-primary);">
+                {{ report_data.summary.avg_session_duration|default:"0:00" }}
+            </p>
+            <p class="text-xs mt-1 m-0" style="color: var(--text-muted);">Avg Duration</p>
+        </div>
+
+    </div>
+
+    <!-- ──────────────────── الرسم البياني لمنحنى النمو اليومي ──────────────────── -->
+    <div class="rounded-2xl border p-5" style="border-color: var(--border); background-color: var(--surface);">
+        <h3 class="text-sm font-bold mb-4" style="color: var(--text-primary);">📈 الزوار والجلسات يومياً (آخر {{ selected_days }} يوم)</h3>
+        <div style="position: relative; height: 320px; width: 100%;">
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ──────────────────── تفاصيل التقارير والجداول ──────────────────── -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <!-- أكثر الصفحات زيارة (عرض كامل على الديسكتوب) -->
+        <div class="col-span-1 lg:col-span-2 rounded-2xl border overflow-hidden flex flex-col" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-4 border-b" style="border-color: var(--border);">
+                <h3 class="text-sm font-bold m-0" style="color: var(--text-primary);">📄 الصفحات الأكثر زيارة (Top Pages)</h3>
+            </div>
+            <div class="overflow-x-auto flex-grow">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                            <th class="p-3 px-4 text-right text-xs font-semibold" style="color: var(--text-muted);">رابط الصفحة</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">الزوار</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">المشاهدات</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">الجلسات</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">وقت التفاعل</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for page in report_data.top_pages %}
+                        {% if page.path|slice:":7" == "/search" or page.path == "--" %}
+                        <!-- سطر غير قابل للنقر (صفحات البحث أو غير المحددة) -->
+                        <tr class="border-b last:border-0 hover:bg-light transition-colors" style="border-color: var(--border);">
+                            <td class="p-3 px-4">
+                                <div class="flex flex-col gap-0.5 text-right">
+                                    <span class="text-sm font-semibold truncate max-w-xs" style="color: var(--text-primary);" title="{{ page.title }}">{{ page.title|default:"بدون عنوان" }}</span>
+                                    <span class="text-xs truncate max-w-xs text-left" style="direction: ltr; color: var(--text-secondary);">
+                                        {{ page.path }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="p-3 px-4 text-center text-sm font-bold" style="color: var(--text-primary);">{{ page.active_users }}</td>
+                            <td class="p-3 px-4 text-center text-sm" style="color: var(--text-secondary);">{{ page.views }}</td>
+                            <td class="p-3 px-4 text-center text-sm" style="color: var(--text-secondary);">{{ page.sessions }}</td>
+                            <td class="p-3 px-4 text-center text-sm" style="color: var(--text-secondary);">{{ page.engagement_time }}</td>
+                        </tr>
+                        {% else %}
+                        <!-- سطر قابل للنقر -->
+                        <tr class="border-b last:border-0 hover:bg-light transition-colors cursor-pointer" 
+                            style="border-color: var(--border);"
+                            onclick="window.open('{{ page.path }}', '_blank')">
+                            <td class="p-3 px-4">
+                                <div class="flex flex-col gap-0.5 text-right">
+                                    <span class="text-sm font-semibold truncate max-w-xs" style="color: var(--text-primary);" title="{{ page.title }}">{{ page.title|default:"بدون عنوان" }}</span>
+                                    <a href="{{ page.path }}" target="_blank" onclick="event.stopPropagation();" class="text-xs text-primary truncate max-w-xs text-left no-underline" style="direction: ltr;">
+                                        {{ page.path }}
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="p-3 px-4 text-center text-sm font-bold" style="color: var(--text-primary);">{{ page.active_users }}</td>
+                            <td class="p-3 px-4 text-center text-sm" style="color: var(--text-secondary);">{{ page.views }}</td>
+                            <td class="p-3 px-4 text-center text-sm" style="color: var(--text-secondary);">{{ page.sessions }}</td>
+                            <td class="p-3 px-4 text-center text-sm" style="color: var(--text-secondary);">{{ page.engagement_time }}</td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="p-8 text-center text-sm" style="color: var(--text-muted);">لا توجد بيانات متوفرة</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- مصادر الزيارات -->
+        <div class="rounded-2xl border overflow-hidden flex flex-col" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-4 border-b" style="border-color: var(--border);">
+                <h3 class="text-sm font-bold m-0" style="color: var(--text-primary);">🔌 مصادر الزيارات (Traffic Sources)</h3>
+            </div>
+            <div class="overflow-x-auto flex-grow">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                            <th class="p-3 px-4 text-right text-xs font-semibold" style="color: var(--text-muted);">المصدر / الوسيط</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">المستخدمين</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">الجلسات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for source in report_data.traffic_sources %}
+                        <tr class="border-b last:border-0 hover:bg-light transition-colors" style="border-color: var(--border);">
+                            <td class="p-3 px-4 text-sm font-semibold" style="color: var(--text-primary); direction: ltr; text-align: right;">{{ source.source }}</td>
+                            <td class="p-3 px-4 text-center text-sm font-bold" style="color: var(--text-primary);">{{ source.active_users }}</td>
+                            <td class="p-3 px-4 text-center text-sm" style="color: var(--text-secondary);">{{ source.sessions }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="p-8 text-center text-sm" style="color: var(--text-muted);">لا توجد بيانات متوفرة</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- أعلى الأحداث والتحويلات -->
+        <div class="rounded-2xl border overflow-hidden flex flex-col" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-4 border-b" style="border-color: var(--border);">
+                <h3 class="text-sm font-bold m-0" style="color: var(--text-primary);">🎯 الأحداث والتحويلات (Events & Conversions)</h3>
+            </div>
+            <div class="overflow-x-auto flex-grow">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                            <th class="p-3 px-4 text-right text-xs font-semibold" style="color: var(--text-muted);">الحدث</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">التكرار</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">التحويلات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in report_data.events %}
+                        <tr class="border-b last:border-0 hover:bg-light transition-colors" style="border-color: var(--border);">
+                            <td class="p-3 px-4 text-sm font-semibold" style="color: var(--text-primary);">{{ event.event_friendly }}</td>
+                            <td class="p-3 px-4 text-center text-sm font-bold" style="color: var(--text-primary);">{{ event.event_count }}</td>
+                            <td class="p-3 px-4 text-center text-sm" style="color: var(--text-secondary);">
+                                {% if event.conversions > 0 %}
+                                <span class="px-2 py-0.5 rounded text-xs font-bold" style="background-color: var(--success-light); color: var(--success);">
+                                    {{ event.conversions }}
+                                </span>
+                                {% else %}
+                                <span class="text-xs" style="color: var(--text-muted);">--</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="p-8 text-center text-sm" style="color: var(--text-muted);">لا توجد بيانات متوفرة</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- أعلى الدول -->
+        <div class="rounded-2xl border overflow-hidden flex flex-col" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-4 border-b" style="border-color: var(--border);">
+                <h3 class="text-sm font-bold m-0" style="color: var(--text-primary);">🌍 أعلى الدول زيارة (Countries)</h3>
+            </div>
+            <div class="overflow-x-auto flex-grow">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr style="background-color: var(--bg-light); border-bottom: 1px solid var(--border);">
+                            <th class="p-3 px-4 text-right text-xs font-semibold" style="color: var(--text-muted);">الدولة</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">المستخدمين</th>
+                            <th class="p-3 px-4 text-center text-xs font-semibold" style="color: var(--text-muted);">الجلسات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for country in report_data.countries %}
+                        <tr class="border-b last:border-0 hover:bg-light transition-colors" style="border-color: var(--border);">
+                            <td class="p-3 px-4 text-sm font-semibold" style="color: var(--text-primary);">{{ country.country }}</td>
+                            <td class="p-3 px-4 text-center text-sm font-bold" style="color: var(--text-primary);">{{ country.active_users }}</td>
+                            <td class="p-3 px-4 text-center text-sm" style="color: var(--text-secondary);">{{ country.sessions }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="p-8 text-center text-sm" style="color: var(--text-muted);">لا توجد بيانات متوفرة</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- التكنولوجيا وأنظمة التشغيل -->
+        <div class="rounded-2xl border overflow-hidden flex flex-col" style="border-color: var(--border); background-color: var(--surface);">
+            <div class="px-5 py-4 border-b" style="border-color: var(--border);">
+                <h3 class="text-sm font-bold m-0" style="color: var(--text-primary);">💻 التكنولوجيا وأنظمة التشغيل (Tech Breakdown)</h3>
+            </div>
+            <div class="p-5 flex flex-col gap-6 flex-grow">
+                <!-- الأجهزة -->
+                <div class="flex flex-col gap-2.5">
+                    <h4 class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-muted);">📱 الأجهزة (Devices)</h4>
+                    {% for device in report_data.devices %}
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-semibold" style="color: var(--text-primary);">{{ device.device_ar }}</span>
+                            <span class="font-bold" style="color: var(--text-secondary);">{{ device.active_users }} ({{ device.percentage }}%)</span>
+                        </div>
+                        <div class="w-full h-1.5 rounded-full overflow-hidden" style="background-color: var(--bg-light);">
+                            <div class="h-full rounded-full tech-progress-bar" 
+                                 data-percentage="{{ device.percentage }}"
+                                 style="background-color: var(--primary); transition: width 0.5s ease;">
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs" style="color: var(--text-muted);">لا توجد بيانات متوفرة</p>
+                    {% endfor %}
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 0;">
+
+                <!-- المتصفحات -->
+                <div class="flex flex-col gap-2.5">
+                    <h4 class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-muted);">🌐 المتصفحات (Browsers)</h4>
+                    {% for browser in report_data.browsers %}
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-semibold" style="color: var(--text-primary);">{{ browser.browser }}</span>
+                            <span class="font-bold" style="color: var(--text-secondary);">{{ browser.active_users }} ({{ browser.percentage }}%)</span>
+                        </div>
+                        <div class="w-full h-1.5 rounded-full overflow-hidden" style="background-color: var(--bg-light);">
+                            <div class="h-full rounded-full tech-progress-bar" 
+                                 data-percentage="{{ browser.percentage }}"
+                                 style="background-color: var(--primary); transition: width 0.5s ease;">
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs" style="color: var(--text-muted);">لا توجد بيانات متوفرة</p>
+                    {% endfor %}
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 0;">
+
+                <!-- أنظمة التشغيل -->
+                <div class="flex flex-col gap-2.5">
+                    <h4 class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-muted);">💻 أنظمة التشغيل (OS)</h4>
+                    {% for os in report_data.operating_systems %}
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-semibold" style="color: var(--text-primary);">{{ os.os }}</span>
+                            <span class="font-bold" style="color: var(--text-secondary);">{{ os.active_users }} ({{ os.percentage }}%)</span>
+                        </div>
+                        <div class="w-full h-1.5 rounded-full overflow-hidden" style="background-color: var(--bg-light);">
+                            <div class="h-full rounded-full tech-progress-bar" 
+                                 data-percentage="{{ os.percentage }}"
+                                 style="background-color: var(--primary); transition: width 0.5s ease;">
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs" style="color: var(--text-muted);">لا توجد بيانات متوفرة</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
     </div>
 
     {% endif %}
 
+    {% endif %}
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Toast Helper
+function showToast(message, level = 'success') {
+    window.dispatchEvent(new CustomEvent('show-toast', {
+        detail: {
+            message: message,
+            level: level
+        }
+    }));
+}
+
+// Global configuration flags fetched from DOM metadata
+const configEl = document.getElementById('analytics-config');
+const isGA4Configured = configEl ? configEl.getAttribute('data-configured') === 'true' : false;
+const hasReportData = configEl ? configEl.getAttribute('data-has-report') === 'true' : false;
+
+function refreshRealtime(showToastNotification = false) {
+    const btn = document.getElementById('btn-refresh-realtime');
+    const countSpan = document.getElementById('realtime-user-count');
+    
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'جاري التحميل... ⏳';
+    }
+
+    fetch('/sg/analytics/api/realtime/')
+        .then(response => response.json())
+        .then(data => {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'تحديث الزوار 🔄';
+            }
+            if (data.error) {
+                showError(data.error);
+                countSpan.textContent = '⚠️';
+                showToast(data.error, 'danger');
+            } else {
+                countSpan.textContent = data.active_users;
+                hideError();
+                if (showToastNotification) {
+                    showToast('تم تحديث زوار الوقت الفعلي بنجاح', 'success');
+                }
+            }
+        })
+        .catch(err => {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'تحديث الزوار 🔄';
+            }
+            countSpan.textContent = '⚠️';
+            showError('تعذر الاتصال بخادم الموقع لجلب زوار الوقت الفعلي.');
+            showToast('تعذر الاتصال بخادم الموقع لجلب زوار الوقت الفعلي.', 'danger');
+            console.error('Realtime fetch failed:', err);
+        });
+}
+
+function triggerManualSync() {
+    Swal.fire({
+        title: 'مزامنة البيانات التاريخية',
+        text: 'هل تريد مزامنة البيانات من جوجل أناليتكس الآن؟ قد يستغرق هذا بضع ثوانٍ.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--primary)',
+        cancelButtonColor: 'var(--border)',
+        confirmButtonText: 'نعم، ابدأ المزامنة',
+        cancelButtonText: 'إلغاء',
+        customClass: { popup: 'rounded-xl' }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            executeManualSync();
+        }
+    });
+}
+
+function executeManualSync() {
+    const btn = document.getElementById('btn-sync-now');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'جاري المزامنة... ⏳';
+    }
+
+    fetch('/sg/analytics/api/sync/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'مزامنة البيانات 🔄';
+        }
+        if (data.success) {
+            Swal.fire({
+                title: 'تمت المزامنة بنجاح!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonColor: 'var(--primary)',
+                confirmButtonText: 'موافق',
+                customClass: { popup: 'rounded-xl' }
+            }).then(() => {
+                window.location.reload();
+            });
+        } else {
+            showError(data.error || 'حدث خطأ غير متوقع أثناء المزامنة.');
+            Swal.fire({
+                title: 'فشلت المزامنة',
+                text: data.error || 'حدث خطأ غير متوقع أثناء المزامنة.',
+                icon: 'error',
+                confirmButtonColor: 'var(--primary)',
+                confirmButtonText: 'موافق',
+                customClass: { popup: 'rounded-xl' }
+            });
+        }
+    })
+    .catch(err => {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'مزامنة البيانات 🔄';
+        }
+        showError('فشلت المزامنة بسبب انقطاع الاتصال بالسيرفر.');
+        Swal.fire({
+            title: 'خطأ اتصال',
+            text: 'فشلت المزامنة بسبب انقطاع الاتصال بالسيرفر.',
+            icon: 'error',
+            confirmButtonColor: 'var(--primary)',
+            confirmButtonText: 'موافق',
+            customClass: { popup: 'rounded-xl' }
+        });
+        console.error('Manual sync failed:', err);
+    });
+}
+
+function showError(msg) {
+    const banner = document.getElementById('analytics-error-banner');
+    const message = document.getElementById('analytics-error-message');
+    if (banner && message) {
+        message.textContent = msg;
+        banner.classList.remove('hidden');
+    }
+}
+function hideError() {
+    const banner = document.getElementById('analytics-error-banner');
+    if (banner) {
+        banner.classList.add('hidden');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (isGA4Configured) {
+        refreshRealtime(false);
+        setInterval(() => refreshRealtime(false), 120000);
+    }
+
+    const trendDataEl = document.getElementById('daily-trend-data');
+    if (hasReportData && trendDataEl) {
+        try {
+            const dailyTrend = JSON.parse(trendDataEl.textContent);
+            const labels = dailyTrend.map(item => item.label);
+            const usersData = dailyTrend.map(item => item.active_users);
+            const sessionsData = dailyTrend.map(item => item.sessions);
+
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            const style = getComputedStyle(document.documentElement);
+            const primaryColor = style.getPropertyValue('--primary').trim() || '#3b82f6';
+            const secondaryColor = style.getPropertyValue('--secondary').trim() || '#10b981';
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'المستخدمون النشطون',
+                            data: usersData,
+                            borderColor: primaryColor,
+                            backgroundColor: primaryColor + '20',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'الجلسات',
+                            data: sessionsData,
+                            borderColor: secondaryColor,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: 'Alexandria, sans-serif',
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Alexandria, sans-serif',
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Alexandria, sans-serif',
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (e) {
+            console.error('Error parsing or rendering chart data:', e);
+        }
+    }
+
+    // Set tech progress bar widths
+    document.querySelectorAll('.tech-progress-bar').forEach(bar => {
+        const percentage = bar.getAttribute('data-percentage') || '0';
+        bar.style.width = percentage + '%';
+    });
+});
+</script>
 {% endblock %}

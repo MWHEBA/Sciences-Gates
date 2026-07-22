@@ -234,7 +234,7 @@ class SiteSEOSettingsForm(forms.ModelForm):
         model = SiteSettings
         fields = [
             'ga4_measurement_id',
-            'google_site_verification',
+            'ga4_property_id',
             'enable_ga4',
         ]
         widgets = {
@@ -243,9 +243,9 @@ class SiteSEOSettingsForm(forms.ModelForm):
                 'placeholder': 'G-XXXXXXXXXX',
                 'dir': 'ltr',
             }),
-            'google_site_verification': forms.TextInput(attrs={
+            'ga4_property_id': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'your_verification_code_here',
+                'placeholder': '448834920',
                 'dir': 'ltr',
             }),
             'enable_ga4': forms.CheckboxInput(attrs={
@@ -254,12 +254,12 @@ class SiteSEOSettingsForm(forms.ModelForm):
         }
         labels = {
             'ga4_measurement_id': 'Google Analytics 4 Measurement ID',
-            'google_site_verification': 'Google Site Verification Code',
+            'ga4_property_id': 'Google Analytics 4 Property ID',
             'enable_ga4': 'تفعيل Google Analytics 4',
         }
         help_texts = {
             'ga4_measurement_id': 'احصل عليه من Google Analytics 4 → Admin → Data Streams',
-            'google_site_verification': 'احصل عليه من Google Search Console → Settings → Verification',
+            'ga4_property_id': 'احصل عليه من Google Analytics 4 → Admin → Property Settings → Property ID (معرف رقمي فقط)',
             'enable_ga4': 'قم بإيقافه مؤقتاً في حالة الصيانة أو اختبار التطوير',
         }
 
@@ -267,7 +267,8 @@ class SEOSettingsForm(forms.Form):
     """Form for SEO management actions."""
     action = forms.ChoiceField(
         choices=[
-            ('regenerate_sitemap', 'إعادة توليد خريطة الموقع'),
+            ('regenerate_sitemap', 'إعادة توليد خريطة الموقع وتحديث الكاش'),
+            ('submit_sitemap_to_google', 'رفع خريطة الموقع لمحرك بحث جوجل (Google Search Console)'),
             ('clear_seo_cache', 'مسح ذاكرة التخزين المؤقت لـ SEO'),
             ('test_ga4', 'اختبار اتصال Google Analytics'),
         ],

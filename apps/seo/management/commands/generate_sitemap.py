@@ -10,11 +10,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('Rebuilding sitemap cache...'))
         
-        # 1. Clear the cache for all sitemaps
-        sitemap_classes = ['universitysitemap', 'institutesitemap', 'majorsitemap', 'articlesitemap', 'staticsitemap']
-        for cls in sitemap_classes:
-            for page in range(1, 11):
-                cache.delete(f"sitemap_{cls}_page_{page}")
+        # 1. Clear the cache for all sitemaps using centralized helper
+        from apps.seo.sitemaps import clear_sitemap_cache
+        clear_sitemap_cache()
         self.stdout.write(self.style.SUCCESS('Sitemap cache cleared.'))
         
         # 2. Warm up the cache by accessing get_urls() for each sitemap class

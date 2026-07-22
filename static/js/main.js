@@ -87,7 +87,7 @@ function initializeHeaderActions() {
             const arrowBtn = document.createElement('button');
             arrowBtn.type = 'button';
             arrowBtn.className = 'dropdown-toggle-btn';
-            arrowBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+            arrowBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>';
             link.appendChild(arrowBtn);
             
             arrowBtn.addEventListener('click', function(e) {
@@ -208,7 +208,7 @@ function initializeVideoPopups() {
             // Create close button (positioned left for RTL compatibility)
             const closeBtn = document.createElement('button');
             closeBtn.type = 'button';
-            closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            closeBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
             closeBtn.style.position = 'absolute';
             closeBtn.style.top = '-40px';
             closeBtn.style.left = '0';
@@ -406,4 +406,3 @@ function initializeAutoSlugify() {
         }
     });
 }
-

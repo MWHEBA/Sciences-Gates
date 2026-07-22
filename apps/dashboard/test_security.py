@@ -154,41 +154,77 @@ class TestDashboardSecurity:
     def test_turnstile_backend_validation(self):
         """Verify Turnstile verification blocks invalid submissions."""
         from django.conf import settings
+        from django.test import override_settings
         from apps.leads.forms import ContactLeadForm
         
-        with patch.object(settings, 'TURNSTILE_SECRET_KEY', 'dummy-secret-key'):
-            with patch('sys.argv', ['manage.py', 'runserver']):
-                # 1. Post without turnstile token
-                form_data = {
-                    'lead_type': 'contact',
-                    'name': 'Test User',
-                    'email': 'student@example.com',
-                    'phone_number': '123456789',
-                    'country_code': '+966',
-                    'phone': '+966123456789',
-                    'nationality': 'مصري',
-                }
-                form = ContactLeadForm(data=form_data)
-                assert not form.is_valid()
-                assert 'يرجى التحقق من اختبار الأمان (Turnstile).' in form.errors['__all__'][0]
-
-                # 2. Mock Cloudflare verification returning failure
-                with patch('requests.post') as mock_post:
-                    mock_resp = MagicMock()
-                    mock_resp.json.return_value = {'success': False}
-                    mock_post.return_value = mock_resp
-                    
-                    form_data['cf-turnstile-response'] = 'invalid-token'
+        with override_settings(TESTING=False):
+            with patch.object(settings, 'TURNSTILE_SECRET_KEY', 'dummy-secret-key'):
+                with patch('sys.argv', ['manage.py', 'runserver']):
+                    # 1. Post without turnstile token
+                    form_data = {
+                        'lead_type': 'contact',
+                        'name': 'Test User',
+                        'email': 'student@example.com',
+                        'phone_number': '123456789',
+                        'country_code': '+966',
+                        'phone': '+966123456789',
+                        'nationality': 'مصري',
+                    }
                     form = ContactLeadForm(data=form_data)
                     assert not form.is_valid()
-                    assert 'فشل التحقق من اختبار الأمان (Turnstile).' in form.errors['__all__'][0]
+                    assert 'يرجى التحقق من اختبار الأمان (Turnstile).' in form.errors['__all__'][0]
 
-                # 3. Mock Cloudflare verification returning success
-                with patch('requests.post') as mock_post:
-                    mock_resp = MagicMock()
-                    mock_resp.json.return_value = {'success': True}
-                    mock_post.return_value = mock_resp
-                    
-                    form_data['cf-turnstile-response'] = 'valid-token'
-                    form = ContactLeadForm(data=form_data)
-                    assert form.is_valid()
+                    # 2. Mock Cloudflare verification returning failure
+                    with patch('requests.post') as mock_post:
+                        mock_resp = MagicMock()
+                        mock_resp.json.return_value = {'success': False}
+                        mock_post.return_value = mock_resp
+                        
+                        form_data['cf-turnstile-response'] = 'invalid-token'
+                        form = ContactLeadForm(data=form_data)
+                        assert not form.is_valid()
+                        assert 'فشل التحقق من اختبار الأمان (Turnstile).' in form.errors['__all__'][0]
+
+                    # 3. Mock Cloudflare verification returning success
+                    with patch('requests.post') as mock_post:
+                        mock_resp = MagicMock()
+                        mock_resp.json.return_value = {'success': True}
+                        mock_post.return_value = mock_resp
+                        
+                        form_data['cf-turnstile-response'] = 'valid-token'
+                        form = ContactLeadForm(data=form_data)
+                        assert form.is_valid()
+
+    def test_super_admin_self_deletion_prevention(self):
+        """Verify that a Super Admin cannot delete their own account."""
+        from apps.core.models import UserRole
+        
+        # 1. Create a Super Admin user
+        super_admin = User.objects.create_user(
+            username='super_admin_user',
+            email='superadmin@example.com',
+            password='Password123',
+            is_staff=True
+        )
+        profile = super_admin.profile
+        profile.role = UserRole.SUPER_ADMIN
+        profile.save()
+        
+        # Log in as the Super Admin
+        self.client.login(username='super_admin_user', password='Password123')
+        
+        # 2. Try to get the delete confirmation (GET) -> should redirect (cannot delete self)
+        url = reverse('dashboard:user_delete', kwargs={'pk': super_admin.pk})
+        response = self.client.get(url)
+        assert response.status_code == 302  # redirects with error
+        
+        # Try GET via AJAX -> should fail
+        response = self.client.get(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        assert response.status_code == 400
+        
+        # 3. Try to POST delete request -> should fail and not delete
+        response = self.client.post(url)
+        assert response.status_code == 302
+        
+        # Check that user still exists in the database
+        assert User.objects.filter(pk=super_admin.pk).exists()

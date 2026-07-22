@@ -57,21 +57,18 @@ def site_settings_context(request):
             site_settings = SiteSettings.get_settings()
             request._site_settings = site_settings
         
-        # Priority: Database > Environment Variable
-        ga4_id = site_settings.ga4_measurement_id or getattr(settings, 'GA4_MEASUREMENT_ID', '')
-        gsc_code = site_settings.google_site_verification or getattr(settings, 'GOOGLE_SITE_VERIFICATION', '')
+        # Only use database settings
+        ga4_id = site_settings.ga4_measurement_id if site_settings else ''
         enable_ga4 = site_settings.enable_ga4 if site_settings else True
         
     except Exception:
         site_settings = None
-        ga4_id = getattr(settings, 'GA4_MEASUREMENT_ID', '')
-        gsc_code = getattr(settings, 'GOOGLE_SITE_VERIFICATION', '')
+        ga4_id = ''
         enable_ga4 = True
     
     return {
         'site_settings': site_settings,
         'GA4_MEASUREMENT_ID': ga4_id,
-        'GOOGLE_SITE_VERIFICATION': gsc_code,
         'ENABLE_GA4': enable_ga4,
         'TURNSTILE_SITE_KEY': getattr(settings, 'TURNSTILE_SITE_KEY', ''),
     }

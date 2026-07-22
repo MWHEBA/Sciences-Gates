@@ -9,7 +9,7 @@
 {% block og_title %}{{ article.og_title|default:article.title }}{% endblock %}
 {% block og_description %}{{ article.og_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}
 
-{% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">{% endblock %}
+{% block canonical %}<link rel="canonical" href="{% if article.canonical_url %}{{ article.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endif %}">{% endblock %}
 
 {% block schema_markup %}
 {{ block.super }}

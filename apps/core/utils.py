@@ -543,14 +543,23 @@ def validate_attachment_file(value):
     Validate attachment file size and file extension.
     - Max size: 10MB
     - Allowed extensions: PDF, Word, Excel, ZIP, RAR, images (PNG, JPG, JPEG)
+    - Prevents double extension bypasses (e.g. file.php.pdf)
     """
     # 10MB limit
     limit = 10 * 1024 * 1024
     if value.size > limit:
         raise ValidationError('حجم الملف كبير جداً. الحد الأقصى المسموح به هو 10 ميجابايت.')
     
-    # Allowed extensions
-    ext = os.path.splitext(value.name)[1].lower()
+    name_lower = value.name.lower()
+    
+    # Block double extensions or files containing scripting languages anywhere
+    banned_phrases = ['.php', '.py', '.sh', '.exe', '.pl', '.cgi', '.asp', '.aspx', '.jsp']
+    for phrase in banned_phrases:
+        if phrase in name_lower:
+            raise ValidationError('امتداد الملف غير مسموح به لأسباب أمنية.')
+            
+    # Verify final extension strictly
+    ext = os.path.splitext(name_lower)[1]
     valid_extensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg', '.zip', '.rar']
     if ext not in valid_extensions:
         raise ValidationError(
@@ -594,44 +603,43 @@ def cleanup_attachment_file_on_delete(instance):
 class SMTPCryptography:
     """
     Symmetric encryption/decryption helper for SMTP passwords stored in the database.
-    Uses CTR mode with HMAC-SHA256 derived from settings.SECRET_KEY to ensure password confidentiality.
+    Uses cryptography.fernet (AES-128 in CBC mode with HMAC-SHA256) for authenticated encryption,
+    with a secure fallback to the legacy CTR XOR mode for backward compatibility.
     """
-    @staticmethod
-    def _get_key():
+    @classmethod
+    def _get_fernet(cls):
+        from cryptography.fernet import Fernet
+        import base64
         import hashlib
-        return hashlib.sha256(settings.SECRET_KEY.encode('utf-8')).digest()
+        key = hashlib.sha256(settings.SECRET_KEY.encode('utf-8')).digest()
+        return Fernet(base64.urlsafe_b64encode(key))
 
     @classmethod
     def encrypt(cls, plaintext):
         if not plaintext:
             return ""
-        import base64
-        import hmac
-        import hashlib
-        import os
-        
-        key = cls._get_key()
-        iv = os.urandom(16)
-        
-        plaintext_bytes = plaintext.encode('utf-8')
-        keystream = bytearray()
-        counter = 0
-        while len(keystream) < len(plaintext_bytes):
-            h = hmac.new(key, iv + str(counter).encode('utf-8'), hashlib.sha256).digest()
-            keystream.extend(h)
-            counter += 1
-            
-        ciphertext = bytes([p ^ k for p, k in zip(plaintext_bytes, keystream)])
-        return base64.b64encode(iv + ciphertext).decode('utf-8')
+        try:
+            f = cls._get_fernet()
+            return f.encrypt(plaintext.encode('utf-8')).decode('utf-8')
+        except Exception:
+            return ""
 
     @classmethod
     def decrypt(cls, ciphertext_b64):
         if not ciphertext_b64:
             return ""
+        
+        # 1. Try decrypting using modern Fernet
+        try:
+            f = cls._get_fernet()
+            return f.decrypt(ciphertext_b64.encode('utf-8')).decode('utf-8')
+        except Exception:
+            pass
+
+        # 2. Fallback to legacy CTR mode decryption
         import base64
         import hmac
         import hashlib
-        
         try:
             data = base64.b64decode(ciphertext_b64.encode('utf-8'))
             if len(data) < 16:
@@ -639,11 +647,11 @@ class SMTPCryptography:
             iv = data[:16]
             ciphertext = data[16:]
             
-            key = cls._get_key()
+            key_derived = hashlib.sha256(settings.SECRET_KEY.encode('utf-8')).digest()
             keystream = bytearray()
             counter = 0
             while len(keystream) < len(ciphertext):
-                h = hmac.new(key, iv + str(counter).encode('utf-8'), hashlib.sha256).digest()
+                h = hmac.new(key_derived, iv + str(counter).encode('utf-8'), hashlib.sha256).digest()
                 keystream.extend(h)
                 counter += 1
                 
@@ -651,5 +659,17 @@ class SMTPCryptography:
             return plaintext_bytes.decode('utf-8')
         except Exception:
             return ""
+
+
+def get_client_ip(request):
+    """Extract the real client IP, respecting Cloudflare headers in production."""
+    cf_ip = request.META.get('HTTP_CF_CONNECTING_IP')
+    if cf_ip:
+        return cf_ip.strip()
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
 
 

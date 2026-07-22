@@ -416,17 +416,19 @@
                     </a>
                 </div>
 
-                <!-- استيراد من WP -->
-                <div :style="'{{ request.path }}'.includes('/sg/import') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a  href="{% url 'dashboard:import_page' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/import' in request.path %}active{% endif %}" >
+
+                <!-- إعادة التوجيه -->
+                <div
+                    :style="'{{ request.path }}'.includes('/sg/redirects') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    <a  href="{% url 'dashboard:redirect_list' %}"
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/redirects' in request.path %}active{% endif %}" >
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
+                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
                             </path>
                         </svg>
-                        <span>استيراد من WP</span>
+                        <span>إعادة التوجيه</span>
                     </a>
                 </div>
 
@@ -487,42 +489,49 @@
             </div>
         </div>
 
-        <!-- قسم SEO - مدير SEO والمدير العام -->
+        <!-- قسم التحليلات - مسؤول SEO والمدير العام -->
         {% if user.is_authenticated and user.profile.is_seo_admin or user.is_authenticated and user.profile.is_super_admin %}
         <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
-            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">SEO</h3>
+            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">التحليلات</h3>
             <div class="space-y-1">
-                <!-- إعادة التوجيه -->
-                <div
-                    :style="'{{ request.path }}'.includes('/sg/redirects') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a  href="{% url 'dashboard:redirect_list' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/redirects' in request.path %}active{% endif %}" >
-                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
-                            </path>
+
+                <!-- Google Analytics -->
+                <div :style="'{{ request.path }}'.includes('/sg/analytics') ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
+                    <a href="{% url 'dashboard:analytics' %}"
+                       class="flex items-center px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer sb-link {% if '/sg/analytics' in request.path %}active{% endif %}">
+                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>
-                        <span>إعادة التوجيه</span>
+                        <span>Google Analytics</span>
                     </a>
                 </div>
 
-                <!-- إعدادات SEO -->
-                <div
-                    :style="'{{ request.path }}'.includes('/sg/seo') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a  href="{% url 'dashboard:seo_management' %}"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link {% if '/sg/seo' in request.path %}active{% endif %}" >
-                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            stroke-width="2" aria-hidden="true">
+                <!-- Search Console -->
+                <div :style="'{{ request.path }}'.includes('/sg/search-console') ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
+                    <a href="{% url 'dashboard:search_console' %}"
+                       class="flex items-center px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer sb-link {% if '/sg/search-console' in request.path %}active{% endif %}">
+                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <span>Search Console</span>
+                    </a>
+                </div>
+
+                <!-- إعدادات الأرشفة -->
+                <div :style="'{{ request.path }}'.includes('/sg/seo') ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
+                    <a href="{% url 'dashboard:seo_management' %}"
+                       class="flex items-center px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer sb-link {% if '/sg/seo' in request.path %}active{% endif %}">
+                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
                             </path>
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
                             </path>
                         </svg>
-                        <span>إعدادات SEO</span>
+                        <span>إعدادات الأرشفة</span>
                     </a>
                 </div>
+
             </div>
         </div>
         {% endif %}
@@ -602,84 +611,12 @@
                         <span>الإعدادات العامة</span>
                     </a>
                 </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- قسم التحليلات - مسؤول SEO والمدير العام -->
-        {% if user.is_authenticated and user.profile.is_seo_admin or user.is_authenticated and user.profile.is_super_admin %}
-        <div style="padding-bottom: 6px; border-bottom: 1px solid var(--border);">
-            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">التحليلات</h3>
-            <div class="space-y-1">
-
-                <!-- Google Analytics -->
-                <div :style="'{{ request.path }}'.includes('/sg/analytics') ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
-                    <a href="{% url 'dashboard:analytics' %}"
-                       class="flex items-center px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer sb-link {% if '/sg/analytics' in request.path %}active{% endif %}">
-                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                        <span>Google Analytics</span>
-                    </a>
-                </div>
-
-                <!-- Search Console -->
-                <div :style="'{{ request.path }}'.includes('/sg/search-console') ? 'background-color: rgba(149, 157, 165, 0.12); border-radius: 8px; padding: 4px;' : ''">
-                    <a href="{% url 'dashboard:search_console' %}"
-                       class="flex items-center px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer sb-link {% if '/sg/search-console' in request.path %}active{% endif %}">
-                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        <span>Search Console</span>
-                    </a>
-                </div>
-
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- قسم النظام - المدير العام فقط -->
-        {% if user.is_authenticated and user.profile.is_super_admin %}
-        <div>
-            <h3 class="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted);">النظام</h3>
-
-            <div class="space-y-1">
-                <!-- سجل النشاط -->
-                <div
-                    :style="'{{ request.path }}'.includes('/sg/activity-log') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a  href="#"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" 
-                        title="قريباً">
-                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                            </path>
-                        </svg>
-                        <span>سجل النشاط</span>
-                    </a>
-                </div>
-
-                <!-- معلومات النظام -->
-                <div
-                    :style="'{{ request.path }}'.includes('/sg/system-info') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
-                    <a  href="#"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" 
-                        title="قريباً">
-                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span>معلومات النظام</span>
-                    </a>
-                </div>
 
                 <!-- النسخ الاحتياطية -->
                 <div
                     :style="'{{ request.path }}'.includes('/sg/backups') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
                     <a  href="#"
-                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-link" 
+                         class="flex items-center px-4 py-2 rounded-lg  transition-colors duration-200 cursor-pointer sb-sub-link {% if '/sg/backups' in request.path %}active{% endif %}" 
                         title="قريباً">
                         <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="2" aria-hidden="true">

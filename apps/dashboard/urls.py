@@ -113,7 +113,12 @@ urlpatterns = [
 
     # Analytics & Search Console (SEO Admin + Super Admin)
     path('analytics/', views.AnalyticsView.as_view(), name='analytics'),
+    path('analytics/api/realtime/', views.AnalyticsRealtimeApi.as_view(), name='analytics_realtime_api'),
+    path('analytics/api/sync/', views.AnalyticsSyncApi.as_view(), name='analytics_sync_api'),
     path('search-console/', views.SearchConsoleView.as_view(), name='search_console'),
+    path('search-console/api/cannibalization/', views.SearchConsoleCannibalizationApi.as_view(), name='search_console_cannibalization_api'),
+    path('search-console/api/redirect/create/', views.SearchConsoleRedirectCreateApi.as_view(), name='search_console_redirect_create_api'),
+    path('search-console/api/404/ignore/', views.SearchConsole404IgnoreApi.as_view(), name='search_console_404_ignore_api'),
 
     
     # Editor uploads
@@ -128,7 +133,4 @@ urlpatterns = [
     
     # Content Locks API
     path('api/locks/', views.ContentLockAPIView.as_view(), name='api_locks'),
-
-    # WordPress Importer
-    path('import/', include('apps.importer.urls')),
 ]

@@ -43,8 +43,56 @@ class Redirect(TimestampedModel):
             models.Index(fields=['old_url', 'is_active']),
         ]
 
+    @staticmethod
+    def normalize_path(url):
+        import urllib.parse
+        url = (url or '').strip()
+        if not url:
+            return "/"
+            
+        if url.startswith(('http://', 'https://')):
+            parsed = urllib.parse.urlparse(url)
+            url = parsed.path
+            if parsed.query:
+                url += '?' + parsed.query
+        elif '/' in url and not url.startswith('/'):
+            parts = url.split('/', 1)
+            if '.' in parts[0]:
+                url = '/' + parts[1]
+                
+        if not url.startswith('/'):
+            url = '/' + url
+            
+        return url
+
+    def save(self, *args, **kwargs):
+        # We check update_fields to avoid infinite loop when incrementing hit count
+        update_fields = kwargs.get('update_fields', None)
+        if not update_fields or 'old_url' in update_fields:
+            self.old_url = self.normalize_path(self.old_url)
+        if not update_fields or 'new_url' in update_fields:
+            if not self.new_url.startswith(('http://', 'https://')):
+                self.new_url = self.normalize_path(self.new_url)
+        super().save(*args, **kwargs)
+
+    @property
+    def old_url_decoded(self):
+        import urllib.parse
+        return urllib.parse.unquote(self.old_url)
+
+    @property
+    def new_url_decoded(self):
+        import urllib.parse
+        if self.new_url.startswith(('http://', 'https://')):
+            return self.new_url
+        return urllib.parse.unquote(self.new_url)
+
+    @property
+    def is_active_label(self):
+        return "نشط" if self.is_active else "غير نشط"
+
     def __str__(self):
-        return f'{self.old_url} → {self.new_url}'
+        return f'{self.old_url_decoded} → {self.new_url_decoded}'
 
     def increment_hit_count(self):
         """Increment the hit count for this redirect."""

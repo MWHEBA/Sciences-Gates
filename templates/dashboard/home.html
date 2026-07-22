@@ -1,4 +1,6 @@
 {% extends 'dashboard/base.html' %}
+{% load l10n %}
+{# force deploy #}
 
 {% block title %}لوحة التحكم - Science Gates{% endblock %}
 
@@ -201,7 +203,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
                 <h3 class="text-sm font-bold m-0" style="color: var(--warning);">
-                    فرص التحسين — مراكز 6 إلى 15
+                    فرص التحسين — مراكز 6 إلى 15 <span class="text-xs font-normal mr-1" style="color: var(--text-muted);">(آخر 28 يوم)</span>
                 </h3>
             </div>
             <a href="{% url 'dashboard:search_console' %}" class="text-xs font-semibold" style="color: var(--primary);">
@@ -212,26 +214,51 @@
             <table class="w-full border-collapse">
                 <tbody>
                     {% for page in gsc_quick_wins|slice:":5" %}
-                    <tr class="border-b border-border transition-colors"
+                    <tr class="border-b border-border transition-colors cursor-pointer"
+                        onclick="window.open('{{ page.url }}', '_blank')"
                         onmouseover="this.style.backgroundColor='var(--bg-light)'"
-                        onmouseout="this.style.backgroundColor='transparent'">
+                        onmouseout="this.style.backgroundColor='transparent'"
+                        style="cursor: pointer;">
                         <td class="p-3 px-5">
-                            <p class="text-xs font-medium m-0 truncate" style="color: var(--text-primary); max-width: 300px;" title="{{ page.url }}">
-                                {{ page.path }}
-                            </p>
+                            <div class="flex flex-col gap-0.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border"
+                                          style="background-color: var(--bg-light); border-color: var(--border); color: var(--text-muted); white-space: nowrap;">
+                                        {{ page.type_label }}
+                                    </span>
+                                    <p class="text-xs font-medium m-0 truncate" style="color: var(--text-primary); max-width: 200px;" title="{{ page.url }}">
+                                        {{ page.title|default:page.path }}
+                                    </p>
+                                </div>
+                                {% if page.top_query %}
+                                <div class="text-[10px] opacity-75 truncate" style="color: var(--text-muted); max-width: 200px; padding-right: 2px;">
+                                    الكلمة المسيطرة: <span class="font-semibold" style="color: var(--text-secondary);">{{ page.top_query }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
                         </td>
                         <td class="p-3 px-4 text-center">
                             <span class="text-xs font-bold px-2 py-0.5 rounded-lg"
                                   style="background-color: var(--warning-light); color: var(--warning);">
-                                مركز {{ page.position }}
+                                مركز {{ page.position|unlocalize }}
                             </span>
+                            <div class="flex items-center justify-center gap-1.5 mt-1 text-[10px]" style="color: var(--text-muted);">
+                                <span class="inline-flex items-center gap-1">
+                                    <img src="https://flagcdn.com/w20/sa.png" width="12" height="9" alt="SA" style="border-radius: 1px;">
+                                    {% if page.sau_position %}{{ page.sau_position|unlocalize }}{% else %}—{% endif %}
+                                </span>
+                                <span>|</span>
+                                <span class="inline-flex items-center gap-1">
+                                    <img src="https://flagcdn.com/w20/eg.png" width="12" height="9" alt="EG" style="border-radius: 1px;">
+                                    {% if page.egy_position %}{{ page.egy_position|unlocalize }}{% else %}—{% endif %}
+                                </span>
+                            </div>
                         </td>
                         <td class="p-3 px-4 text-xs text-center" style="color: var(--text-muted);">
                             {{ page.impressions }} ظهور
                         </td>
                         <td class="p-3 px-4 text-center">
-                            <a href="{{ page.url }}" target="_blank" rel="noopener"
-                               class="text-xs no-underline" style="color: var(--text-muted);">↗</a>
+                            <span class="text-xs" style="color: var(--text-muted);">↗</span>
                         </td>
                     </tr>
                     {% endfor %}

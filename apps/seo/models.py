@@ -29,3 +29,21 @@ class SEOAnalysisDetail(models.Model):
         ]
         verbose_name = "تفاصيل تحليل SEO"
         verbose_name_plural = "تفاصيل تحليلات SEO"
+
+
+class Page404Log(models.Model):
+    """Logs 404 page requests for content optimization."""
+    path = models.CharField(max_length=1024, unique=True, verbose_name="المسار المطلوب")
+    hits = models.PositiveIntegerField(default=0, verbose_name="عدد المحاولات")
+    last_hit = models.DateTimeField(auto_now=True, verbose_name="تاريخ آخر محاولة")
+    referrers = models.JSONField(default=dict, blank=True, verbose_name="مصادر الزيارة (Referrers)")
+    user_agents = models.JSONField(default=dict, blank=True, verbose_name="المتصفحات / الأجهزة")
+    is_ignored = models.BooleanField(default=False, verbose_name="متجاهل")
+
+    class Meta:
+        verbose_name = "سجل صفحة 404"
+        verbose_name_plural = "سجلات صفحات 404"
+        ordering = ["-hits", "-last_hit"]
+
+    def __str__(self):
+        return f"{self.path} ({self.hits} hits)"

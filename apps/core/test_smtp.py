@@ -9,7 +9,7 @@ from django.core.mail import EmailMessage
 def test_smtp_cryptography():
     original_password = "mySecretGoogleWorkspacePassword123!"
     
-    # Test Encryption
+    # Test Encryption (should use new Fernet)
     encrypted = SMTPCryptography.encrypt(original_password)
     assert encrypted != original_password
     assert len(encrypted) > 0
@@ -17,6 +17,29 @@ def test_smtp_cryptography():
     # Test Decryption
     decrypted = SMTPCryptography.decrypt(encrypted)
     assert decrypted == original_password
+
+    # Test Legacy Fallback Decryption
+    import base64
+    import hmac
+    import hashlib
+    import os
+    # Encrypt using legacy XOR CTR method
+    key = hashlib.sha256(settings.SECRET_KEY.encode('utf-8')).digest()
+    iv = os.urandom(16)
+    plaintext_bytes = original_password.encode('utf-8')
+    keystream = bytearray()
+    counter = 0
+    while len(keystream) < len(plaintext_bytes):
+        h = hmac.new(key, iv + str(counter).encode('utf-8'), hashlib.sha256).digest()
+        keystream.extend(h)
+        counter += 1
+        
+    ciphertext = bytes([p ^ k for p, k in zip(plaintext_bytes, keystream)])
+    legacy_encrypted = base64.b64encode(iv + ciphertext).decode('utf-8')
+
+    # Decrypt using updated class (should fallback and decrypt legacy correctly)
+    decrypted_legacy = SMTPCryptography.decrypt(legacy_encrypted)
+    assert decrypted_legacy == original_password
 
 
 @pytest.mark.django_db

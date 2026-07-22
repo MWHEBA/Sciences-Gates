@@ -81,7 +81,9 @@
                     </td>
                     {% endif %}
                     {% for column in columns %}
-                    <td class="px-6 py-4" style="color: var(--text-primary);">
+                    <td class="px-6 py-4 {% if column.direction == 'ltr' %}text-left{% endif %}"
+                        {% if column.direction %}dir="{{ column.direction }}"{% endif %}
+                        style="color: var(--text-primary);">
                         {% if column.type == 'text' %}
                             {# نص عادي #}
                             {{ row|get_item:column.key }}

@@ -1,6 +1,10 @@
 """
 Dashboard views for authentication and dashboard management.
 """
+import logging
+
+logger = logging.getLogger(__name__)
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import authenticate, login, logout
@@ -31,7 +35,7 @@ from apps.institutes.models import Institute, Course
 from apps.majors.models import Major, MajorCategory
 from apps.articles.models import Article, Category, Tag, IgnoredSimilarity
 from apps.core.models import SiteSettings, ContentLock, UserProfile, UserRole
-from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin, DashboardMixin
+from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin, ContentOrSEOAdminRequiredMixin, DashboardMixin
 from apps.dashboard.forms import (
     UserCreateForm, UserUpdateForm, RedirectForm, 
     UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet,
@@ -56,7 +60,10 @@ class DashboardLoginView(View):
     def get(self, request):
         """Display login form."""
         if request.user.is_authenticated:
-            return redirect('dashboard:home')
+            if request.user.is_staff:
+                return redirect('dashboard:home')
+            else:
+                return redirect('home')
         return render(request, self.template_name)
 
     @method_decorator(csrf_protect)
@@ -347,27 +354,117 @@ class DashboardHomeView(DashboardMixin, View):
 class AnalyticsView(SEOAdminRequiredMixin, View):
     """
     Google Analytics overview page for SEO/Super admins.
-    صفحة Analytics — تعرض حالة GA4 وروابط للأدوات الخارجية.
+    صفحة Analytics — تعرض تقارير GA4 من الكاش المحلي.
     """
     template_name = 'dashboard/analytics.html'
 
     def get(self, request):
-        """Display analytics page."""
-        from apps.core.models import SiteSettings
+        """Display analytics page with cached report data."""
+        from apps.core.models import SiteSettings, GA4CachedReport
+
+        days = int(request.GET.get('days', 28))
+        if days not in (7, 14, 28, 90):
+            days = 28
+
         try:
             site_settings = SiteSettings.get_settings()
             ga4_id = site_settings.ga4_measurement_id
+            ga4_property_id = site_settings.ga4_property_id
             ga4_enabled = site_settings.enable_ga4
         except Exception:
             ga4_id = ''
+            ga4_property_id = ''
             ga4_enabled = False
 
         context = {
             'ga4_measurement_id': ga4_id,
+            'ga4_property_id': ga4_property_id,
             'ga4_enabled': ga4_enabled,
-            'ga4_configured': bool(ga4_id),
+            'ga4_configured': bool(ga4_id and ga4_property_id),
+            'selected_days': days,
+            'report_data': None,
+            'updated_at': None,
         }
+
+        if context['ga4_configured']:
+            cached_report = GA4CachedReport.objects.filter(days=days).first()
+            if cached_report:
+                context['report_data'] = cached_report.payload
+                context['updated_at'] = cached_report.updated_at
+
         return render(request, self.template_name, context)
+
+
+class AnalyticsRealtimeApi(SEOAdminRequiredMixin, View):
+    """
+    AJAX API endpoint for retrieving active users count (cached for 2 minutes).
+    """
+    def get(self, request):
+        from apps.core.models import SiteSettings
+        from apps.seo.services.ga4_client import GA4Client, GA4APIError
+        from django.core.cache import cache
+        from django.http import JsonResponse
+
+        try:
+            site_settings = SiteSettings.get_settings()
+            property_id = site_settings.ga4_property_id
+        except Exception:
+            return JsonResponse({'error': 'Error loading settings'}, status=400)
+
+        if not property_id:
+            return JsonResponse({'error': 'Property ID not configured'}, status=400)
+
+        cache_key = f"ga4_realtime_users_{property_id}"
+        cached_users = cache.get(cache_key)
+        
+        if cached_users is not None:
+            return JsonResponse({'active_users': cached_users, 'cached': True})
+
+        client = GA4Client()
+        try:
+            active_users = client.get_realtime_active_users(property_id)
+            cache.set(cache_key, active_users, 120)  # cache for 2 minutes
+            return JsonResponse({'active_users': active_users, 'cached': False})
+        except GA4APIError as exc:
+            return JsonResponse({'error': str(exc)}, status=500)
+        except Exception as exc:
+            return JsonResponse({'error': f"Unexpected error: {str(exc)}"}, status=500)
+
+
+class AnalyticsSyncApi(SEOAdminRequiredMixin, View):
+    """
+    AJAX API endpoint to trigger a manual forced sync of GA4 data (rate limited to once per 15 minutes).
+    """
+    def post(self, request):
+        from apps.core.models import SiteSettings
+        from django.core.cache import cache
+        from django.http import JsonResponse
+        from django.core.management import call_command
+
+        try:
+            site_settings = SiteSettings.get_settings()
+            property_id = site_settings.ga4_property_id
+        except Exception:
+            return JsonResponse({'success': False, 'error': 'خطأ في تحميل الإعدادات.'}, status=400)
+
+        if not property_id:
+            return JsonResponse({'success': False, 'error': 'معرف Property ID غير معرّف في الإعدادات.'}, status=400)
+
+        cache_key = f"ga4_sync_rate_limit_{property_id}"
+        if cache.get(cache_key):
+            return JsonResponse({
+                'success': False, 
+                'error': 'عذراً، يمكنك المزامنة مرة واحدة فقط كل 15 دقيقة لحماية كوتا جوجل.'
+            }, status=429)
+
+        try:
+            # Trigger management command synchronously
+            call_command('sync_ga4_data')
+            # Set rate limit cache lock for 15 minutes (900 seconds)
+            cache.set(cache_key, True, 900)
+            return JsonResponse({'success': True, 'message': 'تمت مزامنة البيانات من Google Analytics بنجاح!'})
+        except Exception as exc:
+            return JsonResponse({'success': False, 'error': f"فشلت المزامنة: {str(exc)}"}, status=500)
 
 
 class SearchConsoleView(SEOAdminRequiredMixin, View):
@@ -392,24 +489,198 @@ class SearchConsoleView(SEOAdminRequiredMixin, View):
             'gsc_connected': connected,
             'selected_days': days,
             'summary': {},
-            'top_pages': [],
+            'bracketted_pages': {},
             'top_queries': [],
-            'quick_wins': [],
-            'clicks_trend': [],
+            'gsc_data_stale': False,
         }
 
         if connected:
             try:
-                context['summary'] = gsc.get_summary(days)
-                context['top_pages'] = gsc.get_top_pages(days, limit=10)
-                context['top_queries'] = gsc.get_top_queries(days, limit=10)
-                context['quick_wins'] = gsc.get_quick_wins(days)
-                context['clicks_trend'] = gsc.get_clicks_trend(days)
+                summary_data = gsc.get_summary(days)
+                bracketted_data = gsc.get_bracketted_pages(days)
+                top_queries_data = gsc.get_top_queries(days, limit=10)
+
+                # Fetch 404 logs from database and group by path variations (trailing slash)
+                from apps.seo.models import Page404Log
+                from collections import defaultdict
+                
+                grouped_logs = defaultdict(lambda: {
+                    "hits": 0,
+                    "last_hit": None,
+                    "referrers": {},
+                    "user_agents": {},
+                    "paths": set()
+                })
+                
+                for log in Page404Log.objects.filter(is_ignored=False):
+                    path_key = log.path.rstrip('/')
+                    if not path_key:
+                        path_key = '/'
+                    
+                    data = grouped_logs[path_key]
+                    data["hits"] += log.hits
+                    if not data["last_hit"] or log.last_hit > data["last_hit"]:
+                        data["last_hit"] = log.last_hit
+                        
+                    for ref, count in (log.referrers or {}).items():
+                        data["referrers"][ref] = data["referrers"].get(ref, 0) + count
+                    for ua, count in (log.user_agents or {}).items():
+                        data["user_agents"][ua] = data["user_agents"].get(ua, 0) + count
+                    
+                    data["paths"].add(log.path)
+                
+                # Sort groups by hits descending, then by last_hit descending
+                sorted_groups = sorted(
+                    grouped_logs.items(),
+                    key=lambda x: (x[1]["hits"], x[1]["last_hit"]),
+                    reverse=True
+                )
+                
+                broken_pages = []
+                for path_key, data in sorted_groups[:15]:
+                    # Display the variation with the trailing slash if it exists
+                    display_path = sorted(list(data["paths"]), key=len, reverse=True)[0]
+                    
+                    sorted_refs = sorted(data["referrers"].items(), key=lambda x: x[1], reverse=True)
+                    top_refs = [ref for ref, count in sorted_refs[:3]]
+                    top_refs_str = ", ".join(top_refs) if top_refs else "direct"
+                    
+                    broken_pages.append({
+                        "url": display_path,
+                        "path": display_path,
+                        "title": display_path,
+                        "type": "broken",
+                        "type_label": "خطأ 404",
+                        "clicks": data["hits"],
+                        "impressions": top_refs_str,
+                        "ctr": data["last_hit"].strftime("%Y-%m-%d") if data["last_hit"] else "",
+                        "position": data["hits"],
+                        "sau_position": None,
+                        "egy_position": None,
+                        "top_query": None,
+                    })
+                bracketted_data["broken"] = broken_pages
+
+                context['summary'] = summary_data
+                context['bracketted_pages'] = bracketted_data
+                context['top_queries'] = top_queries_data.get('queries', [])
+
+                if (summary_data.get('is_stale') or 
+                        bracketted_data.get('is_stale') or 
+                        top_queries_data.get('is_stale')):
+                    context['gsc_data_stale'] = True
             except Exception as exc:
                 logger.warning("SearchConsoleView: %s", exc)
                 context['gsc_error'] = str(exc)
 
         return render(request, self.template_name, context)
+
+
+class SearchConsoleCannibalizationApi(SEOAdminRequiredMixin, View):
+    """
+    AJAX API endpoint for loading keyword cannibalization details asynchronously.
+    """
+    def get(self, request):
+        from apps.seo.services.gsc_client import GSCClient
+        days = int(request.GET.get('days', 28))
+        if days not in (7, 14, 28, 90):
+            days = 28
+
+        gsc = GSCClient()
+        if not gsc.is_connected():
+            return JsonResponse({'error': 'GSC not connected'}, status=400)
+
+        try:
+            data = gsc.get_cannibalized_keywords(days)
+            return JsonResponse(data)
+        except Exception as exc:
+            logger.warning("SearchConsoleCannibalizationApi error: %s", exc)
+            return JsonResponse({'error': str(exc), 'keywords': [], 'is_stale': True}, status=200)
+
+
+class SearchConsoleRedirectCreateApi(SEOAdminRequiredMixin, View):
+    """
+    AJAX API endpoint for creating redirects and removing corresponding 404 logs.
+    """
+    def post(self, request):
+        import json
+        from apps.redirects.models import Redirect
+        from apps.seo.models import Page404Log
+
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            return JsonResponse({'success': False, 'error': 'بيانات غير صالحة.'}, status=400)
+
+        old_url = data.get('old_url', '').strip()
+        new_url = data.get('new_url', '').strip()
+
+        if not old_url or not new_url:
+            return JsonResponse({'success': False, 'error': 'الرابط القديم والجديد مطلوبان.'}, status=400)
+
+        old_url_norm = Redirect.normalize_path(old_url)
+        if new_url.startswith(('http://', 'https://')):
+            new_url_norm = new_url.strip()
+        else:
+            new_url_norm = Redirect.normalize_path(new_url)
+
+        if old_url_norm == new_url_norm:
+            return JsonResponse({'success': False, 'error': 'الرابط القديم والجديد يجب أن يكونا مختلفين.'}, status=400)
+
+        try:
+            redirect_obj, created = Redirect.objects.update_or_create(
+                old_url=old_url_norm,
+                defaults={
+                    'new_url': new_url_norm,
+                    'is_active': True,
+                    'notes': 'تم الإنشاء تلقائياً من لوحة تحكم Search Console لحل خطأ 404.'
+                }
+            )
+
+            # Clean up the 404 log for this URL (all variations of slash/no-slash)
+            variations = [old_url_norm, old_url_norm.rstrip('/'), old_url_norm.rstrip('/') + '/']
+            Page404Log.objects.filter(path__in=variations).delete()
+
+            return JsonResponse({'success': True})
+        except Exception as exc:
+            logger.warning("SearchConsoleRedirectCreateApi: %s", exc)
+            return JsonResponse({'success': False, 'error': str(exc)}, status=500)
+
+
+class SearchConsole404IgnoreApi(SEOAdminRequiredMixin, View):
+    """
+    AJAX API endpoint for marking 404 page logs as ignored.
+    """
+    def post(self, request):
+        import json
+        from apps.seo.models import Page404Log
+        from apps.redirects.models import Redirect
+
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            return JsonResponse({'success': False, 'error': 'بيانات غير صالحة.'}, status=400)
+
+        path = data.get('path', '').strip()
+        if not path:
+            return JsonResponse({'success': False, 'error': 'المسار مطلوب.'}, status=400)
+
+        try:
+            # Normalize path and handle slash variations
+            normalized_path = Redirect.normalize_path(path)
+            variations = [normalized_path, normalized_path.rstrip('/'), normalized_path.rstrip('/') + '/']
+            
+            # Mark all variations as ignored
+            for var in variations:
+                Page404Log.objects.update_or_create(
+                    path=var,
+                    defaults={'is_ignored': True}
+                )
+            
+            return JsonResponse({'success': True})
+        except Exception as exc:
+            logger.warning("SearchConsole404IgnoreApi: %s", exc)
+            return JsonResponse({'success': False, 'error': str(exc)}, status=500)
 
 
 class UserListView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
@@ -641,6 +912,15 @@ class UserDeleteView(SuperAdminRequiredMixin, DeleteView):
     def get(self, request, *args, **kwargs):
         """Return JSON for AJAX delete modal, redirect to list page otherwise."""
         self.object = self.get_object()
+        if self.object == request.user:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('json') == '1':
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'لا يمكنك حذف حسابك الشخصي الذي تستخدمه حالياً.'
+                }, status=400)
+            messages.error(request, 'لا يمكنك حذف حسابك الشخصي الذي تستخدمه حالياً.')
+            return redirect(self.success_url)
+
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('json') == '1':
             return JsonResponse({
                 'status': 'success',
@@ -655,6 +935,15 @@ class UserDeleteView(SuperAdminRequiredMixin, DeleteView):
     def post(self, request, *args, **kwargs):
         """Handle deletion with success message or AJAX response."""
         self.object = self.get_object()
+        if self.object == request.user:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('json') == '1':
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'لا يمكنك حذف حسابك الشخصي الذي تستخدمه حالياً.'
+                }, status=400)
+            messages.error(request, 'لا يمكنك حذف حسابك الشخصي الذي تستخدمه حالياً.')
+            return redirect(self.success_url)
+
         username = self.object.username
         self.object.delete()
         success_message = f'تم حذف المستخدم {username} بنجاح'
@@ -670,7 +959,7 @@ class UserDeleteView(SuperAdminRequiredMixin, DeleteView):
         return redirect(self.success_url)
 
 
-class RedirectListView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
+class RedirectListView(ContentOrSEOAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
     """
     List all redirects with search and filtering.
     عرض قائمة بجميع إعادات التوجيه مع البحث والتصفية
@@ -698,12 +987,16 @@ class RedirectListView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
         """Get redirects with optional search and filtering."""
         queryset = Redirect.objects.all().order_by('-created_at')
         
-        # Search by old_url or new_url
+        # Search by old_url or new_url (support both quoted and unquoted versions of Arabic strings)
         search_query = self.request.GET.get('search', '').strip()
         if search_query:
+            import urllib.parse
+            quoted_query = urllib.parse.quote(search_query)
             queryset = queryset.filter(
                 Q(old_url__icontains=search_query) |
-                Q(new_url__icontains=search_query)
+                Q(new_url__icontains=search_query) |
+                Q(old_url__icontains=quoted_query) |
+                Q(new_url__icontains=quoted_query)
             )
         
         # Filter by is_active status
@@ -721,12 +1014,47 @@ class RedirectListView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, ListView
         context['page_title'] = 'إدارة إعادات التوجيه'
         context['search_query'] = self.request.GET.get('search', '')
         context['status_filter'] = self.request.GET.get('status', '')
+        
+        # Define table columns for list_page.html template using decoded URLs
+        context['columns'] = [
+            {
+                'label': 'الرابط القديم (المكسور)',
+                'key': 'old_url_decoded',
+                'type': 'text',
+                'direction': 'ltr',
+            },
+            {
+                'label': 'الرابط الجديد (التحويل)',
+                'key': 'new_url_decoded',
+                'type': 'text',
+                'direction': 'ltr',
+            },
+            {
+                'label': 'الحالة',
+                'key': 'is_active_label',
+                'type': 'badge',
+                'badge_status_key': 'is_active_label',
+            },
+            {
+                'label': 'عدد الزيارات',
+                'key': 'hit_count',
+                'type': 'text',
+            },
+            {
+                'label': 'تاريخ الإنشاء',
+                'key': 'created_at',
+                'type': 'date',
+            }
+        ]
+        context['edit_url_name'] = 'dashboard:redirect_edit'
+        context['delete_url_name'] = 'dashboard:redirect_delete'
+        
         # Add items for list_page.html template
         context['items'] = context.get('redirects', context.get('object_list', []))
         return context
 
 
-class RedirectCreateView(SEOAdminRequiredMixin, CreateView):
+class RedirectCreateView(ContentOrSEOAdminRequiredMixin, CreateView):
     """
     Create a new redirect.
     إنشاء إعادة توجيه جديدة
@@ -765,7 +1093,7 @@ class RedirectCreateView(SEOAdminRequiredMixin, CreateView):
         return context
 
 
-class RedirectUpdateView(SEOAdminRequiredMixin, UpdateView):
+class RedirectUpdateView(ContentOrSEOAdminRequiredMixin, UpdateView):
     """
     Update an existing redirect.
     تحديث إعادة توجيه موجودة
@@ -803,7 +1131,7 @@ class RedirectUpdateView(SEOAdminRequiredMixin, UpdateView):
         return context
 
 
-class RedirectDeleteView(SEOAdminRequiredMixin, DeleteView):
+class RedirectDeleteView(ContentOrSEOAdminRequiredMixin, DeleteView):
     """
     Delete a redirect with confirmation.
     حذف إعادة توجيه مع تأكيد
@@ -1416,38 +1744,11 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
                     attachment_formset.instance = self.object
                     attachment_formset.save()
                     
-                    # إنشاء redirect لو الـ slug اتغير
-                    new_slug = form.cleaned_data.get('slug')
-                    if old_slug != new_slug and self.object.is_published:
-                        create_redirect = self.request.POST.get('create_redirect') == 'on'
-                        if create_redirect:
-                            old_url = f'/universities/{old_slug}/'
-                            new_url = f'/universities/{new_slug}/'
-                            Redirect.objects.update_or_create(
-                                old_url=old_url,
-                                defaults={
-                                    'new_url': new_url,
-                                    'is_active': True,
-                                    'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط الجامعة: {self.object.name}'
-                                }
-                            )
-                            if not self._is_ajax():
-                                messages.success(
-                                    self.request,
-                                    f'تم تحديث الجامعة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
-                                )
-                        else:
-                            if not self._is_ajax():
-                                messages.warning(
-                                    self.request,
-                                    f'تم تحديث الجامعة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                                )
-                    else:
-                        if not self._is_ajax():
-                            messages.success(
-                                self.request,
-                                f'تم تحديث الجامعة "{self.object.name}" بنجاح'
-                            )
+                    if not self._is_ajax():
+                        messages.success(
+                            self.request,
+                            f'تم تحديث الجامعة "{self.object.name}" بنجاح'
+                        )
                 
                 if self._is_ajax():
                     return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
@@ -2179,38 +2480,11 @@ class InstituteUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, L
                     faq_formset.instance = self.object
                     faq_formset.save()
                     
-                    # إنشاء redirect لو الـ slug اتغير
-                    new_slug = form.cleaned_data.get('slug')
-                    if old_slug != new_slug and self.object.is_published:
-                        create_redirect = self.request.POST.get('create_redirect') == 'on'
-                        if create_redirect:
-                            old_url = f'/institutes/{old_slug}/'
-                            new_url = f'/institutes/{new_slug}/'
-                            Redirect.objects.update_or_create(
-                                old_url=old_url,
-                                defaults={
-                                    'new_url': new_url,
-                                    'is_active': True,
-                                    'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط المعهد: {self.object.name}'
-                                }
-                            )
-                            if not self._is_ajax():
-                                messages.success(
-                                    self.request,
-                                    f'تم تحديث المعهد وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
-                                )
-                        else:
-                            if not self._is_ajax():
-                                messages.warning(
-                                    self.request,
-                                    f'تم تحديث المعهد، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                                )
-                    else:
-                        if not self._is_ajax():
-                            messages.success(
-                                self.request,
-                                f'تم تحديث المعهد "{self.object.name}" بنجاح'
-                            )
+                    if not self._is_ajax():
+                        messages.success(
+                            self.request,
+                            f'تم تحديث المعهد "{self.object.name}" بنجاح'
+                        )
                 
                 if self._is_ajax():
                     return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
@@ -2635,38 +2909,11 @@ class MajorUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, LockV
                     attachments_formset.instance = self.object
                     attachments_formset.save()
                     
-                    # إنشاء redirect لو الـ slug اتغير
-                    new_slug = form.cleaned_data.get('slug')
-                    if old_slug != new_slug and self.object.is_published:
-                        create_redirect = self.request.POST.get('create_redirect') == 'on'
-                        if create_redirect:
-                            old_url = f'/majors/{old_slug}/'
-                            new_url = f'/majors/{new_slug}/'
-                            Redirect.objects.update_or_create(
-                                old_url=old_url,
-                                defaults={
-                                    'new_url': new_url,
-                                    'is_active': True,
-                                    'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط التخصص: {self.object.name}'
-                                }
-                            )
-                            if not self._is_ajax():
-                                messages.success(
-                                    self.request,
-                                    f'تم تحديث التخصص وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
-                                )
-                        else:
-                            if not self._is_ajax():
-                                messages.warning(
-                                    self.request,
-                                    f'تم تحديث التخصص، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                                )
-                    else:
-                        if not self._is_ajax():
-                            messages.success(
-                                self.request,
-                                f'تم تحديث التخصص "{self.object.name}" بنجاح'
-                            )
+                    if not self._is_ajax():
+                        messages.success(
+                            self.request,
+                            f'تم تحديث التخصص "{self.object.name}" بنجاح'
+                        )
                 
                 if self._is_ajax():
                     return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
@@ -3689,38 +3936,11 @@ class ArticleUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Loc
                     attachment_formset.instance = self.object
                     attachment_formset.save()
                     
-                    # إنشاء redirect لو الـ slug اتغير
-                    new_slug = form.cleaned_data.get('slug')
-                    if old_slug != new_slug and self.object.is_published:
-                        create_redirect = self.request.POST.get('create_redirect') == 'on'
-                        if create_redirect:
-                            old_url = f'/articles/{old_slug}/'
-                            new_url = f'/articles/{new_slug}/'
-                            Redirect.objects.update_or_create(
-                                old_url=old_url,
-                                defaults={
-                                    'new_url': new_url,
-                                    'is_active': True,
-                                    'notes': f'تم إنشاؤه تلقائياً عند تغيير رابط المقالة: {self.object.title}'
-                                }
-                            )
-                            if not self._is_ajax():
-                                messages.success(
-                                    self.request,
-                                    f'تم تحديث المقالة وإنشاء إعادة توجيه من {old_url} إلى {new_url} بنجاح'
-                                )
-                        else:
-                            if not self._is_ajax():
-                                messages.warning(
-                                    self.request,
-                                    f'تم تحديث المقالة، لكن لم يتم إنشاء إعادة توجيه للرابط القديم'
-                                )
-                    else:
-                        if not self._is_ajax():
-                            messages.success(
-                                self.request,
-                                f'تم تحديث المقالة "{self.object.title}" بنجاح'
-                            )
+                    if not self._is_ajax():
+                        messages.success(
+                            self.request,
+                            f'تم تحديث المقالة "{self.object.title}" بنجاح'
+                        )
                 
                 if self._is_ajax():
                     return JsonResponse({"status": "success", "message": "تم حفظ المسودة بنجاح."})
@@ -4692,7 +4912,7 @@ class SMTPTestView(SuperAdminRequiredMixin, View):
                 password=password,
                 use_tls=use_tls,
                 use_ssl=use_ssl,
-                timeout=30,
+                timeout=5,  # Short timeout to avoid blocking WSGI workers
             )
             
             # Open connection
@@ -4851,10 +5071,11 @@ class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
             # Settings stats
             'ga4_configured': bool(settings.ga4_measurement_id),
             'ga4_measurement_id': settings.ga4_measurement_id or '',
-            'gsc_configured': bool(settings.google_site_verification),
             'gsc_api_connected': gsc_api_connected,
             'ga4_enabled': settings.enable_ga4,
             'sitemap_last_generated': settings.sitemap_last_generated,
+            'sitemap_last_submitted': settings.sitemap_last_submitted,
+            'sitemap_gsc_status': settings.sitemap_gsc_status,
 
             # Content stats
             'total_universities': University.objects.filter(publish_status='published').count(),
@@ -4915,6 +5136,8 @@ class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
                 action = form.cleaned_data['action']
                 if action == 'regenerate_sitemap':
                     result = self._regenerate_sitemap()
+                elif action == 'submit_sitemap_to_google':
+                    result = self._submit_sitemap_to_google()
                 elif action == 'clear_seo_cache':
                     result = self._clear_seo_cache()
                 elif action == 'test_ga4':
@@ -4934,18 +5157,28 @@ class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
         return redirect('dashboard:seo_management')
 
     def _regenerate_sitemap(self):
-        """Regenerate sitemap.xml and update last generated timestamp."""
+        """Regenerate sitemap.xml, update timestamp, and selectively warm cache."""
         try:
             settings = SiteSettings.get_settings()
             settings.sitemap_last_generated = timezone.now()
             settings.save(update_fields=['sitemap_last_generated'])
             
-            # Clear sitemap cache to force regeneration
+            # Clear sitemap cache
             self._clear_seo_cache()
             
+            # Warm up cache selectively: warm only page 1 for each sitemap
+            # to keep the dashboard response time instantaneous.
+            from apps.seo.sitemaps import sitemaps
+            for name, sitemap_class in sitemaps.items():
+                try:
+                    sitemap_instance = sitemap_class()
+                    sitemap_instance.get_urls(page=1)
+                except Exception as exc:
+                    logger.warning("SEO: Failed to warm cache for %s: %s", name, exc)
+                    
             return {
                 'success': True,
-                'message': 'تم تحديث خريطة الموقع بنجاح. يمكن الوصول إليها من: /sitemap.xml'
+                'message': 'تم تحديث خريطة الموقع وتجهيز الكاش بنجاح. يمكن الوصول إليها من: /sitemap.xml'
             }
         except Exception as e:
             return {
@@ -4954,17 +5187,10 @@ class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
             }
 
     def _clear_seo_cache(self):
-        """Clear SEO-related cache."""
+        """Clear SEO-related cache using the centralized helper."""
         try:
-            from django.core.cache import cache
-            cache_keys = []
-            sitemap_classes = ['universitysitemap', 'institutesitemap', 'majorsitemap', 'articlesitemap', 'staticsitemap']
-            for cls in sitemap_classes:
-                for page in range(1, 11):
-                    cache_keys.append(f"sitemap_{cls}_page_{page}")
-            
-            for key in cache_keys:
-                cache.delete(key)
+            from apps.seo.sitemaps import clear_sitemap_cache
+            clear_sitemap_cache()
             return {
                 'success': True,
                 'message': 'تم مسح ذاكرة التخزين المؤقت لـ SEO بنجاح'
@@ -4973,6 +5199,77 @@ class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
             return {
                 'success': False,
                 'message': f'فشل مسح ذاكرة التخزين المؤقت: {str(e)}'
+            }
+
+    def _submit_sitemap_to_google(self):
+        """Submit sitemap to Google Search Console via API with rate-limiting and error safety."""
+        from django.core.cache import cache
+        from apps.seo.services.gsc_client import GSCClient, GSCAPIError
+        
+        # 1. Rate Limit Check (15 minutes)
+        lock_key = 'sitemap_gsc_submit_lock'
+        if cache.get(lock_key):
+            return {
+                'success': False,
+                'message': 'تم إرسال خريطة الموقع مؤخراً. يرجى الانتظار 15 دقيقة قبل المحاولة مرة أخرى لتجنب تجاوز كوتا جوجل.'
+            }
+            
+        try:
+            gsc = GSCClient()
+            if not gsc.is_connected():
+                settings = SiteSettings.get_settings()
+                settings.sitemap_gsc_status = 'حساب الخدمة غير متصل. يرجى التحقق من ملف الاعتمادات.'
+                settings.save(update_fields=['sitemap_gsc_status'])
+                return {
+                    'success': False,
+                    'message': 'حساب خدمة Google Search Console غير متصل. يرجى التحقق من الإعدادات وملف الاعتمادات.'
+                }
+                
+            # Submit Sitemap
+            gsc.submit_sitemap()
+            
+            # Update settings on success
+            settings = SiteSettings.get_settings()
+            settings.sitemap_last_submitted = timezone.now()
+            settings.sitemap_gsc_status = 'تم الإرسال بنجاح لمحرك البحث'
+            settings.save(update_fields=['sitemap_last_submitted', 'sitemap_gsc_status'])
+            
+            # Set rate limit lock for 15 minutes (900 seconds)
+            cache.set(lock_key, True, 900)
+            
+            return {
+                'success': True,
+                'message': 'تم إرسال خريطة الموقع (sitemap.xml) بنجاح إلى Google Search Console!'
+            }
+        except GSCAPIError as exc:
+            err_msg = str(exc)
+            # Parse common permission/scope errors
+            if "403" in err_msg or "permission" in err_msg.lower():
+                friendly_status = 'خطأ 403: صلاحيات غير كافية لحساب الخدمة في Google Search Console.'
+                friendly_msg = 'فشل الإرسال: حساب خدمة جوجل لا يمتلك صلاحية كتابة (Owner/Full access) على هذه الخاصية في Search Console.'
+            elif "404" in err_msg:
+                friendly_status = 'خطأ 404: لم يتم العثور على موقع الخاصية في Google Search Console.'
+                friendly_msg = 'فشل الإرسال: الخاصية غير مسجلة أو غير متطابقة في حساب Search Console.'
+            else:
+                friendly_status = f'فشل الإرسال: {err_msg[:150]}'
+                friendly_msg = f'فشل إرسال خريطة الموقع لمحرك بحث جوجل: {err_msg}'
+                
+            settings = SiteSettings.get_settings()
+            settings.sitemap_gsc_status = friendly_status
+            settings.save(update_fields=['sitemap_gsc_status'])
+            
+            return {
+                'success': False,
+                'message': friendly_msg
+            }
+        except Exception as e:
+            err_msg = str(e)
+            settings = SiteSettings.get_settings()
+            settings.sitemap_gsc_status = f'خطأ غير متوقع: {err_msg[:150]}'
+            settings.save(update_fields=['sitemap_gsc_status'])
+            return {
+                'success': False,
+                'message': f'حدث خطأ غير متوقع أثناء إرسال خريطة الموقع لجوجل: {err_msg}'
             }
 
     def _test_ga4_connection(self):

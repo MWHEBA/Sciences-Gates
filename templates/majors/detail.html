@@ -10,7 +10,7 @@
 {% block og_title %}{{ major.og_title|default:major.name }}{% endblock %}
 {% block og_description %}{{ major.og_description|default:major.description|clean_desc|truncatewords:30 }}{% endblock %}
 
-{% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
+{% block canonical %}<link rel="canonical" href="{% if major.canonical_url %}{{ major.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endif %}">{% endblock %}
 
 {% block schema_markup %}
 {{ block.super }}

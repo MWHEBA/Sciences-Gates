@@ -66,6 +66,8 @@ class ContentAdminRequiredMixin(DashboardMixin):
         user_profile = request.user.profile
         if not (user_profile.is_content_admin or user_profile.is_super_admin):
             messages.error(request, 'ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول.')
+            if request.method == 'GET':
+                return redirect('dashboard:login')
             return HttpResponseForbidden('غير مصرح بالوصول إلى هذا المورد')
 
         return super().dispatch(request, *args, **kwargs)
@@ -89,6 +91,33 @@ class SEOAdminRequiredMixin(DashboardMixin):
         user_profile = request.user.profile
         if not (user_profile.is_seo_admin or user_profile.is_super_admin):
             messages.error(request, 'ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول.')
+            if request.method == 'GET':
+                return redirect('dashboard:login')
+            return HttpResponseForbidden('غير مصرح بالوصول إلى هذا المورد')
+
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ContentOrSEOAdminRequiredMixin(DashboardMixin):
+    """
+    Mixin requiring user to be Content Admin, SEO Admin, or Super Admin.
+    يتطلب من المستخدم أن يكون مسؤول محتوى، مسؤول SEO، أو مسؤول نظام
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        """Check if user has content admin, SEO admin, or super admin role."""
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
+        if not hasattr(request.user, 'profile'):
+            messages.error(request, 'لم يتم العثور على ملف المستخدم. يرجى التواصل مع المسؤول.')
+            return redirect('dashboard:login')
+
+        user_profile = request.user.profile
+        if not (user_profile.is_content_admin or user_profile.is_seo_admin or user_profile.is_super_admin):
+            messages.error(request, 'ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول.')
+            if request.method == 'GET':
+                return redirect('dashboard:login')
             return HttpResponseForbidden('غير مصرح بالوصول إلى هذا المورد')
 
         return super().dispatch(request, *args, **kwargs)
@@ -112,6 +141,8 @@ class SuperAdminRequiredMixin(DashboardMixin):
         user_profile = request.user.profile
         if not user_profile.is_super_admin:
             messages.error(request, 'ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول.')
+            if request.method == 'GET':
+                return redirect('dashboard:login')
             return HttpResponseForbidden('غير مصرح بالوصول إلى هذا المورد')
 
         return super().dispatch(request, *args, **kwargs)

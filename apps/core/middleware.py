@@ -161,12 +161,5 @@ class MaintenanceModeMiddleware:
             return HttpResponse("الموقع قيد الصيانة حالياً. سنعود قريباً.", status=503, content_type='text/plain; charset=utf-8')
 
     def get_client_ip(self, request):
-        # Support Cloudflare connecting IP header first
-        cf_ip = request.META.get('HTTP_CF_CONNECTING_IP')
-        if cf_ip:
-            return cf_ip.strip()
-            
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            return x_forwarded_for.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR')
+        from apps.core.utils import get_client_ip as utils_get_client_ip
+        return utils_get_client_ip(request)

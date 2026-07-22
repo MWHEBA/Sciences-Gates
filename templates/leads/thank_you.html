@@ -64,4 +64,34 @@
 <!-- CTA Band -->
 {% include 'partials/cta-band.html' %}
 
+{% block extra_js %}
+<script>
+    // Send conversion event to GA4
+    if (typeof gtag === 'function') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const leadType = urlParams.get('lead_type');
+        const subtype = urlParams.get('subtype');
+        
+        if (leadType === 'registration') {
+            if (subtype === 'institute') {
+                gtag('event', 'institute_apply_success', {
+                    'event_category': 'Engagement',
+                    'event_label': 'Institute Application'
+                });
+            } else {
+                gtag('event', 'university_apply_success', {
+                    'event_category': 'Engagement',
+                    'event_label': 'University Application'
+                });
+            }
+        } else if (leadType === 'contact') {
+            gtag('event', 'contact_form_success', {
+                'event_category': 'Engagement',
+                'event_label': 'Contact Form Submission'
+            });
+        }
+    }
+</script>
+{% endblock %}
+
 {% endblock %}

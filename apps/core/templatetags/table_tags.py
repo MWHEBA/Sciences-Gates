@@ -99,6 +99,8 @@ def get_status_variant(status_value):
         'read': 'gray',
         'unread': 'yellow',
         'urgent': 'red',
+        'نشط': 'green',
+        'غير نشط': 'gray',
     }
     
     return status_mapping.get(str(status_value).lower(), 'gray')

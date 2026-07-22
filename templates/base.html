@@ -20,11 +20,7 @@
     <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
     <meta name="googlebot" content="{% block googlebot %}index, follow{% endblock %}">
     
-    <!-- Google Search Console Verification -->
-    {% if GOOGLE_SITE_VERIFICATION %}
-    <meta name="google-site-verification" content="{{ GOOGLE_SITE_VERIFICATION }}">
-    {% endif %}
-    
+
     <!-- Open Graph Tags for Social Media Sharing -->
     <meta property="og:title" content="{% block og_title %}Science Gates - Study in Malaysia{% endblock %}">
     <meta property="og:description" content="{% block og_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
@@ -57,6 +53,9 @@
     <!-- Consolidated Public CSS Bundle -->
     <link rel="preload" href="{% static 'css/public-bundle.min.css' %}" as="style">
     <link rel="stylesheet" href="{% static 'css/public-bundle.min.css' %}">
+    
+    <!-- Preload Global Logo (LCP Element) -->
+    <link rel="preload" href="{% static 'images/logo.webp' %}" as="image" type="image/webp" fetchpriority="high">
     
     <!-- JSON-LD Schema Markup -->
     {% block schema_markup %}
@@ -168,5 +167,32 @@
         </a>
     </div>
     {% endif %}
+    <script>
+        (function() {
+            function initWhatsAppTracker() {
+                // Listen in the capturing phase (true) to bypass stopPropagation()
+                document.addEventListener('click', function(e) {
+                    const anchor = e.target.closest('a');
+                    if (anchor && anchor.href && (anchor.href.includes('wa.me') || anchor.href.includes('whatsapp.com'))) {
+                        if (typeof gtag === 'function') {
+                            gtag('event', 'whatsapp_click', {
+                                'click_url': anchor.href,
+                                'page_path': window.location.pathname,
+                                'transport_type': 'beacon'
+                            });
+                        } else {
+                            console.warn("[GA4 Tracking] gtag function not found.");
+                        }
+                    }
+                }, true);
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initWhatsAppTracker);
+            } else {
+                initWhatsAppTracker();
+            }
+        })();
+    </script>
 </body>
 </html>

@@ -18,6 +18,7 @@
 8. [Advanced Optimization & KPIs](#-advanced-optimization--kpis)
 9. [Decision-Making Framework](#-decision-making-framework)
 10. [Reference Code Snippets](#-reference-code-snippets)
+11. [GSC Page Indexing Analysis (July 2026)](#-gsc-page-indexing-analysis-july-2026)
 
 ---
 
@@ -335,3 +336,90 @@ Append this layout section to the bottom of your university search grid in [list
     </div>
 </section>
 ```
+
+---
+
+## 📈 GSC Page Indexing Analysis (July 2026)
+
+This section provides a detailed analysis of Google Search Console (GSC) page indexing based on data collected up to **July 10, 2026**.
+
+### 📊 Overall Indexing Status (Summary)
+
+* **Total Crawled/Known URLs**: 1,150
+* **Indexed Pages**: 221 (19.2% of total URLs)
+* **Not Indexed Pages**: 929 (80.8% of total URLs)
+
+> [!NOTE]  
+> The 221 indexed pages align perfectly with our core active database content (~201 detail pages including 36 universities, 19 institutes, 65 majors, 81 articles, plus static landing pages and hubs). This indicates a **near 100% indexing rate for our active and valid user-facing pages**.
+
+---
+
+### 📉 Historical Indexing Trend & Observations
+
+* **Overall Decrease in Excluded URLs**: The number of "Not Indexed" URLs has dropped from **1,919** in late April to **929** in July, indicating that Google is cleaning up outdated or invalid URLs.
+* **The Mid-May Dip (May 16–29)**:
+  * Indexed pages dropped significantly to a low of **31 pages** (impressions fell from ~3,200/day to 575/day).
+  * This indicates a site-wide block or server issue (e.g., misconfigured `robots.txt` disallowing all crawlers, a site-wide `noindex` tag deployment, or extended server downtime).
+  * The site recovered back to **225 indexed pages** on **May 30**, restoring traffic. We must prevent similar drops during future deployments.
+
+---
+
+### 🔍 Breakdown of "Why pages aren't indexed"
+
+Below is the analysis of the 11 critical and 1 non-critical indexing issues reported in Search Console.
+
+#### 1. Crawled - currently not indexed (588 pages)
+* **Status**: Failed Validation | **Source**: Google systems | **Impact**: High (63.3% of non-indexed URLs)
+* **Analysis**: Google crawled these URLs but chose not to index them. Since we only have ~210 valid pages, the remaining ~380 URLs are likely dynamic pages with query parameters (e.g., searches `/search/?q=...` or filters `/universities/?city=...`), pagination, or duplicate URL structures without clean canonical targets.
+* **Action**: Ensure all templates implement self-referencing `<link rel="canonical">` tags.
+
+#### 2. Blocked due to access forbidden (403) (136 pages)
+* **Status**: Not Started | **Source**: Website | **Impact**: Medium (14.6% of non-indexed URLs)
+* **Analysis**: Googlebot was rejected with a 403 HTTP code. This is usually caused by firewall settings (ModSecurity, Cloudflare, or Fail2ban) blocking crawlers from private pages, dashboard URLs (like `/sg/*`), or staging links.
+* **Action**: Audit server logs to ensure Googlebot is not blocked on public pages. Ensure private routes (e.g., `/sg/*` and `/mw-admin/*`) redirect with a `302 Found` (or require authentication) rather than returning a raw 403, or let robots.txt block them.
+
+#### 3. Page with redirect (92 pages)
+* **Status**: Failed Validation | **Source**: Website | **Impact**: Low (9.9%)
+* **Analysis**: Google crawled old URLs (such as legacy short slugs like `/<slug>/`) which are permanently redirected (301) to their new structures (like `/universities/<slug>/`) via `LegacyUrlDetailView`. This is correct and healthy behavior.
+* **Action**: Ensure all internal links on the website point directly to the new target URLs rather than redirecting, saving Google's crawl budget.
+
+#### 4. Blocked by robots.txt (38 pages)
+* **Status**: Failed Validation | **Source**: Website | **Impact**: Low (4.1%)
+* **Analysis**: Googlebot complied with directives in [robots.txt](file:///c:/Users/MohYousif/Desktop/Sciences%20Gates/static/robots.txt) blocking specific patterns like `/sg/`, `/mw-admin/`, `/api/`, or `*.json`. This is correct; these pages should remain private.
+* **Action**: No action required.
+
+#### 5. Not found (404) (34 pages)
+* **Status**: Failed Validation | **Source**: Website | **Impact**: Low (3.7%)
+* **Analysis**: Google crawled links that no longer exist on the server (e.g., deleted legacy universities or old articles).
+* **Action**: Set up 301 redirects for any of these URLs that have active backlinks or high traffic. Remove internal links pointing to them.
+
+#### 6. Alternate page with proper canonical tag (17 pages)
+* **Status**: Failed Validation | **Source**: Website | **Impact**: Low (1.8%)
+* **Analysis**: Google found duplicate pages but correctly respected the canonical tag pointing to the master URL. This is the desired behavior.
+* **Action**: No action required.
+
+#### 7. Excluded by 'noindex' tag (15 pages)
+* **Status**: Failed Validation | **Source**: Website | **Impact**: Low (1.6%)
+* **Analysis**: Pages containing `<meta name="robots" content="noindex">` (e.g., search results or draft pages).
+* **Action**: Verify that no production landing pages accidentally contain the `noindex` tag.
+
+#### 8. Duplicate without user-selected canonical (4 pages)
+* **Status**: Started Validation | **Source**: Website | **Impact**: Minimal
+* **Analysis**: Duplicate pages where no canonical URL was specified. Google chose its own canonical version.
+* **Action**: Define canonical tags for these pages to prevent split search equity.
+
+#### 9. Discovered - currently not indexed (2 pages)
+* **Status**: Started Validation | **Source**: Google systems | **Impact**: Minimal
+* **Analysis**: Google knows these URLs exist but hasn't crawled them yet.
+* **Action**: Normal behavior. They will be crawled in due course.
+
+#### 10. Other Client & Authorization Blocks
+* **Issues**: *Blocked due to other 4xx issue* (2 pages), *Blocked due to unauthorized request (401)* (1 page).
+* **Action**: Verify these are login-required pages that should not be public.
+
+#### 11. Indexed, though blocked by robots.txt (1 page - Non-Critical)
+* **Status**: Not Started | **Source**: Website | **Impact**: Minimal
+* **Analysis**: A page blocked in `robots.txt` was indexed because Google found external links pointing to it. Since Google cannot crawl it, it cannot extract descriptive text.
+* **Action**: Remove the block from `robots.txt` temporarily, add a `noindex` tag to the page, wait for Google to de-index it, then re-apply the robots.txt rule.
+
+---

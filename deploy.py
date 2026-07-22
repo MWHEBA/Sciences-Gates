@@ -998,12 +998,7 @@ class DeploymentManager:
             remote_file = f"{self.remote_path}/{relative_path}".replace('\\', '/')
             
             # إنشاء المجلد البعيد إذا لزم الأمر
-            remote_dir = '/'.join(remote_file.split('/')[:-1])
-            if remote_dir and remote_dir != self.remote_path:
-                try:
-                    sftp.mkdir(remote_dir)
-                except:
-                    pass
+            self._create_remote_directories(sftp, remote_file)
             
             print(f"📤 رفع الملف...")
             sftp.put(str(file_path), remote_file)

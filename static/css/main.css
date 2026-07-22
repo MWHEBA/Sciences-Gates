@@ -1306,6 +1306,7 @@ only screen and (min-width: 768px) and (max-width: 991px),
     opacity: 0.8;
     user-select: none;
     margin-right: 15px;
+    margin-left: 15px;
     font-weight: 300;
 }
 
@@ -1466,14 +1467,15 @@ only screen and (min-width: 768px) and (max-width: 991px),
 }
 
 .it-header-2-main-menu ul li.has-dropdown::after {
-    content: "\f107";
-    font-family: "Font Awesome 6 Pro", "Font Awesome 6 Free";
+    content: "";
     display: inline-block;
-    font-size: 16px;
+    width: 7px;
+    height: 7px;
     margin-left: 5px;
-    font-weight: 400;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
     transition: 0.3s;
-    transform: translateY(1px);
+    transform: translateY(-2px) rotate(45deg);
     color: var(--it-common-black);
 }
 
@@ -1755,6 +1757,18 @@ only screen and (min-width: 768px) and (max-width: 991px),
     color: var(--it-theme-1);
 }
 
+@media (max-width: 991px) {
+    .itoffcanvas__logo img {
+        filter: brightness(0) invert(1);
+    }
+
+    .itoffcanvas__close-btn button {
+        right: auto;
+        left: 25px;
+        top: 25px;
+    }
+}
+
 .itoffcanvas__text {
     padding-bottom: 20px;
     margin-bottom: 20px;
@@ -1856,12 +1870,12 @@ only screen and (min-width: 768px) and (max-width: 991px),
     cursor: pointer;
 }
 
-.it-menu-mobile ul li.has-dropdown>a .dropdown-toggle-btn i {
+.it-menu-mobile ul li.has-dropdown>a .dropdown-toggle-btn svg {
     transition: transform 0.3s ease-in-out;
 }
 
-.it-menu-mobile ul li.has-dropdown>a .dropdown-toggle-btn.dropdown-opened i {
-    transform: rotate(90deg);
+.it-menu-mobile ul li.has-dropdown>a .dropdown-toggle-btn.dropdown-opened svg {
+    transform: rotate(180deg);
 }
 
 .it-menu-mobile ul li.has-dropdown>a .dropdown-toggle-btn:hover {
@@ -1870,7 +1884,7 @@ only screen and (min-width: 768px) and (max-width: 991px),
     color: var(--white);
 }
 
-.it-menu-mobile ul li.has-dropdown>a .dropdown-toggle-btn:hover i {
+.it-menu-mobile ul li.has-dropdown>a .dropdown-toggle-btn:hover svg {
     color: var(--white);
 }
 
@@ -1884,7 +1898,7 @@ only screen and (min-width: 768px) and (max-width: 991px),
     color: var(--white);
 }
 
-.it-menu-mobile ul li.has-dropdown>a.expanded .dropdown-toggle-btn.dropdown-opened i {
+.it-menu-mobile ul li.has-dropdown>a.expanded .dropdown-toggle-btn.dropdown-opened svg {
     color: var(--white);
 }
 
@@ -2635,7 +2649,7 @@ html[dir="rtl"] .it-header-2-top-right ul li.topbar-social-item {
 
 html[dir="rtl"] .it-header-2-top-right ul li.topbar-separator-item {
     margin-left: 15px;
-    margin-right: 0;
+    margin-left: 15px;
 }
 
 html[dir="rtl"] .it-header-2-top-right ul li.topbar-login-item {
@@ -4087,10 +4101,6 @@ a.site-footer__contact-value:hover {
         flex-direction: row;
         flex-wrap: wrap;
         gap: 20px 16px;
-    }
-
-    .site-footer__contact-item {
-        width: calc(50% - 8px);
     }
 
     .site-footer__bottom-inner {

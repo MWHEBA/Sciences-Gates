@@ -145,7 +145,7 @@
                  x-transition:enter-start="opacity-0 translate-y-2"
                  x-transition:enter-end="opacity-100 translate-y-0">
                 <h2 class="text-2xl font-bold text-text-primary mb-6 border-r-4 border-secondary pr-3">الجامعات ({{ universities|length }})</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {% for university in universities %}
                         {% include 'partials/university-card.html' with university=university %}
                     {% endfor %}
@@ -161,7 +161,7 @@
                  x-transition:enter-start="opacity-0 translate-y-2"
                  x-transition:enter-end="opacity-100 translate-y-0">
                 <h2 class="text-2xl font-bold text-text-primary mb-6 border-r-4 border-secondary pr-3">المعاهد ({{ institutes|length }})</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {% for institute in institutes %}
                         {% include 'partials/institute-card.html' with institute=institute %}
                     {% endfor %}
@@ -193,7 +193,7 @@
                  x-transition:enter-start="opacity-0 translate-y-2"
                  x-transition:enter-end="opacity-100 translate-y-0">
                 <h2 class="text-2xl font-bold text-text-primary mb-6 border-r-4 border-secondary pr-3">المقالات والأدلة ({{ articles|length }})</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {% for article in articles %}
                         {% include 'partials/article-card.html' with article=article %}
                     {% endfor %}

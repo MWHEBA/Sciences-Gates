@@ -13,6 +13,53 @@ from apps.majors.models import Major
 from apps.articles.models import Article
 
 
+def clear_sitemap_cache(sitemap_type=None):
+    """
+    Centralized utility to clear sitemap cache keys.
+    If sitemap_type is provided (e.g. 'universities', 'institutes', 'majors', 'articles'),
+    only that specific sitemap class's cache is cleared.
+    """
+    from django.core.cache import cache
+    from django.contrib.sites.models import Site
+    
+    # We clear sitemaps for the production domain, local environments, and the active site domain
+    domains = ['sciencesgates.com', 'localhost:8000', '127.0.0.1:8000']
+    try:
+        current_domain = Site.objects.get_current().domain
+        if current_domain not in domains:
+            domains.append(current_domain)
+    except Exception:
+        pass
+        
+    protocols = ['http', 'https']
+    
+    # Map type to sitemap class lower name
+    type_map = {
+        'universities': ['universitysitemap'],
+        'institutes': ['institutesitemap'],
+        'majors': ['majorsitemap'],
+        'articles': ['articlesitemap'],
+    }
+    
+    if sitemap_type in type_map:
+        classes_to_clear = type_map[sitemap_type]
+    else:
+        # Clear all sitemaps
+        classes_to_clear = ['universitysitemap', 'institutesitemap', 'majorsitemap', 'articlesitemap', 'staticsitemap']
+        
+    cache_keys = []
+    for cls in classes_to_clear:
+        for page in range(1, 11):
+            # Clear key without domain/proto for legacy fallback
+            cache_keys.append(f"sitemap_{cls}_page_{page}")
+            # Clear keys with domains and protocols
+            for domain in domains:
+                for proto in protocols:
+                    cache_keys.append(f"sitemap_{cls}_page_{page}_{domain}_{proto}")
+                    
+    cache.delete_many(cache_keys)
+
+
 class BaseSitemap(Sitemap):
     """Base sitemap class with common configuration and caching."""
     
@@ -25,7 +72,20 @@ class BaseSitemap(Sitemap):
         Override to add caching and ensure only published content is included.
         """
         from django.core.cache import cache
-        cache_key = f"sitemap_{self.__class__.__name__.lower()}_page_{page}"
+        from django.contrib.sites.models import Site as DjangoSite
+        
+        if site is None:
+            try:
+                resolved_site = DjangoSite.objects.get_current()
+            except Exception:
+                resolved_site = None
+        else:
+            resolved_site = site
+            
+        domain = resolved_site.domain if resolved_site else 'sciencesgates.com'
+        proto = protocol or 'https'
+        
+        cache_key = f"sitemap_{self.__class__.__name__.lower()}_page_{page}_{domain}_{proto}"
         cached_urls = cache.get(cache_key)
         if cached_urls is not None:
             return cached_urls
