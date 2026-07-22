@@ -12,6 +12,25 @@ register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
+def website_schema(context):
+    """
+    Generate WebSite schema for search engine site name display.
+    
+    Usage:
+        {% load schema_tags %}
+        <script type="application/ld+json">
+        {% website_schema %}
+        </script>
+    """
+    request = context.get('request')
+    if not request:
+        return '{}'
+    
+    schema = SchemaGenerator.generate_website_schema(request)
+    return mark_safe(json.dumps(schema, ensure_ascii=False, indent=2))
+
+
+@register.simple_tag(takes_context=True)
 def organization_schema(context):
     """
     Generate Organization schema for the website.

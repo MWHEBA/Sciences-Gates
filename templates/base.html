@@ -1,4 +1,4 @@
-{% load static %}{% load seo_tags %}{% load breadcrumbs %}<!DOCTYPE html>
+{% load static %}{% load seo_tags %}{% load breadcrumbs %}{% load schema_tags %}<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -10,10 +10,10 @@
     <meta name="text_direction" content="rtl">
     
     <!-- SEO Meta Tags -->
-    <title>{% block title %}Science Gates - Study in Malaysia{% endblock %}</title>
+    <title>{% block title %}شركة بوابات العلوم للدراسة في ماليزيا{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
     <meta name="keywords" content="{% block meta_keywords %}ماليزيا، جامعات، دراسة{% endblock %}">
-    <meta name="author" content="Science Gates">
+    <meta name="author" content="شركة بوابات العلوم للدراسة في ماليزيا">
     <meta name="theme-color" content="#1f2937">
     
     <!-- Robots Meta -->
@@ -22,17 +22,17 @@
     
 
     <!-- Open Graph Tags for Social Media Sharing -->
-    <meta property="og:title" content="{% block og_title %}Science Gates - Study in Malaysia{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}شركة بوابات العلوم للدراسة في ماليزيا{% endblock %}">
     <meta property="og:description" content="{% block og_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
-    <meta property="og:site_name" content="Science Gates">
+    <meta property="og:site_name" content="شركة بوابات العلوم للدراسة في ماليزيا">
     <meta property="og:locale" content="ar_SA">
     {% block og_image %}<meta property="og:image" content="{% static 'images/og-default.jpg' %}">{% endblock %}
     
     <!-- Twitter Card Tags -->
     <meta name="twitter:card" content="{% block twitter_card %}summary_large_image{% endblock %}">
-    <meta name="twitter:title" content="{% block twitter_title %}Science Gates - Study in Malaysia{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}شركة بوابات العلوم للدراسة في ماليزيا{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
     {% block twitter_image %}<meta name="twitter:image" content="{% static 'images/og-default.jpg' %}">{% endblock %}
     
@@ -44,7 +44,10 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
-    <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'images/favicon-192x192.png' %}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{% static 'images/favicon-512x512.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
 
     <!-- Preload Local Fonts (Zero Layout Shift) -->
     <link rel="preload" href="{% static 'fonts/alexandria-arabic.woff2' %}" as="font" type="font/woff2" crossorigin>
@@ -60,19 +63,10 @@
     <!-- JSON-LD Schema Markup -->
     {% block schema_markup %}
     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Science Gates",
-        "url": "{{ request.scheme }}://{{ request.get_host }}/",
-        "description": "Educational content platform for Malaysian universities and institutes",
-        "inLanguage": "ar",
-        "contactPoint": {
-            "@type": "ContactPoint",
-            "contactType": "Customer Service",
-            "availableLanguage": ["ar", "en"]
-        }
-    }
+    {% website_schema %}
+    </script>
+    <script type="application/ld+json">
+    {% organization_schema %}
     </script>
     {% endblock %}
     

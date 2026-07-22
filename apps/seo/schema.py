@@ -13,6 +13,27 @@ class SchemaGenerator:
     """Base class for generating JSON-LD schema markup."""
     
     @staticmethod
+    def generate_website_schema(request):
+        """
+        Generate WebSite schema for search engine site name display.
+        
+        Args:
+            request: HTTP request object for building absolute URLs
+            
+        Returns:
+            Dictionary containing WebSite schema markup
+        """
+        site_url = request.build_absolute_uri('/')
+        
+        return {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "شركة بوابات العلوم للدراسة في ماليزيا",
+            "alternateName": ["بوابات العلوم", "Science Gates"],
+            "url": site_url
+        }
+    
+    @staticmethod
     def generate_organization_schema(request):
         """
         Generate Organization schema for the website.
@@ -31,9 +52,10 @@ class SchemaGenerator:
         schema = {
             "@context": "https://schema.org",
             "@type": "Organization",
-            "name": "Science Gates",
+            "name": "شركة بوابات العلوم للدراسة في ماليزيا",
+            "alternateName": ["بوابات العلوم", "Science Gates"],
             "url": site_url,
-            "description": "Educational content platform for Malaysian universities and institutes",
+            "description": "منصة متخصصة في القبولات الجامعية والخدمات التعليمية للدراسة في ماليزيا",
             "inLanguage": "ar",
             "contactPoint": {
                 "@type": "ContactPoint",
@@ -48,13 +70,13 @@ class SchemaGenerator:
         }
         
         # Add logo if available
-        logo_url = request.build_absolute_uri('/static/images/logo.svg')
+        logo_url = request.build_absolute_uri('/static/images/favicon-512x512.png')
         if logo_url:
             schema["logo"] = {
                 "@type": "ImageObject",
                 "url": logo_url,
-                "width": 250,
-                "height": 60
+                "width": 512,
+                "height": 512
             }
         
         return schema
@@ -109,7 +131,7 @@ class SchemaGenerator:
         # Add publisher information
         schema["publisher"] = {
             "@type": "Organization",
-            "name": "Science Gates",
+            "name": "شركة بوابات العلوم للدراسة في ماليزيا",
             "logo": {
                 "@type": "ImageObject",
                 "url": request.build_absolute_uri('/static/images/logo.svg'),

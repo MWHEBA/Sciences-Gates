@@ -161,6 +161,17 @@ class TestSchemaGenerator:
         self.factory = RequestFactory()
         self.request = self.factory.get('/')
     
+    def test_website_schema_generation(self):
+        """Test website schema generation for Google site name."""
+        from apps.seo.schema import SchemaGenerator
+        
+        schema = SchemaGenerator.generate_website_schema(self.request)
+        
+        assert schema['@context'] == 'https://schema.org'
+        assert schema['@type'] == 'WebSite'
+        assert schema['name'] == 'شركة بوابات العلوم للدراسة في ماليزيا'
+        assert 'بوابات العلوم' in schema['alternateName']
+    
     def test_organization_schema_generation(self):
         """Test organization schema generation."""
         from apps.seo.schema import SchemaGenerator
@@ -169,7 +180,7 @@ class TestSchemaGenerator:
         
         assert schema['@context'] == 'https://schema.org'
         assert schema['@type'] == 'Organization'
-        assert schema['name'] == 'Science Gates'
+        assert schema['name'] == 'شركة بوابات العلوم للدراسة في ماليزيا'
         assert schema['inLanguage'] == 'ar'
     
     def test_organization_schema_has_contact_point(self):
@@ -201,8 +212,8 @@ class TestSchemaGenerator:
         assert 'logo' in schema
         assert schema['logo']['@type'] == 'ImageObject'
         assert 'url' in schema['logo']
-        assert schema['logo']['width'] == 250
-        assert schema['logo']['height'] == 60
+        assert schema['logo']['width'] == 512
+        assert schema['logo']['height'] == 512
     
     def test_breadcrumb_schema_generation(self):
         """Test breadcrumb schema generation."""
@@ -377,7 +388,7 @@ class TestArticleSchemaGenerator:
         
         assert 'publisher' in schema
         assert schema['publisher']['@type'] == 'Organization'
-        assert schema['publisher']['name'] == 'Science Gates'
+        assert schema['publisher']['name'] == 'شركة بوابات العلوم للدراسة في ماليزيا'
     
     def test_article_schema_includes_url(self):
         """Test article schema includes article URL."""
