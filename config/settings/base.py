@@ -221,8 +221,3 @@ STORAGES = {
 TURNSTILE_SITE_KEY = config('TURNSTILE_SITE_KEY', default='')
 TURNSTILE_SECRET_KEY = config('TURNSTILE_SECRET_KEY', default='')
 
-# WordPress Content Importer Settings
-WP_IMPORTER_BASE_URL = config('WP_IMPORTER_BASE_URL', default='https://sciencesgates.com')
-WP_IMPORTER_SECRET_KEY = config('WP_IMPORTER_SECRET_KEY', default='sg_import_secret_key_2026')
-WP_IMPORTER_TIMEOUT = config('WP_IMPORTER_TIMEOUT', default=30, cast=int)
-
