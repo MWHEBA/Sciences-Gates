@@ -947,6 +947,7 @@ INSERT INTO `wp_fluentform_submissions` (`id`, `form_id`, `response`, `created_a
         with tempfile.NamedTemporaryFile('w+', delete=False, suffix='.sql', encoding='utf-8') as tf:
             tf.write(sql_content)
             tf_path = tf.name
+            tf.close()
 
         try:
             call_command('import_fluentform_entries', file=tf_path, since='2025-01-01')

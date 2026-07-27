@@ -22,6 +22,15 @@ class InstituteForm(forms.ModelForm):
         label='المدينة',
         help_text='المدينة التي يقع بها المعهد لتسهيل التصفية والبحث'
     )
+    order = forms.IntegerField(
+        required=False,
+        initial=0,
+        label='ترتيب العرض',
+        widget=forms.NumberInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': '0',
+        })
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
