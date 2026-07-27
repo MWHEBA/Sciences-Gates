@@ -319,6 +319,8 @@ class MajorPublicViewsTest(TestCase):
         url = reverse('majors:detail', kwargs={'slug': self.major.slug})
         
         # Expected queries: 1 redirect check + 1 major + 3 dynamic tables + 4 relationships (including tags) + 1 site settings + 3 new prefetches (faqs, attachments, programs) = 13
+        from django.core.cache import cache
+        cache.clear()
         with self.assertNumQueries(13):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)

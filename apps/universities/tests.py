@@ -231,6 +231,8 @@ class TestUniversityDetailView:
     
     def test_detail_view_query_optimization(self, django_assert_num_queries):
         """Test that detail view uses optimized queries."""
+        from django.core.cache import cache
+        cache.clear()
         with django_assert_num_queries(13):
             response = self.client.get(
                 reverse('universities:detail', kwargs={'slug': self.university.slug})

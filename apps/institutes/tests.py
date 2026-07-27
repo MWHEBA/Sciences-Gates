@@ -216,6 +216,8 @@ class InstituteDetailViewTest(TestCase):
         # This test verifies that prefetch_related is working
         # by checking that accessing related objects doesn't cause additional queries
         # Queries: 1 for redirect check, 1 for institute, 1 for courses, 1 for articles, 1 for tags, 1 for site settings, 1 for attachments, 1 for faqs
+        from django.core.cache import cache
+        cache.clear()
         with self.assertNumQueries(8):
             response = self.client.get(url)
             # Access the courses to ensure they're prefetched
