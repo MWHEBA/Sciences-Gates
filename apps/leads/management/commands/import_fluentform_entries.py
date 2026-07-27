@@ -359,7 +359,7 @@ class Command(BaseCommand):
         entries = []
         for match in insert_pattern.finditer(content):
             columns = [c.strip(" `'\":") for c in match.group(1).split(',')]
-            rows_raw = re.findall(r"\((?>'[^']*'|[^)])+\)", match.group(2))
+            rows_raw = re.findall(r"\((?:'[^']*'|[^)])+\)", match.group(2))
             for row_str in rows_raw:
                 row_str = row_str.strip('(), ')
                 vals = [v.strip().strip("'") for v in row_str.split("','")]

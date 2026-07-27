@@ -10,9 +10,15 @@ Disallow: /*.json$
 Disallow: /*?*page=
 Disallow: /*&
 
-# Crawl delay للروبوتات الرئيسية
+# Crawl delay for main search engines
 User-agent: Googlebot
 Allow: /
+Disallow: /mw-admin/
+Disallow: /sg/
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /*?*page=
+Disallow: /*&
 Crawl-delay: 1
 
 User-agent: Bingbot

@@ -3,6 +3,7 @@
 
 {% block title %}المعاهد المرتبطة بـ {{ tag.name }} | بوابات العلوم{% endblock %}
 {% block meta_description %}استكشف جميع المعاهد المعتمدة والدورات المتاحة المرتبطة بـ {{ tag.name }} في ماليزيا.{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
 
 {% block content %}
 {% include "components/page_hero.html" with title="#"|add:tag.name subtitle="اكتشف جميع المعاهد والدورات المرتبطة بهذا الوسم." %}

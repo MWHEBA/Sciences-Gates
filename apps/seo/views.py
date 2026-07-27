@@ -34,9 +34,15 @@ Disallow: /*.json$
 Disallow: /*?*page=
 Disallow: /*&
 
-# Crawl delay for main search engines
+# Crawl delay and disallow rules for main search engines
 User-agent: Googlebot
 Allow: /
+Disallow: /{admin_url}/
+Disallow: /{dashboard_url}/
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /*?*page=
+Disallow: /*&
 Crawl-delay: 1
 
 User-agent: Bingbot
