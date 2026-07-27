@@ -22,8 +22,8 @@ class WPImporterClient:
     """Client for fetching structured content from the old WordPress site."""
 
     def fetch(self, slug: str) -> dict:
-        base_url = getattr(settings, 'WP_IMPORTER_BASE_URL', '').strip().rstrip('/')
-        secret_key = getattr(settings, 'WP_IMPORTER_SECRET_KEY', '').strip()
+        base_url = (getattr(settings, 'WP_IMPORTER_BASE_URL', None) or 'https://sciencesgates.com').strip().rstrip('/')
+        secret_key = (getattr(settings, 'WP_IMPORTER_SECRET_KEY', None) or 'sg_import_secret_key_2026').strip()
         timeout = getattr(settings, 'WP_IMPORTER_TIMEOUT', 30)
 
         if not base_url:
