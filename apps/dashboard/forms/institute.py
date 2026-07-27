@@ -35,11 +35,21 @@ class InstituteForm(forms.ModelForm):
             if self.data.get('imported_main_image_path'):
                 self.fields['main_image'].required = False
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        from apps.core.navigation import auto_shift_order_if_changed
+        from apps.institutes.models import Institute
+        auto_shift_order_if_changed(self, Institute, instance)
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
     class Meta:
         model = Institute
         fields = [
             # Basic Information
-            'name', 'slug', 'state', 'city', 'logo', 'main_image', 'location',
+            'name', 'slug', 'state', 'city', 'order', 'logo', 'main_image', 'location',
             'telephone', 'website',
             # Rich Text Sections
             'introduction', 'description', 'why_choose_us', 'english_study',
@@ -68,6 +78,12 @@ class InstituteForm(forms.ModelForm):
                 'required': True,
                 'dir': 'ltr',
                 'data-paste-clean': 'slug',
+            }),
+            'order': forms.NumberInput(attrs={
+                'class': 'w-full text-center border-0 p-0 focus:outline-none focus:ring-0 font-normal',
+                'style': 'background: transparent; color: var(--text-primary); font-size: 13px;',
+                'placeholder': '0',
+                'min': '0',
             }),
             'state': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',

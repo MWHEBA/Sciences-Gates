@@ -306,3 +306,50 @@ class TestKeywordDensityReporting(TestCase):
         codes = [w["code"] for w in result["warnings"]]
         self.assertNotIn("FOCUS_KEYWORD_DENSITY_HIGH", codes)
         self.assertIn("focus_keyword_density_good", result["passed_checks"])
+
+
+# ─────────────────────────────────────────────────
+# 5. Internal Links Detection Tests
+# ─────────────────────────────────────────────────
+class TestInternalLinksDetection(TestCase):
+
+    def test_full_url_with_site_domain_counted_as_internal(self):
+        """Full URLs like https://sciencesgates.com/majors/cs must be counted as internal."""
+        engine = _make_engine(main_content_overrides={
+            "links": [
+                {"href": "https://sciencesgates.com/majors/computer-science", "text": "تخصص الحاسب"},
+                {"href": "http://127.0.0.1:8000/articles/my-article", "text": "مقالة مفيدة"},
+                {"href": "http://localhost:8000/universities/1", "text": "جامعة أكسفورد"},
+            ]
+        })
+        result = engine.evaluate()
+        warn_codes = [w["code"] for w in result["warnings"]]
+        self.assertNotIn("LOW_INTERNAL_LINKS", warn_codes)
+        self.assertIn("internal_links", result["passed_checks"])
+
+    def test_relative_path_without_leading_slash_counted_as_internal(self):
+        """Relative URLs like majors/cs must be counted as internal."""
+        engine = _make_engine(main_content_overrides={
+            "links": [
+                {"href": "majors/computer-science", "text": "تخصص الحاسب"},
+                {"href": "articles/test", "text": "اختبار"},
+                {"href": "universities/1", "text": "جامعة"},
+            ]
+        })
+        result = engine.evaluate()
+        warn_codes = [w["code"] for w in result["warnings"]]
+        self.assertNotIn("LOW_INTERNAL_LINKS", warn_codes)
+        self.assertIn("internal_links", result["passed_checks"])
+
+    def test_external_urls_not_counted_as_internal(self):
+        """External domain links like google.com must NOT count towards internal links."""
+        engine = _make_engine(main_content_overrides={
+            "links": [
+                {"href": "https://google.com/search", "text": "جوجل"},
+                {"href": "https://facebook.com", "text": "فيسبوك"},
+            ]
+        })
+        result = engine.evaluate()
+        warn_codes = [w["code"] for w in result["warnings"]]
+        self.assertIn("LOW_INTERNAL_LINKS", warn_codes)
+

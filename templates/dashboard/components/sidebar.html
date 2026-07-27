@@ -612,6 +612,19 @@
                     </a>
                 </div>
 
+                <!-- إدارة القوائم والصفحة الرئيسية -->
+                <div
+                    :style="'{{ request.path }}'.includes('/navigation') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">
+                    <a  href="{% url 'dashboard:navigation_manager' %}"
+                         class="flex items-center px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer sb-sub-link {% if 'navigation' in request.path %}active{% endif %}" >
+                        <svg class="w-5 h-5 ml-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <span>إدارة القوائم والرئيسية</span>
+                    </a>
+                </div>
+
                 <!-- النسخ الاحتياطية -->
                 <div
                     :style="'{{ request.path }}'.includes('/sg/backups') ? 'background-color: rgba(0, 0, 0, 0.02); border-radius: 8px;' : ''">

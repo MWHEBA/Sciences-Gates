@@ -492,4 +492,55 @@ class AttachmentFileValidationTestCase(TestCase):
             validate_attachment_file(unsafe_double_ext_file)
 
 
+class SiteSettingsSocialLinksTestCase(TestCase):
+    """Test cases for dynamic social media links in SiteSettings."""
+
+    def test_clean_social_url(self):
+        from apps.core.models import SiteSettings
+        self.assertEqual(SiteSettings.clean_social_url('facebook.com/sciencegates'), 'https://facebook.com/sciencegates')
+        self.assertEqual(SiteSettings.clean_social_url('https://instagram.com/sciencegates'), 'https://instagram.com/sciencegates')
+        self.assertEqual(SiteSettings.clean_social_url('http://twitter.com/sciencegates'), 'http://twitter.com/sciencegates')
+        self.assertEqual(SiteSettings.clean_social_url('   '), '')
+
+    def test_social_links_normalization_and_property(self):
+        from apps.core.models import SiteSettings
+        settings = SiteSettings.get_settings()
+        settings.facebook = 'facebook.com/myFB'
+        settings.instagram = 'instagram.com/myIG'
+        settings.twitter = 'https://x.com/myTwitter'
+        settings.youtube = ''
+        settings.save()
+
+        # Check normalization
+        settings.refresh_from_db()
+        self.assertEqual(settings.facebook, 'https://facebook.com/myFB')
+        self.assertEqual(settings.instagram, 'https://instagram.com/myIG')
+        self.assertEqual(settings.twitter, 'https://x.com/myTwitter')
+
+        # Check social_links property
+        links = settings.social_links
+        keys = [item['key'] for item in links]
+        self.assertIn('facebook', keys)
+        self.assertIn('instagram', keys)
+        self.assertIn('twitter', keys)
+        self.assertNotIn('youtube', keys)
+
+    def test_organization_schema_same_as(self):
+        from apps.core.models import SiteSettings
+        from apps.seo.schema import SchemaGenerator
+        from django.test import RequestFactory
+
+        settings = SiteSettings.get_settings()
+        settings.facebook = 'https://facebook.com/test'
+        settings.youtube = 'https://youtube.com/test'
+        settings.save()
+
+        rf = RequestFactory()
+        request = rf.get('/')
+        schema = SchemaGenerator.generate_organization_schema(request)
+        self.assertIn('https://facebook.com/test', schema['sameAs'])
+        self.assertIn('https://youtube.com/test', schema['sameAs'])
+
+
+
 

@@ -545,11 +545,16 @@ def validate_attachment_file(value):
     - Allowed extensions: PDF, Word, Excel, ZIP, RAR, images (PNG, JPG, JPEG)
     - Prevents double extension bypasses (e.g. file.php.pdf)
     """
-    # 10MB limit
-    limit = 10 * 1024 * 1024
-    if value.size > limit:
-        raise ValidationError('حجم الملف كبير جداً. الحد الأقصى المسموح به هو 10 ميجابايت.')
-    
+    if not value:
+        return
+
+    try:
+        limit = 10 * 1024 * 1024
+        if hasattr(value, 'size') and value.size > limit:
+            raise ValidationError('حجم الملف كبير جداً. الحد الأقصى المسموح به هو 10 ميجابايت.')
+    except (FileNotFoundError, OSError):
+        pass
+
     name_lower = value.name.lower()
     
     # Block double extensions or files containing scripting languages anywhere
@@ -570,29 +575,33 @@ def validate_attachment_file(value):
 def cleanup_attachment_file_on_save(instance):
     """
     Deletes the old physical file from disk when a file is replaced during update.
+    Bypasses if physical file does not exist.
     """
     if instance.pk:
         try:
             old_instance = instance.__class__.objects.get(pk=instance.pk)
             if old_instance.file and old_instance.file != instance.file:
                 try:
-                    old_instance.file.delete(save=False)
+                    if hasattr(old_instance.file, 'storage') and old_instance.file.storage.exists(old_instance.file.name):
+                        old_instance.file.delete(save=False)
                 except Exception as e:
                     import logging
                     logging.getLogger(__name__).warning(
                         f"Error deleting physical file on update for {instance.__class__.__name__} (ID: {instance.pk}): {e}"
                     )
-        except instance.__class__.DoesNotExist:
+        except (instance.__class__.DoesNotExist, FileNotFoundError, OSError):
             pass
 
 
 def cleanup_attachment_file_on_delete(instance):
     """
     Deletes the physical file from disk when the attachment model instance is deleted.
+    Bypasses if physical file does not exist.
     """
     if instance.file:
         try:
-            instance.file.delete(save=False)
+            if hasattr(instance.file, 'storage') and instance.file.storage.exists(instance.file.name):
+                instance.file.delete(save=False)
         except Exception as e:
             import logging
             logging.getLogger(__name__).warning(

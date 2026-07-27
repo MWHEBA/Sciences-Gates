@@ -4,7 +4,7 @@ Context processors for global template context.
 """
 from django.conf import settings
 from apps.leads.models import Lead, LeadType
-from apps.leads.countries import ALL_COUNTRIES, DEFAULT_COUNTRY, DEFAULT_CODE, DEFAULT_PLACEHOLDER
+from apps.leads.countries import ALL_COUNTRIES, DEFAULT_COUNTRY, DEFAULT_CODE, DEFAULT_PLACEHOLDER, get_country_info
 from apps.core.models import SiteSettings
 
 
@@ -77,19 +77,29 @@ def site_settings_context(request):
 def phone_countries_context(request):
     """
     Add phone country codes to templates that need the lead form.
-    إضافة أكواد الدول للقوالب التي تحتاج فورم التواصل
+    إضافة أكواد الدول للقوالب التي تحتاج فورم التواصل مع اكتشاف دولة الزائر من الـ Proxy Headers
     """
     # Only load for public pages (not dashboard)
     dashboard_segment = f"/{settings.DASHBOARD_URL.strip('/')}"
     is_dashboard = request.path == dashboard_segment or request.path.startswith(f"{dashboard_segment}/")
     if is_dashboard:
         return {}
+
+    # Try detecting user's country from proxy headers (Cloudflare, Vercel, GeoIP)
+    detected_iso = None
+    for header in ('HTTP_CF_IPCOUNTRY', 'HTTP_X_VERCEL_IP_COUNTRY', 'GEOIP_COUNTRY_CODE', 'HTTP_X_COUNTRY_CODE'):
+        val = request.META.get(header)
+        if val and val.lower() != 'xx' and len(val) == 2:
+            detected_iso = val.lower()
+            break
+
+    default_country, default_code, default_placeholder = get_country_info(detected_iso)
     
     return {
         'phone_countries': ALL_COUNTRIES,
-        'default_country': DEFAULT_COUNTRY,
-        'default_code': DEFAULT_CODE,
-        'default_placeholder': DEFAULT_PLACEHOLDER,
+        'default_country': default_country,
+        'default_code': default_code,
+        'default_placeholder': default_placeholder,
     }
 
 
@@ -120,39 +130,43 @@ def mega_menu_context(request):
     from apps.universities.models import University
     from apps.institutes.models import Institute
     from apps.majors.models import MajorCategory
+    from apps.core.navigation import get_navigation_slots_dict, build_curated_list_with_dedup_fallback
     
     menu_data = cache.get('mega_menu_data')
     if not menu_data:
-        # Fetch Public Universities (excluding sub-pages)
-        public_univs = list(
+        # Public Universities Pool
+        public_pool = (
             University.objects.filter(publish_status='published', university_type='public')
             .exclude(slug__icontains='السكن')
             .exclude(slug__icontains='الاعترافات')
             .exclude(slug__icontains='التعاقدات')
             .exclude(slug__startswith='سكن-')
-            .only('name', 'slug', 'logo', 'university_type')
-            .order_by('name')
+            .order_by('order', 'name')
         )
+        public_slots = get_navigation_slots_dict('mega_menu_public_univ')
+        public_univs = build_curated_list_with_dedup_fallback(public_slots, public_pool, 8)
 
-        # Fetch Private Universities (excluding sub-pages)
-        private_univs = list(
+        # Private Universities Pool
+        private_pool = (
             University.objects.filter(publish_status='published', university_type='private')
             .exclude(slug__icontains='السكن')
             .exclude(slug__icontains='الاعترافات')
             .exclude(slug__icontains='التعاقدات')
             .exclude(slug__startswith='سكن-')
-            .only('name', 'slug', 'logo', 'university_type')
-            .order_by('name')
+            .order_by('order', 'name')
         )
+        private_slots = get_navigation_slots_dict('mega_menu_private_univ')
+        private_univs = build_curated_list_with_dedup_fallback(private_slots, private_pool, 8)
 
-        # Fetch Language Institutes (excluding sub-pages)
-        institutes = list(
+        # Language Institutes Pool
+        institute_pool = (
             Institute.objects.filter(publish_status='published')
             .exclude(slug__icontains='اختبار')
             .exclude(slug__icontains='معاهد')
-            .only('name', 'slug', 'logo', 'main_image')
-            .order_by('name')
+            .order_by('order', 'name')
         )
+        institute_slots = get_navigation_slots_dict('mega_menu_institute')
+        institutes = build_curated_list_with_dedup_fallback(institute_slots, institute_pool, 8)
 
         # Fetch Major Categories with at least one published major
         major_categories = list(

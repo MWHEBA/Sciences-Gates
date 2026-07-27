@@ -331,6 +331,56 @@ class SiteSettings(models.Model):
         verbose_name='رقم WhatsApp'
     )
     
+    # Social Media Links
+    facebook = models.URLField(
+        max_length=500,
+        blank=True,
+        default='',
+        verbose_name='رابط فيسبوك'
+    )
+    instagram = models.URLField(
+        max_length=500,
+        blank=True,
+        default='',
+        verbose_name='رابط انستغرام'
+    )
+    twitter = models.URLField(
+        max_length=500,
+        blank=True,
+        default='',
+        verbose_name='رابط منصة X (تويتر)'
+    )
+    youtube = models.URLField(
+        max_length=500,
+        blank=True,
+        default='',
+        verbose_name='رابط يوتيوب'
+    )
+    linkedin = models.URLField(
+        max_length=500,
+        blank=True,
+        default='',
+        verbose_name='رابط لينكد إن'
+    )
+    tiktok = models.URLField(
+        max_length=500,
+        blank=True,
+        default='',
+        verbose_name='رابط تيك توك'
+    )
+    telegram = models.URLField(
+        max_length=500,
+        blank=True,
+        default='',
+        verbose_name='رابط تليجرام'
+    )
+    snapchat = models.URLField(
+        max_length=500,
+        blank=True,
+        default='',
+        verbose_name='رابط سناب شات'
+    )
+    
     # SEO Settings
     ga4_measurement_id = models.CharField(
         max_length=50,
@@ -516,8 +566,16 @@ class SiteSettings(models.Model):
             json.dump(data, f, ensure_ascii=False, indent=2)
 
     def save(self, *args, **kwargs):
-        """Ensure only one instance exists (singleton pattern)."""
+        """Ensure only one instance exists (singleton pattern) and normalize social URLs."""
         self.pk = 1
+        self.facebook = self.clean_social_url(self.facebook)
+        self.instagram = self.clean_social_url(self.instagram)
+        self.twitter = self.clean_social_url(self.twitter)
+        self.youtube = self.clean_social_url(self.youtube)
+        self.linkedin = self.clean_social_url(self.linkedin)
+        self.tiktok = self.clean_social_url(self.tiktok)
+        self.telegram = self.clean_social_url(self.telegram)
+        self.snapchat = self.clean_social_url(self.snapchat)
         super().save(*args, **kwargs)
         try:
             self.update_maintenance_cache()
@@ -537,6 +595,18 @@ class SiteSettings(models.Model):
         """Get or create the singleton instance."""
         settings, created = cls.objects.get_or_create(pk=1)
         return settings
+
+    @staticmethod
+    def clean_social_url(url):
+        """Ensure social URL starts with http:// or https://."""
+        if not url:
+            return ""
+        url = url.strip()
+        if not url:
+            return ""
+        if not (url.startswith('http://') or url.startswith('https://')):
+            return f"https://{url}"
+        return url
 
     @staticmethod
     def clean_whatsapp_number(number):
@@ -649,6 +719,30 @@ class SiteSettings(models.Model):
         return self.format_display_number(primary)
 
     @property
+    def social_links(self):
+        """Return list of active social media profiles with metadata."""
+        links = []
+        if self.facebook:
+            links.append({'key': 'facebook', 'name': 'فيسبوك', 'url': self.facebook, 'icon': 'facebook'})
+        if self.instagram:
+            links.append({'key': 'instagram', 'name': 'انستغرام', 'url': self.instagram, 'icon': 'instagram'})
+        if self.twitter:
+            links.append({'key': 'twitter', 'name': 'X (تويتر)', 'url': self.twitter, 'icon': 'twitter'})
+        if self.youtube:
+            links.append({'key': 'youtube', 'name': 'يوتيوب', 'url': self.youtube, 'icon': 'youtube'})
+        if self.linkedin:
+            links.append({'key': 'linkedin', 'name': 'لينكد إن', 'url': self.linkedin, 'icon': 'linkedin'})
+        if self.tiktok:
+            links.append({'key': 'tiktok', 'name': 'تيك توك', 'url': self.tiktok, 'icon': 'tiktok'})
+        if self.telegram:
+            links.append({'key': 'telegram', 'name': 'تليجرام', 'url': self.telegram, 'icon': 'telegram'})
+        if self.snapchat:
+            links.append({'key': 'snapchat', 'name': 'سناب شات', 'url': self.snapchat, 'icon': 'snapchat'})
+        if self.whatsapp_primary_clean:
+            links.append({'key': 'whatsapp', 'name': 'واتساب', 'url': f'https://wa.me/{self.whatsapp_primary_clean}', 'icon': 'whatsapp'})
+        return links
+
+    @property
     def whatsapp_list_parsed(self):
         """Get a list of parsed WhatsApp numbers (each is a dict with 'raw' and 'clean' keys)."""
         numbers = self.whatsapp_list
@@ -660,15 +754,6 @@ class SiteSettings(models.Model):
             })
         return parsed
 
-    @property
-    def facebook(self):
-        """Placeholder for facebook link since the field doesn't exist in the database."""
-        return None
-
-    @property
-    def instagram(self):
-        """Placeholder for instagram link since the field doesn't exist in the database."""
-        return None
 
 
 @receiver(post_save, sender=SiteSettings)
@@ -828,6 +913,118 @@ class GA4CachedReport(models.Model):
 
     def __str__(self):
         return f"GA4 Report ({self.days} days) - {self.updated_at}"
+
+
+class SiteNavigation(TimestampedModel):
+    """
+    Model for managing curated navigation slots for Mega Menu and Homepage.
+    إدارة التخصيص بالخانات الثابتة للقوائم والصفحة الرئيسية
+    """
+    SECTION_CHOICES = [
+        ('mega_menu_public_univ', 'القائمة الرئيسية - جامعات حكومية'),
+        ('mega_menu_private_univ', 'القائمة الرئيسية - جامعات خاصة'),
+        ('mega_menu_institute', 'القائمة الرئيسية - معاهد اللغة'),
+        ('home_featured_univ', 'الصفحة الرئيسية - جامعات مميزة'),
+        ('home_featured_institute', 'الصفحة الرئيسية - معاهد مميزة'),
+        ('home_featured_major', 'الصفحة الرئيسية - تخصصات مميزة'),
+    ]
+
+    section = models.CharField(
+        max_length=50,
+        choices=SECTION_CHOICES,
+        verbose_name='القسم',
+        db_index=True
+    )
+    slot_number = models.PositiveIntegerField(
+        verbose_name='رقم الخانة',
+        help_text='رقم الخانة (من 1 إلى الحد الأقصى للقسم)'
+    )
+    university = models.ForeignKey(
+        'universities.University',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='navigation_slots',
+        verbose_name='الجامعة'
+    )
+    institute = models.ForeignKey(
+        'institutes.Institute',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='navigation_slots',
+        verbose_name='المعهد'
+    )
+    major = models.ForeignKey(
+        'majors.Major',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='navigation_slots',
+        verbose_name='التخصص'
+    )
+
+    class Meta:
+        verbose_name = 'تخصيص خانة قائمة'
+        verbose_name_plural = 'تخصيصات خانات القوائم'
+        unique_together = ('section', 'slot_number')
+        ordering = ['section', 'slot_number']
+
+    def __str__(self):
+        return f"{self.get_section_display()} - خانة {self.slot_number}"
+
+
+class ContentVersion(models.Model):
+    """
+    Model for storing content snapshots / version history (max 5 versions per object).
+    """
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        verbose_name='نوع المحتوى'
+    )
+    object_id = models.PositiveIntegerField(
+        verbose_name='معرف المحتوى'
+    )
+    content_object = GenericForeignKey('content_type', 'object_id')
+    version_number = models.PositiveIntegerField(
+        verbose_name='رقم النسخة'
+    )
+    data = models.JSONField(
+        verbose_name='بيانات النسخة',
+        help_text='لقطة من بيانات الموديل والعلاقات المخزنة كـ JSON'
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='content_versions',
+        verbose_name='أنشئت بواسطة'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='تاريخ الحفظ'
+    )
+    change_reason = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name='سبب التعديل'
+    )
+
+    class Meta:
+        verbose_name = 'نسخة محتوى'
+        verbose_name_plural = 'نسخ المحتوى'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.content_type.model} #{self.object_id} - v{self.version_number}"
+
+
 
 
 

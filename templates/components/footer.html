@@ -23,30 +23,69 @@
                         وابات العلوم هي منصة لتوفير التعليم عالي الجودة والاستشارات للطلاب الراغبين في متابعة دراستهم في ماليزيا ، قدمت خدمات متنوعة لآلاف الطلاب وأنشأت علاقة جيدة مع المؤسسات التعليمية الحكومية والخاصة في ماليزيا لتسهيل وضمان التسجيل السلس للطلاب الجدد.
                     </p>
                     <!-- أيقونات التواصل الاجتماعي -->
+                    {% if site_settings.social_links %}
                     <div class="site-footer__social" aria-label="روابط التواصل الاجتماعي">
-                        <a href="#" class="site-footer__social-btn" aria-label="فيسبوك" title="فيسبوك">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
-                               <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/>
-                            </svg>
-                        </a>
-                        <a href="#" class="site-footer__social-btn" aria-label="انستغرام" title="انستغرام">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
-                               <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                               <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                               <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                            </svg>
-                        </a>
-                        <a href="#" class="site-footer__social-btn" aria-label="يوتيوب" title="يوتيوب">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
-                               <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.108C19.516 3.5 12 3.5 12 3.5s-7.516 0-9.388.555A3.002 3.002 0 0 0 .502 6.163C0 8.07 0 12 0 12s0 3.93.502 5.837a3.003 3.003 0 0 0 2.11 2.108C4.484 20.5 12 20.5 12 20.5s7.516 0 9.388-.555a3.002 3.002 0 0 0 2.11-2.108C24 15.93 24 12 24 12s0-3.93-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                            </svg>
-                        </a>
-                        <a href="#" class="site-footer__social-btn site-footer__social-btn--whatsapp" aria-label="واتساب" title="واتساب">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
-                               <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.458L0 24zm6.59-4.846c1.6.95 3.167 1.45 4.81 1.452 5.518 0 10.01-4.48 10.014-9.982.002-2.664-1.03-5.167-2.906-7.045C16.69 1.701 14.19.668 11.53.668c-5.524 0-10.017 4.478-10.021 9.98-.001 1.748.459 3.454 1.332 4.966L1.83 20.354l5.068-1.328-.251.128zm10.707-7.464c-.302-.15-1.786-.88-2.062-.98-.276-.1-.476-.15-.677.15-.2.3-.777.98-.95 1.18-.175.2-.35.225-.653.075-.302-.15-1.276-.47-2.43-1.5-.898-.8-1.503-1.79-1.68-2.09-.176-.3-.02-.462.13-.61.137-.135.303-.35.454-.525.152-.175.202-.3.303-.5.101-.2.05-.375-.025-.525-.075-.15-.677-1.63-.927-2.23-.244-.587-.492-.507-.677-.517-.174-.01-.375-.012-.576-.012-.2 0-.527.075-.804.375-.276.3-1.055 1.03-1.055 2.515s1.08 2.916 1.23 3.116c.15.2 2.128 3.25 5.156 4.56.72.31 1.28.497 1.72.637.724.23 1.38.197 1.902.12.58-.087 1.787-.73 2.037-1.435.25-.705.25-1.31.176-1.435-.074-.125-.275-.2-.577-.35z"/>
-                            </svg>
-                        </a>
+                        {% for social in site_settings.social_links %}
+                           {% if social.key == 'facebook' %}
+                           <a href="{{ social.url }}" target="_blank" rel="noopener" class="site-footer__social-btn" aria-label="فيسبوك" title="فيسبوك">
+                               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                  <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/>
+                               </svg>
+                           </a>
+                           {% elif social.key == 'instagram' %}
+                           <a href="{{ social.url }}" target="_blank" rel="noopener" class="site-footer__social-btn" aria-label="انستغرام" title="انستغرام">
+                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
+                                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                               </svg>
+                           </a>
+                           {% elif social.key == 'twitter' %}
+                           <a href="{{ social.url }}" target="_blank" rel="noopener" class="site-footer__social-btn" aria-label="منصة X" title="منصة X">
+                               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                               </svg>
+                           </a>
+                           {% elif social.key == 'youtube' %}
+                           <a href="{{ social.url }}" target="_blank" rel="noopener" class="site-footer__social-btn" aria-label="يوتيوب" title="يوتيوب">
+                               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                  <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.108C19.516 3.5 12 3.5 12 3.5s-7.516 0-9.388.555A3.002 3.002 0 0 0 .502 6.163C0 8.07 0 12 0 12s0 3.93.502 5.837a3.003 3.003 0 0 0 2.11 2.108C4.484 20.5 12 20.5 12 20.5s7.516 0 9.388-.555a3.002 3.002 0 0 0 2.11-2.108C24 15.93 24 12 24 12s0-3.93-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                               </svg>
+                           </a>
+                           {% elif social.key == 'linkedin' %}
+                           <a href="{{ social.url }}" target="_blank" rel="noopener" class="site-footer__social-btn" aria-label="لينكد إن" title="لينكد إن">
+                               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                               </svg>
+                           </a>
+                           {% elif social.key == 'tiktok' %}
+                           <a href="{{ social.url }}" target="_blank" rel="noopener" class="site-footer__social-btn" aria-label="تيك توك" title="تيك توك">
+                               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.29 0 .56.04.82.1v-3.6a6.35 6.35 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.43a6.34 6.34 0 0 0 10.86 4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-3.04-1.29z"/>
+                               </svg>
+                           </a>
+                           {% elif social.key == 'telegram' %}
+                           <a href="{{ social.url }}" target="_blank" rel="noopener" class="site-footer__social-btn" aria-label="تليجرام" title="تليجرام">
+                               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                               </svg>
+                           </a>
+                           {% elif social.key == 'snapchat' %}
+                           <a href="{{ social.url }}" target="_blank" rel="noopener" class="site-footer__social-btn" aria-label="سناب شات" title="سناب شات">
+                               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                  <path d="M12.003 2c-3.957 0-6.177 2.748-6.177 5.766 0 1.25.405 2.455.937 3.376.155.267.112.44-.122.628-.696.559-1.637.76-2.411 1.344-.33.249-.395.535-.121.84.975 1.084 2.502.936 3.791.758.337-.046.52.09.622.378.368 1.041.97 1.942 2.449 1.942.275 0 .584-.047.932-.14.364-.097.669-.097 1.033 0 .348.093.657.14.932.14 1.479 0 2.081-.901 2.449-1.942.102-.288.285-.424.622-.378 1.289.178 2.816.326 3.791-.758.274-.305.209-.591-.121-.84-.774-.584-1.715-.785-2.411-1.344-.234-.188-.277-.361-.122-.628.532-.921.937-2.126.937-3.376 0-3.018-2.22-5.766-6.177-5.766z"/>
+                               </svg>
+                           </a>
+                           {% elif social.key == 'whatsapp' %}
+                           <a href="{{ social.url }}" target="_blank" rel="noopener" class="site-footer__social-btn site-footer__social-btn--whatsapp" aria-label="واتساب" title="واتساب">
+                               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align: middle;">
+                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.458L0 24zm6.59-4.846c1.6.95 3.167 1.45 4.81 1.452 5.518 0 10.01-4.48 10.014-9.982.002-2.664-1.03-5.167-2.906-7.045C16.69 1.701 14.19.668 11.53.668c-5.524 0-10.017 4.478-10.021 9.98-.001 1.748.459 3.454 1.332 4.966L1.83 20.354l5.068-1.328-.251.128zm10.707-7.464c-.302-.15-1.786-.88-2.062-.98-.276-.1-.476-.15-.677.15-.2.3-.777.98-.95 1.18-.175.2-.35.225-.653.075-.302-.15-1.276-.47-2.43-1.5-.898-.8-1.503-1.79-1.68-2.09-.176-.3-.02-.462.13-.61.137-.135.303-.35.454-.525.152-.175.202-.3.303-.5.101-.2.05-.375-.025-.525-.075-.15-.677-1.63-.927-2.23-.244-.587-.492-.507-.677-.517-.174-.01-.375-.012-.576-.012-.2 0-.527.075-.804.375-.276.3-1.055 1.03-1.055 2.515s1.08 2.916 1.23 3.116c.15.2 2.128 3.25 5.156 4.56.72.31 1.28.497 1.72.637.724.23 1.38.197 1.902.12.58-.087 1.787-.73 2.037-1.435.25-.705.25-1.31.176-1.435-.074-.125-.275-.2-.577-.35z"/>
+                               </svg>
+                           </a>
+                           {% endif %}
+                        {% endfor %}
                     </div>
+                    {% endif %}
                 </div>
 
                 <!-- العمود 2: روابط سريعة -->

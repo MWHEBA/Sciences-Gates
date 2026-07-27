@@ -36,11 +36,20 @@ class UniversityForm(forms.ModelForm):
             if self.data.get('imported_main_image_path'):
                 self.fields['main_image'].required = False
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        from apps.core.navigation import auto_shift_order_if_changed
+        auto_shift_order_if_changed(self, University, instance)
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
     class Meta:
         model = University
         fields = [
             # Basic Information
-            'name', 'slug', 'university_type', 'state', 'city', 'logo', 'main_image', 'location', 'video_url',
+            'name', 'slug', 'university_type', 'state', 'city', 'order', 'logo', 'main_image', 'location', 'video_url',
             'telephone', 'website',
             # Rich Text Sections
             'description',
@@ -72,6 +81,12 @@ class UniversityForm(forms.ModelForm):
             'university_type': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'required': True,
+            }),
+            'order': forms.NumberInput(attrs={
+                'class': 'w-full text-center border-0 p-0 focus:outline-none focus:ring-0 font-normal',
+                'style': 'background: transparent; color: var(--text-primary); font-size: 13px;',
+                'placeholder': '0',
+                'min': '0',
             }),
             'state': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
@@ -235,7 +250,7 @@ class UniversityForm(forms.ModelForm):
             'canonical_url': 'الرابط الأساسي',
             'robots_index': 'السماح بالفهرسة',
             'robots_follow': 'السماح بتتبع الروابط',
-            'sitemap_include': 'تضمين في خريطة الموقع',
+            'order': 'ترتيب العرض (في صفحات القوائم)',
             'og_title': 'عنوان Open Graph',
             'og_description': 'وصف Open Graph',
             'og_image': 'صورة Open Graph',

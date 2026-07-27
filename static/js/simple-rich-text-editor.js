@@ -189,7 +189,15 @@ class SimpleRichTextEditor {
         const allowedTags = ['b', 'strong', 'em', 'i', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'br', 'div', 'p'];
         const unwrapTags = ['span', 'font', 'section', 'article', 'mark', 'small', 'big', 'center', 'abbr', 'code', 'pre', 'sub', 'sup'];
         const allowedAttributes = {
-            'a': ['href', 'title', 'target']
+            'a': ['href', 'title', 'target', 'style', 'class'],
+            'div': ['class', 'style', 'align', 'dir'],
+            'p': ['class', 'style', 'align', 'dir'],
+            'h2': ['class', 'style', 'align', 'dir'],
+            'h3': ['class', 'style', 'align', 'dir'],
+            'h4': ['class', 'style', 'align', 'dir'],
+            'ul': ['class', 'style', 'align', 'dir'],
+            'ol': ['class', 'style', 'align', 'dir'],
+            'li': ['class', 'style', 'align', 'dir'],
         };
         
         // إنشاء عنصر مؤقت
@@ -267,6 +275,9 @@ class SimpleRichTextEditor {
                 // تحويل <p> لـ <div>
                 if (tagName === 'p') {
                     const div = document.createElement('div');
+                    Array.from(node.attributes).forEach(attr => {
+                        div.setAttribute(attr.name, attr.value);
+                    });
                     while (node.firstChild) {
                         div.appendChild(node.firstChild);
                     }

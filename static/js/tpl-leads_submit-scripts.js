@@ -1,4 +1,155 @@
 (function() {
+    // Map of common timezones to 2-letter ISO country codes
+    var TZ_COUNTRY_MAP = {
+        'Africa/Cairo': 'eg',
+        'Asia/Riyadh': 'sa',
+        'Asia/Dubai': 'ae',
+        'Asia/Kuwait': 'kw',
+        'Asia/Qatar': 'qa',
+        'Asia/Muscat': 'om',
+        'Asia/Bahrain': 'bh',
+        'Asia/Amman': 'jo',
+        'Asia/Baghdad': 'iq',
+        'Africa/Khartoum': 'sd',
+        'Africa/Tripoli': 'ly',
+        'Africa/Casablanca': 'ma',
+        'Africa/Algiers': 'dz',
+        'Africa/Tunis': 'tn',
+        'Asia/Kuala_Lumpur': 'my',
+        'Asia/Beirut': 'lb',
+        'Asia/Damascus': 'sy',
+        'Asia/Gaza': 'ps',
+        'Asia/Hebron': 'ps',
+        'Asia/Aden': 'ye',
+        'Europe/London': 'gb',
+        'America/New_York': 'us',
+        'America/Chicago': 'us',
+        'America/Los_Angeles': 'us',
+        'America/Toronto': 'ca',
+        'Europe/Paris': 'fr',
+        'Europe/Berlin': 'de',
+        'Europe/Istanbul': 'tr',
+        'Asia/Istanbul': 'tr',
+        'Asia/Jakarta': 'id',
+        'Asia/Karachi': 'pk',
+        'Asia/Kolkata': 'in',
+        'Asia/Dhaka': 'bd',
+        'Asia/Manila': 'ph'
+    };
+
+    function selectCountryByIso(wrapper, isoCode) {
+        if (!wrapper || !isoCode) return false;
+        var dropdown = wrapper.querySelector('.intl-phone-dropdown');
+        var btn = wrapper.querySelector('.intl-phone-selected');
+        var flagImg = wrapper.querySelector('.intl-phone-flag');
+        var codeSpan = btn ? btn.querySelector('span') : null;
+        var parent = wrapper.parentNode;
+        var hiddenCode = (parent ? parent.querySelector('input[name="country_code"]') : null) || document.querySelector('input[name="country_code"]');
+        var phoneInput = wrapper.querySelector('.intl-phone-input');
+
+        if (!dropdown || !flagImg || !codeSpan || !phoneInput) return false;
+
+        var targetIso = isoCode.toLowerCase();
+        var opt = dropdown.querySelector('li[role="option"][data-flag="' + targetIso + '"]');
+        if (!opt) return false;
+
+        var code = opt.getAttribute('data-code');
+        var flag = opt.getAttribute('data-flag');
+        var placeholder = opt.getAttribute('data-placeholder');
+
+        codeSpan.textContent = code;
+        flagImg.src = 'https://flagcdn.com/w20/' + flag + '.png';
+        if (hiddenCode) hiddenCode.value = code;
+        if (placeholder) phoneInput.placeholder = placeholder;
+        return true;
+    }
+
+    function detectBrowserCountry() {
+        try {
+            var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (tz && TZ_COUNTRY_MAP[tz]) {
+                return TZ_COUNTRY_MAP[tz];
+            }
+        } catch(e) {}
+
+        var langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ''];
+        for (var i = 0; i < langs.length; i++) {
+            if (!langs[i]) continue;
+            var parts = langs[i].split('-');
+            if (parts.length === 2 && parts[1].length === 2) {
+                var c = parts[1].toLowerCase();
+                if (c !== 'ar' && c !== 'en') {
+                    return c;
+                }
+            }
+        }
+        return null;
+    }
+
+    function applyCountryToWrappers(wrappers, countryIso) {
+        wrappers.forEach(function(wrapper) {
+            if (wrapper.dataset.userSelected === 'true') return;
+            selectCountryByIso(wrapper, countryIso);
+        });
+    }
+
+    function fetchIpCountry(callback) {
+        var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        var timeoutId = controller ? setTimeout(function() { controller.abort(); }, 2500) : null;
+
+        fetch('https://get.geojs.io/v1/ip/country.json', { signal: controller ? controller.signal : undefined })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (timeoutId) clearTimeout(timeoutId);
+                if (data && data.country) {
+                    callback(data.country.toLowerCase());
+                } else {
+                    callback(null);
+                }
+            })
+            .catch(function() {
+                if (timeoutId) clearTimeout(timeoutId);
+                fetch('https://ipapi.co/json/')
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (data && data.country_code) {
+                            callback(data.country_code.toLowerCase());
+                        } else {
+                            callback(null);
+                        }
+                    })
+                    .catch(function() { callback(null); });
+            });
+    }
+
+    function autoDetectAndSetCountry(wrappers) {
+        if (!wrappers || !wrappers.length) return;
+
+        var cached = null;
+        try {
+            cached = sessionStorage.getItem('user_detected_country');
+        } catch(e) {}
+
+        if (cached) {
+            applyCountryToWrappers(wrappers, cached);
+            return;
+        }
+
+        var localDetected = detectBrowserCountry();
+        if (localDetected) {
+            applyCountryToWrappers(wrappers, localDetected);
+        }
+
+        fetchIpCountry(function(ipCountry) {
+            if (ipCountry) {
+                try {
+                    sessionStorage.setItem('user_detected_country', ipCountry);
+                } catch(e) {}
+                applyCountryToWrappers(wrappers, ipCountry);
+            }
+        });
+    }
+
     // Initialize all phone inputs on DOMContentLoaded
     function initIntlPhone(wrapper) {
         var btn = wrapper.querySelector('.intl-phone-selected');
@@ -7,8 +158,8 @@
         var codeSpan = btn ? btn.querySelector('span') : null;
         
         var parent = wrapper.parentNode;
-        var hiddenCode = parent.querySelector('input[name="country_code"]');
-        var combined = parent.querySelector('input[name="phone"]');
+        var hiddenCode = (parent ? parent.querySelector('input[name="country_code"]') : null) || document.querySelector('input[name="country_code"]');
+        var combined = (parent ? parent.querySelector('input[name="phone"]') : null) || document.querySelector('input[name="phone"]');
         var phoneInput = wrapper.querySelector('.intl-phone-input');
         
         if (!btn || !dropdown || !flagImg || !codeSpan || !phoneInput) return;
@@ -46,6 +197,11 @@
                 if (search) setTimeout(function() { search.focus(); }, 50);
             }
         });
+
+        // Mark user interaction when typing in input
+        phoneInput.addEventListener('input', function() {
+            wrapper.dataset.userSelected = 'true';
+        });
         
         // Search filter
         var searchInput = dropdown.querySelector('.intl-phone-search');
@@ -69,6 +225,7 @@
         dropdown.addEventListener('click', function(e) {
             var li = e.target.closest('li[role="option"]');
             if (!li) return;
+            wrapper.dataset.userSelected = 'true';
             var code = li.getAttribute('data-code');
             var flag = li.getAttribute('data-flag');
             var placeholder = li.getAttribute('data-placeholder');
@@ -102,6 +259,7 @@
                 }
                 
                 if (matchedOpt) {
+                    wrapper.dataset.userSelected = 'true';
                     var code = matchedOpt.getAttribute('data-code');
                     var flag = matchedOpt.getAttribute('data-flag');
                     var placeholder = matchedOpt.getAttribute('data-placeholder');
@@ -134,8 +292,8 @@
         var wrappers = e.target.querySelectorAll('.intl-phone-wrapper');
         wrappers.forEach(function(wrapper) {
             var parent = wrapper.parentNode;
-            var hiddenCode = parent.querySelector('input[name="country_code"]');
-            var combined = parent.querySelector('input[name="phone"]');
+            var hiddenCode = (parent ? parent.querySelector('input[name="country_code"]') : null) || document.querySelector('input[name="country_code"]');
+            var combined = (parent ? parent.querySelector('input[name="phone"]') : null) || document.querySelector('input[name="phone"]');
             var phoneInput = wrapper.querySelector('.intl-phone-input');
             
             if (phoneInput && combined && hiddenCode) {
@@ -148,6 +306,7 @@
     function initAll() {
         var wrappers = document.querySelectorAll('.intl-phone-wrapper');
         wrappers.forEach(initIntlPhone);
+        autoDetectAndSetCountry(wrappers);
     }
     
     if (document.readyState === 'loading') {

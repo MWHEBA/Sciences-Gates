@@ -49,6 +49,20 @@ class SchemaGenerator:
         """
         site_url = request.build_absolute_uri('/')
         
+        from apps.core.models import SiteSettings
+        try:
+            site_settings = SiteSettings.get_settings()
+            same_as_links = [item['url'] for item in site_settings.social_links]
+        except Exception:
+            same_as_links = []
+
+        if not same_as_links:
+            same_as_links = [
+                "https://www.facebook.com/sciencegates",
+                "https://www.twitter.com/sciencegates",
+                "https://www.linkedin.com/company/sciencegates"
+            ]
+        
         schema = {
             "@context": "https://schema.org",
             "@type": "Organization",
@@ -62,11 +76,7 @@ class SchemaGenerator:
                 "contactType": "Customer Service",
                 "availableLanguage": ["ar", "en"]
             },
-            "sameAs": [
-                "https://www.facebook.com/sciencegates",
-                "https://www.twitter.com/sciencegates",
-                "https://www.linkedin.com/company/sciencegates"
-            ]
+            "sameAs": same_as_links
         }
         
         # Add logo if available

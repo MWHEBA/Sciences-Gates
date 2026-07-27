@@ -108,6 +108,7 @@ urlpatterns = [
     
     # General Settings (Super Admin)
     path('settings/', views.SiteSettingsUpdateView.as_view(), name='settings'),
+    path('navigation/', views.NavigationManagerView.as_view(), name='navigation_manager'),
     path('settings/test-smtp/', views.SMTPTestView.as_view(), name='test_smtp'),
     path('seo/', views.SEOManagementView.as_view(), name='seo_management'),
 
@@ -133,4 +134,14 @@ urlpatterns = [
     
     # Content Locks API
     path('api/locks/', views.ContentLockAPIView.as_view(), name='api_locks'),
+    
+    # Internal Link Search API
+    path('api/link-search/', views.LinkSearchApiView.as_view(), name='api_link_search'),
+
+    # Versioning APIs
+    path('api/versions/restore/<int:version_id>/', views.ContentVersionRestoreView.as_view(), name='api_version_restore'),
+    path('api/versions/detail/<int:version_id>/', views.ContentVersionDetailView.as_view(), name='api_version_detail'),
+    path('api/versions/<str:model_name>/<int:object_id>/', views.ContentVersionListView.as_view(), name='api_version_list'),
 ]
+
+

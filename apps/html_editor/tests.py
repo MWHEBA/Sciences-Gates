@@ -250,3 +250,24 @@ class SanitizeArticleHTMLTests(TestCase):
         self.assertNotIn('onerror', result)
         self.assertNotIn('javascript:', result)
         self.assertNotIn('<script>', result)
+
+    def test_alignment_and_direction_attributes(self):
+        """Test that alignment styles (text-align) and dir/align attributes are preserved on block elements."""
+        html = '<p style="text-align: right;" dir="rtl">محتوى لليمين</p>'
+        result = sanitize_article_html(html)
+        self.assertIn('style="text-align: right;"', result)
+        self.assertIn('dir="rtl"', result)
+
+        html_h2 = '<h2 style="text-align: center;">عنوان رئيسي</h2>'
+        result_h2 = sanitize_article_html(html_h2)
+        self.assertIn('style="text-align: center;"', result_h2)
+
+        html_align = '<div align="center">محتوى بالمنتصف</div>'
+        result_align = sanitize_article_html(html_align)
+        self.assertIn('align="center"', result_align)
+
+        html_justify = '<p style="text-align: justify;">نص متباعد ومتساوي الحواف</p>'
+        result_justify = sanitize_article_html(html_justify)
+        self.assertIn('style="text-align: justify;"', result_justify)
+
+

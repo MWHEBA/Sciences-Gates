@@ -27,6 +27,12 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
         help_text='رابط الصفحة (يدعم الأحرف العربية)',
         allow_unicode=True
     )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='ترتيب العرض',
+        help_text='ترتيب ظهور المعهد في صفحات القوائم (الأصغر أولاً)',
+        db_index=True
+    )
     is_legacy = models.BooleanField(
         default=False,
         verbose_name='رابط قديم',
@@ -137,7 +143,7 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
     class Meta:
         verbose_name = 'معهد'
         verbose_name_plural = 'المعاهد'
-        ordering = ['name']
+        ordering = ['order', 'name']
         indexes = [
             models.Index(fields=['publish_status']),
             models.Index(fields=['name']),
@@ -301,8 +307,11 @@ class InstituteAttachment(TimestampedModel):
 
     def save(self, *args, **kwargs):
         cleanup_attachment_file_on_save(self)
-        if self.file and hasattr(self.file, 'size'):
-            self.file_size = self.file.size
+        if self.file:
+            try:
+                self.file_size = self.file.size
+            except (FileNotFoundError, OSError, ValueError):
+                pass
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):

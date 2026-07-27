@@ -299,8 +299,11 @@ class ArticleAttachment(TimestampedModel):
 
     def save(self, *args, **kwargs):
         cleanup_attachment_file_on_save(self)
-        if self.file and hasattr(self.file, 'size'):
-            self.file_size = self.file.size
+        if self.file:
+            try:
+                self.file_size = self.file.size
+            except (FileNotFoundError, OSError, ValueError):
+                pass
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):

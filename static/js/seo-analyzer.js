@@ -6,7 +6,10 @@
   if (!objectId) return; // Server-side PK check: only load on pages where object is saved
 
   var pathParts = window.location.pathname.split('/');
-  var dashboardIndex = pathParts.indexOf('dashboard');
+  var dashboardIndex = pathParts.indexOf('sg');
+  if (dashboardIndex === -1) {
+    dashboardIndex = pathParts.indexOf('dashboard');
+  }
   if (dashboardIndex === -1 || dashboardIndex + 1 >= pathParts.length) return;
   var contentType = pathParts[dashboardIndex + 1];
 

@@ -1,0 +1,272 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Science Gates{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content_wrapper %}
+<div class="w-full flex-1 flex flex-col gap-6 min-w-0" x-data="{
+        activeTab: 'megamenu',
+        savingSlot: null,
+        updateSlot(sectionKey, slotNum, entityType, selectEl) {
+            const entityId = selectEl.value;
+            this.savingSlot = `${sectionKey}_${slotNum}`;
+            
+            const formData = new FormData();
+            formData.append('section', sectionKey);
+            formData.append('slot_number', slotNum);
+            formData.append('entity_type', entityType);
+            formData.append('entity_id', entityId);
+            
+            fetch('{% url "dashboard:navigation_manager" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.savingSlot = null;
+                if (data.success) {
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: data.message, level: 'success' } 
+                    }));
+                    setTimeout(() => { window.location.reload(); }, 600);
+                } else {
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: data.message || 'حدث خطأ أثناء التحديث', level: 'error' } 
+                    }));
+                }
+            })
+            .catch(err => {
+                this.savingSlot = null;
+                window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: 'حدث خطأ في الاتصال بالخادم', level: 'error' } 
+                }));
+            });
+        }
+    }">
+
+    <!-- Page Header & Info Banner -->
+    <div class="rounded-xl border p-5 shadow-sm" style="border-color: var(--border); background-color: var(--surface);">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-lg font-bold" style="color: var(--text-primary);">🎯 إدارة القوائم والصفحة الرئيسية (Curated Navigation)</h2>
+                <p class="text-sm mt-1" style="color: var(--text-secondary);">
+                    حدد الكيانات المخصصة لكل خانة ثابتة في الهيدر والرئيسية. النظام يضمن ملء أي خانة فارغة أو محذوفة تلقائياً بذكاء دون أي تكرار.
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium" style="background-color: var(--surface-hover); color: var(--primary);">
+                    ✨ استكمال تلقائي مفعل 100%
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs (Mega Menu vs Homepage) -->
+    <div class="rounded-xl border shadow-sm overflow-hidden" style="border-color: var(--border); background-color: var(--surface);">
+        <div class="border-b px-4 flex gap-4" style="border-color: var(--border);">
+            <button type="button" @click="activeTab = 'megamenu'"
+                    :class="activeTab === 'megamenu' ? 'border-b-2 font-bold' : 'opacity-70'"
+                    :style="activeTab === 'megamenu' ? 'border-color: var(--primary); color: var(--primary);' : 'color: var(--text-secondary);'"
+                    class="py-4 px-4 text-sm flex items-center gap-2 transition-all cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+                <span>📌 القائمة الرئيسية (Mega Menu)</span>
+            </button>
+
+            <button type="button" @click="activeTab = 'homepage'"
+                    :class="activeTab === 'homepage' ? 'border-b-2 font-bold' : 'opacity-70'"
+                    :style="activeTab === 'homepage' ? 'border-color: var(--primary); color: var(--primary);' : 'color: var(--text-secondary);'"
+                    class="py-4 px-4 text-sm flex items-center gap-2 transition-all cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                <span>🏠 الصفحة الرئيسية (Homepage)</span>
+            </button>
+        </div>
+
+        <div class="p-6">
+            <!-- TAB 1: Mega Menu -->
+            <div x-show="activeTab === 'megamenu'" class="flex flex-col gap-8">
+                {% for sec in sections %}
+                {% if sec.key == 'mega_menu_public_univ' or sec.key == 'mega_menu_private_univ' or sec.key == 'mega_menu_institute' %}
+                <div class="border rounded-xl p-5 shadow-xs" style="border-color: var(--border); background-color: var(--surface);">
+                    <div class="mb-4 pb-3 border-b flex items-center justify-between" style="border-color: var(--border);">
+                        <div>
+                            <h3 class="font-bold text-base" style="color: var(--text-primary);">{{ sec.title }}</h3>
+                            <p class="text-xs mt-0.5" style="color: var(--text-secondary);">{{ sec.description }}</p>
+                        </div>
+                        <span class="text-xs px-2.5 py-1 rounded-full font-mono font-medium" style="background-color: var(--surface-hover); color: var(--text-secondary);">
+                            {{ sec.max_slots }} خانات
+                        </span>
+                    </div>
+
+                    <!-- Slots Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {% for slot in sec.slots %}
+                        <div class="border rounded-lg p-3 flex flex-col justify-between gap-2.5 transition-all"
+                             style="border-color: var(--border); background-color: var(--surface-hover);">
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold font-mono px-2 py-0.5 rounded" style="background-color: var(--primary-light, #e0f2fe); color: var(--primary);">
+                                    خانة #{{ slot.slot_number }}
+                                </span>
+                                {% if slot.is_manual %}
+                                <span class="text-xs px-2 py-0.5 rounded font-medium bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    🟢 تعيين يدوي
+                                </span>
+                                {% else %}
+                                <span class="text-xs px-2 py-0.5 rounded font-medium bg-slate-200 text-slate-700">
+                                    🔘 استكمال تلقائي
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Dropdown Select -->
+                            <div>
+                                <select class="w-full text-xs px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        style="border-color: var(--border); background-color: var(--surface); color: var(--text-primary);"
+                                        @change="updateSlot('{{ sec.key }}', {{ slot.slot_number }}, '{{ sec.type }}', $event.target)">
+                                    <option value="0">-- تلقائي (استكمال بحسب الترتيب) --</option>
+                                    
+                                    {% if sec.type == 'university' %}
+                                        {% if sec.key == 'mega_menu_public_univ' %}
+                                            {% for item in all_public_univs %}
+                                            <option value="{{ item.id }}" {% if slot.assigned_item and slot.assigned_item.id == item.id %}selected{% endif %}>
+                                                {{ item.name }}
+                                            </option>
+                                            {% endfor %}
+                                        {% else %}
+                                            {% for item in all_private_univs %}
+                                            <option value="{{ item.id }}" {% if slot.assigned_item and slot.assigned_item.id == item.id %}selected{% endif %}>
+                                                {{ item.name }}
+                                            </option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% elif sec.type == 'institute' %}
+                                        {% for item in all_institutes %}
+                                        <option value="{{ item.id }}" {% if slot.assigned_item and slot.assigned_item.id == item.id %}selected{% endif %}>
+                                            {{ item.name }}
+                                        </option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <!-- Effective Displayed Entity Notice -->
+                            <div class="text-xs pt-1 border-t flex items-center justify-between" style="border-color: var(--border);">
+                                <span class="text-slate-500">الظاهر للزائر:</span>
+                                <span class="font-medium text-slate-800 truncate max-w-[150px]">
+                                    {% if slot.effective_item %}
+                                        {{ slot.effective_item.name }}
+                                    {% else %}
+                                        <span class="text-slate-400">لا يوجد</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- TAB 2: Homepage -->
+            <div x-show="activeTab === 'homepage'" class="flex flex-col gap-8">
+                {% for sec in sections %}
+                {% if sec.key == 'home_featured_univ' or sec.key == 'home_featured_institute' or sec.key == 'home_featured_major' %}
+                <div class="border rounded-xl p-5 shadow-xs" style="border-color: var(--border); background-color: var(--surface);">
+                    <div class="mb-4 pb-3 border-b flex items-center justify-between" style="border-color: var(--border);">
+                        <div>
+                            <h3 class="font-bold text-base" style="color: var(--text-primary);">{{ sec.title }}</h3>
+                            <p class="text-xs mt-0.5" style="color: var(--text-secondary);">{{ sec.description }}</p>
+                        </div>
+                        <span class="text-xs px-2.5 py-1 rounded-full font-mono font-medium" style="background-color: var(--surface-hover); color: var(--text-secondary);">
+                            {{ sec.max_slots }} خانات
+                        </span>
+                    </div>
+
+                    <!-- Slots Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for slot in sec.slots %}
+                        <div class="border rounded-lg p-3 flex flex-col justify-between gap-2.5 transition-all"
+                             style="border-color: var(--border); background-color: var(--surface-hover);">
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold font-mono px-2 py-0.5 rounded" style="background-color: var(--primary-light, #e0f2fe); color: var(--primary);">
+                                    خانة #{{ slot.slot_number }}
+                                </span>
+                                {% if slot.is_manual %}
+                                <span class="text-xs px-2 py-0.5 rounded font-medium bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    🟢 تعيين يدوي
+                                </span>
+                                {% else %}
+                                <span class="text-xs px-2 py-0.5 rounded font-medium bg-slate-200 text-slate-700">
+                                    🔘 استكمال تلقائي
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Dropdown Select -->
+                            <div>
+                                <select class="w-full text-xs px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        style="border-color: var(--border); background-color: var(--surface); color: var(--text-primary);"
+                                        @change="updateSlot('{{ sec.key }}', {{ slot.slot_number }}, '{{ sec.type }}', $event.target)">
+                                    <option value="0">-- تلقائي (استكمال بحسب الترتيب) --</option>
+                                    
+                                    {% if sec.type == 'university' %}
+                                        {% for item in all_public_univs %}
+                                        <option value="{{ item.id }}" {% if slot.assigned_item and slot.assigned_item.id == item.id %}selected{% endif %}>
+                                            [حكومي] {{ item.name }}
+                                        </option>
+                                        {% endfor %}
+                                        {% for item in all_private_univs %}
+                                        <option value="{{ item.id }}" {% if slot.assigned_item and slot.assigned_item.id == item.id %}selected{% endif %}>
+                                            [خاص] {{ item.name }}
+                                        </option>
+                                        {% endfor %}
+                                    {% elif sec.type == 'institute' %}
+                                        {% for item in all_institutes %}
+                                        <option value="{{ item.id }}" {% if slot.assigned_item and slot.assigned_item.id == item.id %}selected{% endif %}>
+                                            {{ item.name }}
+                                        </option>
+                                        {% endfor %}
+                                    {% elif sec.type == 'major' %}
+                                        {% for item in all_majors %}
+                                        <option value="{{ item.id }}" {% if slot.assigned_item and slot.assigned_item.id == item.id %}selected{% endif %}>
+                                            {{ item.name }}
+                                        </option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <!-- Effective Displayed Entity Notice -->
+                            <div class="text-xs pt-1 border-t flex items-center justify-between" style="border-color: var(--border);">
+                                <span class="text-slate-500">الظاهر للزائر:</span>
+                                <span class="font-medium text-slate-800 truncate max-w-[150px]">
+                                    {% if slot.effective_item %}
+                                        {{ slot.effective_item.name }}
+                                    {% else %}
+                                        <span class="text-slate-400">لا يوجد</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

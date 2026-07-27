@@ -63,7 +63,17 @@
                             box-shadow: var(--shadow-sm);
                             padding: 24px;">
                     <section>
-                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">المعلومات الأساسية</h2>
+                        <div class="flex items-center justify-between" style="margin-bottom: 20px;">
+                            <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin: 0;">المعلومات الأساسية</h2>
+                            {% if form.instance.pk %}
+                            <button type="button" onclick="openVersionModal('article', '{{ form.instance.pk }}')" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md shadow-sm transition-colors" style="background-color: var(--color-bg-subtle, #f3f4f6); color: var(--color-text-main, #374151); border: 1px solid var(--color-border, #d1d5db);">
+                                <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                سجل النسخ (5)
+                            </button>
+                            {% endif %}
+                        </div>
                         <div class="space-y-6">
                             <!-- العنوان — Full Width -->
                             <div>
@@ -1100,6 +1110,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Media Edit Modal -->
 {% include "dashboard/components/media_edit_modal.html" %}
+{% include "dashboard/includes/version_history_modal.html" %}
 {% endblock %}
 
 {% block extra_js %}

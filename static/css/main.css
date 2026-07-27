@@ -1293,7 +1293,7 @@ only screen and (min-width: 768px) and (max-width: 991px),
 }
 
 .it-header-2-top-right ul li:not(:last-child) {
-    margin-right: 30px;
+    margin-right: 15px;
 }
 
 /* Custom list items spacing overrides */
@@ -2367,7 +2367,8 @@ only screen and (min-width: 768px) and (max-width: 991px),
     }
 }
 
-.it-hero-2-thumb>img {
+.it-hero-2-thumb>img,
+.it-hero-2-thumb>picture {
     position: relative;
     z-index: 2;
     max-width: 100%;
@@ -2377,7 +2378,8 @@ only screen and (min-width: 768px) and (max-width: 991px),
 
 @media only screen and (min-width: 768px) and (max-width: 991px),
 (max-width: 767px) {
-    .it-hero-2-thumb>img {
+    .it-hero-2-thumb>img,
+    .it-hero-2-thumb>picture {
         max-width: 100%;
     }
 }
@@ -2638,18 +2640,13 @@ html[dir="rtl"] .it-header-2-top-right {
 }
 
 html[dir="rtl"] .it-header-2-top-right ul li:not(:last-child) {
-    margin-left: 30px;
-    margin-right: 0;
+    margin-left: 15px;
+    margin-right: 15px;
 }
 
 html[dir="rtl"] .it-header-2-top-right ul li.topbar-social-item {
-    margin-left: 15px;
+    margin-left: 0;
     margin-right: 0;
-}
-
-html[dir="rtl"] .it-header-2-top-right ul li.topbar-separator-item {
-    margin-left: 15px;
-    margin-left: 15px;
 }
 
 html[dir="rtl"] .it-header-2-top-right ul li.topbar-login-item {
@@ -3464,6 +3461,7 @@ only screen and (min-width: 992px) and (max-width: 1199px) {
     margin-bottom: 12px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.5;
@@ -3692,24 +3690,30 @@ only screen and (min-width: 992px) and (max-width: 1199px) {
     border: 2px solid var(--primary);
 }
 
-/* دائرة الأيقونة */
+/* دائرة الأيقونة — خلفية معتمة لتغطية خط الوصل الممتد خلفها */
 .step-card__icon {
     width: 80px;
     height: 80px;
-    background-color: var(--white-10);
+    background-color: var(--primary);
     border: 2px solid var(--white-18);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.6rem;
-    color: var(--white);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    color: var(--secondary);
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.step-card__icon svg {
+    color: inherit;
+    fill: currentColor;
+    transition: color 0.3s ease;
 }
 
 /* الأيقونة الأخيرة بلون ذهبي مميز */
 .step-card__icon--accent {
-    background-color: var(--secondary-muted);
+    background-color: var(--primary);
     border-color: var(--secondary);
     color: var(--secondary);
 }

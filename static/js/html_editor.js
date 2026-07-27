@@ -511,10 +511,11 @@ class ProfessionalHTMLEditor {
             this._handleToolbarAction(btn);
         });
 
-        // Editor input → sync + update toolbar state + word count
+        // Editor input → sync + update toolbar state + word count + debounced save state
         this.editorArea.addEventListener('input', () => {
             this._syncToTextarea();
             this._updateWordCount();
+            this._scheduleTypingSaveState();
         });
 
         // Editor click/selection → update toolbar state
@@ -608,6 +609,7 @@ class ProfessionalHTMLEditor {
         if (this._initialValue) {
             this.editorArea.innerHTML = this._initialValue;
         }
+        this._saveState('الحالة الأولية');
         this._syncToTextarea();
         this._updateWordCount();
         this._bindAllTableEvents();
@@ -623,6 +625,14 @@ class ProfessionalHTMLEditor {
         const value = btn.getAttribute('data-value') || null;
 
         switch (action) {
+            case 'undo':
+                this.editorArea.focus();
+                this._undo();
+                break;
+            case 'redo':
+                this.editorArea.focus();
+                this._redo();
+                break;
             case 'createLink':
                 this.editorArea.focus();
                 this._insertLink();
@@ -1033,11 +1043,10 @@ class ProfessionalHTMLEditor {
         const overlay = document.createElement('div');
         overlay.className = 'pro-editor-modal-overlay';
         
-        // Show text field if we don't have selectedText, or if we are editing an existing link
-        const showTextField = !selectedText || isEditing;
+        const hasSelection = !!selectedText && !isEditing;
 
         overlay.innerHTML = `
-            <div class="pro-editor-modal" role="dialog" aria-modal="true" aria-label="${isEditing ? 'تعديل الرابط' : 'إدراج رابط'}">
+            <div class="pro-editor-modal pro-link-editor-modal" role="dialog" aria-modal="true" aria-label="${isEditing ? 'تعديل الرابط' : 'إدراج رابط'}">
                 <div class="pro-editor-modal-header">
                     <span>${isEditing ? 'تعديل الرابط' : 'إدراج رابط'}</span>
                     <button type="button" class="pro-modal-close" aria-label="إغلاق">
@@ -1047,17 +1056,36 @@ class ProfessionalHTMLEditor {
                 <div class="pro-editor-modal-body">
                     <div class="pro-modal-field">
                         <label>عنوان الرابط (URL)</label>
-                        <input type="url" class="pro-link-url" placeholder="https://" dir="ltr" />
+                        <input type="url" class="pro-link-url" placeholder="https:// أو /universities/..." dir="ltr" />
                     </div>
-                    ${showTextField ? `
                     <div class="pro-modal-field">
                         <label>نص الرابط</label>
                         <input type="text" class="pro-link-text" placeholder="نص يظهر للقارئ" dir="rtl" />
-                    </div>` : ''}
+                    </div>
                     <label class="pro-modal-checkbox">
                         <input type="checkbox" class="pro-link-newtab" />
                         <span>فتح في تبويب جديد</span>
                     </label>
+
+                    <div class="pro-link-search-section">
+                        <div class="pro-link-search-divider">
+                            <span>أو اختر من محتوى الموقع</span>
+                        </div>
+                        <div class="pro-link-search-filters">
+                            <button type="button" class="pro-link-type-pill is-active" data-type="all">الكل</button>
+                            <button type="button" class="pro-link-type-pill" data-type="university">جامعات</button>
+                            <button type="button" class="pro-link-type-pill" data-type="institute">معاهد</button>
+                            <button type="button" class="pro-link-type-pill" data-type="major">تخصصات</button>
+                            <button type="button" class="pro-link-type-pill" data-type="article">مقالات</button>
+                        </div>
+                        <div class="pro-link-search-input-wrapper">
+                            <input type="text" class="pro-link-search-input" placeholder="ابحث باسم الجامعة، المعهد، التخصص أو المقال..." dir="rtl" />
+                            <span class="pro-link-search-spinner" style="display:none;"></span>
+                        </div>
+                        <div class="pro-link-search-results">
+                            <div class="pro-link-results-placeholder">اكتب كلمة البحث أو انقر لاستعراض عناصر الموقع المنشورة...</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="pro-editor-modal-footer">
                     <button type="button" class="pro-modal-cancel">إلغاء</button>
@@ -1073,19 +1101,119 @@ class ProfessionalHTMLEditor {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
         const urlInput = overlay.querySelector('.pro-link-url');
+        const textInput = overlay.querySelector('.pro-link-text');
+        const newTabCheckbox = overlay.querySelector('.pro-link-newtab');
+
         if (isEditing) {
             urlInput.value = existingUrl;
         }
-
-        const textInput = overlay.querySelector('.pro-link-text');
-        if (textInput && selectedText) {
+        if (selectedText) {
             textInput.value = selectedText;
         }
-
-        const newTabCheckbox = overlay.querySelector('.pro-link-newtab');
         if (existingNewTab) {
             newTabCheckbox.checked = true;
         }
+
+        // Internal Search Logic
+        const searchInput = overlay.querySelector('.pro-link-search-input');
+        const resultsContainer = overlay.querySelector('.pro-link-search-results');
+        const spinner = overlay.querySelector('.pro-link-search-spinner');
+        const pills = overlay.querySelectorAll('.pro-link-type-pill');
+        let currentType = 'all';
+        let searchTimeout = null;
+        const searchCache = new Map();
+
+        pills.forEach(pill => {
+            pill.addEventListener('click', (e) => {
+                e.preventDefault();
+                pills.forEach(p => p.classList.remove('is-active'));
+                pill.classList.add('is-active');
+                currentType = pill.getAttribute('data-type');
+                triggerSearch();
+            });
+        });
+
+        const fetchResults = (query, type) => {
+            const cacheKey = `${type}:${query.trim()}`;
+            if (searchCache.has(cacheKey)) {
+                renderResults(searchCache.get(cacheKey));
+                return;
+            }
+
+            spinner.style.display = 'inline-block';
+
+            const dashboardPrefix = window.location.pathname.startsWith('/sg') ? '/sg' : '/dashboard';
+            const endpoint = `${dashboardPrefix}/api/link-search/?q=${encodeURIComponent(query)}&type=${encodeURIComponent(type)}`;
+            fetch(endpoint)
+                .then(res => res.json())
+                .then(data => {
+                    spinner.style.display = 'none';
+                    if (data.success && data.results) {
+                        searchCache.set(cacheKey, data.results);
+                        renderResults(data.results);
+                    } else {
+                        renderResults([]);
+                    }
+                })
+                .catch(() => {
+                    spinner.style.display = 'none';
+                    resultsContainer.innerHTML = '<div class="pro-link-results-error">تعذر الاتصال بالخادم.</div>';
+                });
+        };
+
+        const renderResults = (items) => {
+            if (!items || items.length === 0) {
+                resultsContainer.innerHTML = '<div class="pro-link-results-empty">لم يتم العثور على نتائج منشورة مطابقة.</div>';
+                return;
+            }
+
+            let html = '<ul class="pro-link-results-list">';
+            items.forEach(item => {
+                const safeTitle = item.title.replace(/"/g, '&quot;');
+                html += `
+                    <li class="pro-link-result-item" data-url="${item.url}" data-title="${safeTitle}" title="${item.url}">
+                        <span class="pro-link-result-badge badge-${item.type}">${item.type_label}</span>
+                        <div class="pro-link-result-info">
+                            <span class="pro-link-result-title">${item.title}</span>
+                        </div>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            resultsContainer.innerHTML = html;
+
+            resultsContainer.querySelectorAll('.pro-link-result-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const url = el.getAttribute('data-url');
+                    const title = el.getAttribute('data-title');
+                    
+                    urlInput.value = url;
+                    if (!hasSelection || !textInput.value.trim()) {
+                        textInput.value = title;
+                    }
+                    
+                    resultsContainer.querySelectorAll('.pro-link-result-item').forEach(i => i.classList.remove('is-selected'));
+                    el.classList.add('is-selected');
+                });
+            });
+        };
+
+        const triggerSearch = () => {
+            const query = searchInput.value.trim();
+            if (searchTimeout) clearTimeout(searchTimeout);
+            
+            searchTimeout = setTimeout(() => {
+                fetchResults(query, currentType);
+            }, 300);
+        };
+
+        searchInput.addEventListener('input', triggerSearch);
+        
+        searchInput.addEventListener('focus', () => {
+            if (!searchInput.value.trim() && resultsContainer.querySelector('.pro-link-results-placeholder')) {
+                fetchResults('', currentType);
+            }
+        });
 
         overlay.querySelector('.pro-modal-confirm').addEventListener('click', () => {
             const url = urlInput.value.trim();
@@ -1095,9 +1223,8 @@ class ProfessionalHTMLEditor {
             onConfirm(url, text, newTab);
         });
 
-        // Enter key confirms
         overlay.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && e.target !== searchInput) {
                 overlay.querySelector('.pro-modal-confirm').click();
             } else if (e.key === 'Escape') {
                 close();
@@ -2709,47 +2836,150 @@ class ProfessionalHTMLEditor {
     }
 
     // ─── Undo/Redo Stack ──────────────────────────────────────────────────────
+    // ─── Selection Helpers for Caret Preservation ─────────────────────────────
+    _getTextOffset(root, node, nodeOffset) {
+        let offset = 0;
+        const treeWalker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+        let currentNode;
+        while ((currentNode = treeWalker.nextNode())) {
+            if (currentNode === node) {
+                return offset + nodeOffset;
+            }
+            offset += currentNode.textContent.length;
+        }
+        return offset;
+    }
+
+    _createRangeFromOffsets(root, startOffset, endOffset) {
+        let currentOffset = 0;
+        let startNode = null, startNodeOffset = 0;
+        let endNode = null, endNodeOffset = 0;
+
+        const treeWalker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+        let node;
+        while ((node = treeWalker.nextNode())) {
+            const len = node.textContent.length;
+            if (!startNode && currentOffset + len >= startOffset) {
+                startNode = node;
+                startNodeOffset = startOffset - currentOffset;
+            }
+            if (!endNode && currentOffset + len >= endOffset) {
+                endNode = node;
+                endNodeOffset = endOffset - currentOffset;
+            }
+            currentOffset += len;
+            if (startNode && endNode) break;
+        }
+
+        if (startNode && endNode) {
+            const range = document.createRange();
+            range.setStart(startNode, startNodeOffset);
+            range.setEnd(endNode, endNodeOffset);
+            return range;
+        }
+        return null;
+    }
+
+    _saveSelection() {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return null;
+        const range = sel.getRangeAt(0);
+        if (!this.editorArea.contains(range.commonAncestorContainer)) return null;
+
+        return {
+            startOffset: this._getTextOffset(this.editorArea, range.startContainer, range.startOffset),
+            endOffset: this._getTextOffset(this.editorArea, range.endContainer, range.endOffset),
+        };
+    }
+
+    _restoreSelection(savedSel) {
+        if (!savedSel) return;
+        const range = this._createRangeFromOffsets(this.editorArea, savedSel.startOffset, savedSel.endOffset);
+        if (range) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
+    _scheduleTypingSaveState() {
+        if (this._typingTimer) clearTimeout(this._typingTimer);
+        this._typingTimer = setTimeout(() => {
+            this._saveState('كتابة');
+        }, 400);
+    }
+
+    _flushTypingState() {
+        if (this._typingTimer) {
+            clearTimeout(this._typingTimer);
+            this._typingTimer = null;
+        }
+        const currentHTML = this.editorArea.innerHTML;
+        const lastState = this.undoStack[this.undoStack.length - 1];
+        if (!lastState || lastState.html !== currentHTML) {
+            this._saveState('كتابة');
+        }
+    }
+
+    // ─── Undo/Redo Stack ──────────────────────────────────────────────────────
     _saveState(description = 'تعديل') {
-        // Save current state to undo stack
+        const currentHTML = this.editorArea.innerHTML;
+        const lastState = this.undoStack[this.undoStack.length - 1];
+        if (lastState && lastState.html === currentHTML) return;
+
+        const selectionInfo = this._saveSelection();
+
         this.undoStack.push({
-            html: this.editorArea.innerHTML,
+            html: currentHTML,
             description: description,
+            selection: selectionInfo,
             timestamp: Date.now(),
         });
-        // Clear redo stack when new action is performed
         this.redoStack = [];
-        // Limit stack size to 50 states
         if (this.undoStack.length > 50) this.undoStack.shift();
     }
 
     _undo() {
-        if (this.undoStack.length === 0) return;
-        // Save current state to redo stack
+        this._flushTypingState();
+
+        if (this.undoStack.length <= 1) return;
+
+        const currentState = this.undoStack.pop();
         this.redoStack.push({
-            html: this.editorArea.innerHTML,
-            description: 'إعادة',
+            html: currentState.html,
+            description: currentState.description,
+            selection: this._saveSelection() || currentState.selection,
             timestamp: Date.now(),
         });
-        // Restore previous state
-        const state = this.undoStack.pop();
-        this.editorArea.innerHTML = state.html;
+
+        const prevState = this.undoStack[this.undoStack.length - 1];
+        this.editorArea.innerHTML = prevState.html;
         this._syncToTextarea();
         this._bindAllTableEvents();
+        this._bindImageEvents();
+        if (prevState.selection) {
+            this._restoreSelection(prevState.selection);
+        }
     }
 
     _redo() {
         if (this.redoStack.length === 0) return;
-        // Save current state to undo stack
+
+        const nextState = this.redoStack.pop();
         this.undoStack.push({
-            html: this.editorArea.innerHTML,
-            description: 'تراجع',
+            html: nextState.html,
+            description: nextState.description,
+            selection: nextState.selection,
             timestamp: Date.now(),
         });
-        // Restore next state
-        const state = this.redoStack.pop();
-        this.editorArea.innerHTML = state.html;
+
+        this.editorArea.innerHTML = nextState.html;
         this._syncToTextarea();
         this._bindAllTableEvents();
+        this._bindImageEvents();
+        if (nextState.selection) {
+            this._restoreSelection(nextState.selection);
+        }
     }
 
     // ─── Clear Formatting ──────────────────────────────────────────────────────
@@ -2823,46 +3053,53 @@ class ProfessionalHTMLEditor {
 
     // ─── Keyboard Shortcuts ────────────────────────────────────────────────────
     _handleKeydown(e) {
-        if (e.ctrlKey || e.metaKey) {
-            switch (e.key.toLowerCase()) {
-                case 'b':
-                    e.preventDefault();
-                    this._saveState('غامق');
-                    document.execCommand('bold', false, null);
-                    this._updateToolbarState();
-                    break;
-                case 'i':
-                    e.preventDefault();
-                    this._saveState('مائل');
-                    document.execCommand('italic', false, null);
-                    this._updateToolbarState();
-                    break;
-                case 'u':
-                    e.preventDefault();
-                    this._saveState('تسطير');
-                    document.execCommand('underline', false, null);
-                    this._updateToolbarState();
-                    break;
-                case 'z':
-                    if (e.shiftKey) {
-                        e.preventDefault();
-                        this._redo();
-                    } else {
-                        e.preventDefault();
-                        this._undo();
-                    }
-                    this._updateToolbarState();
-                    break;
-                case 'y':
-                    e.preventDefault();
+        const isCmdOrCtrl = e.ctrlKey || e.metaKey;
+
+        if (isCmdOrCtrl) {
+            const key = e.key ? e.key.toLowerCase() : '';
+            const code = e.code || '';
+            const keyCode = e.keyCode || e.which;
+
+            const isZ = code === 'KeyZ' || key === 'z' || keyCode === 90;
+            const isY = code === 'KeyY' || key === 'y' || keyCode === 89;
+            const isB = code === 'KeyB' || key === 'b' || keyCode === 66;
+            const isI = code === 'KeyI' || key === 'i' || keyCode === 73;
+            const isU = code === 'KeyU' || key === 'u' || keyCode === 85;
+            const isK = code === 'KeyK' || key === 'k' || keyCode === 75;
+
+            if (isZ) {
+                e.preventDefault();
+                if (e.shiftKey) {
                     this._redo();
-                    this._updateToolbarState();
-                    break;
-                case 'k':
-                    e.preventDefault();
-                    this._insertLink();
-                    break;
+                } else {
+                    this._undo();
+                }
+                this._updateToolbarState();
+            } else if (isY) {
+                e.preventDefault();
+                this._redo();
+                this._updateToolbarState();
+            } else if (isB) {
+                e.preventDefault();
+                this._saveState('غامق');
+                document.execCommand('bold', false, null);
+                this._updateToolbarState();
+            } else if (isI) {
+                e.preventDefault();
+                this._saveState('مائل');
+                document.execCommand('italic', false, null);
+                this._updateToolbarState();
+            } else if (isU) {
+                e.preventDefault();
+                this._saveState('تسطير');
+                document.execCommand('underline', false, null);
+                this._updateToolbarState();
+            } else if (isK) {
+                e.preventDefault();
+                this._insertLink();
             }
+        } else if (e.key === ' ' || e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete') {
+            this._flushTypingState();
         }
     }
 
@@ -2940,16 +3177,26 @@ class ProfessionalHTMLEditor {
         ]);
 
         const ALLOWED_ATTRS = {
-            'a':     ['href', 'title', 'target'],
-            'img':   ['src', 'alt', 'width', 'height', 'style', 'class'],
-            'table': ['class', 'data-pro-table', 'style'],
-            'th':    ['colspan', 'rowspan', 'class', 'style'],
-            'td':    ['colspan', 'rowspan', 'class', 'style'],
-            'tr':    ['class', 'style'],
-            'col':   ['style'],
-            'div':   ['class', 'style'],
-            'span':  ['class', 'style'],
-            'font':  ['color', 'size', 'face', 'style', 'class'],
+            'a':          ['href', 'title', 'target', 'style', 'class'],
+            'img':        ['src', 'alt', 'width', 'height', 'style', 'class'],
+            'table':      ['class', 'data-pro-table', 'style'],
+            'th':         ['colspan', 'rowspan', 'class', 'style'],
+            'td':         ['colspan', 'rowspan', 'class', 'style'],
+            'tr':         ['class', 'style'],
+            'col':        ['style'],
+            'div':        ['class', 'style', 'align', 'dir'],
+            'span':       ['class', 'style', 'dir'],
+            'font':       ['color', 'size', 'face', 'style', 'class'],
+            'p':          ['class', 'style', 'align', 'dir'],
+            'h2':         ['class', 'style', 'align', 'dir'],
+            'h3':         ['class', 'style', 'align', 'dir'],
+            'h4':         ['class', 'style', 'align', 'dir'],
+            'h5':         ['class', 'style', 'align', 'dir'],
+            'h6':         ['class', 'style', 'align', 'dir'],
+            'blockquote': ['class', 'style', 'align', 'dir'],
+            'ul':         ['class', 'style', 'align', 'dir'],
+            'ol':         ['class', 'style', 'align', 'dir'],
+            'li':         ['class', 'style', 'align', 'dir'],
         };
 
         const temp = document.createElement('div');
@@ -3020,6 +3267,9 @@ class ProfessionalHTMLEditor {
                     // تحويل <p> لـ <div>
                     if (tag === 'p') {
                         const div = document.createElement('div');
+                        Array.from(child.attributes).forEach(attr => {
+                            div.setAttribute(attr.name, attr.value);
+                        });
                         while (child.firstChild) {
                             div.appendChild(child.firstChild);
                         }

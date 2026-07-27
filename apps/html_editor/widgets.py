@@ -76,3 +76,7 @@ class CustomHTMLEditorWidget(forms.Widget):
             'all': ('css/html_editor.css',)
         }
         js = ('js/html_editor.js',)
+
+
+
+

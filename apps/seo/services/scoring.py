@@ -306,6 +306,51 @@ class SEOScoringEngine:
 
         self.categories["schema_quality"]["earned"] = min(20, max(0, earned))
 
+    def _is_internal_link(self, href: str) -> bool:
+        if not href:
+            return False
+        href = href.strip()
+
+        # Ignore non-http protocols
+        if href.startswith(("mailto:", "tel:", "javascript:", "data:", "whatsapp:", "skype:")):
+            return False
+
+        # Relative paths starting with / or #
+        if href.startswith(("/", "#")) and not href.startswith("//"):
+            return True
+
+        from urllib.parse import urlparse
+        try:
+            parsed = urlparse(href)
+        except Exception:
+            return False
+
+        # Relative path without scheme and netloc (e.g. "articles/my-slug" or "../majors/cs")
+        if not parsed.netloc and not parsed.scheme:
+            return True
+
+        netloc = parsed.netloc.lower()
+        host_only = netloc.split(":")[0]
+
+        # 1. Check against canonical URL domain if set
+        canonical = (self.full_page.get("canonical", "") or "").strip()
+        if canonical:
+            try:
+                can_parsed = urlparse(canonical)
+                if can_parsed.netloc:
+                    can_host = can_parsed.netloc.lower().split(":")[0]
+                    if host_only == can_host or host_only.endswith("." + can_host):
+                        return True
+            except Exception:
+                pass
+
+        # 2. Check against known project site domains & local hosts
+        site_domains = {"sciencesgates.com", "www.sciencesgates.com", "127.0.0.1", "localhost"}
+        if host_only in site_domains or any(host_only.endswith("." + d) for d in site_domains):
+            return True
+
+        return False
+
     def _check_media_links(self):
         earned = 0
         image_warnings = self.main_content.get("image_warnings", [])
@@ -314,11 +359,15 @@ class SEOScoringEngine:
         else:
             earned += 5
 
-        internal_links = [x for x in self.main_content.get("links", []) if x.get("href", "").startswith("/")]
+        internal_links = [x for x in self.main_content.get("links", []) if self._is_internal_link(x.get("href", ""))]
         if len(internal_links) >= self.profile.min_internal_links:
             earned += 3
+            self.passed.append("internal_links")
         else:
-            self.warnings.append({"code": "LOW_INTERNAL_LINKS", "message": "عدد الروابط الداخلية أقل من المطلوب."})
+            self.warnings.append({
+                "code": "LOW_INTERNAL_LINKS",
+                "message": f"عدد الروابط الداخلية المكتشفة ({len(internal_links)}) أقل من الحد الأدنى المطلوب ({self.profile.min_internal_links})."
+            })
 
         # Validate OG image URL structure
         og_image = (self.full_page.get("og_image", "") or "").strip()

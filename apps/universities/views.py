@@ -35,7 +35,7 @@ class UniversityListView(BreadcrumbMixin, ListView):
         ).prefetch_related(
             'related_majors',
             'related_articles'
-        ).order_by('name')
+        ).order_by('order', 'name')
         
         # Apply search filter (q)
         q = self.request.GET.get('q', '').strip()

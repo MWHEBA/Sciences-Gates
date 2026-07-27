@@ -53,7 +53,17 @@
                             box-shadow: var(--shadow-sm);
                             padding: 24px;">
                     <section>
-                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">المعلومات الأساسية</h2>
+                        <div class="flex items-center justify-between" style="margin-bottom: 20px;">
+                            <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin: 0;">المعلومات الأساسية</h2>
+                            {% if form.instance.pk %}
+                            <button type="button" onclick="openVersionModal('university', '{{ form.instance.pk }}')" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md shadow-sm transition-colors" style="background-color: var(--color-bg-subtle, #f3f4f6); color: var(--color-text-main, #374151); border: 1px solid var(--color-border, #d1d5db);">
+                                <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                سجل النسخ (5)
+                            </button>
+                            {% endif %}
+                        </div>
                         <div class="space-y-6">
                             <!-- الاسم — Full Width -->
                             <div>
@@ -102,6 +112,7 @@
                                         <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.university_type.errors.0 }}</p>
                                     {% endif %}
                                 </div>
+
 
                                 <!-- رابط الفيديو -->
                                 <div>
@@ -1062,16 +1073,31 @@
                         {% endif %}
 
                         {% if form.instance.pk %}
-                        <!-- تاريخ آخر تحديث -->
-                        <div class="flex items-center gap-2 mb-4 p-3 rounded-lg" style="background-color: var(--surface-2); border: 1px solid var(--border);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
-                                <path d="M12 8v4l3 3"></path>
-                                <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
-                            </svg>
-                            <span style="color: var(--text-secondary); font-size: 13px;">آخر تحديث:</span>
-                            <span class="font-normal" style="color: var(--text-primary); font-size: 13px;" dir="ltr">
-                                {{ form.instance.updated_at|date:"Y-m-d" }}
-                            </span>
+                        <!-- شريط التحديث والترتيب (مناصفة في السايد بار - في حالة التعديل فقط) -->
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <!-- 1. تاريخ آخر تحديث (أيقونة + تاريخ) -->
+                            <div class="flex items-center gap-2 p-3 rounded-lg" style="background-color: var(--surface-2); border: 1px solid var(--border);" title="تاريخ آخر تحديث">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);" class="flex-shrink-0">
+                                    <path d="M12 8v4l3 3"></path>
+                                    <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+                                </svg>
+                                <span class="font-normal" style="color: var(--text-primary); font-size: 13px;" dir="ltr">
+                                    {{ form.instance.updated_at|date:"Y-m-d" }}
+                                </span>
+                            </div>
+
+                            <!-- 2. ترتيب العرض (أيقونة + رقم) -->
+                            <div class="flex items-center gap-2 p-3 rounded-lg" style="background-color: var(--surface-2); border: 1px solid var(--border);" title="ترتيب العرض في صفحة القائمة">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);" class="flex-shrink-0">
+                                    <line x1="10" y1="6" x2="21" y2="6"></line>
+                                    <line x1="10" y1="12" x2="21" y2="12"></line>
+                                    <line x1="10" y1="18" x2="21" y2="18"></line>
+                                    <path d="M4 6h1v4"></path>
+                                    <path d="M4 10h2"></path>
+                                    <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
+                                </svg>
+                                {{ form.order }}
+                            </div>
                         </div>
                         {% endif %}
 
@@ -1507,4 +1533,5 @@ function feeTablesManager() {
     };
 }
 </script>
+{% include "dashboard/includes/version_history_modal.html" %}
 {% endblock %}

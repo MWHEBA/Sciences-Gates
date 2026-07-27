@@ -144,3 +144,18 @@ ALL_COUNTRIES = PRIORITY_COUNTRIES + OTHER_COUNTRIES
 DEFAULT_COUNTRY = "sa"
 DEFAULT_CODE = "+966"
 DEFAULT_PLACEHOLDER = "5XXXXXXXX"
+
+
+def get_country_info(iso_code):
+    """
+    جلب معلومات الدولة (iso_code, dial_code, placeholder) حسب رمز الدولة ISO-2.
+    في حال عدم العثور عليها يتم إرجاع الدولة الافتراضية (السعودية).
+    """
+    if not iso_code:
+        return DEFAULT_COUNTRY, DEFAULT_CODE, DEFAULT_PLACEHOLDER
+    target = str(iso_code).lower().strip()
+    for iso, name, code, placeholder in ALL_COUNTRIES:
+        if iso == target:
+            return iso, code, placeholder
+    return DEFAULT_COUNTRY, DEFAULT_CODE, DEFAULT_PLACEHOLDER
+

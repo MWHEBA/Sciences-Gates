@@ -71,6 +71,27 @@ a {
   transition: var(--transition);
 }
 
+/* Hyperlinks in text content */
+p a,
+.content a,
+.article-content a,
+.pro-editor-content a,
+.rich-text-content a {
+  color: var(--primary);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+p a:hover,
+.content a:hover,
+.article-content a:hover,
+.pro-editor-content a:hover,
+.rich-text-content a:hover {
+  color: var(--primary-hover);
+}
+
 img,
 video {
   max-width: 100%;

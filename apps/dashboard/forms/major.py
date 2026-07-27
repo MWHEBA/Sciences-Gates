@@ -15,11 +15,21 @@ class MajorForm(forms.ModelForm):
     نموذج إنشاء وتعديل التخصصات مع محرر القالب المنظم
     """
     
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        from apps.core.navigation import auto_shift_order_if_changed
+        from apps.majors.models import Major
+        auto_shift_order_if_changed(self, Major, instance)
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
     class Meta:
         model = Major
         fields = [
             # Basic Information
-            'name', 'slug', 'category', 'main_image',
+            'name', 'slug', 'category', 'order', 'main_image',
             # Quick Information Fields
             'bachelor_duration', 'master_duration', 'phd_duration',
             'study_language', 'practical_training', 'career_opportunities', 'competitor_url',
@@ -52,6 +62,12 @@ class MajorForm(forms.ModelForm):
             'category': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'required': True,
+            }),
+            'order': forms.NumberInput(attrs={
+                'class': 'w-full text-center border-0 p-0 focus:outline-none focus:ring-0 font-normal',
+                'style': 'background: transparent; color: var(--text-primary); font-size: 13px;',
+                'placeholder': '0',
+                'min': '0',
             }),
             'main_image': forms.FileInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',

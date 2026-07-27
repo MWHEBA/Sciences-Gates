@@ -241,3 +241,34 @@ class TestLeadsSystem:
         assert 'الرسالة الاستفسارية' in content
         assert 'asker_export@example.com' in content
         assert 'student_export@example.com' not in content
+
+    def test_country_info_lookup(self):
+        from apps.leads.countries import get_country_info, DEFAULT_COUNTRY, DEFAULT_CODE
+        # Valid country
+        iso, code, placeholder = get_country_info('eg')
+        assert iso == 'eg'
+        assert code == '+20'
+        
+        iso_ae, code_ae, _ = get_country_info('ae')
+        assert iso_ae == 'ae'
+        assert code_ae == '+971'
+        
+        # Invalid / unknown fallback to Saudi Arabia
+        iso_unknown, code_unknown, _ = get_country_info('xx')
+        assert iso_unknown == DEFAULT_COUNTRY
+        assert code_unknown == DEFAULT_CODE
+
+    def test_phone_countries_context_auto_detect(self, rf):
+        from apps.core.context_processors import phone_countries_context
+        # Request with Cloudflare country header for Egypt
+        request = rf.get('/', HTTP_CF_IPCOUNTRY='EG')
+        context = phone_countries_context(request)
+        assert context['default_country'] == 'eg'
+        assert context['default_code'] == '+20'
+
+        # Request without header defaults to Saudi Arabia
+        request_default = rf.get('/')
+        context_default = phone_countries_context(request_default)
+        assert context_default['default_country'] == 'sa'
+        assert context_default['default_code'] == '+966'
+

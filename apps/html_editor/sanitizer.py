@@ -17,7 +17,7 @@ except (ImportError, ModuleNotFoundError):
 
 # Allowed HTML tags for article content (includes tables, styling spans/fonts, divs)
 ALLOWED_TAGS = [
-    'p', 'br', 'strong', 'em', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'br', 'strong', 'em', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote',
     'ul', 'ol', 'li', 'a', 'img', 'table', 'thead', 'tbody',
     'tfoot', 'tr', 'th', 'td', 'colgroup', 'col', 'div', 'span', 'font'
 ]
@@ -31,14 +31,24 @@ ALLOWED_ATTRIBUTES = {
     'td': ['colspan', 'rowspan', 'class', 'style'],
     'tr': ['class', 'style'],
     'col': ['style'],
-    'div': ['class', 'style'],
-    'span': ['class', 'style'],
+    'div': ['class', 'style', 'align', 'dir'],
+    'span': ['class', 'style', 'dir'],
     'font': ['color', 'size', 'face', 'style', 'class'],
+    'p': ['class', 'style', 'align', 'dir'],
+    'h2': ['class', 'style', 'align', 'dir'],
+    'h3': ['class', 'style', 'align', 'dir'],
+    'h4': ['class', 'style', 'align', 'dir'],
+    'h5': ['class', 'style', 'align', 'dir'],
+    'h6': ['class', 'style', 'align', 'dir'],
+    'blockquote': ['class', 'style', 'align', 'dir'],
+    'ul': ['class', 'style', 'align', 'dir'],
+    'ol': ['class', 'style', 'align', 'dir'],
+    'li': ['class', 'style', 'align', 'dir'],
 }
 
 # Allowed CSS properties for style attributes
 ALLOWED_STYLES = [
-    'text-align', 'background-color', 'color', 'font-size', 'width', 'height',
+    'text-align', 'direction', 'background-color', 'color', 'font-size', 'width', 'height',
     'line-height', 'border-radius', 'margin-top', 'margin-bottom', 'max-width',
     'vertical-align'
 ]

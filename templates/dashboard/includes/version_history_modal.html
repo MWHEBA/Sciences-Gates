@@ -1,0 +1,217 @@
+{% comment %}
+Version History Modal Component
+Displays last 5 saved versions for Articles, Universities, Institutes, and Majors.
+{% endcomment %}
+<div id="versionHistoryModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 transition-opacity bg-black bg-opacity-50" aria-hidden="true" onclick="closeVersionModal()"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+    <div class="inline-block px-4 pt-5 pb-4 overflow-hidden text-right align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6" style="background-color: var(--color-bg-card, #ffffff); color: var(--color-text-main, #1f2937);">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-gray-200" style="border-color: var(--color-border, #e5e7eb);">
+        <h3 class="text-lg font-bold" id="modal-title" style="color: var(--color-text-heading, #111827);">
+          سجل النسخ السابقة (أحدث 5 نسخ)
+        </h3>
+        <button type="button" onclick="closeVersionModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+          <span class="sr-only">إغلاق</span>
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="mt-4">
+        <p class="mb-3 text-xs text-gray-500" style="color: var(--color-text-muted, #6b7280);">
+          يحتفظ النظام بآخر 5 نسخ سابقة لحماية بياناتك. استرجاع أي نسخة يعيد المحتوى والمرفقات والأسئلة الشائعة مع الاحتفاظ بإعدادات SEO والرابط الحالية دون تغيير.
+        </p>
+
+        <div id="versionListLoading" class="py-6 text-center">
+          <svg class="w-8 h-8 mx-auto text-primary animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="block mt-2 text-sm text-gray-500">جاري تحميل سجل النسخ...</span>
+        </div>
+
+        <div id="versionListEmpty" class="hidden py-6 text-center text-sm text-gray-500">
+          لا توجد نسخ سابقة محفوظة بعد لهذه الصفحة. تُحفظ النسخ تلقائياً عند إجراء تعديلات سابقة.
+        </div>
+
+        <div id="versionListContainer" class="hidden space-y-3">
+          <!-- Versions dynamic table/cards -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-right">
+              <thead class="text-xs uppercase bg-gray-50" style="background-color: var(--color-bg-subtle, #f9fafb);">
+                <tr>
+                  <th class="px-4 py-2">رقم النسخة</th>
+                  <th class="px-4 py-2">تاريخ الحفظ</th>
+                  <th class="px-4 py-2">بواسطة</th>
+                  <th class="px-4 py-2">سبب التعديل</th>
+                  <th class="px-4 py-2 text-center">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="versionTableBody" class="divide-y divide-gray-200">
+                <!-- Rows injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 sm:mt-6 text-left">
+        <button type="button" onclick="closeVersionModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none" style="background-color: var(--color-bg-subtle, #f3f4f6); color: var(--color-text-main, #374151);">
+          إغلاق
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SweetAlert2 Library -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+const versionListUrlPattern = "{% url 'dashboard:api_version_list' model_name='MODEL_NAME' object_id=999999 %}";
+const versionRestoreUrlPattern = "{% url 'dashboard:api_version_restore' version_id=999999 %}";
+
+function openVersionModal(modelName, objectId) {
+  const modal = document.getElementById('versionHistoryModal');
+  const loading = document.getElementById('versionListLoading');
+  const empty = document.getElementById('versionListEmpty');
+  const container = document.getElementById('versionListContainer');
+  const tbody = document.getElementById('versionTableBody');
+
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  loading.classList.remove('hidden');
+  empty.classList.add('hidden');
+  container.classList.add('hidden');
+  tbody.innerHTML = '';
+
+  const requestUrl = versionListUrlPattern.replace('MODEL_NAME', modelName).replace('999999', objectId);
+
+  fetch(requestUrl, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(res => res.json())
+  .then(data => {
+    loading.classList.add('hidden');
+    if (data.status === 'success' && data.versions && data.versions.length > 0) {
+      container.classList.remove('hidden');
+      data.versions.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50';
+        tr.innerHTML = `
+          <td class="px-4 py-3 font-semibold text-primary">v${v.version_number}</td>
+          <td class="px-4 py-3 text-gray-600">${v.created_at}</td>
+          <td class="px-4 py-3 text-gray-600">${v.created_by}</td>
+          <td class="px-4 py-3 text-gray-500 text-xs">${v.change_reason}</td>
+          <td class="px-4 py-3 text-center">
+            <button type="button" onclick="restoreVersionConfirm(${v.id}, ${v.version_number})" class="px-3 py-1 text-xs font-semibold text-white bg-primary rounded hover:bg-primary-dark transition-colors">
+              استرجاع
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } else {
+      empty.classList.remove('hidden');
+    }
+  })
+  .catch(err => {
+    loading.classList.add('hidden');
+    empty.classList.remove('hidden');
+    empty.innerText = 'حدث خطأ أثناء تحميل سجل النسخ.';
+  });
+}
+
+function closeVersionModal() {
+  const modal = document.getElementById('versionHistoryModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function restoreVersionConfirm(versionId, versionNum) {
+  const executeRestore = () => {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+    const restoreUrl = versionRestoreUrlPattern.replace('999999', versionId);
+
+    Swal.fire({
+      title: 'جاري استرجاع النسخة...',
+      text: 'يرجى الانتظار لحين استرجاع المحتوى والمرفقات.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    fetch(restoreUrl, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': csrfToken,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        Swal.fire({
+          title: 'تم الاسترجاع بنجاح!',
+          text: 'تم استرجاع المحتوى والمرفقات والأسئلة الشائعة بنجاح، مع الحفاظ على إعدادات SEO والرابط الحالية دون تغيير.',
+          icon: 'success',
+          confirmButtonColor: 'var(--primary, #1e40af)',
+          confirmButtonText: 'حسناً',
+          customClass: { popup: 'rounded-xl' }
+        }).then(() => {
+          window.location.reload();
+        });
+      } else {
+        Swal.fire({
+          title: 'حدث خطأ!',
+          text: data.error || 'فشل استرجاع النسخة.',
+          icon: 'error',
+          confirmButtonColor: 'var(--primary, #1e40af)',
+          confirmButtonText: 'حسناً',
+          customClass: { popup: 'rounded-xl' }
+        });
+      }
+    })
+    .catch(err => {
+      Swal.fire({
+        title: 'خطأ في الاتصال!',
+        text: 'حدث خطأ أثناء الاتصال بالسيرفر.',
+        icon: 'error',
+        confirmButtonColor: 'var(--primary, #1e40af)',
+        confirmButtonText: 'حسناً',
+        customClass: { popup: 'rounded-xl' }
+      });
+    });
+  };
+
+  if (typeof Swal !== 'undefined') {
+    Swal.fire({
+      title: `تأكيد استرجاع النسخة v${versionNum}`,
+      text: 'هل أنت تأكد من استرجاع هذه النسخة؟ سيتم استرجاع البيانات والمرفقات والأسئلة الشائعة، مع الاحتفاظ بإعدادات SEO والرابط الحالية.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--primary, #1e40af)',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'نعم، استرجع النسخة',
+      cancelButtonText: 'إلغاء',
+      customClass: { popup: 'rounded-xl' }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        executeRestore();
+      }
+    });
+  } else {
+    if (confirm(`هل أنت تأكد من استرجاع النسخة رقم v${versionNum}؟`)) {
+      executeRestore();
+    }
+  }
+}
+</script>
+

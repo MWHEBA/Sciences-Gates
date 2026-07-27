@@ -43,36 +43,43 @@ class HomeView(TemplateView):
         - Limits results to 6 items per content type
         """
         context = super().get_context_data(**kwargs)
+        from apps.core.navigation import get_navigation_slots_dict, build_curated_list_with_dedup_fallback
         
-        # Fetch featured universities (published only) - Limited to 3 items per user request
-        universities = University.objects.filter(
+        # Fetch featured universities (published only) using curated slots + fallback
+        univ_pool = University.objects.filter(
             publish_status=PublishStatus.PUBLISHED
-        ).prefetch_related(
+        ).order_by('order', 'name').prefetch_related(
             'faculties__programs',
             'faqs',
             'related_majors',
             'related_articles'
-        )[:3]
+        )
+        univ_slots = get_navigation_slots_dict('home_featured_univ')
+        universities = build_curated_list_with_dedup_fallback(univ_slots, univ_pool, 6)
         
-        # Fetch featured institutes (published only) - Limited to 2 items per user request
-        institutes = Institute.objects.filter(
+        # Fetch featured institutes (published only) using curated slots + fallback
+        inst_pool = Institute.objects.filter(
             publish_status=PublishStatus.PUBLISHED
-        ).prefetch_related(
+        ).order_by('order', 'name').prefetch_related(
             'courses',
             'related_articles'
-        )[:2]
+        )
+        inst_slots = get_navigation_slots_dict('home_featured_institute')
+        institutes = build_curated_list_with_dedup_fallback(inst_slots, inst_pool, 4)
         
-        # Fetch featured majors (published only) - Limited to 2 items per user request
-        majors = Major.objects.filter(
+        # Fetch featured majors (published only) using curated slots + fallback
+        major_pool = Major.objects.filter(
             publish_status=PublishStatus.PUBLISHED
-        ).prefetch_related(
+        ).order_by('order', 'name').prefetch_related(
             'best_universities',
             'cheap_universities',
             'related_articles',
             'subjects_tables',
             'salary_tables',
             'countries_tables'
-        )[:2]
+        )
+        major_slots = get_navigation_slots_dict('home_featured_major')
+        majors = build_curated_list_with_dedup_fallback(major_slots, major_pool, 6)
         
         # Fetch recent articles (published only)
         articles = Article.objects.filter(

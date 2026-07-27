@@ -13,7 +13,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages
 from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
-from django.views.generic import View, ListView, CreateView, UpdateView, DeleteView, FormView
+from django.views.generic import View, ListView, CreateView, UpdateView, DeleteView, FormView, TemplateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
@@ -1213,7 +1213,7 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
             faculties_prefetch,
             'related_majors',
             'related_articles'
-        ).order_by('-created_at')
+        ).order_by('order', 'name')
         
         # Search by name, slug, state, or city
         search_query = self.request.GET.get('search', '').strip()
@@ -1342,6 +1342,7 @@ class UniversityListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Li
         
         # Columns for data table
         context['columns'] = [
+            {'label': 'الترتيب', 'key': 'order', 'type': 'text'},
             {'label': 'اسم الجامعة', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:university_edit', 'link_param': 'pk'},
             {'label': 'المدينة', 'key': 'city_display', 'type': 'text'},
             {'label': 'النوع', 'key': 'university_type_display', 'type': 'text'},
@@ -1721,6 +1722,14 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
         if all_valid:
             try:
                 with transaction.atomic():
+                    # Capture pre-save version snapshot of DB state before applying updates
+                    from apps.core.services.versioning import VersioningService
+                    VersioningService.capture_pre_save_snapshot(
+                        self.object,
+                        user=self.request.user,
+                        change_reason='تحديث الجامعة'
+                    )
+
                     # حفظ الـ slug القديم قبل الحفظ
                     old_slug = self.object.slug
                     
@@ -2142,7 +2151,7 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
         queryset = Institute.objects.all().prefetch_related(
             'courses',
             'related_articles'
-        ).order_by('-created_at')
+        ).order_by('order', 'name')
         
         # Search by name or slug
         search_query = self.request.GET.get('search', '').strip()
@@ -2257,6 +2266,7 @@ class InstituteListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Lis
         
         # Columns for data table
         context['columns'] = [
+            {'label': 'الترتيب', 'key': 'order', 'type': 'text'},
             {'label': 'اسم المعهد', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:institute_edit', 'link_param': 'pk'},
             {'label': 'الموقع', 'key': 'city_display', 'type': 'text'},
             {'label': 'الدورات', 'key': 'courses_count', 'type': 'text'},
@@ -2469,6 +2479,14 @@ class InstituteUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, L
         if course_formset.is_valid() and attachment_formset.is_valid() and faq_formset.is_valid():
             try:
                 with transaction.atomic():
+                    # Capture pre-save version snapshot of DB state before applying updates
+                    from apps.core.services.versioning import VersioningService
+                    VersioningService.capture_pre_save_snapshot(
+                        self.object,
+                        user=self.request.user,
+                        change_reason='تحديث المعهد'
+                    )
+
                     # حفظ الـ slug القديم قبل الحفظ
                     old_slug = self.object.slug
                     
@@ -2591,7 +2609,7 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
         queryset = Major.objects.all().select_related('category').prefetch_related(
             'subjects_tables', 'salary_tables', 'countries_tables',
             'best_universities', 'cheap_universities', 'related_articles'
-        ).order_by('-created_at')
+        ).order_by('order', 'name')
         
         # Search by name or slug
         search_query = self.request.GET.get('search', '').strip()
@@ -2676,6 +2694,7 @@ class MajorListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListVie
         
         # Columns for data table
         context['columns'] = [
+            {'label': 'الترتيب', 'key': 'order', 'type': 'text'},
             {'label': 'اسم التخصص', 'key': 'name', 'type': 'link', 'link_url_name': 'dashboard:major_edit', 'link_param': 'pk'},
             {'label': 'التصنيف', 'key': 'major_category_display', 'type': 'text'},
             {'label': 'الحالة', 'key': 'publish_status', 'type': 'status_badge'},
@@ -2889,6 +2908,14 @@ class MajorUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, LockV
             attachments_formset.is_valid()):
             try:
                 with transaction.atomic():
+                    # Capture pre-save version snapshot of DB state before applying updates
+                    from apps.core.services.versioning import VersioningService
+                    VersioningService.capture_pre_save_snapshot(
+                        self.object,
+                        user=self.request.user,
+                        change_reason='تحديث التخصص'
+                    )
+
                     # حفظ الـ slug القديم قبل الحفظ
                     old_slug = self.object.slug
                     
@@ -3918,6 +3945,14 @@ class ArticleUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, Loc
         if faq_formset.is_valid() and attachment_formset.is_valid():
             try:
                 with transaction.atomic():
+                    # Capture pre-save version snapshot of DB state before applying updates
+                    from apps.core.services.versioning import VersioningService
+                    VersioningService.capture_pre_save_snapshot(
+                        self.object,
+                        user=self.request.user,
+                        change_reason='تحديث المقالة'
+                    )
+
                     # حفظ الـ slug القديم قبل الحفظ
                     old_slug = self.object.slug
                     
@@ -4817,6 +4852,10 @@ class SiteSettingsUpdateView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, 
             tab_fields = {
                 'general': ['site_name', 'site_description'],
                 'contact': ['phone', 'email', 'whatsapp'],
+                'social': [
+                    'facebook', 'instagram', 'twitter', 'youtube',
+                    'linkedin', 'tiktok', 'telegram', 'snapchat'
+                ],
                 'steps': ['registration_steps_title', 'registration_steps_content'],
                 'maintenance': [
                     'maintenance_mode', 'maintenance_title', 'maintenance_message',
@@ -4956,6 +4995,166 @@ class SMTPTestView(SuperAdminRequiredMixin, View):
                 'error': friendly_msg,
                 'technical_details': traceback.format_exc()
             })
+
+
+class NavigationManagerView(SuperAdminRequiredMixin, DashboardBreadcrumbMixin, TemplateView):
+    """
+    View for managing curated navigation slots for Mega Menu and Homepage.
+    عرض وإدارة الخانات الثابتة للقوائم والصفحة الرئيسية
+    """
+    template_name = 'dashboard/navigation_manager.html'
+
+    def get_breadcrumbs(self):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('إدارة القوائم والصفحة الرئيسية')
+            .build())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from apps.core.models import SiteNavigation
+        from apps.universities.models import University
+        from apps.institutes.models import Institute
+        from apps.majors.models import Major
+        from apps.core.navigation import build_curated_list_with_dedup_fallback, get_navigation_slots_dict
+
+        sections_config = [
+            {
+                'key': 'mega_menu_public_univ',
+                'title': 'القائمة الرئيسية - الجامعات الحكومية',
+                'description': 'الجامعات الحكومية الظاهرة في القائمة المنسدلة في الهيدر (8 خانات)',
+                'max_slots': 8,
+                'type': 'university',
+                'pool': University.objects.filter(publish_status='published', university_type='public').order_by('order', 'name'),
+            },
+            {
+                'key': 'mega_menu_private_univ',
+                'title': 'القائمة الرئيسية - الجامعات الخاصة',
+                'description': 'الجامعات الخاصة الظاهرة في القائمة المنسدلة في الهيدر (8 خانات)',
+                'max_slots': 8,
+                'type': 'university',
+                'pool': University.objects.filter(publish_status='published', university_type='private').order_by('order', 'name'),
+            },
+            {
+                'key': 'mega_menu_institute',
+                'title': 'القائمة الرئيسية - معاهد اللغة',
+                'description': 'معاهد اللغة الإنجليزية الظاهرة في القائمة المنسدلة في الهيدر (8 خانات)',
+                'max_slots': 8,
+                'type': 'institute',
+                'pool': Institute.objects.filter(publish_status='published').order_by('order', 'name'),
+            },
+            {
+                'key': 'home_featured_univ',
+                'title': 'الصفحة الرئيسية - الجامعات المميزة',
+                'description': 'الجامعات المعروضة في قسم النخبة بالصفحة الرئيسية (6 خانات)',
+                'max_slots': 6,
+                'type': 'university',
+                'pool': University.objects.filter(publish_status='published').order_by('order', 'name'),
+            },
+            {
+                'key': 'home_featured_institute',
+                'title': 'الصفحة الرئيسية - المعاهد الموصى بها',
+                'description': 'المعاهد المعروضة في قسم معاهد اللغة بالصفحة الرئيسية (4 خانات)',
+                'max_slots': 4,
+                'type': 'institute',
+                'pool': Institute.objects.filter(publish_status='published').order_by('order', 'name'),
+            },
+            {
+                'key': 'home_featured_major',
+                'title': 'الصفحة الرئيسية - التخصصات الأكثر طلباً',
+                'description': 'التخصصات المعروضة في قسم التخصصات بالصفحة الرئيسية (6 خانات)',
+                'max_slots': 6,
+                'type': 'major',
+                'pool': Major.objects.filter(publish_status='published').order_by('order', 'name'),
+            },
+        ]
+
+        rendered_sections = []
+        for sec in sections_config:
+            slots_dict = get_navigation_slots_dict(sec['key'])
+            curated_list = build_curated_list_with_dedup_fallback(slots_dict, sec['pool'], sec['max_slots'])
+            
+            slots_data = []
+            for slot_num in range(1, sec['max_slots'] + 1):
+                assigned_item = slots_dict.get(slot_num)
+                effective_item = curated_list[slot_num - 1] if slot_num <= len(curated_list) else None
+                is_manual = bool(assigned_item and getattr(assigned_item, 'publish_status', '') == 'published')
+                
+                slots_data.append({
+                    'slot_number': slot_num,
+                    'assigned_item': assigned_item,
+                    'effective_item': effective_item,
+                    'is_manual': is_manual,
+                })
+                
+            rendered_sections.append({
+                'key': sec['key'],
+                'title': sec['title'],
+                'description': sec['description'],
+                'max_slots': sec['max_slots'],
+                'type': sec['type'],
+                'slots': slots_data,
+            })
+
+        context['page_title'] = 'إدارة القوائم والصفحة الرئيسية'
+        context['sections'] = rendered_sections
+        context['all_public_univs'] = list(University.objects.filter(publish_status='published', university_type='public').order_by('name'))
+        context['all_private_univs'] = list(University.objects.filter(publish_status='published', university_type='private').order_by('name'))
+        context['all_institutes'] = list(Institute.objects.filter(publish_status='published').order_by('name'))
+        context['all_majors'] = list(Major.objects.filter(publish_status='published').order_by('name'))
+        return context
+
+    def post(self, request, *args, **kwargs):
+        from apps.core.models import SiteNavigation
+        from apps.universities.models import University
+        from apps.institutes.models import Institute
+        from apps.majors.models import Major
+        from django.core.cache import cache
+
+        section = request.POST.get('section')
+        slot_number = request.POST.get('slot_number')
+        entity_type = request.POST.get('entity_type')
+        entity_id = request.POST.get('entity_id')
+
+        if not section or not slot_number:
+            return JsonResponse({'success': False, 'message': 'بيانات الخانة غير كافية.'}, status=400)
+
+        try:
+            slot_number = int(slot_number)
+            nav_slot, created = SiteNavigation.objects.get_or_create(
+                section=section,
+                slot_number=slot_number
+            )
+
+            if not entity_id or str(entity_id) in ('0', '', 'none'):
+                nav_slot.university = None
+                nav_slot.institute = None
+                nav_slot.major = None
+                nav_slot.save()
+            else:
+                entity_id = int(entity_id)
+                if entity_type == 'university':
+                    nav_slot.university = University.objects.get(pk=entity_id)
+                    nav_slot.institute = None
+                    nav_slot.major = None
+                elif entity_type == 'institute':
+                    nav_slot.institute = Institute.objects.get(pk=entity_id)
+                    nav_slot.university = None
+                    nav_slot.major = None
+                elif entity_type == 'major':
+                    nav_slot.major = Major.objects.get(pk=entity_id)
+                    nav_slot.university = None
+                    nav_slot.institute = None
+                nav_slot.save()
+
+            cache.delete('mega_menu_data')
+
+            return JsonResponse({
+                'success': True,
+                'message': f'تم تحديث الخانة رقم {slot_number} بنجاح ✨'
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'حدث خطأ: {str(e)}'}, status=400)
 
 
 class SEOManagementView(SEOAdminRequiredMixin, DashboardBreadcrumbMixin, View):
@@ -6386,6 +6585,185 @@ class ArticleManualMergeView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin
         }
         context.update(self.get_additional_context(keep_art))
         return render(request, self.template_name, context)
+
+
+class LinkSearchApiView(LoginRequiredMixin, View):
+    """
+    API view for searching published internal entities (Universities, Institutes, Majors, Articles)
+    with Arabic normalization for use in the HTML Editor link insertion modal.
+    """
+    def get(self, request, *args, **kwargs):
+        from apps.search.utils import get_db_search_variations
+        
+        query_str = request.GET.get('q', '').strip()
+        entity_type = request.GET.get('type', 'all').strip().lower()
+
+        results = []
+        limit_per_type = 10 if entity_type != 'all' else 5
+
+        words = [w for w in query_str.split() if len(w) > 0]
+
+        def build_name_filter(field_name='name'):
+            if not words:
+                return Q()
+            q_comb = Q()
+            for w in words:
+                variations = get_db_search_variations(w)
+                if not variations:
+                    variations = [w]
+                word_q = Q()
+                for var in variations:
+                    kw = {f'{field_name}__icontains': var}
+                    word_q |= Q(**kw)
+                q_comb &= word_q
+            return q_comb
+
+        # 1. Universities
+        if entity_type in ('all', 'university', 'universities'):
+            uni_q = Q(publish_status='published') & build_name_filter('name')
+            unis = University.objects.filter(uni_q).order_by('name')[:limit_per_type]
+            for u in unis:
+                results.append({
+                    'id': u.id,
+                    'title': u.name,
+                    'url': u.get_absolute_url(),
+                    'type': 'university',
+                    'type_label': 'جامعة'
+                })
+
+        # 2. Institutes
+        if entity_type in ('all', 'institute', 'institutes'):
+            inst_q = Q(publish_status='published') & build_name_filter('name')
+            insts = Institute.objects.filter(inst_q).order_by('name')[:limit_per_type]
+            for i in insts:
+                results.append({
+                    'id': i.id,
+                    'title': i.name,
+                    'url': i.get_absolute_url(),
+                    'type': 'institute',
+                    'type_label': 'معهد'
+                })
+
+        # 3. Majors
+        if entity_type in ('all', 'major', 'majors'):
+            maj_q = Q(publish_status='published') & build_name_filter('name')
+            majs = Major.objects.filter(maj_q).order_by('name')[:limit_per_type]
+            for m in majs:
+                results.append({
+                    'id': m.id,
+                    'title': m.name,
+                    'url': m.get_absolute_url(),
+                    'type': 'major',
+                    'type_label': 'تخصص'
+                })
+
+        # 4. Articles
+        if entity_type in ('all', 'article', 'articles'):
+            art_q = Q(publish_status='published') & build_name_filter('title')
+            arts = Article.objects.filter(art_q).order_by('-created_at')[:limit_per_type]
+            for a in arts:
+                results.append({
+                    'id': a.id,
+                    'title': a.title,
+                    'url': a.get_absolute_url(),
+                    'type': 'article',
+                    'type_label': 'مقال'
+                })
+
+        return JsonResponse({'success': True, 'results': results[:20]})
+
+
+class ContentVersionListView(ContentAdminRequiredMixin, View):
+    """
+    Get list of latest 5 versions for a given model and object ID via AJAX.
+    """
+    def get(self, request, model_name, object_id):
+        from django.apps import apps
+        from apps.core.services.versioning import VersioningService
+
+        model_map = {
+            'article': 'articles.Article',
+            'university': 'universities.University',
+            'institute': 'institutes.Institute',
+            'major': 'majors.Major'
+        }
+
+        app_model = model_map.get(model_name.lower())
+        if not app_model:
+            return JsonResponse({'error': 'نوع المحتوى غير مدعوم'}, status=400)
+
+        try:
+            model_cls = apps.get_model(app_model)
+            instance = model_cls.objects.get(pk=object_id)
+        except (LookupError, model_cls.DoesNotExist):
+            return JsonResponse({'error': 'المحتوى غير موجود'}, status=404)
+
+        versions = VersioningService.get_versions(instance)
+        data = []
+        for v in versions:
+            user_name = (v.created_by.get_full_name() or v.created_by.username) if v.created_by else 'النظام'
+            data.append({
+                'id': v.id,
+                'version_number': v.version_number,
+                'created_at': v.created_at.strftime('%Y-%m-%d %H:%M'),
+                'created_by': user_name,
+                'change_reason': v.change_reason or 'نسخة سابقة'
+            })
+        return JsonResponse({'status': 'success', 'versions': data})
+
+
+class ContentVersionDetailView(ContentAdminRequiredMixin, View):
+    """
+    Get version detail data snapshot via AJAX for previewing.
+    """
+    def get(self, request, version_id):
+        from apps.core.models import ContentVersion
+        try:
+            version = ContentVersion.objects.select_related('created_by').get(pk=version_id)
+        except ContentVersion.DoesNotExist:
+            return JsonResponse({'error': 'النسخة غير موجودة'}, status=404)
+
+        user_name = (version.created_by.get_full_name() or version.created_by.username) if version.created_by else 'النظام'
+
+        return JsonResponse({
+            'status': 'success',
+            'version': {
+                'id': version.id,
+                'version_number': version.version_number,
+                'created_at': version.created_at.strftime('%Y-%m-%d %H:%M'),
+                'created_by': user_name,
+                'change_reason': version.change_reason or 'نسخة سابقة',
+                'data': version.data
+            }
+        })
+
+
+class ContentVersionRestoreView(ContentAdminRequiredMixin, View):
+    """
+    Restore a specific version via AJAX/POST (excluding SEO and URL).
+    """
+    def post(self, request, version_id, *args, **kwargs):
+        from apps.core.services.versioning import VersioningService
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            restored_instance = VersioningService.restore_version(version_id, user=request.user)
+            if not restored_instance:
+                return JsonResponse({'error': 'فشل استرجاع النسخة: النسخة أو المحتوى غير موجود.'}, status=400)
+
+            messages.success(request, 'تم استرجاع النسخة بنجاح (مع الاحتفاظ بإعدادات SEO والرابط الحالية).')
+            return JsonResponse({
+                'status': 'success',
+                'message': 'تم استرجاع النسخة بنجاح.',
+                'redirect_url': request.META.get('HTTP_REFERER')
+            })
+        except Exception as e:
+            logger.error(f"Error restoring version {version_id}: {e}", exc_info=True)
+            return JsonResponse({'error': f'حدث خطأ أثناء استرجاع النسخة: {str(e)}'}, status=500)
+
+
+
 
 
 
