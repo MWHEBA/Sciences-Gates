@@ -142,6 +142,9 @@ urlpatterns = [
     path('api/versions/restore/<int:version_id>/', views.ContentVersionRestoreView.as_view(), name='api_version_restore'),
     path('api/versions/detail/<int:version_id>/', views.ContentVersionDetailView.as_view(), name='api_version_detail'),
     path('api/versions/<str:model_name>/<int:object_id>/', views.ContentVersionListView.as_view(), name='api_version_list'),
+
+    # Importer Tool
+    path('importer/', include('apps.importer.urls')),
 ]
 
 

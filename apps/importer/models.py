@@ -26,6 +26,7 @@ class ImportJob(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='تاريخ التحديث')
 
     class Meta:
+        app_label = 'importer'
         verbose_name = 'عملية استيراد'
         verbose_name_plural = 'عمليات الاستيراد'
         ordering = ['-created_at']

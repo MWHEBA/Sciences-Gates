@@ -578,6 +578,11 @@ class SiteSettings(models.Model):
         self.snapchat = self.clean_social_url(self.snapchat)
         super().save(*args, **kwargs)
         try:
+            from django.core.cache import cache
+            cache.delete('site_settings_instance')
+        except Exception:
+            pass
+        try:
             self.update_maintenance_cache()
         except Exception:
             pass
@@ -592,9 +597,17 @@ class SiteSettings(models.Model):
 
     @classmethod
     def get_settings(cls):
-        """Get or create the singleton instance."""
-        settings, created = cls.objects.get_or_create(pk=1)
-        return settings
+        """Get or create the singleton instance with caching."""
+        from django.core.cache import cache
+        try:
+            settings_inst = cache.get('site_settings_instance')
+            if not settings_inst:
+                settings_inst, _ = cls.objects.get_or_create(pk=1)
+                cache.set('site_settings_instance', settings_inst, 86400)
+            return settings_inst
+        except Exception:
+            settings_inst, _ = cls.objects.get_or_create(pk=1)
+            return settings_inst
 
     @staticmethod
     def clean_social_url(url):

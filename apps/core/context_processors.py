@@ -130,10 +130,15 @@ def mega_menu_context(request):
     from apps.universities.models import University
     from apps.institutes.models import Institute
     from apps.majors.models import MajorCategory
-    from apps.core.navigation import get_navigation_slots_dict, build_curated_list_with_dedup_fallback
+    from apps.core.navigation import get_all_navigation_slots_dict, build_curated_list_with_dedup_fallback
     
     menu_data = cache.get('mega_menu_data')
     if not menu_data:
+        all_slots = get_all_navigation_slots_dict()
+        public_slots = all_slots.get('mega_menu_public_univ', {})
+        private_slots = all_slots.get('mega_menu_private_univ', {})
+        institute_slots = all_slots.get('mega_menu_institute', {})
+
         # Public Universities Pool
         public_pool = (
             University.objects.filter(publish_status='published', university_type='public')
@@ -143,7 +148,6 @@ def mega_menu_context(request):
             .exclude(slug__startswith='سكن-')
             .order_by('order', 'name')
         )
-        public_slots = get_navigation_slots_dict('mega_menu_public_univ')
         public_univs = build_curated_list_with_dedup_fallback(public_slots, public_pool, 8)
 
         # Private Universities Pool
@@ -155,7 +159,6 @@ def mega_menu_context(request):
             .exclude(slug__startswith='سكن-')
             .order_by('order', 'name')
         )
-        private_slots = get_navigation_slots_dict('mega_menu_private_univ')
         private_univs = build_curated_list_with_dedup_fallback(private_slots, private_pool, 8)
 
         # Language Institutes Pool
@@ -165,7 +168,6 @@ def mega_menu_context(request):
             .exclude(slug__icontains='معاهد')
             .order_by('order', 'name')
         )
-        institute_slots = get_navigation_slots_dict('mega_menu_institute')
         institutes = build_curated_list_with_dedup_fallback(institute_slots, institute_pool, 8)
 
         # Fetch Major Categories with at least one published major

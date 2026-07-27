@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'apps.leads',
     'apps.search',
     'apps.redirects',
+    'apps.importer',
 ]
 
 MIDDLEWARE = [

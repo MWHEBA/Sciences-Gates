@@ -50,17 +50,15 @@ def build_curated_list_with_dedup_fallback(assigned_items_dict, pool_queryset, t
 
     final_list = []
     try:
-        available_fallbacks = list(
-            pool_queryset.filter(publish_status='published')
-            .exclude(pk__in=assigned_ids)
-            .order_by('order', 'name')
-        )
+        qs = pool_queryset.filter(publish_status='published')
+        if assigned_ids:
+            qs = qs.exclude(pk__in=assigned_ids)
+        available_fallbacks = list(qs.order_by('order', 'name')[:total_needed])
     except Exception:
-        available_fallbacks = list(
-            pool_queryset.filter(publish_status='published')
-            .exclude(pk__in=assigned_ids)
-            .order_by('name')
-        )
+        qs = pool_queryset.filter(publish_status='published')
+        if assigned_ids:
+            qs = qs.exclude(pk__in=assigned_ids)
+        available_fallbacks = list(qs.order_by('name')[:total_needed])
     fallback_idx = 0
 
     for slot_num in range(1, total_needed + 1):
@@ -76,6 +74,32 @@ def build_curated_list_with_dedup_fallback(assigned_items_dict, pool_queryset, t
                 fallback_idx += 1
 
     return final_list
+
+
+def get_all_navigation_slots_dict():
+    """
+    Returns a dictionary of section_name -> {slot_number -> entity_instance}.
+    Executed in 1 single database query.
+    """
+    try:
+        slots = (
+            SiteNavigation.objects.all()
+            .select_related('university', 'institute', 'major')
+            .order_by('slot_number')
+        )
+        res = {}
+        for slot in slots:
+            if slot.section not in res:
+                res[slot.section] = {}
+            if slot.university:
+                res[slot.section][slot.slot_number] = slot.university
+            elif slot.institute:
+                res[slot.section][slot.slot_number] = slot.institute
+            elif slot.major:
+                res[slot.section][slot.slot_number] = slot.major
+        return res
+    except Exception:
+        return {}
 
 
 def get_navigation_slots_dict(section_name):
@@ -100,3 +124,4 @@ def get_navigation_slots_dict(section_name):
         return res
     except Exception:
         return {}
+
