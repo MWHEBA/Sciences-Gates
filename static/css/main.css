@@ -3304,7 +3304,9 @@ only screen and (min-width: 992px) and (max-width: 1199px) {
 
 /* Majors and Institutes Stack Grid on Homepage */
 .majors-institutes-grid {
-    gap: 40px;
+    gap: 100px;
+    margin-top: 4.5rem !important;
+    padding-top: 3.5rem !important;
 }
 
 .section-header--sm {

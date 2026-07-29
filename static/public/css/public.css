@@ -972,9 +972,6 @@ p {
 }
 
 /* ─── Majors & Institutes Grid ──────────────────────────────────────── */
-.majors-institutes-grid {
-  gap: 4rem;
-}
 
 .cards-stack {
   display: flex;
