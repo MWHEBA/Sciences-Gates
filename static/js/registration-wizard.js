@@ -28,7 +28,7 @@
             alert('يرجى اختيار الجنسية.');
             return false;
         }
-        if (nationality === 'دولة اخرى غير موجودة') {
+        if (['دولة اخرى غير موجودة', 'دولة أخرى غير موجودة', 'دولة أخرى', 'أخرى'].indexOf(nationality) !== -1) {
             var customNat = document.getElementById('reg_custom_nationality');
             if (customNat && !customNat.value.trim()) {
                 alert('يرجى كتابة اسم الدولة/الجنسية الأخرى.');

@@ -40,6 +40,37 @@ class TestLeadsSystem:
         lead = form.save()
         assert lead.nationality == 'بريطاني'
 
+    def test_contact_lead_form_custom_nationality_with_hamza(self):
+        form_data = {
+            'lead_type': LeadType.CONTACT,
+            'name': 'جون دو',
+            'email': 'john_hamza@example.com',
+            'phone': '+447777777777',
+            'nationality': 'دولة أخرى غير موجودة',
+            'custom_nationality': 'كندي',
+            'message': 'استفسار',
+            'website': '',
+        }
+        form = ContactLeadForm(data=form_data)
+        assert form.is_valid(), form.errors
+        lead = form.save()
+        assert lead.nationality == 'كندي'
+
+    def test_contact_lead_form_nationality_normalization(self):
+        form_data = {
+            'lead_type': LeadType.CONTACT,
+            'name': 'علي حسن',
+            'email': 'ali@example.com',
+            'phone': '+201111111122',
+            'nationality': 'مصر',
+            'message': 'استفسار',
+            'website': '',
+        }
+        form = ContactLeadForm(data=form_data)
+        assert form.is_valid(), form.errors
+        lead = form.save()
+        assert lead.nationality == 'مصري'
+
     def test_contact_lead_form_email_required(self):
         form_data = {
             'lead_type': LeadType.CONTACT,

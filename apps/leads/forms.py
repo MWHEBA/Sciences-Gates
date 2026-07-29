@@ -7,33 +7,68 @@ from django.core.exceptions import ValidationError
 import re
 from apps.leads.models import Lead, LeadType
 
-# exact choices matching the Fluent Forms export dropdown options
+# Standard nationality choices (unique list of demonyms)
 NATIONALITY_CHOICES = [
     ('', '- اختر الجنسية -'),
-    ('مصر', 'مصر'),
-    ('السعودية', 'السعودية'),
-    ('ليبيا', 'ليبيا'),
-    ('المغرب', 'المغرب'),
-    ('الجزائر', 'الجزائر'),
-    ('البحرين', 'البحرين'),
-    ('قطر', 'قطر'),
-    ('الصومال', 'الصومال'),
-    ('الاردن', 'الأردن'),
-    ('فلسطين', 'فلسطين'),
-    ('العراق', 'العراق'),
-    ('لبنان', 'لبنان'),
-    ('سوريا', 'سوريا'),
-    ('تونس', 'تونس'),
-    ('السودان', 'السودان'),
-    ('موريتانيا', 'موريتانيا'),
-    ('عمان', 'عمان'),
-    ('اليمن', 'اليمن'),
-    ('الكويت', 'الكويت'),
-    ('جيبوتى', 'جيبوتي'),
-    ('جزر القمر', 'جزر القمر'),
-    ('الامارات العربية المتحدة', 'الامارات العربية المتحدة'),
+    ('سعودي', 'سعودي'),
+    ('إماراتي', 'إماراتي'),
+    ('سوداني', 'سوداني'),
+    ('مصري', 'مصري'),
+    ('أردني', 'أردني'),
+    ('عراقي', 'عراقي'),
+    ('كويتي', 'كويتي'),
+    ('بحريني', 'بحريني'),
+    ('قطري', 'قطري'),
+    ('عماني', 'عماني'),
+    ('يمني', 'يمني'),
+    ('ليبي', 'ليبي'),
+    ('مغربي', 'مغربي'),
+    ('جزائري', 'جزائري'),
+    ('تونسي', 'تونسي'),
+    ('فلسطيني', 'فلسطيني'),
+    ('لبناني', 'لبناني'),
+    ('سوري', 'سوري'),
+    ('موريتاني', 'موريتاني'),
+    ('صومالي', 'صومالي'),
+    ('جيبوتي', 'جيبوتي'),
+    ('قمري', 'قمري (جزر القمر)'),
+    ('ماليزي', 'ماليزي'),
+    ('تركي', 'تركي'),
+    ('إندونيسي', 'إندونيسي'),
+    ('باكستاني', 'باكستاني'),
+    ('هندي', 'هندي'),
+    ('بنغلاديشي', 'بنغلاديشي'),
     ('دولة اخرى غير موجودة', 'دولة أخرى'),
 ]
+
+NATIONALITY_MAP = {
+    'مصر': 'مصري',
+    'السعودية': 'سعودي',
+    'ليبيا': 'ليبي',
+    'المغرب': 'مغربي',
+    'الجزائر': 'جزائري',
+    'البحرين': 'بحريني',
+    'قطر': 'قطري',
+    'الصومال': 'صومالي',
+    'الاردن': 'أردني',
+    'الأردن': 'أردني',
+    'فلسطين': 'فلسطيني',
+    'العراق': 'عراقي',
+    'لبنان': 'لبناني',
+    'سوريا': 'سوري',
+    'تونس': 'تونسي',
+    'السودان': 'سوداني',
+    'موريتانيا': 'موريتاني',
+    'عمان': 'عماني',
+    'اليمن': 'يمني',
+    'الكويت': 'كويتي',
+    'جيبوتى': 'جيبوتي',
+    'جزر القمر': 'قمري',
+    'الامارات العربية المتحدة': 'إماراتي',
+    'الإمارات العربية المتحدة': 'إماراتي',
+    'الإمارات': 'إماراتي',
+    'ماليزيا': 'ماليزي',
+}
 
 RESIDENCE_CHOICES = [
     ('', '- اختر دولة الإقامة -'),
@@ -45,6 +80,7 @@ RESIDENCE_CHOICES = [
     ('البحرين', 'البحرين'),
     ('قطر', 'قطر'),
     ('الصومال', 'الصومال'),
+    ('الأردن', 'الأردن'),
     ('الاردن', 'الأردن'),
     ('فلسطين', 'فلسطين'),
     ('العراق', 'العراق'),
@@ -56,9 +92,12 @@ RESIDENCE_CHOICES = [
     ('عمان', 'عمان'),
     ('اليمن', 'اليمن'),
     ('الكويت', 'الكويت'),
+    ('جيبوتي', 'جيبوتي'),
     ('جيبوتى', 'جيبوتي'),
     ('جزر القمر', 'جزر القمر'),
-    ('الامارات العربية المتحدة', 'الامارات العربية المتحدة'),
+    ('الإمارات العربية المتحدة', 'الإمارات العربية المتحدة'),
+    ('الامارات العربية المتحدة', 'الإمارات العربية المتحدة'),
+    ('ماليزيا', 'ماليزيا'),
     ('دولة اخرى غير موجودة', 'دولة أخرى'),
 ]
 
@@ -69,6 +108,21 @@ STUDY_LEVEL_CHOICES = [
     ('دكتوراة', 'دكتوراة'),
     ('معهد اللغة', 'معهد اللغة'),
 ]
+
+
+class NormalizedChoiceField(forms.ChoiceField):
+    """
+    ChoiceField that normalizes inputs (like country names to demonyms
+    or hamza variations for custom nationality) before validating choices.
+    """
+    def to_python(self, value):
+        if value and isinstance(value, str):
+            val_str = value.strip()
+            if val_str in ['دولة أخرى غير موجودة', 'دولة أخرى', 'أخرى']:
+                val_str = 'دولة اخرى غير موجودة'
+            val_str = NATIONALITY_MAP.get(val_str, val_str)
+            return super().to_python(val_str)
+        return super().to_python(value)
 
 
 class LeadBaseForm(forms.ModelForm):
@@ -141,6 +195,17 @@ class LeadBaseForm(forms.ModelForm):
                 raise ValidationError('الرسالة تحتوي على عدد كبير جداً من الروابط')
         return message
 
+    def clean_nationality(self):
+        """
+        Normalize nationality field value if mapped to country name.
+        """
+        nationality = self.cleaned_data.get('nationality')
+        if nationality and isinstance(nationality, str):
+            nationality = nationality.strip()
+            # Normalize country name to demonym if in NATIONALITY_MAP
+            return NATIONALITY_MAP.get(nationality, nationality)
+        return nationality
+
     def clean(self):
         """
         Overall form validation.
@@ -182,7 +247,14 @@ class LeadBaseForm(forms.ModelForm):
         nationality = cleaned_data.get('nationality')
         custom_nationality = cleaned_data.get('custom_nationality')
         
-        if nationality == 'دولة اخرى غير موجودة':
+        CUSTOM_NATIONALITY_KEYS = [
+            'دولة اخرى غير موجودة',
+            'دولة أخرى غير موجودة',
+            'دولة أخرى',
+            'أخرى'
+        ]
+        
+        if nationality in CUSTOM_NATIONALITY_KEYS:
             if custom_nationality and custom_nationality.strip():
                 cleaned_data['nationality'] = custom_nationality.strip()
             else:
@@ -195,6 +267,15 @@ class ContactLeadForm(LeadBaseForm):
     """
     Form for Contact/Inquiry submissions.
     """
+    nationality = NormalizedChoiceField(
+        choices=NATIONALITY_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True,
+        }),
+        label='الجنسية'
+    )
     custom_nationality = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
@@ -229,13 +310,6 @@ class ContactLeadForm(LeadBaseForm):
                 'dir': 'ltr',
                 'maxlength': '20',
             }),
-            'nationality': forms.Select(
-                choices=NATIONALITY_CHOICES,
-                attrs={
-                    'class': 'form-control',
-                    'required': True,
-                }
-            ),
             'message': forms.Textarea(attrs={
                 'class': 'form-control',
                 'placeholder': 'الرسالة أو الاستفسار',
@@ -263,6 +337,33 @@ class RegistrationLeadForm(LeadBaseForm):
     """
     Form for University/Institute Registration submissions.
     """
+    nationality = NormalizedChoiceField(
+        choices=NATIONALITY_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={
+            'class': 'reg-select',
+            'required': True,
+        }),
+        label='الجنسية'
+    )
+    residence_country = forms.ChoiceField(
+        choices=RESIDENCE_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={
+            'class': 'reg-select',
+            'required': True,
+        }),
+        label='دولة الإقامة'
+    )
+    study_level = forms.ChoiceField(
+        choices=STUDY_LEVEL_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={
+            'class': 'reg-select',
+            'required': True,
+        }),
+        label='المرحلة الدراسية'
+    )
     custom_nationality = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
@@ -300,28 +401,7 @@ class RegistrationLeadForm(LeadBaseForm):
                 'dir': 'ltr',
                 'maxlength': '20',
             }),
-            'nationality': forms.Select(
-                choices=NATIONALITY_CHOICES,
-                attrs={
-                    'class': 'reg-select',
-                    'required': True,
-                }
-            ),
             'institution_name': forms.HiddenInput(),
-            'residence_country': forms.Select(
-                choices=RESIDENCE_CHOICES,
-                attrs={
-                    'class': 'reg-select',
-                    'required': True,
-                }
-            ),
-            'study_level': forms.Select(
-                choices=STUDY_LEVEL_CHOICES,
-                attrs={
-                    'class': 'reg-select',
-                    'required': True,
-                }
-            ),
             'address': forms.TextInput(attrs={
                 'class': 'reg-input',
                 'placeholder': 'المدينة، المنطقة، الشارع',

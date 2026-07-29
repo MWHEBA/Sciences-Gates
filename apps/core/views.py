@@ -21,10 +21,10 @@ class HomeView(TemplateView):
     Homepage view displaying featured content from all content types.
     
     Fetches and displays:
-    - Featured universities (published, limited to 6)
-    - Featured institutes (published, limited to 6)
-    - Featured majors (published, limited to 6)
-    - Recent articles (published, limited to 6)
+    - Featured universities (published, limited to 3)
+    - Featured institutes (published, limited to 3)
+    - Featured majors (published, limited to 3)
+    - Recent articles (published, limited to 3)
     
     Requirements: 1, 19
     """
@@ -40,7 +40,7 @@ class HomeView(TemplateView):
         Query Optimization:
         - Uses select_related for foreign key relationships
         - Uses prefetch_related for many-to-many and reverse foreign key relationships
-        - Limits results to 6 items per content type
+        - Limits featured content to 3 items per type
         """
         context = super().get_context_data(**kwargs)
         from apps.core.navigation import get_navigation_slots_dict, build_curated_list_with_dedup_fallback
@@ -55,7 +55,7 @@ class HomeView(TemplateView):
             'related_articles'
         )
         univ_slots = get_navigation_slots_dict('home_featured_univ')
-        universities = build_curated_list_with_dedup_fallback(univ_slots, univ_pool, 6)
+        universities = build_curated_list_with_dedup_fallback(univ_slots, univ_pool, 3)
         
         # Fetch featured institutes (published only) using curated slots + fallback
         inst_pool = Institute.objects.filter(
@@ -65,7 +65,7 @@ class HomeView(TemplateView):
             'related_articles'
         )
         inst_slots = get_navigation_slots_dict('home_featured_institute')
-        institutes = build_curated_list_with_dedup_fallback(inst_slots, inst_pool, 4)
+        institutes = build_curated_list_with_dedup_fallback(inst_slots, inst_pool, 3)
         
         # Fetch featured majors (published only) using curated slots + fallback
         major_pool = Major.objects.filter(
@@ -79,7 +79,7 @@ class HomeView(TemplateView):
             'countries_tables'
         )
         major_slots = get_navigation_slots_dict('home_featured_major')
-        majors = build_curated_list_with_dedup_fallback(major_slots, major_pool, 6)
+        majors = build_curated_list_with_dedup_fallback(major_slots, major_pool, 3)
         
         # Fetch recent articles (published only)
         articles = Article.objects.filter(
@@ -92,7 +92,7 @@ class HomeView(TemplateView):
             'related_universities',
             'related_institutes',
             'related_majors'
-        ).order_by('-publish_date')[:6]
+        ).order_by('-publish_date')[:3]
         
         # Temporary hardcoded FAQs for the homepage
         faqs = [

@@ -89,13 +89,13 @@
                 </div>
 
                 <!-- Nationality Field -->
-                <div class="form-group" x-data="{ showCustom: '{{ form.nationality.value|default:'' }}' === 'دولة اخرى غير موجودة' }">
+                <div class="form-group" x-data="{ showCustom: ['دولة اخرى غير موجودة', 'دولة أخرى غير موجودة', 'دولة أخرى', 'أخرى'].includes('{{ form.nationality.value|default:'' }}') }">
                     <label for="{{ form.nationality.id_for_label }}" class="form-label">
                         الجنسية <span class="form-required">*</span>
                     </label>
                     <select name="nationality" id="{{ form.nationality.id_for_label }}" class="form-control" required 
-                            @change="showCustom = ($event.target.value === 'دولة اخرى غير موجودة')">
-                        {% for value, label in form.fields.nationality.choices %}
+                            @change="showCustom = (['دولة اخرى غير موجودة', 'دولة أخرى غير موجودة', 'دولة أخرى', 'أخرى'].includes($event.target.value))">
+                        {% for value, label in form.nationality.field.choices %}
                             <option value="{{ value }}" {% if form.nationality.value == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>

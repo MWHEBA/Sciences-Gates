@@ -44,7 +44,7 @@ class Lead(TimestampedModel):
         verbose_name='الرسالة'
     )
     
-    # New fields matching Fluent Forms export
+    # Additional lead details fields
     nationality = models.CharField(
         max_length=150,
         blank=True,

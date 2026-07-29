@@ -395,8 +395,8 @@
     </div>
 </section>
 
-<!-- Featured Universities -->
-<section class="section section-bg-white">
+<!-- Featured Universities, Majors and Institutes -->
+<section class="section section-bg-white" style="padding-bottom: 2.5rem;">
     <div class="container">
         <div class="section-header">
             <div class="section-header__titles">
@@ -412,15 +412,12 @@
             {% endfor %}
         </div>
     </div>
-</section>
 
-<!-- Featured Majors and Institutes -->
-<section class="section section-bg-white">
-    <div class="container grid grid--2 majors-institutes-grid">
+    <div class="container grid grid--2 majors-institutes-grid" style="margin-top: 2.5rem;">
         <!-- Majors -->
         <div>
-            <div class="section-header section-header--sm">
-                <h2 class="section-title section-title--sm">أبرز التخصصات في ماليزيا</h2>
+            <div class="section-header">
+                <h2 class="section-title">أبرز التخصصات في ماليزيا</h2>
                 <a href="{% url 'majors:list' %}" class="btn btn--outline btn--sm">الكل</a>
             </div>
             <div class="cards-stack">
@@ -434,8 +431,8 @@
 
         <!-- Institutes -->
         <div>
-            <div class="section-header section-header--sm">
-                <h2 class="section-title section-title--sm">أبرز المعاهد في ماليزيا</h2>
+            <div class="section-header">
+                <h2 class="section-title">أبرز المعاهد في ماليزيا</h2>
                 <a href="{% url 'institutes:list' %}" class="btn btn--outline btn--sm">الكل</a>
             </div>
             <div class="cards-stack">

@@ -878,7 +878,7 @@
                         <div class="reg-form-group">
                             <label for="reg_nationality">الجنسية <span class="inl-s-973ad1998f">*</span></label>
                             <select id="reg_nationality" name="nationality" class="reg-select" required
-                                @change="showCustomNationality = ($event.target.value === 'دولة اخرى غير موجودة')">
+                                @change="showCustomNationality = (['دولة اخرى غير موجودة', 'دولة أخرى غير موجودة', 'دولة أخرى'].includes($event.target.value))">
                                 <option value="" disabled selected>اختر الجنسية...</option>
                                 <option value="سعودي">سعودي</option>
                                 <option value="إماراتي">إماراتي</option>
@@ -896,11 +896,12 @@
                                 <option value="جزائري">جزائري</option>
                                 <option value="تونسي">تونسي</option>
                                 <option value="فلسطيني">فلسطيني</option>
-                                <option value="لبناني">لبنان</option>
+                                <option value="لبناني">لبناني</option>
                                 <option value="سوري">سوري</option>
                                 <option value="موريتاني">موريتاني</option>
                                 <option value="صومالي">صومالي</option>
                                 <option value="جيبوتي">جيبوتي</option>
+                                <option value="قمري">قمري (جزر القمر)</option>
                                 <option value="ماليزي">ماليزي</option>
                                 <option value="دولة اخرى غير موجودة">دولة أخرى</option>
                             </select>
