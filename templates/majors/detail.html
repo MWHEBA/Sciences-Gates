@@ -10,7 +10,24 @@
 {% block og_title %}{{ major.og_title|default:major.name }}{% endblock %}
 {% block og_description %}{{ major.og_description|default:major.description|clean_desc|truncatewords:30 }}{% endblock %}
 
-{% block canonical %}<link rel="canonical" href="{% if major.canonical_url %}{{ major.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endif %}">{% endblock %}
+{% block og_image %}
+{% with og_img=major.get_og_image_url %}
+<meta property="og:image" content="{% if og_img %}{% if og_img|slice:":4" == "http" %}{{ og_img }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img }}{% endif %}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endif %}">
+<meta property="og:image:secure_url" content="{% if og_img %}{% if og_img|slice:":4" == "http" %}{{ og_img }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img }}{% endif %}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endif %}">
+<meta property="og:image:width" content="600">
+<meta property="og:image:height" content="600">
+<meta name="thumbnail" content="{% if og_img %}{% if og_img|slice:":4" == "http" %}{{ og_img }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img }}{% endif %}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endif %}">
+<link rel="image_src" href="{% if og_img %}{% if og_img|slice:":4" == "http" %}{{ og_img }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img }}{% endif %}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endif %}">
+{% endwith %}
+{% endblock %}
+
+{% block twitter_image %}
+{% with og_img=major.get_og_image_url %}
+<meta name="twitter:image" content="{% if og_img %}{% if og_img|slice:":4" == "http" %}{{ og_img }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img }}{% endif %}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endif %}">
+{% endwith %}
+{% endblock %}
+
+{% block canonical %}{% render_canonical_tag major request %}{% endblock %}
 
 {% block schema_markup %}
 {{ block.super }}

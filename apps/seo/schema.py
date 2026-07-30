@@ -9,28 +9,31 @@ from django.urls import reverse
 from django.conf import settings
 
 
+def _normalize_url(url):
+    if not url:
+        return url
+    if 'www.sciencesgates.com' in url:
+        url = url.replace('www.sciencesgates.com', 'sciencesgates.com')
+    if url.startswith('http://sciencesgates.com'):
+        url = 'https://sciencesgates.com' + url[len('http://sciencesgates.com'):]
+    return url
+
+
 class SchemaGenerator:
     """Base class for generating JSON-LD schema markup."""
     
     @staticmethod
     def generate_website_schema(request):
-        """
-        Generate WebSite schema for search engine site name display.
-        
-        Args:
-            request: HTTP request object for building absolute URLs
-            
-        Returns:
-            Dictionary containing WebSite schema markup
-        """
-        site_url = request.build_absolute_uri('/')
+        site_url = _normalize_url(request.build_absolute_uri('/'))
+        logo_url = _normalize_url(request.build_absolute_uri('/static/images/og-default.jpg'))
         
         return {
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": "شركة بوابات العلوم للدراسة في ماليزيا",
             "alternateName": ["بوابات العلوم", "Science Gates"],
-            "url": site_url
+            "url": site_url,
+            "image": logo_url
         }
     
     @staticmethod
@@ -47,7 +50,7 @@ class SchemaGenerator:
         Returns:
             Dictionary containing Organization schema markup
         """
-        site_url = request.build_absolute_uri('/')
+        site_url = _normalize_url(request.build_absolute_uri('/'))
         
         from apps.core.models import SiteSettings
         try:
@@ -63,6 +66,8 @@ class SchemaGenerator:
                 "https://www.linkedin.com/company/sciencegates"
             ]
         
+        logo_url = _normalize_url(request.build_absolute_uri('/static/images/og-default.jpg'))
+        
         schema = {
             "@context": "https://schema.org",
             "@type": "Organization",
@@ -71,6 +76,18 @@ class SchemaGenerator:
             "url": site_url,
             "description": "منصة متخصصة في القبولات الجامعية والخدمات التعليمية للدراسة في ماليزيا",
             "inLanguage": "ar",
+            "logo": {
+                "@type": "ImageObject",
+                "url": logo_url,
+                "width": 600,
+                "height": 600
+            },
+            "image": {
+                "@type": "ImageObject",
+                "url": logo_url,
+                "width": 600,
+                "height": 600
+            },
             "contactPoint": {
                 "@type": "ContactPoint",
                 "contactType": "Customer Service",
@@ -79,33 +96,10 @@ class SchemaGenerator:
             "sameAs": same_as_links
         }
         
-        # Add logo if available
-        logo_url = request.build_absolute_uri('/static/images/favicon-512x512.png')
-        if logo_url:
-            schema["logo"] = {
-                "@type": "ImageObject",
-                "url": logo_url,
-                "width": 512,
-                "height": 512
-            }
-        
         return schema
     
     @staticmethod
     def generate_article_schema(article, request):
-        """
-        Generate Article schema for article content.
-        
-        Returns a JSON-LD Article schema with title, description, image, author,
-        and publication dates for search engine optimization.
-        
-        Args:
-            article: Article model instance
-            request: HTTP request object for building absolute URLs
-            
-        Returns:
-            Dictionary containing Article schema markup
-        """
         schema = {
             "@context": "https://schema.org",
             "@type": "NewsArticle",
@@ -114,16 +108,25 @@ class SchemaGenerator:
             "datePublished": article.publish_date.isoformat() if article.publish_date else None,
             "dateModified": article.updated_at.isoformat() if article.updated_at else None,
             "inLanguage": "ar",
-            "url": request.build_absolute_uri(article.get_absolute_url()),
+            "url": _normalize_url(request.build_absolute_uri(article.get_absolute_url())),
         }
+        
+        logo_url = _normalize_url(request.build_absolute_uri('/static/images/og-default.jpg'))
         
         # Add featured image if available
         if article.featured_image:
             schema["image"] = {
                 "@type": "ImageObject",
-                "url": request.build_absolute_uri(article.featured_image.url),
+                "url": _normalize_url(request.build_absolute_uri(article.featured_image.url)),
                 "width": 1200,
                 "height": 630
+            }
+        else:
+            schema["image"] = {
+                "@type": "ImageObject",
+                "url": logo_url,
+                "width": 600,
+                "height": 600
             }
         
         # Add author information
@@ -144,9 +147,9 @@ class SchemaGenerator:
             "name": "شركة بوابات العلوم للدراسة في ماليزيا",
             "logo": {
                 "@type": "ImageObject",
-                "url": request.build_absolute_uri('/static/images/logo.svg'),
-                "width": 250,
-                "height": 60
+                "url": logo_url,
+                "width": 600,
+                "height": 600
             }
         }
         

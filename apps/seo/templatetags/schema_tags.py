@@ -141,12 +141,23 @@ def university_schema(context, university):
         "inLanguage": "ar",
     }
     
+    default_img_url = request.build_absolute_uri('/static/images/og-default.jpg')
+    
     # Add logo if available
     if university.logo:
         schema["logo"] = {
             "@type": "ImageObject",
             "url": request.build_absolute_uri(university.logo.url)
         }
+        schema["image"] = request.build_absolute_uri(university.logo.url)
+    else:
+        schema["logo"] = {
+            "@type": "ImageObject",
+            "url": default_img_url,
+            "width": 600,
+            "height": 600
+        }
+        schema["image"] = default_img_url
     
     # Add location
     if university.location:
@@ -182,6 +193,8 @@ def institute_schema(context, institute):
     if not request or not institute:
         return '{}'
     
+    default_img_url = request.build_absolute_uri('/static/images/og-default.jpg')
+    
     schema = {
         "@context": "https://schema.org",
         "@type": "EducationalOrganization",
@@ -197,6 +210,15 @@ def institute_schema(context, institute):
             "@type": "ImageObject",
             "url": request.build_absolute_uri(institute.main_image.url)
         }
+        schema["image"] = request.build_absolute_uri(institute.main_image.url)
+    else:
+        schema["logo"] = {
+            "@type": "ImageObject",
+            "url": default_img_url,
+            "width": 600,
+            "height": 600
+        }
+        schema["image"] = default_img_url
     
     # Add location
     if getattr(institute, 'location', None):
@@ -232,6 +254,8 @@ def major_course_schema(context, major):
     if not request or not major:
         return '{}'
     
+    default_img_url = request.build_absolute_uri('/static/images/og-default.jpg')
+    
     schema = {
         "@context": "https://schema.org",
         "@type": "Course",
@@ -239,8 +263,13 @@ def major_course_schema(context, major):
         "description": major.get_meta_description(),
         "provider": {
             "@type": "Organization",
-            "name": "Science Gates"
+            "name": "Science Gates",
+            "logo": {
+                "@type": "ImageObject",
+                "url": default_img_url
+            }
         },
+        "image": default_img_url,
         "inLanguage": "ar",
     }
     
@@ -271,15 +300,27 @@ def webpage_schema(context, page_name):
     if not request:
         return '{}'
     
+    default_img_url = request.build_absolute_uri('/static/images/og-default.jpg')
+    
     schema = {
         "@context": "https://schema.org",
         "@type": "WebPage",
         "name": page_name,
         "url": request.build_absolute_uri(),
         "inLanguage": "ar",
+        "primaryImageOfPage": {
+            "@type": "ImageObject",
+            "url": default_img_url,
+            "width": 600,
+            "height": 600
+        },
         "publisher": {
             "@type": "Organization",
-            "name": "Science Gates"
+            "name": "Science Gates",
+            "logo": {
+                "@type": "ImageObject",
+                "url": default_img_url
+            }
         }
     }
     

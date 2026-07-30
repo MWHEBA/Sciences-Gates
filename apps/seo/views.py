@@ -11,6 +11,7 @@ import os
 
 from apps.seo.models import SEOAnalysisDetail
 from apps.seo.services import AnalyzerError, PageSEOAnalyzer
+from apps.seo.templatetags.seo_tags import normalize_canonical_domain
 
 
 @require_http_methods(["GET"])
@@ -70,7 +71,7 @@ Sitemap: {sitemap_url}
 """.format(
         admin_url=admin_url,
         dashboard_url=dashboard_url,
-        sitemap_url=request.build_absolute_uri('/sitemap.xml')
+        sitemap_url=normalize_canonical_domain(request.build_absolute_uri('/sitemap.xml'))
     )
     return HttpResponse(robots_content, content_type='text/plain')
 

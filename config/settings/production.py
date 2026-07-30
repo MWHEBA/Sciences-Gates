@@ -26,9 +26,11 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 3600  # 1 hour session lifetime
 
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='sciencesgates.com,localhost,127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='sciencesgates.com,www.sciencesgates.com,localhost,127.0.0.1', cast=Csv())
 if 'sciencesgates.com' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('sciencesgates.com')
+if 'www.sciencesgates.com' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('www.sciencesgates.com')
 
 # Production database configuration
 # Support both SQLite and MySQL dynamically based on DB_ENGINE (defaults to sqlite)
@@ -232,6 +234,11 @@ cache_dir.mkdir(parents=True, exist_ok=True)
 # SECURE_SSL_REDIRECT: Redirect all HTTP requests to HTTPS
 # Set to False during initial setup/testing, then enable for production
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+
+# REVERSE PROXY / CLOUDFLARE CONFIGURATION
+# Trust the X-Forwarded-Proto header set by Cloudflare/cPanel Apache reverse proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 # SECURE COOKIES
 # SESSION_COOKIE_SECURE: Only send session cookie over HTTPS

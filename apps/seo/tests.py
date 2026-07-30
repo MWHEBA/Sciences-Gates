@@ -212,8 +212,8 @@ class TestSchemaGenerator:
         assert 'logo' in schema
         assert schema['logo']['@type'] == 'ImageObject'
         assert 'url' in schema['logo']
-        assert schema['logo']['width'] == 512
-        assert schema['logo']['height'] == 512
+        assert schema['logo']['width'] == 600
+        assert schema['logo']['height'] == 600
     
     def test_breadcrumb_schema_generation(self):
         """Test breadcrumb schema generation."""
@@ -685,6 +685,38 @@ class TestSitemapEnhancements:
                     siteUrl="sc-domain:sciencesgates.com",
                     feedpath="https://sciencesgates.com/sitemap.xml"
                 )
+
+
+from django.test import SimpleTestCase, RequestFactory, override_settings
+
+
+@override_settings(ALLOWED_HOSTS=['testserver', 'localhost', 'sciencesgates.com', 'www.sciencesgates.com'])
+class TestCanonicalDomainMiddlewareAndNormalization(SimpleTestCase):
+    """Tests for CanonicalDomainMiddleware and canonical URL domain normalization."""
+
+    def test_canonical_middleware_redirects_www(self):
+        from apps.seo.middleware import CanonicalDomainMiddleware
+        rf = RequestFactory()
+        middleware = CanonicalDomainMiddleware(lambda req: None)
+        request = rf.get('/universities/', HTTP_HOST='www.sciencesgates.com')
+        response = middleware(request)
+        assert response is not None
+        assert response.status_code == 301
+        assert response['Location'] == 'https://sciencesgates.com/universities/'
+
+    def test_canonical_middleware_ignores_non_www(self):
+        from apps.seo.middleware import CanonicalDomainMiddleware
+        rf = RequestFactory()
+        middleware = CanonicalDomainMiddleware(lambda req: None)
+        request = rf.get('/universities/', HTTP_HOST='sciencesgates.com')
+        response = middleware(request)
+        assert response is None
+
+    def test_normalize_canonical_domain(self):
+        from apps.seo.templatetags.seo_tags import normalize_canonical_domain
+        assert normalize_canonical_domain('https://www.sciencesgates.com/test/') == 'https://sciencesgates.com/test/'
+        assert normalize_canonical_domain('http://sciencesgates.com/test/') == 'https://sciencesgates.com/test/'
+        assert normalize_canonical_domain('https://sciencesgates.com/test/') == 'https://sciencesgates.com/test/'
 
 
 

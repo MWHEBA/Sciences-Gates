@@ -102,16 +102,63 @@ def render_og_tags(obj, request=None):
         og_tags.append(f'<meta property="og:description" content="{escape(og_description)}">')
     
     # OG image
+def normalize_canonical_domain(url):
+    """
+    Ensures URL uses the non-www production domain (https://sciencesgates.com).
+    Strips www. for sciencesgates.com and ensures https scheme.
+    """
+    if not url:
+        return url
+    if 'www.sciencesgates.com' in url:
+        url = url.replace('www.sciencesgates.com', 'sciencesgates.com')
+    if url.startswith('http://sciencesgates.com'):
+        url = 'https://sciencesgates.com' + url[len('http://sciencesgates.com'):]
+    return url
+
+
+@register.simple_tag
+def render_open_graph_tags(obj, request=None):
+    if not obj:
+        return ''
+    
+    og_tags = []
+    
+    # OG Title
+    og_title = getattr(obj, 'get_og_title', lambda: getattr(obj, 'get_meta_title', lambda: '')())()
+    if og_title:
+        og_tags.append(f'<meta property="og:title" content="{escape(og_title)}">')
+    
+    # OG Description
+    og_description = getattr(obj, 'get_og_description', lambda: getattr(obj, 'get_meta_description', lambda: '')())()
+    if og_description:
+        og_tags.append(f'<meta property="og:description" content="{escape(og_description)}">')
+    
+    # OG Image
     og_image_url = getattr(obj, 'get_og_image_url', lambda: '')()
-    if og_image_url:
-        # Make absolute URL if request is provided
-        if request and not og_image_url.startswith('http'):
-            og_image_url = request.build_absolute_uri(og_image_url)
-        og_tags.append(f'<meta property="og:image" content="{escape(og_image_url)}">')
+    if not og_image_url:
+        from django.templatetags.static import static
+        og_image_url = static('images/og-default.jpg')
+    
+    if request and not og_image_url.startswith('http'):
+        og_image_url = request.build_absolute_uri(og_image_url)
+        
+    og_image_url = normalize_canonical_domain(og_image_url)
+    
+    og_tags.append(f'<meta property="og:image" content="{escape(og_image_url)}">')
+    og_tags.append(f'<meta property="og:image:secure_url" content="{escape(og_image_url)}">')
+    og_tags.append('<meta property="og:image:width" content="600">')
+    og_tags.append('<meta property="og:image:height" content="600">')
+    img_type = 'image/png' if og_image_url.lower().endswith('.png') else 'image/jpeg'
+    og_tags.append(f'<meta property="og:image:type" content="{img_type}">')
+    
+    # Thumbnail tags for Google Search & legacy link previewers
+    og_tags.append(f'<meta name="thumbnail" content="{escape(og_image_url)}">')
+    og_tags.append(f'<link rel="image_src" href="{escape(og_image_url)}">')
     
     # OG URL
     if request and hasattr(obj, 'get_absolute_url'):
         og_url = request.build_absolute_uri(obj.get_absolute_url())
+        og_url = normalize_canonical_domain(og_url)
         og_tags.append(f'<meta property="og:url" content="{escape(og_url)}">')
     
     # OG type (default to website)
@@ -123,25 +170,6 @@ def render_og_tags(obj, request=None):
 
 @register.simple_tag
 def render_twitter_card_tags(obj, request=None):
-    """
-    Render Twitter Card meta tags for Twitter sharing.
-    
-    Generates HTML meta tags for:
-    - twitter:card (defaults to 'summary_large_image')
-    - twitter:title
-    - twitter:description
-    - twitter:image
-    
-    Args:
-        obj: Content object with SEO fields (must have SEOMixin)
-        request: HTTP request object for building absolute URLs (optional)
-        
-    Returns:
-        HTML string with Twitter Card meta tags (marked safe)
-        
-    Example:
-        {% render_twitter_card_tags article request %}
-    """
     if not obj:
         return ''
     
@@ -163,35 +191,20 @@ def render_twitter_card_tags(obj, request=None):
     
     # Twitter image
     twitter_image_url = getattr(obj, 'get_og_image_url', lambda: '')()
-    if twitter_image_url:
-        # Make absolute URL if request is provided
-        if request and not twitter_image_url.startswith('http'):
-            twitter_image_url = request.build_absolute_uri(twitter_image_url)
-        twitter_tags.append(f'<meta name="twitter:image" content="{escape(twitter_image_url)}">')
+    if not twitter_image_url:
+        from django.templatetags.static import static
+        twitter_image_url = static('images/og-default.jpg')
+        
+    if request and not twitter_image_url.startswith('http'):
+        twitter_image_url = request.build_absolute_uri(twitter_image_url)
+    twitter_image_url = normalize_canonical_domain(twitter_image_url)
+    twitter_tags.append(f'<meta name="twitter:image" content="{escape(twitter_image_url)}">')
     
     return mark_safe('\n    '.join(twitter_tags))
 
 
 @register.simple_tag
 def render_canonical_tag(obj, request=None):
-    """
-    Render canonical link tag for SEO.
-    
-    Generates HTML link tag for canonical URL:
-    - Uses custom canonical_url if provided
-    - Falls back to object's absolute URL
-    - Ensures absolute URL with request context
-    
-    Args:
-        obj: Content object with SEO fields (must have SEOMixin)
-        request: HTTP request object for building absolute URLs (optional)
-        
-    Returns:
-        HTML string with canonical link tag (marked safe)
-        
-    Example:
-        {% render_canonical_tag article request %}
-    """
     if not obj:
         return ''
     
@@ -208,5 +221,7 @@ def render_canonical_tag(obj, request=None):
     # Make absolute URL if request is provided and URL is relative
     if request and not canonical_url.startswith('http'):
         canonical_url = request.build_absolute_uri(canonical_url)
+        
+    canonical_url = normalize_canonical_domain(canonical_url)
     
     return mark_safe(f'<link rel="canonical" href="{escape(canonical_url)}">')

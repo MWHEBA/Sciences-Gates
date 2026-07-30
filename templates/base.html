@@ -17,30 +17,44 @@
     <meta name="theme-color" content="#1f2937">
     
     <!-- Robots Meta -->
-    <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
-    <meta name="googlebot" content="{% block googlebot %}index, follow{% endblock %}">
-    
+    <meta name="robots" content="{% block robots %}index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1{% endblock %}">
+    <meta name="googlebot" content="{% block googlebot %}index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1{% endblock %}">
 
-    <!-- Open Graph Tags for Social Media Sharing -->
+    <!-- Google Search & Legacy Thumbnail Meta Tags -->
+    {% block thumbnail_meta %}
+    <meta name="thumbnail" content="{% if 'sciencesgates.com' in request.get_host %}https://sciencesgates.com{% else %}{{ request.scheme }}://{{ request.get_host }}{% endif %}{% static 'images/og-default.jpg' %}">
+    <link rel="image_src" href="{% if 'sciencesgates.com' in request.get_host %}https://sciencesgates.com{% else %}{{ request.scheme }}://{{ request.get_host }}{% endif %}{% static 'images/og-default.jpg' %}">
+    {% endblock %}
+
+    <!-- Open Graph Tags for Social Media Sharing & WhatsApp -->
     <meta property="og:title" content="{% block og_title %}شركة بوابات العلوم للدراسة في ماليزيا{% endblock %}">
     <meta property="og:description" content="{% block og_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-    <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{% if 'sciencesgates.com' in request.get_host %}https://sciencesgates.com{{ request.path }}{% else %}{{ request.build_absolute_uri }}{% endif %}{% endblock %}">
     <meta property="og:site_name" content="شركة بوابات العلوم للدراسة في ماليزيا">
     <meta property="og:locale" content="ar_SA">
-    {% block og_image %}<meta property="og:image" content="{% static 'images/og-default.jpg' %}">{% endblock %}
+    {% block og_image %}
+    <meta property="og:image" content="{% if 'sciencesgates.com' in request.get_host %}https://sciencesgates.com{% else %}{{ request.scheme }}://{{ request.get_host }}{% endif %}{% static 'images/og-default.jpg' %}">
+    <meta property="og:image:secure_url" content="{% if 'sciencesgates.com' in request.get_host %}https://sciencesgates.com{% else %}{{ request.scheme }}://{{ request.get_host }}{% endif %}{% static 'images/og-default.jpg' %}">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="600">
+    <meta property="og:image:height" content="600">
+    <meta property="og:image:alt" content="شركة بوابات العلوم للدراسة في ماليزيا">
+    {% endblock %}
     
     <!-- Twitter Card Tags -->
     <meta name="twitter:card" content="{% block twitter_card %}summary_large_image{% endblock %}">
     <meta name="twitter:title" content="{% block twitter_title %}شركة بوابات العلوم للدراسة في ماليزيا{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
-    {% block twitter_image %}<meta name="twitter:image" content="{% static 'images/og-default.jpg' %}">{% endblock %}
+    {% block twitter_image %}
+    <meta name="twitter:image" content="{% if 'sciencesgates.com' in request.get_host %}https://sciencesgates.com{% else %}{{ request.scheme }}://{{ request.get_host }}{% endif %}{% static 'images/og-default.jpg' %}">
+    {% endblock %}
     
     <!-- Canonical URL -->
-    {% block canonical %}<link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">{% endblock %}
+    {% block canonical %}<link rel="canonical" href="{% if 'sciencesgates.com' in request.get_host %}https://sciencesgates.com{{ request.path }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endif %}">{% endblock %}
     
     <!-- Alternate Links for Multilingual Support (Future) -->
-    <link rel="alternate" hreflang="ar" href="{{ request.build_absolute_uri }}">
+    <link rel="alternate" hreflang="ar" href="{% if 'sciencesgates.com' in request.get_host %}https://sciencesgates.com{{ request.path }}{% else %}{{ request.build_absolute_uri }}{% endif %}">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">

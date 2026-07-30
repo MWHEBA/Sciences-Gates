@@ -1,5 +1,7 @@
 import logging
 from django.db import transaction
+from django.http import HttpResponsePermanentRedirect
+from django.utils.deprecation import MiddlewareMixin
 from .models import Page404Log
 
 logger = logging.getLogger(__name__)
@@ -63,3 +65,20 @@ class Page404TrackingMiddleware:
                 log.save()
         except Exception as exc:
             logger.warning("Page404TrackingMiddleware: Failed to log 404 for path %s: %s", path, exc)
+
+
+class CanonicalDomainMiddleware(MiddlewareMixin):
+    """
+    Middleware to enforce canonical non-www domain (https://sciencesgates.com).
+    Redirects www.sciencesgates.com requests to https://sciencesgates.com with HTTP 301.
+    """
+
+    def process_request(self, request):
+        host = request.get_host().split(':')[0].lower()
+        if host.startswith('www.'):
+            clean_host = host[4:]
+            if clean_host == 'sciencesgates.com':
+                protocol = 'https'
+                new_url = f"{protocol}://{clean_host}{request.get_full_path()}"
+                return HttpResponsePermanentRedirect(new_url)
+        return None
