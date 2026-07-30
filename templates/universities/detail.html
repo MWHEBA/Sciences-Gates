@@ -4,6 +4,7 @@
 {% load breadcrumbs %}
 {% load university_tags %}
 {% load schema_tags %}
+{% load seo_tags %}
 
 {% block title %}{{ university.meta_title|default:university.name }} - بوابات العلوم{% endblock %}
 {% block meta_description %}{{ university.meta_description|default:university.description|clean_desc }}{% endblock %}

@@ -2,6 +2,7 @@
 {% load static %}
 {% load breadcrumbs %}
 {% load schema_tags %}
+{% load seo_tags %}
 
 {% block title %}{{ article.meta_title|default:article.title }} | بوابات العلوم{% endblock %}
 {% block meta_description %}{{ article.meta_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}

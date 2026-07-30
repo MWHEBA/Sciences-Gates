@@ -3,6 +3,7 @@
 {% load image_tags %}
 {% load breadcrumbs %}
 {% load schema_tags %}
+{% load seo_tags %}
 
 {% block title %}{{ major.meta_title|default:major.name }} - بوابات العلوم{% endblock %}
 {% block meta_description %}{{ major.meta_description|default:major.description|clean_desc|truncatewords:30 }}{% endblock %}
