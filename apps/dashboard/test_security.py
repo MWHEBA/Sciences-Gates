@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.test import override_settings
 from unittest.mock import patch, MagicMock
 from django.core.files.uploadedfile import SimpleUploadedFile
 from io import BytesIO
@@ -92,6 +93,7 @@ class TestDashboardSecurity:
         assert response.status_code == 200
         assert 'تم قفل محاولات تسجيل الدخول مؤقتاً' in response.content.decode('utf-8')
 
+    @override_settings(TESTING=False)
     def test_rate_limiting_lead_submission(self):
         """Verify rate limiting on lead submission (3 submissions per hour)."""
         url = reverse('leads:submit')
