@@ -310,6 +310,29 @@ class TestArticleDetailView:
         response = self.client.get(unpublished.get_absolute_url())
         assert response.status_code == 404
 
+    def test_article_detail_view_random_recommendations(self):
+        """Test that article detail view includes 3 random article recommendations excluding current article."""
+        other_category = Category.objects.create(name='تصنيف آخر', slug='other-cat')
+        created_articles = []
+        for i in range(5):
+            cat = self.category if i < 2 else other_category
+            art = Article.objects.create(
+                title=f'مقالة أخرى {i}',
+                slug=f'other-article-{i}',
+                featured_image='articles/test.jpg',
+                category=cat,
+                author=self.user,
+                content='<p>محتوى</p>',
+                publish_status='published'
+            )
+            created_articles.append(art)
+        
+        response = self.client.get(self.article.get_absolute_url())
+        assert response.status_code == 200
+        related = response.context['related_articles']
+        assert len(related) == 3
+        assert self.article not in related
+
 
 @pytest.mark.django_db
 class TestCategoryArticleListView:

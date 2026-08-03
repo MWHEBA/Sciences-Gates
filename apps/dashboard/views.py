@@ -11,7 +11,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.cache import never_cache
 from django.contrib import messages
+
 from django.http import HttpResponseForbidden, HttpResponse, JsonResponse
 from django.views.generic import View, ListView, CreateView, UpdateView, DeleteView, FormView, TemplateView
 from django.utils.decorators import method_decorator
@@ -49,6 +51,7 @@ from apps.seo.mixins import DashboardBreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
 
 
+@method_decorator(never_cache, name='dispatch')
 class DashboardLoginView(View):
     """
     Handle user login to the dashboard.
@@ -69,8 +72,15 @@ class DashboardLoginView(View):
     @method_decorator(csrf_protect)
     def post(self, request):
         """Handle login form submission."""
+        if request.user.is_authenticated:
+            if request.user.is_staff:
+                return redirect('dashboard:home')
+            else:
+                return redirect('home')
+
         from django.utils.http import url_has_allowed_host_and_scheme
         from django.core.cache import cache
+
         
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')

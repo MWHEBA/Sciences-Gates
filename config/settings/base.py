@@ -75,6 +75,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
+CSRF_FAILURE_VIEW = 'apps.core.views.csrf_failure'
+
 
 TEMPLATES = [
     {

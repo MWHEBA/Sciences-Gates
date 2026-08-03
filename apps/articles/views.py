@@ -171,12 +171,22 @@ class ArticleDetailView(BreadcrumbMixin, DetailView):
         context['related_majors'] = article.related_majors.all()
         context['faqs'] = article.faqs.all()
         
-        # Get related articles from the same category
+        # Get 3 random article recommendations (preferring same category first, backfilling if needed)
+        related_qs = Article.objects.filter(
+            publish_status='published'
+        ).exclude(pk=article.pk).select_related('category', 'author')
+        
         if article.category:
-            context['related_articles'] = Article.objects.filter(
-                publish_status='published',
-                category=article.category
-            ).exclude(pk=article.pk).select_related('category', 'author')[:3]
+            same_cat_articles = list(related_qs.filter(category=article.category).order_by('?')[:3])
+            if len(same_cat_articles) < 3:
+                needed = 3 - len(same_cat_articles)
+                excluded_pks = [article.pk] + [a.pk for a in same_cat_articles]
+                other_articles = list(related_qs.exclude(pk__in=excluded_pks).order_by('?')[:needed])
+                context['related_articles'] = same_cat_articles + other_articles
+            else:
+                context['related_articles'] = same_cat_articles
+        else:
+            context['related_articles'] = list(related_qs.order_by('?')[:3])
         
         # Add lead form
         from apps.leads.forms import LeadForm

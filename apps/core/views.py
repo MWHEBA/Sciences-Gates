@@ -236,3 +236,20 @@ class LegacyUrlDetailView(View):
         raise Http404("الصفحة غير موجودة")
 
 
+def csrf_failure(request, reason=""):
+    """
+    Custom CSRF failure handler.
+    If the user is already authenticated or attempting login while authenticated,
+    redirect seamlessly to dashboard or home with a friendly message instead of showing 403 debug screen.
+    """
+    if request.user.is_authenticated:
+        messages.info(request, 'أنت مسجل الدخول بالفعل.')
+        if getattr(request.user, 'is_staff', False):
+            return redirect('dashboard:home')
+        return redirect('home')
+    
+    messages.warning(request, 'انتهت الجلسة المؤقتة للنموذج، يرجى التحديث والمحاولة مرة أخرى.')
+    return redirect('dashboard:login')
+
+
+
