@@ -49,6 +49,9 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/tpl-universities_detail-styles.css' %}">
+    {% if institute.main_image %}
+    <link rel="preload" href="{{ institute.main_image.url }}" as="image" fetchpriority="high">
+    {% endif %}
     <style>
         .detail-table--institutes th,
         .detail-table--institutes td {

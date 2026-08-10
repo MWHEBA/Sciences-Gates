@@ -24,7 +24,7 @@ class PerformanceIntegrityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode('utf-8')
         high_count = content.count('fetchpriority="high"')
-        self.assertLessEqual(high_count, 6, "fetchpriority='high' should only be applied to true LCP hero elements")
+        self.assertLessEqual(high_count, 5, "fetchpriority='high' should strictly only be applied to the true LCP hero element")
 
     def test_manifest_staticfiles_storage_configured(self):
         storages = getattr(settings, 'STORAGES', {})

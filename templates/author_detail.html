@@ -40,7 +40,7 @@
         <div class="bg-gray-50 border border-gray-200 rounded-xl p-8 mb-12 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-8">
             <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden bg-primary text-white flex items-center justify-center font-bold text-4xl flex-shrink-0 shadow-md">
                 {% if author.avatar %}
-                    <img src="{{ author.avatar.url }}" alt="{{ author.name }}" class="w-full h-full object-cover">
+                    <img src="{{ author.avatar.url }}" alt="{{ author.name }}" width="160" height="160" class="w-full h-full object-cover" fetchpriority="high" loading="eager" decoding="async">
                 {% else %}
                     م ك
                 {% endif %}

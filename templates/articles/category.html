@@ -19,7 +19,11 @@
                     <!-- Article Image Section -->
                     <div class="article-list-image">
                         {% if article.featured_image %}
-                            <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="article-list-image-img">
+                            {% if forloop.first %}
+                                <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" width="360" height="240" class="article-list-image-img" fetchpriority="high" loading="eager" decoding="async">
+                            {% else %}
+                                <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" width="360" height="240" class="article-list-image-img" loading="lazy" decoding="async">
+                            {% endif %}
                         {% else %}
                             <div class="article-list-image-placeholder">
                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 4a2 2 0 00-2 2v3m2-3a2 2 0 012 2v3m-2-3a2 2 0 00-2-2.5m3-3a1 1 0 100-2 1 1 0 000 2zM9 9h1.01M9 13h3.01m-3.01 4h3.01"></path></svg>

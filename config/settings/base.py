@@ -237,4 +237,9 @@ TURNSTILE_SECRET_KEY = config('TURNSTILE_SECRET_KEY', default='')
 # IndexNow Key Configuration
 INDEXNOW_KEY = config('INDEXNOW_KEY', default='c7a8b9f0e1d2c3b4a5f6e7d8c9b0a1f2')
 
+# Sorl Thumbnail Optimization (High Compression & Fast Download)
+THUMBNAIL_QUALITY = 75
+THUMBNAIL_FORMAT = 'WEBP'
+THUMBNAIL_PRESERVE_FORMAT = False
+
 
