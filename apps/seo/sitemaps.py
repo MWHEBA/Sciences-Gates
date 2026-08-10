@@ -225,19 +225,20 @@ class StaticSitemap(BaseSitemap):
         return reverse(item)
 
     def lastmod(self, item):
-        if item == 'home' or item == 'articles:list':
-            latest = Article.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
-            return latest or timezone.now()
-        elif item == 'universities:list':
-            latest = University.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
-            return latest or timezone.now()
-        elif item == 'majors:list':
-            latest = Major.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
-            return latest or timezone.now()
-        elif item == 'institutes:list':
-            latest = Institute.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
-            return latest or timezone.now()
-        return timezone.now()
+        try:
+            if item in ['home', 'articles:list']:
+                latest = Article.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
+            elif item == 'universities:list':
+                latest = University.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
+            elif item == 'majors:list':
+                latest = Major.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
+            elif item == 'institutes:list':
+                latest = Institute.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
+            else:
+                latest = None
+            return latest if latest else timezone.now()
+        except Exception:
+            return timezone.now()
 
     def priority(self, item):
         if item == 'home':

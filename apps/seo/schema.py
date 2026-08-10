@@ -136,6 +136,12 @@ class SchemaGenerator:
             "url": base_url,
             "description": "منصة متخصصة في القبولات الجامعية والخدمات التعليمية للدراسة في ماليزيا",
             "inLanguage": "ar",
+            "taxID": "202101038492",
+            "identifier": {
+                "@type": "PropertyValue",
+                "propertyID": "SSM",
+                "value": "202101038492"
+            },
             "logo": {
                 "@type": "ImageObject",
                 "url": logo_url,
@@ -176,39 +182,41 @@ class SchemaGenerator:
             "@context": "https://schema.org",
             "@type": "BlogPosting",
             "@id": f"{article_url}#blogposting",
+            "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": article_url
+            },
             "headline": article.get_meta_title(),
             "description": article.get_meta_description(),
-            "datePublished": article.publish_date.isoformat() if getattr(article, 'publish_date', None) else None,
-            "dateModified": article.updated_at.isoformat() if getattr(article, 'updated_at', None) else None,
+            "image": [logo_url],
+            "datePublished": article.publish_date.replace(microsecond=0).isoformat() if getattr(article, 'publish_date', None) else None,
+            "dateModified": article.updated_at.replace(microsecond=0).isoformat() if getattr(article, 'updated_at', None) else None,
             "inLanguage": "ar",
             "url": article_url,
-            "isPartOf": {
-                "@id": f"{base_url}#website"
-            },
-            "publisher": {
-                "@id": f"{base_url}#organization"
-            },
             "author": {
                 "@type": "Person",
                 "@id": f"{base_url}author/dr-mohammad-kayali/#person",
-                "name": getattr(article, 'author_display_name', 'د. محمد الكيالي')
+                "name": article.author_display_name,
+                "url": f"{base_url}author/dr-mohammad-kayali/"
+            },
+            "publisher": {
+                "@type": "Organization",
+                "@id": f"{base_url}#organization",
+                "name": "شركة بوابات العلوم",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": logo_url
+                }
             }
         }
         
-        if article.featured_image:
-            img_url = request.build_absolute_uri(article.featured_image.url) if request else article.featured_image.url
+        if getattr(article, 'featured_image', None) and hasattr(article.featured_image, 'url'):
+            img_url = request.build_absolute_uri(article.featured_image.url) if request else f"{base_url}{article.featured_image.url.lstrip('/')}"
             schema["image"] = {
                 "@type": "ImageObject",
                 "url": _normalize_url(img_url),
                 "width": 1200,
                 "height": 630
-            }
-        else:
-            schema["image"] = {
-                "@type": "ImageObject",
-                "url": logo_url,
-                "width": 600,
-                "height": 600
             }
         
         return schema
@@ -255,20 +263,28 @@ class SchemaGenerator:
         """
         Generate FAQPage schema for FAQ sections.
         """
+        import re
+        from bs4 import BeautifulSoup
+
         questions = []
         for faq in faqs:
             q_text = getattr(faq, 'question', None) or (faq.get('question') if isinstance(faq, dict) else None)
             a_text = getattr(faq, 'answer', None) or (faq.get('answer') if isinstance(faq, dict) else None)
             
             if q_text and a_text:
-                questions.append({
-                    "@type": "Question",
-                    "name": q_text,
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": a_text
-                    }
-                })
+                # Strip HTML tags and shortcodes for clean plain-text JSON-LD
+                clean_answer = BeautifulSoup(str(a_text), 'html.parser').get_text(separator=' ', strip=True)
+                clean_answer = re.sub(r'\[wptb[^\]]*\]', '', clean_answer).strip()
+                
+                if clean_answer:
+                    questions.append({
+                        "@type": "Question",
+                        "name": str(q_text).strip(),
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": clean_answer
+                        }
+                    })
         
         return {
             "@context": "https://schema.org",

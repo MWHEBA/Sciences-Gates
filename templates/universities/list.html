@@ -5,6 +5,67 @@
 {% block meta_description %}استكشف قائمة أفضل الجامعات الماليزية المعترف بها عالمياً. اختر من بين أكثر من 50 جامعة
 شريكة.{% endblock %}
 
+{% block schema_markup %}
+{{ block.super }}
+<!-- WebPage Schema for Universities List -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://sciencesgates.com/universities/#webpage",
+  "url": "https://sciencesgates.com/universities/",
+  "name": "الجامعات في ماليزيا - بوابات العلوم",
+  "description": "دليل أفضل الجامعات الماليزية المعتمدة رسمياً والجامعات الحكومية والخاصة الشريكة.",
+  "isPartOf": {
+    "@type": "WebSite",
+    "@id": "https://sciencesgates.com/#website"
+  }
+}
+</script>
+<!-- BreadcrumbList Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "الرئيسية",
+      "item": "https://sciencesgates.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "الجامعات في ماليزيا",
+      "item": "https://sciencesgates.com/universities/"
+    }
+  ]
+}
+</script>
+{% if universities %}
+<!-- ItemList Schema for Universities -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "دليل الجامعات الماليزية",
+  "numberOfItems": {{ universities|length }},
+  "itemListElement": [
+    {% for u in universities %}
+    {
+      "@type": "ListItem",
+      "position": {{ forloop.counter }},
+      "name": "{{ u.name|escapejs }}",
+      "url": "https://sciencesgates.com{{ u.get_absolute_url }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}
+
 {% block content %}
 {% include "components/page_hero.html" with title="الجامعات في ماليزيا" subtitle="استكشف قائمة أفضل الجامعات الماليزية المعترف بها عالمياً. نقدم لك دليلاً شاملاً لمساعدتك في اتخاذ القرار الأكاديمي الصحيح وتحقيق طموحاتك." search_template="universities/search_form.html" %}
 

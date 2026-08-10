@@ -10,8 +10,8 @@ class PerformanceIntegrityTests(TestCase):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
         content = response.content.decode('utf-8')
-        self.assertIn('images/shape-2-7.webp', content)
-        self.assertIn('media="(max-width: 991px)"', content)
+        self.assertIn('.it-hero-2-shape-4', content)
+        self.assertIn('display: none !important;', content)
 
     def test_hero_lcp_image_has_fetchpriority_high(self):
         response = self.client.get('/')

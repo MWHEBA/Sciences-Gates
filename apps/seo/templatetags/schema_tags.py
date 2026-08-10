@@ -161,11 +161,21 @@ def university_schema(context, university):
     
     # Add location
     if university.location:
-        schema["address"] = {
-            "@type": "PostalAddress",
-            "addressCountry": "MY",
-            "addressLocality": university.location
-        }
+        from bs4 import BeautifulSoup
+        clean_loc = BeautifulSoup(str(university.location), 'html.parser').get_text(strip=True)
+        if clean_loc:
+            city_name = "Kuala Lumpur"
+            for known_city in ['Kuala Lumpur', 'كوالالمبور', 'Selangor', 'سيلانجور', 'Johor', 'جوهور', 'Penang', 'بينانج', 'Kedah', 'كداح']:
+                if known_city.lower() in clean_loc.lower():
+                    city_name = known_city
+                    break
+            else:
+                city_name = clean_loc[:40].split('،')[0].strip() if len(clean_loc) > 50 else clean_loc
+            schema["address"] = {
+                "@type": "PostalAddress",
+                "addressCountry": "MY",
+                "addressLocality": city_name
+            }
         
     # Add telephone if available
     if getattr(university, 'telephone', None):
@@ -222,11 +232,21 @@ def institute_schema(context, institute):
     
     # Add location
     if getattr(institute, 'location', None):
-        schema["address"] = {
-            "@type": "PostalAddress",
-            "addressCountry": "MY",
-            "addressLocality": institute.location
-        }
+        from bs4 import BeautifulSoup
+        clean_loc = BeautifulSoup(str(institute.location), 'html.parser').get_text(strip=True)
+        if clean_loc:
+            city_name = "Kuala Lumpur"
+            for known_city in ['Kuala Lumpur', 'كوالالمبور', 'Selangor', 'سيلانجور', 'Johor', 'جوهور', 'Penang', 'بينانج']:
+                if known_city.lower() in clean_loc.lower():
+                    city_name = known_city
+                    break
+            else:
+                city_name = clean_loc[:40].split('،')[0].strip() if len(clean_loc) > 50 else clean_loc
+            schema["address"] = {
+                "@type": "PostalAddress",
+                "addressCountry": "MY",
+                "addressLocality": city_name
+            }
         
     # Add telephone if available
     if getattr(institute, 'telephone', None):

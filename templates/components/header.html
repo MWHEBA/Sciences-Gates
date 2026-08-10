@@ -275,7 +275,7 @@
                <div class="row align-items-center">
                   <div class="col-xl-2 col-6">
                      <div class="it-header-2-logo">
-                         <a href="/"><img src="{% static 'images/logo.webp' %}" alt="بوابات العلوم" width="118" height="36" fetchpriority="high" loading="eager" decoding="async"></a>
+                         <a href="/"><img src="{% static 'images/logo.webp' %}" alt="بوابات العلوم" width="118" height="36" loading="eager" decoding="async"></a>
                      </div>
                   </div>
                   <div class="col-xl-7 d-none d-xl-block">
@@ -300,7 +300,7 @@
                                                  <li>
                                                     <a href="{{ univ.get_absolute_url }}">
                                                        {% if univ.logo %}
-                                                       <img src="{{ univ.logo.url }}" alt="{{ univ.name }}" class="mega-menu-logo">
+                                                       <img src="{{ univ.logo.url }}" alt="{{ univ.name }}" class="mega-menu-logo" width="24" height="24" loading="lazy" decoding="async">
                                                        {% else %}
                                                        <span class="mega-menu-logo-fallback">
                                                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
@@ -326,7 +326,7 @@
                                                  <li>
                                                     <a href="{{ univ.get_absolute_url }}">
                                                        {% if univ.logo %}
-                                                       <img src="{{ univ.logo.url }}" alt="{{ univ.name }}" class="mega-menu-logo">
+                                                       <img src="{{ univ.logo.url }}" alt="{{ univ.name }}" class="mega-menu-logo" width="24" height="24" loading="lazy" decoding="async">
                                                        {% else %}
                                                        <span class="mega-menu-logo-fallback">
                                                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
@@ -402,7 +402,7 @@
                                                  <li>
                                                     <a href="{{ inst.get_absolute_url }}">
                                                        {% if inst.logo %}
-                                                       <img src="{{ inst.logo.url }}" alt="{{ inst.name }}" class="mega-menu-logo">
+                                                       <img src="{{ inst.logo.url }}" alt="{{ inst.name }}" class="mega-menu-logo" width="24" height="24" loading="lazy" decoding="async">
                                                        {% else %}
                                                        <span class="mega-menu-logo-fallback">
                                                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: middle;">
@@ -504,8 +504,8 @@
                                </li>
                                <li><a href="{% url 'articles:list' %}"
                                      class="{% if 'articles' in request.path %}is-active{% endif %}">المقالات</a></li>
-                              <li><a href="{% url 'leads:submit' %}"
-                                    class="{% if 'leads' in request.path %}is-active{% endif %}">تواصل معنا</a></li>
+                               <li><a href="{% url 'contact' %}"
+                                     class="{% if 'contact' in request.path %}is-active{% endif %}">تواصل معنا</a></li>
                            </ul>
                         </nav>
                      </div>

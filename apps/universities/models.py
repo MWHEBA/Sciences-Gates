@@ -377,11 +377,14 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
     def __str__(self):
         return self.name
 
-    def get_absolute_url(self):
-        """Return the absolute URL for this university."""
-        return reverse('universities:detail', kwargs={'slug': self.slug})
+    def clean(self):
+        super().clean()
+        from django.core.exceptions import ValidationError
+        if getattr(self, 'telephone', None) and "601128195437" in str(self.telephone):
+            raise ValidationError({'telephone': 'لا يمكن استخدام رقم هاتف الشركة لجامعة.'})
 
     def save(self, *args, **kwargs):
+        self.full_clean()
         """Store old slug for redirect creation if slug changes."""
         if self.pk:
             old_instance = University.objects.get(pk=self.pk)

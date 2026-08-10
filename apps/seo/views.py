@@ -95,11 +95,15 @@ Disallow: /
 User-agent: Bytespider
 Disallow: /
 
+# LLM & AI Documentation
+# llms.txt: {llms_url}
+
 # Sitemap
 Sitemap: {sitemap_url}
 """.format(
         admin_url=admin_url,
         dashboard_url=dashboard_url,
+        llms_url=normalize_canonical_domain(request.build_absolute_uri('/llms.txt')),
         sitemap_url=normalize_canonical_domain(request.build_absolute_uri('/sitemap.xml'))
     )
     return HttpResponse(robots_content, content_type='text/plain')
@@ -112,6 +116,20 @@ def indexnow_key_view(request):
     """
     key = getattr(settings, 'INDEXNOW_KEY', 'c7a8b9f0e1d2c3b4a5f6e7d8c9b0a1f2')
     return HttpResponse(key, content_type='text/plain')
+
+
+@require_http_methods(["GET"])
+def llms_txt(request):
+    """
+    Serve llms.txt Markdown file for LLM Crawlers.
+    """
+    llms_path = os.path.join(settings.BASE_DIR, 'templates', 'llms.txt')
+    if os.path.exists(llms_path):
+        with open(llms_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    else:
+        content = "# Sciences Gates - Study in Malaysia Portal\n\nOfficial educational consultancy portal."
+    return HttpResponse(content, content_type='text/markdown; charset=utf-8')
 
 
 

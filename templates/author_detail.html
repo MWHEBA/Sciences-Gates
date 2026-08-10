@@ -4,12 +4,14 @@
 {% block title %}{{ author.name }} | الخبير والمستشار الأكاديمي{% endblock %}
 {% block meta_description %}{{ author.title_credentials }} - تعرف على السيرة الذاتية والخبرات الأكاديمية والمقالات المكتوبة بواسطة {{ author.name }}.{% endblock %}
 
-{% block extra_head %}
+{% block schema_markup %}
+{{ block.super }}
 <!-- Person JSON-LD Schema -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Person",
+  "@id": "https://sciencesgates.com/author/dr-mohammad-kayali/#person",
   "name": "{{ author.name }}",
   "jobTitle": "{{ author.title_credentials }}",
   "description": "{{ author.bio|escapejs }}",
@@ -20,6 +22,7 @@
   ],
   "worksFor": {
     "@type": "EducationalOrganization",
+    "@id": "https://sciencesgates.com/#organization",
     "name": "Sciences Gates - بوابات العلوم للدراسة في ماليزيا",
     "url": "https://sciencesgates.com"
   },
