@@ -209,6 +209,14 @@
                         </dd>
                     </div>
                     {% endif %}
+                    {% if university.updated_at %}
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">آخر تحديث:</dt>
+                        <dd class="detail-sidebar-value date">
+                            <time datetime="{{ university.updated_at|date:'Y-m-d' }}">{{ university.updated_at|date:"d F Y" }}</time>
+                        </dd>
+                    </div>
+                    {% endif %}
                 </dl>
             </div>
 
@@ -577,6 +585,14 @@
                         <dt class="detail-sidebar-label">الموقع الرسمي:</dt>
                         <dd class="detail-sidebar-value">
                             <a href="{{ university.website }}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">زيارة الموقع</a>
+                        </dd>
+                    </div>
+                    {% endif %}
+                    {% if university.updated_at %}
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">آخر تحديث:</dt>
+                        <dd class="detail-sidebar-value date">
+                            <time datetime="{{ university.updated_at|date:'Y-m-d' }}">{{ university.updated_at|date:"d F Y" }}</time>
                         </dd>
                     </div>
                     {% endif %}

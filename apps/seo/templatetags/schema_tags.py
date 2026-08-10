@@ -289,39 +289,38 @@ def major_course_schema(context, major):
 def webpage_schema(context, page_name):
     """
     Generate WebPage schema for general pages.
-    
+
     Usage:
         {% load schema_tags %}
         <script type="application/ld+json">
         {% webpage_schema "الصفحة الرئيسية" %}
         </script>
     """
+    from apps.seo.schema import _normalize_url, _CANONICAL_ORIGIN
     request = context.get('request')
     if not request:
         return '{}'
-    
-    default_img_url = request.build_absolute_uri('/static/images/og-default.jpg')
-    
+
+    page_url = _normalize_url(request.build_absolute_uri())
+    img_url = _normalize_url(request.build_absolute_uri('/static/images/og-default.jpg'))
+    canonical_org_id = f'{_CANONICAL_ORIGIN}/#organization'
+
     schema = {
         "@context": "https://schema.org",
         "@type": "WebPage",
         "name": page_name,
-        "url": request.build_absolute_uri(),
+        "url": page_url,
         "inLanguage": "ar",
+        "isPartOf": {"@id": f"{_CANONICAL_ORIGIN}/#website"},
         "primaryImageOfPage": {
             "@type": "ImageObject",
-            "url": default_img_url,
+            "url": img_url,
             "width": 600,
             "height": 600
         },
-        "publisher": {
-            "@type": "Organization",
-            "name": "Science Gates",
-            "logo": {
-                "@type": "ImageObject",
-                "url": default_img_url
-            }
-        }
+        # Reference canonical Organization entity by @id — avoids name mismatch and duplication
+        "publisher": {"@id": canonical_org_id}
     }
-    
+
     return mark_safe(json.dumps(schema, ensure_ascii=False, indent=2))
+

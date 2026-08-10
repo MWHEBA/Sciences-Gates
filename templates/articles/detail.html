@@ -286,9 +286,19 @@
                             <time datetime="{{ article.publish_date|date:'Y-m-d' }}">{{ article.publish_date|date:"d F Y" }}</time>
                         </dd>
                     </div>
+                    {% if article.updated_at and article.updated_at != article.publish_date %}
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">آخر تحديث:</dt>
+                        <dd class="detail-sidebar-value date">
+                            <time datetime="{{ article.updated_at|date:'Y-m-d' }}">{{ article.updated_at|date:"d F Y" }}</time>
+                        </dd>
+                    </div>
+                    {% endif %}
                     <div class="detail-sidebar-item">
                         <dt class="detail-sidebar-label">الكاتب:</dt>
-                        <dd class="detail-sidebar-value author">{{ article.author_display_name }}</dd>
+                        <dd class="detail-sidebar-value author">
+                            <a href="/author/dr-mohammad-kayali/" rel="author" style="color: var(--primary); text-decoration: none; font-weight: 600;">{{ article.author_display_name }}</a>
+                        </dd>
                     </div>
                 </dl>
             </div>

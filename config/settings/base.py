@@ -187,6 +187,9 @@ MAX_IMAGE_WIDTH = config('MAX_IMAGE_WIDTH', default=1920, cast=int)
 
 # Site Configuration
 SITE_NAME = config('SITE_NAME', default='بوابات العلوم للدراسة في ماليزيا')
+# CRITICAL: Override SITE_URL in production .env → SITE_URL=https://sciencesgates.com
+# Leaving it as localhost will cause broken JSON-LD schema (Google drops Organization & WebSite markup).
+# The schema.py _normalize_url guard provides a second line of defence, but the .env must be correct.
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
 # Security Settings

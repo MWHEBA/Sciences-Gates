@@ -21,6 +21,14 @@ def university_sitemap_handler(sender, instance, **kwargs):
     except Exception as exc:
         logger.error("SEO Invalidation: Failed to clear university sitemap cache: %s", exc)
 
+    if not kwargs.get('raw'):
+        try:
+            if hasattr(instance, 'get_absolute_url') and getattr(instance, 'publish_status', None) == 'published':
+                full_url = f"https://sciencesgates.com{instance.get_absolute_url()}"
+                schedule_indexnow_ping(full_url)
+        except Exception:
+            pass
+
 
 @receiver(post_save, sender=Institute)
 @receiver(post_delete, sender=Institute)
@@ -32,6 +40,14 @@ def institute_sitemap_handler(sender, instance, **kwargs):
     except Exception as exc:
         logger.error("SEO Invalidation: Failed to clear institute sitemap cache: %s", exc)
 
+    if not kwargs.get('raw'):
+        try:
+            if hasattr(instance, 'get_absolute_url') and getattr(instance, 'publish_status', None) == 'published':
+                full_url = f"https://sciencesgates.com{instance.get_absolute_url()}"
+                schedule_indexnow_ping(full_url)
+        except Exception:
+            pass
+
 
 @receiver(post_save, sender=Major)
 @receiver(post_delete, sender=Major)
@@ -42,6 +58,14 @@ def major_sitemap_handler(sender, instance, **kwargs):
         clear_sitemap_cache(sitemap_type='majors')
     except Exception as exc:
         logger.error("SEO Invalidation: Failed to clear major sitemap cache: %s", exc)
+
+    if not kwargs.get('raw'):
+        try:
+            if hasattr(instance, 'get_absolute_url') and getattr(instance, 'publish_status', None) == 'published':
+                full_url = f"https://sciencesgates.com{instance.get_absolute_url()}"
+                schedule_indexnow_ping(full_url)
+        except Exception:
+            pass
 
 
 @receiver(post_save, sender=Article)

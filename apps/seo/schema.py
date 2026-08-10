@@ -10,27 +10,70 @@ from django.conf import settings
 from django.templatetags.static import static
 
 
+# Canonical production origin — single source of truth for schema URLs
+_CANONICAL_ORIGIN = 'https://sciencesgates.com'
+
+# All patterns that must never appear in production schema output
+_LOCALHOST_PATTERNS = [
+    'http://localhost:8000',
+    'https://localhost:8000',
+    'http://localhost',
+    'https://localhost',
+    'http://127.0.0.1:8000',
+    'https://127.0.0.1:8000',
+    'http://127.0.0.1',
+    'https://127.0.0.1',
+]
+
+
 def _normalize_url(url):
+    """Normalize a URL to canonical HTTPS production form.
+
+    Converts:
+    - www.sciencesgates.com → sciencesgates.com
+    - http://sciencesgates.com → https://sciencesgates.com
+    - localhost / 127.0.0.1 (any port) → https://sciencesgates.com
+    """
     if not url:
         return url
+    # Strip www prefix
     if 'www.sciencesgates.com' in url:
         url = url.replace('www.sciencesgates.com', 'sciencesgates.com')
+    # Upgrade plain-http to HTTPS
     if url.startswith('http://sciencesgates.com'):
-        url = 'https://sciencesgates.com' + url[len('http://sciencesgates.com'):]
+        url = _CANONICAL_ORIGIN + url[len('http://sciencesgates.com'):]
+    # Replace any localhost / 127.0.0.1 pattern with the canonical origin
+    for pattern in _LOCALHOST_PATTERNS:
+        if url.startswith(pattern):
+            url = _CANONICAL_ORIGIN + url[len(pattern):]
+            break
     return url
 
 
 def _get_base_url(request=None):
     """
     Construct canonical base site URL dynamically.
-    First checks settings.SITE_URL, falls back to request.build_absolute_uri('/').
+
+    Priority order:
+    1. settings.SITE_URL (from .env) — normalized to strip localhost/www/http.
+    2. request.build_absolute_uri('/') — normalized similarly.
+    3. Hard-coded production fallback.
+
+    IMPORTANT: SITE_URL must be set to 'https://sciencesgates.com' in the
+    production .env file.  If it is left as the default 'http://localhost:8000'
+    the _normalize_url guard below will still correct the output.
     """
     configured = getattr(settings, 'SITE_URL', '').rstrip('/')
     if configured:
-        return _normalize_url(configured + '/')
+        normalized = _normalize_url(configured + '/')
+        # Extra safety: if after normalization we still have localhost, ignore it
+        if 'localhost' not in normalized and '127.0.0.1' not in normalized:
+            return normalized
     if request:
-        return _normalize_url(request.build_absolute_uri('/'))
-    return 'https://sciencesgates.com/'
+        normalized = _normalize_url(request.build_absolute_uri('/'))
+        if 'localhost' not in normalized and '127.0.0.1' not in normalized:
+            return normalized
+    return f'{_CANONICAL_ORIGIN}/'
 
 
 class SchemaGenerator:

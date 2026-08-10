@@ -9,6 +9,7 @@ from django.contrib.sitemaps.views import sitemap
 from apps.core.views import HomeView, AboutView, VisaTrackingView, LegacyUrlDetailView, PrivacyView, TermsView
 from apps.seo.views import robots_txt, indexnow_key_view
 from apps.seo.sitemaps import sitemaps
+from apps.articles.views import AuthorDetailView
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
@@ -16,6 +17,8 @@ urlpatterns = [
     path('visa-tracking/', VisaTrackingView.as_view(), name='visa_tracking'),
     path('privacy/', PrivacyView.as_view(), name='privacy'),
     path('terms/', TermsView.as_view(), name='terms'),
+    # Canonical author bio URL — referenced in JSON-LD schema and article bylines
+    path('author/<str:slug>/', AuthorDetailView.as_view(), name='author_detail'),
 
     path(settings.ADMIN_URL, admin.site.urls),
     path(settings.DASHBOARD_URL, include('apps.dashboard.urls')),
