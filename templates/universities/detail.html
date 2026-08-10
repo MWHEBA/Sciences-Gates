@@ -786,7 +786,7 @@
     </button>
 
     <!-- Registration Wizard Modal -->
-    <div x-show="openRegModal" class="reg-modal-overlay"
+    <div x-show="openRegModal" x-cloak class="reg-modal-overlay" style="display: none;"
         @keydown.escape.window="openRegModal = false">
         <div class="reg-modal-content" @click.away="openRegModal = false">
 

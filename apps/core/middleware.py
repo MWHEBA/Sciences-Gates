@@ -179,11 +179,12 @@ class SecurityHeadersMiddleware:
         # 1. Content-Security-Policy (Alpine.js & Tailwind compliant)
         csp_policy = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net www.googletagmanager.com; "
-            "style-src 'self' 'unsafe-inline' fonts.googleapis.com; "
-            "font-src 'self' fonts.gstatic.com; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net www.googletagmanager.com https://challenges.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com cdn.jsdelivr.net; "
+            "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net data:; "
             "img-src 'self' data: https:; "
-            "connect-src 'self' www.google-analytics.com; "
+            "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://challenges.cloudflare.com; "
+            "connect-src 'self' www.google-analytics.com https://get.geojs.io https://ipapi.co; "
             "object-src 'none'; "
             "base-uri 'self'; "
             "form-action 'self'; "

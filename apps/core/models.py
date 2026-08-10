@@ -260,6 +260,16 @@ class UserProfile(models.Model):
     def is_super_admin(self):
         return self.role == UserRole.SUPER_ADMIN
 
+    @property
+    def is_content_admin(self):
+        """Check if user is content admin."""
+        return self.role == UserRole.CONTENT_ADMIN
+
+    @property
+    def is_seo_admin(self):
+        """Check if user is SEO admin."""
+        return self.role == UserRole.SEO_ADMIN
+
 
 class AuthorProfile(models.Model):
     """
@@ -325,16 +335,6 @@ class AuthorProfile(models.Model):
         if self.university_profile_url:
             urls.append(self.university_profile_url)
         return urls
-
-    @property
-    def is_content_admin(self):
-        """Check if user is content admin."""
-        return self.role == UserRole.CONTENT_ADMIN
-
-    @property
-    def is_seo_admin(self):
-        """Check if user is SEO admin."""
-        return self.role == UserRole.SEO_ADMIN
 
 
 @receiver(post_save, sender=User)

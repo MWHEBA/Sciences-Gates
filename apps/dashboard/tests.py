@@ -1271,7 +1271,50 @@ class TestArticleListView:
         assert self.article2.author is None
 
 
+@pytest.mark.django_db
+class TestLeadListView:
+    """Tests for LeadListView in dashboard."""
 
+    @pytest.fixture(autouse=True)
+    def setup(self, client):
+        self.client = client
+        self.user = User.objects.create_user(
+            username='contentadmin',
+            password='testpass123',
+            is_staff=True
+        )
+        from apps.core.models import UserRole, UserProfile
+        UserProfile.objects.update_or_create(
+            user=self.user,
+            defaults={'role': UserRole.CONTENT_ADMIN}
+        )
+        self.client.login(username='contentadmin', password='testpass123')
 
+    def test_lead_list_registration(self):
+        """Test lead list view with lead_type=registration."""
+        Lead.objects.create(
+            lead_type=LeadType.REGISTRATION,
+            name='Test Student',
+            phone='123456789',
+            nationality='Yemeni',
+            study_level='Bachelor'
+        )
+        url = f"{reverse('dashboard:lead_list')}?lead_type=registration"
+        response = self.client.get(url)
+        assert response.status_code == 200
+        assert 'leads' in response.context
+        assert len(response.context['leads']) == 1
 
-
+    def test_lead_list_contact(self):
+        """Test lead list view with lead_type=contact."""
+        Lead.objects.create(
+            lead_type=LeadType.CONTACT,
+            name='Contact Person',
+            phone='987654321',
+            message='Inquiry message'
+        )
+        url = f"{reverse('dashboard:lead_list')}?lead_type=contact"
+        response = self.client.get(url)
+        assert response.status_code == 200
+        assert 'leads' in response.context
+        assert len(response.context['leads']) == 1
