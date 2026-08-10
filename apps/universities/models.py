@@ -374,8 +374,9 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
             models.Index(fields=['-created_at']),
         ]
 
-    def __str__(self):
-        return self.name
+    def get_absolute_url(self):
+        """Return the absolute URL for this university."""
+        return reverse('universities:detail', kwargs={'slug': self.slug})
 
     def clean(self):
         super().clean()

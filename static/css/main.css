@@ -2038,6 +2038,8 @@ only screen and (min-width: 768px) and (max-width: 991px),
 }
 
 /* Default Mobile/Tablet column widths for Hero */
+.it-hero-2-area .col-xl-8,
+.it-hero-2-area .col-lg-8,
 .it-hero-2-area .col-xl-6,
 .it-hero-2-area .col-lg-6 {
     width: 100%;
@@ -2051,27 +2053,60 @@ only screen and (min-width: 768px) and (max-width: 991px),
 
 /* Desktop layout (>= 992px) */
 @media (min-width: 992px) {
+    .it-hero-2-area .row {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+    }
+
+    /* High-specificity selector: targets exact hero text column */
+    .col-xl-8.col-lg-8.col-md-12 {
+        max-width: 50%;
+        width: 50%;
+    }
+
+    /* Text column (8/12) */
+    .it-hero-2-area .col-lg-8 {
+        flex: 0 0 auto;
+        width: 60% !important;
+    }
+
+    /* Image column (4/12) */
+    .it-hero-2-area .col-lg-4 {
+        flex: 0 0 auto;
+        width: 40% !important;
+    }
+
+    /* Keep col-lg-6 support for any other usage */
     .it-hero-2-area .col-lg-6 {
         flex: 0 0 auto;
         width: 55% !important;
-    }
-
-    .it-hero-2-area .col-lg-4 {
-        flex: 0 0 auto;
-        width: 45% !important;
     }
 }
 
 /* Large Desktop layout (>= 1200px) */
 @media (min-width: 1200px) {
+    .it-hero-2-area .row {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+    }
+
+    /* Text column xl */
+    .it-hero-2-area .col-xl-8 {
+        flex: 0 0 auto;
+        width: 50% !important;
+    }
+
     .it-hero-2-area .col-xl-6 {
         flex: 0 0 auto;
         width: 50% !important;
     }
 
+    /* Image column xl */
     .it-hero-2-area .col-xl-4 {
         flex: 0 0 auto;
-        width: 38% !important;
+        width: 40% !important;
     }
 }
 

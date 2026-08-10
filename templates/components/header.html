@@ -29,7 +29,7 @@
          <h3 class="offcanva-title">تواصل معنا</h3>
          <div class="it-info-wrapper mb-20 d-flex align-items-center">
             <div class="itoffcanvas__info-icon">
-               <a href="mailto:{{ site_settings.email|default:'info@sciencegates.com' }}" aria-label="البريد الإلكتروني">
+               <a href="mailto:{{ site_settings.email|default:'info@sciencesgates.com' }}" aria-label="البريد الإلكتروني">
                   <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="vertical-align: middle;">
                      <path d="M19.8627 11.5702L15.509 7.21652C15.326 7.03352 15.0291 7.03352 14.8461 7.21652C14.663 7.39956 14.663 7.69638 14.8461 7.87947L18.3022 11.3356H10.0604C9.37673 11.3356 8.82055 10.7794 8.82055 10.0957V1.85397L12.1573 5.19063C12.3403 5.37363 12.6371 5.37363 12.8202 5.19063C13.0033 5.00758 13.0033 4.71077 12.8202 4.52767L8.58599 0.2935C8.40294 0.1105 8.10613 0.1105 7.92308 0.2935L0.450273 7.76645C0.267227 7.9495 0.267227 8.24631 0.450273 8.42941L11.7269 19.706C11.8148 19.7939 11.9341 19.8433 12.0584 19.8433C12.1827 19.8433 12.302 19.7939 12.3898 19.706L19.8627 12.2331C19.9506 12.1452 20 12.026 20 11.9017C20 11.7774 19.9506 11.6581 19.8627 11.5702ZM7.88315 1.65939V7.6292H1.91334L7.88315 1.65939ZM11.5896 18.2429L1.91334 8.56666H7.88315V10.0957C7.88315 11.2963 8.85993 12.2731 10.0605 12.2731H11.5896V18.2429ZM12.5271 18.2429V12.2731H18.4969L12.5271 18.2429Z" fill="currentColor" />
                   </svg>
@@ -37,7 +37,7 @@
             </div>
             <div class="itoffcanvas__info-address">
                <span>البريد الإلكتروني</span>
-               <a href="mailto:{{ site_settings.email|default:'info@sciencegates.com' }}">{{ site_settings.email|default:'info@sciencegates.com' }}</a>
+               <a href="mailto:{{ site_settings.email|default:'info@sciencesgates.com' }}">{{ site_settings.email|default:'info@sciencesgates.com' }}</a>
             </div>
          </div>
          {% if site_settings.phone %}
@@ -86,10 +86,10 @@
          <div class="row align-items-center">
             <div class="col-xl-8 col-lg-8">
                <div class="it-header-2-top-left">
-                  <ul>
+                  <ul style="display: flex; align-items: center; gap: 20px; margin: 0; padding: 0; list-style: none;">
                      {% if site_settings.phone %}
                      <li class="d-none d-lg-inline-block">
-                        <a href="tel:{{ site_settings.phone_clean }}" dir="ltr" style="unicode-bidi: plaintext; display: inline-flex !important; align-items: center;">
+                        <a href="tel:{{ site_settings.phone_clean }}" dir="ltr" style="unicode-bidi: plaintext; display: inline-flex !important; align-items: center; gap: 6px; white-space: nowrap;">
                            <span>
                               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -103,7 +103,7 @@
                      </li>
                      {% endif %}
                      <li>
-                        <a href="mailto:{{ site_settings.email|default:'info@sciencegates.com' }}">
+                        <a href="mailto:{{ site_settings.email|default:'info@sciencesgates.com' }}" style="display: inline-flex !important; align-items: center; gap: 6px; white-space: nowrap;">
                            <span>
                               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -112,11 +112,11 @@
                                     fill="currentColor" />
                               </svg>
                            </span>
-                           {{ site_settings.email|default:'info@sciencegates.com' }}
+                           {{ site_settings.email|default:'info@sciencesgates.com' }}
                         </a>
                      </li>
                      <li class="d-none d-xl-inline-block">
-                        <a href="{% url 'visa_tracking' %}">
+                        <a href="{% url 'visa_tracking' %}" style="display: inline-flex !important; align-items: center; gap: 6px; white-space: nowrap;">
                            <span>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--secondary); vertical-align: middle;">
                                  <rect width="16" height="20" x="4" y="2" rx="2"></rect>
@@ -134,7 +134,7 @@
             </div>
             <div class="col-xl-4 col-lg-4 d-none d-sm-block">
                <div class="it-header-2-top-right text-end">
-                  <ul>
+                  <ul style="display: flex; align-items: center; justify-content: flex-end; gap: 15px; margin: 0; padding: 0; list-style: none;">
                      <!-- Language Dropdown (Deactivated for now)
                      <li>
                         <div id="it-header-2-lang" class="it-header-2-lang d-none d-sm-block">
