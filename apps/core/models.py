@@ -258,8 +258,73 @@ class UserProfile(models.Model):
 
     @property
     def is_super_admin(self):
-        """Check if user is super admin."""
         return self.role == UserRole.SUPER_ADMIN
+
+
+class AuthorProfile(models.Model):
+    """
+    Author profile model for E-E-A-T credentials and Person JSON-LD Schema.
+    """
+    user = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='author_profile',
+        verbose_name='حساب المستخدم'
+    )
+    name = models.CharField(
+        max_length=200,
+        default='د. محمد الكيالي',
+        verbose_name='اسم الكاتب'
+    )
+    slug = models.SlugField(
+        max_length=200,
+        unique=True,
+        default='dr-mohammad-kayali',
+        verbose_name='رابط الكاتب'
+    )
+    title_credentials = models.CharField(
+        max_length=250,
+        default='دكتوراه في علوم الحاسوب (UKM) - خبير الاستشارات التعليمية في ماليزيا',
+        verbose_name='المؤهل واللقب المهني'
+    )
+    bio = models.TextField(
+        default='مؤسس ومدير شركة بوابات العلوم للدراسة في ماليزيا. حاصل على درجة الدكتوراه في علوم الحاسوب من جامعة UKM الماليزية، يملك أكثر من 10 سنوات خبرة في تقديم الاستشارات الأكاديمية وإرشادات القبول الجامعي لأكثر من 3000 طالب عربي.',
+        verbose_name='السيرة الذاتية والخبرة'
+    )
+    avatar = models.ImageField(
+        upload_to='authors/',
+        blank=True,
+        null=True,
+        verbose_name='صورة الكاتب'
+    )
+    linkedin_url = models.URLField(
+        blank=True,
+        default='https://www.linkedin.com/in/mohammad-kayali/',
+        verbose_name='رابط لينكد إن'
+    )
+    university_profile_url = models.URLField(
+        blank=True,
+        default='https://www.ukm.my/',
+        verbose_name='رابط الملف الجامعي / الرسمي'
+    )
+
+    class Meta:
+        verbose_name = 'ملف الكاتب (E-E-A-T)'
+        verbose_name_plural = 'ملفات الكتاب (E-E-A-T)'
+
+    def __str__(self):
+        return f'{self.name} - {self.title_credentials}'
+
+    @property
+    def same_as_urls(self):
+        urls = []
+        if self.linkedin_url:
+            urls.append(self.linkedin_url)
+        if self.university_profile_url:
+            urls.append(self.university_profile_url)
+        return urls
 
     @property
     def is_content_admin(self):

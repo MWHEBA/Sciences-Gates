@@ -7,22 +7,21 @@ only published content that should be indexed appears in the sitemap.
 """
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
+from django.db.models import Count, Q, Max
+from django.utils import timezone
 from apps.universities.models import University
 from apps.institutes.models import Institute
-from apps.majors.models import Major
-from apps.articles.models import Article
+from apps.majors.models import Major, MajorCategory
+from apps.articles.models import Article, Category
 
 
 def clear_sitemap_cache(sitemap_type=None):
     """
     Centralized utility to clear sitemap cache keys.
-    If sitemap_type is provided (e.g. 'universities', 'institutes', 'majors', 'articles'),
-    only that specific sitemap class's cache is cleared.
     """
     from django.core.cache import cache
     from django.contrib.sites.models import Site
     
-    # We clear sitemaps for the production domain, local environments, and the active site domain
     domains = ['sciencesgates.com', 'localhost:8000', '127.0.0.1:8000']
     try:
         current_domain = Site.objects.get_current().domain
@@ -33,26 +32,27 @@ def clear_sitemap_cache(sitemap_type=None):
         
     protocols = ['http', 'https']
     
-    # Map type to sitemap class lower name
     type_map = {
         'universities': ['universitysitemap'],
         'institutes': ['institutesitemap'],
         'majors': ['majorsitemap'],
         'articles': ['articlesitemap'],
+        'major_categories': ['majorcategorysitemap'],
+        'article_categories': ['articlecategorysitemap'],
     }
     
     if sitemap_type in type_map:
         classes_to_clear = type_map[sitemap_type]
     else:
-        # Clear all sitemaps
-        classes_to_clear = ['universitysitemap', 'institutesitemap', 'majorsitemap', 'articlesitemap', 'staticsitemap']
+        classes_to_clear = [
+            'universitysitemap', 'institutesitemap', 'majorsitemap', 
+            'articlesitemap', 'majorcategorysitemap', 'articlecategorysitemap', 'staticsitemap'
+        ]
         
     cache_keys = []
     for cls in classes_to_clear:
         for page in range(1, 11):
-            # Clear key without domain/proto for legacy fallback
             cache_keys.append(f"sitemap_{cls}_page_{page}")
-            # Clear keys with domains and protocols
             for domain in domains:
                 for proto in protocols:
                     cache_keys.append(f"sitemap_{cls}_page_{page}_{domain}_{proto}")
@@ -61,16 +61,13 @@ def clear_sitemap_cache(sitemap_type=None):
 
 
 class BaseSitemap(Sitemap):
-    """Base sitemap class with common configuration and caching."""
+    """Base sitemap class with common configuration and 24-hour caching."""
     
     changefreq = 'weekly'
     priority = 0.8
     protocol = 'https'
     
     def get_urls(self, page=1, site=None, protocol=None):
-        """
-        Override to add caching and ensure only published content is included.
-        """
         from django.core.cache import cache
         from django.contrib.sites.models import Site as DjangoSite
         
@@ -91,123 +88,133 @@ class BaseSitemap(Sitemap):
             return cached_urls
             
         urls = super().get_urls(page=page, site=site, protocol=protocol)
-        # Cache for 24 hours
+        # Cache for 24 hours (86400s)
         cache.set(cache_key, urls, 86400)
         return urls
 
 
 class UniversitySitemap(BaseSitemap):
-    """Sitemap for University content.
-    
-    Includes only published universities with sitemap_include=True.
-    """
-    
+    """Sitemap for University content."""
     priority = 0.9
     changefreq = 'monthly'
     
     def items(self):
-        """Return published universities with sitemap inclusion enabled."""
         return University.objects.filter(
             publish_status='published',
             sitemap_include=True
         ).order_by('-updated_at')
     
     def location(self, item):
-        """Return the URL for a university."""
         return item.get_absolute_url()
     
     def lastmod(self, item):
-        """Return the last modification date."""
         return item.updated_at
 
 
 class InstituteSitemap(BaseSitemap):
-    """Sitemap for Institute content.
-    
-    Includes only published institutes with sitemap_include=True.
-    """
-    
+    """Sitemap for Institute content."""
     priority = 0.9
     changefreq = 'monthly'
     
     def items(self):
-        """Return published institutes with sitemap inclusion enabled."""
         return Institute.objects.filter(
             publish_status='published',
             sitemap_include=True
         ).order_by('-updated_at')
     
     def location(self, item):
-        """Return the URL for an institute."""
         return item.get_absolute_url()
     
     def lastmod(self, item):
-        """Return the last modification date."""
         return item.updated_at
 
 
 class MajorSitemap(BaseSitemap):
-    """Sitemap for Major content.
-    
-    Includes only published majors with sitemap_include=True.
-    """
-    
+    """Sitemap for Major content."""
     priority = 0.9
     changefreq = 'monthly'
     
     def items(self):
-        """Return published majors with sitemap inclusion enabled."""
         return Major.objects.filter(
             publish_status='published',
             sitemap_include=True
         ).order_by('-updated_at')
     
     def location(self, item):
-        """Return the URL for a major."""
         return item.get_absolute_url()
     
     def lastmod(self, item):
-        """Return the last modification date."""
         return item.updated_at
 
 
 class ArticleSitemap(BaseSitemap):
-    """Sitemap for Article content.
-    
-    Includes only published articles with sitemap_include=True.
-    """
-    
+    """Sitemap for Article content."""
     priority = 0.8
     changefreq = 'weekly'
     
     def items(self):
-        """Return published articles with sitemap inclusion enabled."""
         return Article.objects.filter(
             publish_status='published',
             sitemap_include=True
         ).order_by('-updated_at')
     
     def location(self, item):
-        """Return the URL for an article."""
         return item.get_absolute_url()
     
     def lastmod(self, item):
-        """Return the last modification date."""
+        return item.updated_at
+
+
+class MajorCategorySitemap(BaseSitemap):
+    """
+    Sitemap for Major Category archive pages.
+    Quality Gate: Only includes categories with at least 1 active published major.
+    """
+    priority = 0.7
+    changefreq = 'weekly'
+
+    def items(self):
+        return MajorCategory.objects.annotate(
+            pub_count=Count('majors', filter=Q(majors__publish_status='published'))
+        ).filter(pub_count__gte=1).order_by('-updated_at')
+
+    def location(self, item):
+        return item.get_absolute_url()
+
+    def lastmod(self, item):
+        return item.updated_at
+
+
+class ArticleCategorySitemap(BaseSitemap):
+    """
+    Sitemap for Article Category archive pages.
+    Quality Gate: Only includes categories with at least 1 active published article.
+    """
+    priority = 0.7
+    changefreq = 'weekly'
+
+    def items(self):
+        return Category.objects.annotate(
+            pub_count=Count('articles', filter=Q(articles__publish_status='published'))
+        ).filter(pub_count__gte=1).order_by('-updated_at')
+
+    def location(self, item):
+        return reverse('articles:category', kwargs={'slug': item.slug})
+
+    def lastmod(self, item):
         return item.updated_at
 
 
 class StaticSitemap(BaseSitemap):
-    """Sitemap for static pages and listing pages.
-    
-    Includes main pages like home, about us, visa tracking, and main section list pages.
-    """
+    """Sitemap for static pages and main listing pages."""
     
     def items(self):
-        """Return static and list page URL names."""
         return [
             'home',
             'about_us',
             'visa_tracking',
+            'privacy',
+            'terms',
             'universities:list',
             'institutes:list',
             'majors:list',
@@ -215,11 +222,24 @@ class StaticSitemap(BaseSitemap):
         ]
     
     def location(self, item):
-        """Return the URL for a static page."""
         return reverse(item)
 
+    def lastmod(self, item):
+        if item == 'home' or item == 'articles:list':
+            latest = Article.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
+            return latest or timezone.now()
+        elif item == 'universities:list':
+            latest = University.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
+            return latest or timezone.now()
+        elif item == 'majors:list':
+            latest = Major.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
+            return latest or timezone.now()
+        elif item == 'institutes:list':
+            latest = Institute.objects.filter(publish_status='published').aggregate(Max('updated_at'))['updated_at__max']
+            return latest or timezone.now()
+        return timezone.now()
+
     def priority(self, item):
-        """Return priority per page type."""
         if item == 'home':
             return 1.0
         elif item in ['universities:list', 'institutes:list', 'majors:list', 'articles:list']:
@@ -227,7 +247,6 @@ class StaticSitemap(BaseSitemap):
         return 0.5
 
     def changefreq(self, item):
-        """Return change frequency per page type."""
         if item == 'home':
             return 'daily'
         elif item in ['universities:list', 'institutes:list', 'majors:list', 'articles:list']:
@@ -235,12 +254,12 @@ class StaticSitemap(BaseSitemap):
         return 'monthly'
 
 
-# Sitemap index configuration
-# Register all sitemaps in urls.py
 sitemaps = {
     'universities': UniversitySitemap,
     'institutes': InstituteSitemap,
     'majors': MajorSitemap,
     'articles': ArticleSitemap,
+    'major_categories': MajorCategorySitemap,
+    'article_categories': ArticleCategorySitemap,
     'static': StaticSitemap,
 }

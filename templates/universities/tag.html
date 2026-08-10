@@ -4,6 +4,7 @@
 {% block title %}الجامعات المرتبطة بـ {{ tag.name }} | بوابات العلوم{% endblock %}
 {% block meta_description %}استكشف جميع الجامعات والفرص التعليمية المتاحة المرتبطة بـ {{ tag.name }} في ماليزيا.{% endblock %}
 {% block robots %}noindex, follow{% endblock %}
+{% block googlebot %}noindex, follow{% endblock %}
 
 {% block content %}
 {% include "components/page_hero.html" with title="#"|add:tag.name subtitle="اكتشف جميع الجامعات والفرص التعليمية المرتبطة بهذا الوسم." %}

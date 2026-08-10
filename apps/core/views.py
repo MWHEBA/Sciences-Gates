@@ -252,4 +252,15 @@ def csrf_failure(request, reason=""):
     return redirect('dashboard:login')
 
 
+class PrivacyView(TemplateView):
+    """View for displaying Privacy Policy page."""
+    template_name = 'privacy.html'
+
+
+class TermsView(TemplateView):
+    """View for displaying Terms of Service page."""
+    template_name = 'terms.html'
+
+
+
 

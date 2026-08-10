@@ -7,6 +7,7 @@ for search engines using JSON-LD format according to schema.org vocabulary.
 import json
 from django.urls import reverse
 from django.conf import settings
+from django.templatetags.static import static
 
 
 def _normalize_url(url):
@@ -19,61 +20,77 @@ def _normalize_url(url):
     return url
 
 
+def _get_base_url(request=None):
+    """
+    Construct canonical base site URL dynamically.
+    First checks settings.SITE_URL, falls back to request.build_absolute_uri('/').
+    """
+    configured = getattr(settings, 'SITE_URL', '').rstrip('/')
+    if configured:
+        return _normalize_url(configured + '/')
+    if request:
+        return _normalize_url(request.build_absolute_uri('/'))
+    return 'https://sciencesgates.com/'
+
+
 class SchemaGenerator:
     """Base class for generating JSON-LD schema markup."""
     
     @staticmethod
-    def generate_website_schema(request):
-        site_url = _normalize_url(request.build_absolute_uri('/'))
-        logo_url = _normalize_url(request.build_absolute_uri('/static/images/og-default.jpg'))
+    def generate_website_schema(request=None):
+        base_url = _get_base_url(request)
+        logo_url = _normalize_url(request.build_absolute_uri(static('images/og-default.jpg')) if request else f"{base_url}static/images/og-default.jpg")
         
         return {
             "@context": "https://schema.org",
             "@type": "WebSite",
-            "name": "شركة بوابات العلوم للدراسة في ماليزيا",
-            "alternateName": ["بوابات العلوم", "Science Gates"],
-            "url": site_url,
-            "image": logo_url
+            "@id": f"{base_url}#website",
+            "name": "شركة بوابات العلوم",
+            "alternateName": ["بوابات العلوم", "Sciences Gates", "بوابات العلوم للدراسة في ماليزيا"],
+            "url": base_url,
+            "inLanguage": "ar",
+            "image": logo_url,
+            "publisher": {
+                "@id": f"{base_url}#organization"
+            }
         }
     
     @staticmethod
-    def generate_organization_schema(request):
+    def generate_organization_schema(request=None):
         """
         Generate Organization schema for the website.
-        
-        Returns a JSON-LD Organization schema with site name, logo, contact info,
-        and social profiles for search engine optimization.
-        
-        Args:
-            request: HTTP request object for building absolute URLs
-            
-        Returns:
-            Dictionary containing Organization schema markup
         """
-        site_url = _normalize_url(request.build_absolute_uri('/'))
+        base_url = _get_base_url(request)
         
         from apps.core.models import SiteSettings
         try:
             site_settings = SiteSettings.get_settings()
-            same_as_links = [item['url'] for item in site_settings.social_links]
+            raw_links = [item['url'] for item in site_settings.social_links]
         except Exception:
-            same_as_links = []
+            raw_links = []
 
-        if not same_as_links:
-            same_as_links = [
+        if not raw_links:
+            raw_links = [
                 "https://www.facebook.com/sciencegates",
                 "https://www.twitter.com/sciencegates",
                 "https://www.linkedin.com/company/sciencegates"
             ]
         
-        logo_url = _normalize_url(request.build_absolute_uri('/static/images/og-default.jpg'))
+        # Exclude messaging channels like wa.me / whatsapp from sameAs
+        same_as_links = [
+            link for link in raw_links 
+            if 'wa.me' not in link and 'whatsapp' not in link
+        ]
+        
+        logo_url = _normalize_url(request.build_absolute_uri(static('images/og-default.jpg')) if request else f"{base_url}static/images/og-default.jpg")
         
         schema = {
             "@context": "https://schema.org",
             "@type": "Organization",
-            "name": "شركة بوابات العلوم للدراسة في ماليزيا",
-            "alternateName": ["بوابات العلوم", "Science Gates"],
-            "url": site_url,
+            "@id": f"{base_url}#organization",
+            "name": "شركة بوابات العلوم",
+            "alternateName": ["بوابات العلوم", "Sciences Gates", "بوابات العلوم للدراسة في ماليزيا"],
+            "url": base_url,
             "description": "منصة متخصصة في القبولات الجامعية والخدمات التعليمية للدراسة في ماليزيا",
             "inLanguage": "ar",
             "logo": {
@@ -91,7 +108,15 @@ class SchemaGenerator:
             "contactPoint": {
                 "@type": "ContactPoint",
                 "contactType": "Customer Service",
-                "availableLanguage": ["ar", "en"]
+                "telephone": "+601128195437",
+                "email": "info@sciencesgates.com",
+                "availableLanguage": ["ar", "en"],
+                "areaServed": ["MY", "SA", "AE", "EG", "KW", "QA", "OM"]
+            },
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Kuala Lumpur",
+                "addressCountry": "MY"
             },
             "sameAs": same_as_links
         }
@@ -99,25 +124,39 @@ class SchemaGenerator:
         return schema
     
     @staticmethod
-    def generate_article_schema(article, request):
+    def generate_article_schema(article, request=None):
+        base_url = _get_base_url(request)
+        article_url = _normalize_url(request.build_absolute_uri(article.get_absolute_url()) if request else f"{base_url}articles/{article.slug}/")
+        logo_url = _normalize_url(request.build_absolute_uri(static('images/og-default.jpg')) if request else f"{base_url}static/images/og-default.jpg")
+
         schema = {
             "@context": "https://schema.org",
-            "@type": "NewsArticle",
+            "@type": "BlogPosting",
+            "@id": f"{article_url}#blogposting",
             "headline": article.get_meta_title(),
             "description": article.get_meta_description(),
-            "datePublished": article.publish_date.isoformat() if article.publish_date else None,
-            "dateModified": article.updated_at.isoformat() if article.updated_at else None,
+            "datePublished": article.publish_date.isoformat() if getattr(article, 'publish_date', None) else None,
+            "dateModified": article.updated_at.isoformat() if getattr(article, 'updated_at', None) else None,
             "inLanguage": "ar",
-            "url": _normalize_url(request.build_absolute_uri(article.get_absolute_url())),
+            "url": article_url,
+            "isPartOf": {
+                "@id": f"{base_url}#website"
+            },
+            "publisher": {
+                "@id": f"{base_url}#organization"
+            },
+            "author": {
+                "@type": "Person",
+                "@id": f"{base_url}author/dr-mohammad-kayali/#person",
+                "name": getattr(article, 'author_display_name', 'د. محمد الكيالي')
+            }
         }
         
-        logo_url = _normalize_url(request.build_absolute_uri('/static/images/og-default.jpg'))
-        
-        # Add featured image if available
         if article.featured_image:
+            img_url = request.build_absolute_uri(article.featured_image.url) if request else article.featured_image.url
             schema["image"] = {
                 "@type": "ImageObject",
-                "url": _normalize_url(request.build_absolute_uri(article.featured_image.url)),
+                "url": _normalize_url(img_url),
                 "width": 1200,
                 "height": 630
             }
@@ -129,59 +168,36 @@ class SchemaGenerator:
                 "height": 600
             }
         
-        # Add author information
-        if article.author:
-            schema["author"] = {
-                "@type": "Person",
-                "name": article.author_display_name
-            }
-        else:
-            schema["author"] = {
-                "@type": "Organization",
-                "name": article.author_display_name
-            }
-        
-        # Add publisher information
-        schema["publisher"] = {
-            "@type": "Organization",
-            "name": "شركة بوابات العلوم للدراسة في ماليزيا",
-            "logo": {
-                "@type": "ImageObject",
-                "url": logo_url,
-                "width": 600,
-                "height": 600
-            }
-        }
-        
         return schema
     
     @staticmethod
-    def generate_breadcrumb_schema(breadcrumbs, request):
+    def generate_breadcrumb_schema(breadcrumbs, request=None):
         """
         Generate BreadcrumbList schema for navigation.
-        
-        Returns a JSON-LD BreadcrumbList schema for search engine optimization
-        and breadcrumb navigation display.
-        
-        Args:
-            breadcrumbs: List of tuples (name, url)
-            request: HTTP request object for building absolute URLs
-            
-        Returns:
-            Dictionary containing BreadcrumbList schema markup
         """
+        base_url = _get_base_url(request)
         items = []
-        for index, (name, url) in enumerate(breadcrumbs, 1):
-            # For the current page (last item), url is None — use the request's full path
-            if url is None:
+        
+        for index, crumb in enumerate(breadcrumbs, 1):
+            if hasattr(crumb, 'name') and hasattr(crumb, 'url'):
+                name = crumb.name
+                url = crumb.url
+            elif isinstance(crumb, (tuple, list)) and len(crumb) >= 2:
+                name = crumb[0]
+                url = crumb[1]
+            else:
+                continue
+
+            if url is None and request:
                 url = request.build_absolute_uri()
-            elif url.startswith('/'):
-                url = request.build_absolute_uri(url)
+            elif url and url.startswith('/'):
+                url = request.build_absolute_uri(url) if request else f"{base_url}{url.lstrip('/')}"
+            
             items.append({
                 "@type": "ListItem",
                 "position": index,
                 "name": name,
-                "item": url,
+                "item": url or base_url,
             })
         
         schema = {
@@ -190,61 +206,29 @@ class SchemaGenerator:
             "itemListElement": items,
         }
         return schema
-    
+
     @staticmethod
     def generate_faq_schema(faqs):
         """
         Generate FAQPage schema for FAQ sections.
-        
-        Returns a JSON-LD FAQPage schema with questions and answers for
-        search engine optimization and rich snippets.
-        
-        Args:
-            faqs: List of dictionaries with 'question' and 'answer' keys,
-                  or list of FAQ model instances with question and answer attributes
-            
-        Returns:
-            Dictionary containing FAQPage schema markup
         """
-        main_entity = []
-        
+        questions = []
         for faq in faqs:
-            # Handle both dictionary and model instance formats
-            if isinstance(faq, dict):
-                question = faq.get('question', '')
-                answer = faq.get('answer', '')
-            else:
-                # Assume it's a model instance
-                question = getattr(faq, 'question', '')
-                answer = getattr(faq, 'answer', '')
+            q_text = getattr(faq, 'question', None) or (faq.get('question') if isinstance(faq, dict) else None)
+            a_text = getattr(faq, 'answer', None) or (faq.get('answer') if isinstance(faq, dict) else None)
             
-            if question and answer:
-                main_entity.append({
+            if q_text and a_text:
+                questions.append({
                     "@type": "Question",
-                    "name": question,
+                    "name": q_text,
                     "acceptedAnswer": {
                         "@type": "Answer",
-                        "text": answer,
+                        "text": a_text
                     }
                 })
         
-        schema = {
+        return {
             "@context": "https://schema.org",
             "@type": "FAQPage",
-            "mainEntity": main_entity,
+            "mainEntity": questions
         }
-        
-        return schema
-    
-    @staticmethod
-    def to_json_ld(schema):
-        """
-        Convert schema dictionary to JSON-LD string.
-        
-        Args:
-            schema: Dictionary containing schema data
-            
-        Returns:
-            JSON string representation of the schema
-        """
-        return json.dumps(schema, ensure_ascii=False, indent=2)

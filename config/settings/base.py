@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'apps.core.middleware.SecurityHeadersMiddleware',
     'apps.seo.middleware.CanonicalDomainMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -134,6 +135,15 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+    },
+}
 
 # Media files
 MEDIA_URL = '/media/'
@@ -223,4 +233,8 @@ STORAGES = {
 # Cloudflare Turnstile Settings
 TURNSTILE_SITE_KEY = config('TURNSTILE_SITE_KEY', default='')
 TURNSTILE_SECRET_KEY = config('TURNSTILE_SECRET_KEY', default='')
+
+# IndexNow Key Configuration
+INDEXNOW_KEY = config('INDEXNOW_KEY', default='c7a8b9f0e1d2c3b4a5f6e7d8c9b0a1f2')
+
 

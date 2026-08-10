@@ -258,6 +258,16 @@ def invalidate_mega_menu_cache(sender, instance, **kwargs):
     except Exception as e:
         logger.error(f'Error invalidating mega menu cache: {e}')
 
+def invalidate_sitemap_cache_signal(sender, instance, **kwargs):
+    """Clear the sitemap cache when content models change."""
+    from apps.seo.sitemaps import clear_sitemap_cache
+    try:
+        clear_sitemap_cache()
+        logger.info('Sitemap cache invalidated due to save/delete of content entity.')
+    except Exception as e:
+        logger.error(f'Error invalidating sitemap cache: {e}')
+
+
 def connect_media_signals():
     """Connect all media synchronization signals and cache invalidations."""
     from django.db.models.signals import post_save, post_delete, pre_delete
@@ -288,6 +298,11 @@ def connect_media_signals():
     post_delete.connect(invalidate_mega_menu_cache, sender=MajorCategory)
     post_save.connect(invalidate_mega_menu_cache, sender=Major)
     post_delete.connect(invalidate_mega_menu_cache, sender=Major)
+
+    # Invalidate Sitemap Cache
+    for model_cls in [University, Institute, Major, MajorCategory, Article]:
+        post_save.connect(invalidate_sitemap_cache_signal, sender=model_cls)
+        post_delete.connect(invalidate_sitemap_cache_signal, sender=model_cls)
 
 
 # Connect signals automatically on import

@@ -316,3 +316,29 @@ class TagArticleListView(BreadcrumbMixin, ListView):
             context['tag'] = None
         
         return context
+
+
+class AuthorDetailView(DetailView):
+    """Display author profile, credentials, E-E-A-T signals, and authored articles."""
+    template_name = 'author_detail.html'
+    context_object_name = 'author'
+
+    def get_object(self, queryset=None):
+        from apps.core.models import AuthorProfile
+        slug = self.kwargs.get('slug', 'dr-mohammad-kayali')
+        author = AuthorProfile.objects.filter(slug=slug).first()
+        if not author:
+            author, _ = AuthorProfile.objects.get_or_create(
+                slug='dr-mohammad-kayali',
+                defaults={
+                    'name': 'د. محمد الكيالي',
+                    'title_credentials': 'دكتوراه في علوم الحاسوب (UKM) - خبير الاستشارات التعليمية في ماليزيا',
+                }
+            )
+        return author
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['articles'] = Article.objects.filter(publish_status='published').order_by('-publish_date')[:10]
+        return context
+

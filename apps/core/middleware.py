@@ -163,3 +163,55 @@ class MaintenanceModeMiddleware:
     def get_client_ip(self, request):
         from apps.core.utils import get_client_ip as utils_get_client_ip
         return utils_get_client_ip(request)
+
+
+class SecurityHeadersMiddleware:
+    """
+    Enterprise Security Headers Middleware.
+    Injects Content-Security-Policy, Permissions-Policy, and removes X-Powered-By header.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+
+        # 1. Content-Security-Policy (Alpine.js & Tailwind compliant)
+        csp_policy = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net www.googletagmanager.com; "
+            "style-src 'self' 'unsafe-inline' fonts.googleapis.com; "
+            "font-src 'self' fonts.gstatic.com; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self' www.google-analytics.com; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'; "
+            "frame-ancestors 'none';"
+        )
+        response['Content-Security-Policy'] = csp_policy
+
+        # 2. Permissions-Policy
+        permissions_policy = (
+            "geolocation=(), "
+            "microphone=(), "
+            "camera=(), "
+            "payment=(), "
+            "usb=(), "
+            "bluetooth=()"
+        )
+        response['Permissions-Policy'] = permissions_policy
+
+        # 3. Strip application-level X-Powered-By if set
+        if 'X-Powered-By' in response:
+            del response['X-Powered-By']
+        if 'x-powered-by' in response:
+            del response['x-powered-by']
+
+        # 4. Prevent direct media URLs from being indexed as standalone web pages
+        media_prefix = settings.MEDIA_URL.rstrip('/')
+        if media_prefix and request.path.startswith(media_prefix):
+            response['X-Robots-Tag'] = 'noindex'
+
+        return response
+

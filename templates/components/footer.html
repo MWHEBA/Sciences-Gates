@@ -277,9 +277,9 @@
                     &copy; {{ "now"|date:"Y" }} <strong>بوابات العلوم</strong>. جميع الحقوق محفوظة.
                 </p>
                 <div class="site-footer__legal-links">
-                    <a href="/privacy" class="site-footer__legal-link">سياسة الخصوصية</a>
+                    <a href="{% url 'privacy' %}" class="site-footer__legal-link">سياسة الخصوصية</a>
                     <span class="site-footer__legal-sep" aria-hidden="true">·</span>
-                    <a href="/terms" class="site-footer__legal-link">الشروط والأحكام</a>
+                    <a href="{% url 'terms' %}" class="site-footer__legal-link">الشروط والأحكام</a>
                 </div>
             </div>
         </div>

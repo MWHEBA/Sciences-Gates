@@ -5,6 +5,7 @@
 {% block title %}{{ tag.name }} - المقالات - بوابات العلوم{% endblock %}
 {% block meta_description %}اقرأ جميع مقالات الوسم {{ tag.name }}{% endblock %}
 {% block robots %}noindex, follow{% endblock %}
+{% block googlebot %}noindex, follow{% endblock %}
 
 {% block content %}
 {% include "components/page_hero.html" with title="#"|add:tag.name subtitle="اكتشف جميع المقالات والنصائح التعليمية المرتبطة بهذا الوسم." %}

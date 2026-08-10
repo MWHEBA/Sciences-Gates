@@ -44,6 +44,23 @@ class Lead(TimestampedModel):
         verbose_name='الرسالة'
     )
     
+    # Legal & Governance Audit Trail Fields
+    privacy_consent = models.BooleanField(
+        default=False,
+        verbose_name='موافقة سياسة الخصوصية'
+    )
+    privacy_consent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='تاريخ الموافقة على الخصوصية'
+    )
+    privacy_policy_version = models.CharField(
+        max_length=20,
+        blank=True,
+        default='1.0',
+        verbose_name='إصدار سياسة الخصوصية'
+    )
+    
     # Additional lead details fields
     nationality = models.CharField(
         max_length=150,

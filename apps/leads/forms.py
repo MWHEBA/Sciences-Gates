@@ -141,9 +141,31 @@ class LeadBaseForm(forms.ModelForm):
         help_text='اتركه فارغاً'
     )
 
+    agree_to_privacy = forms.BooleanField(
+        required=True,
+        error_messages={'required': 'يجب الموافقة على سياسة الخصوصية والشروط للمتابعة.'},
+        label='أوافق على سياسة الخصوصية والشروط والأحكام'
+    )
+
     class Meta:
         model = Lead
         fields = []
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if self.cleaned_data.get('agree_to_privacy'):
+            from django.utils import timezone
+            instance.privacy_consent = True
+            instance.privacy_consent_at = timezone.now()
+            from apps.core.models import SiteSettings
+            try:
+                settings_obj = SiteSettings.get_settings()
+                instance.privacy_policy_version = getattr(settings_obj, 'privacy_policy_version', '1.0') or '1.0'
+            except Exception:
+                instance.privacy_policy_version = '1.0'
+        if commit:
+            instance.save()
+        return instance
 
     def clean_website(self):
         """
@@ -287,7 +309,7 @@ class ContactLeadForm(LeadBaseForm):
     )
 
     class Meta(LeadBaseForm.Meta):
-        fields = ['lead_type', 'name', 'email', 'phone', 'nationality', 'message']
+        fields = ['lead_type', 'name', 'email', 'phone', 'nationality', 'message', 'agree_to_privacy']
         widgets = {
             'lead_type': forms.HiddenInput(),
             'name': forms.TextInput(attrs={
@@ -377,7 +399,7 @@ class RegistrationLeadForm(LeadBaseForm):
     class Meta(LeadBaseForm.Meta):
         fields = [
             'lead_type', 'name', 'email', 'phone', 'nationality', 
-            'institution_name', 'residence_country', 'study_level', 'address', 'message'
+            'institution_name', 'residence_country', 'study_level', 'address', 'message', 'agree_to_privacy'
         ]
         widgets = {
             'lead_type': forms.HiddenInput(),

@@ -7,10 +7,11 @@
 العلوم.{% endblock %}
 
 {% block extra_css %}
-<link rel="preload" href="{% static 'images/hero-bg-1.webp' %}" as="image" type="image/webp" fetchpriority="high" media="(min-width: 992px)">
-<link rel="preload" href="{% static 'images/Studentes.webp' %}" as="image" type="image/webp" fetchpriority="high" media="(min-width: 992px)">
-<link rel="preload" href="{% static 'images/shape-2-6.webp' %}" as="image" type="image/webp" fetchpriority="high" media="(min-width: 992px)">
-<link rel="preload" href="{% static 'images/visa-application.webp' %}" as="image" type="image/webp" fetchpriority="high" media="(min-width: 992px)">
+<link rel="preload" href="{% static 'images/shape-2-7.webp' %}" as="image" type="image/webp" media="(max-width: 991px)">
+<link rel="preload" href="{% static 'images/hero-bg-1.webp' %}" as="image" type="image/webp" media="(min-width: 992px)">
+<link rel="preload" href="{% static 'images/Studentes.webp' %}" as="image" type="image/webp" media="(min-width: 992px)">
+<link rel="preload" href="{% static 'images/shape-2-6.webp' %}" as="image" type="image/webp" media="(min-width: 992px)">
+<link rel="preload" href="{% static 'images/visa-application.webp' %}" as="image" type="image/webp" media="(min-width: 992px)">
 <style>
     @media (max-width: 991px) {
         /* Make the hero row fill the viewport height excluding header */
@@ -159,7 +160,7 @@
         })();
     </script>
     <div class="it-hero-2-shape-4">
-        <img src="{% static 'images/shape-2-7.webp' %}" alt="خلفية بوابات العلوم" width="400" height="266" loading="eager" decoding="async">
+        <img src="{% static 'images/shape-2-7.webp' %}" alt="خلفية بوابات العلوم" width="400" height="266" fetchpriority="high" loading="eager" decoding="async">
     </div>
     <div class="it-hero-2-shape-7 d-xl-block">
         <img src="{% static 'images/shape-2-1.webp' %}" alt="رمز تجميلي" width="20" height="21" loading="eager" decoding="async">

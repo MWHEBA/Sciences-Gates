@@ -17,8 +17,7 @@ from apps.seo.templatetags.seo_tags import normalize_canonical_domain
 @require_http_methods(["GET"])
 def robots_txt(request):
     """
-    Serve robots.txt file dynamically to ensure admin and dashboard URLs
-    reflect any changes in settings.ADMIN_URL and settings.DASHBOARD_URL.
+    Serve robots.txt file dynamically for Search Engine & AI Optimization.
     """
     admin_url = settings.ADMIN_URL.strip('/')
     dashboard_url = settings.DASHBOARD_URL.strip('/')
@@ -33,9 +32,10 @@ Disallow: /{dashboard_url}/
 Disallow: /api/
 Disallow: /*.json$
 Disallow: /*?*page=
-Disallow: /*&
+Disallow: /*?*sort=
+Disallow: /*?*filter=
 
-# Crawl delay and disallow rules for main search engines
+# Search Engine Crawlers
 User-agent: Googlebot
 Allow: /
 Disallow: /{admin_url}/
@@ -43,27 +43,56 @@ Disallow: /{dashboard_url}/
 Disallow: /api/
 Disallow: /*.json$
 Disallow: /*?*page=
-Disallow: /*&
-Crawl-delay: 1
+Disallow: /*?*sort=
+Disallow: /*?*filter=
 
 User-agent: Bingbot
 Allow: /
-Crawl-delay: 1
+Disallow: /{admin_url}/
+Disallow: /{dashboard_url}/
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /*?*page=
+Disallow: /*?*sort=
+Disallow: /*?*filter=
 
-# Block AI crawlers from scraping content
-User-agent: GPTBot
-Disallow: /
-
+# Allowed AI Search & Real-time Discovery Bots
 User-agent: ChatGPT-User
+Allow: /
+Disallow: /{admin_url}/
+Disallow: /{dashboard_url}/
+Disallow: /api/
+Disallow: /*.json$
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /{admin_url}/
+Disallow: /{dashboard_url}/
+Disallow: /api/
+Disallow: /*.json$
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /{admin_url}/
+Disallow: /{dashboard_url}/
+Disallow: /api/
+Disallow: /*.json$
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /{admin_url}/
+Disallow: /{dashboard_url}/
+Disallow: /api/
+Disallow: /*.json$
+
+# Blocked Uncredited Offline Scraping & Training Crawlers
+User-agent: GPTBot
 Disallow: /
 
 User-agent: CCBot
 Disallow: /
 
-User-agent: anthropic-ai
-Disallow: /
-
-User-agent: Claude-Web
+User-agent: Bytespider
 Disallow: /
 
 # Sitemap
@@ -74,6 +103,16 @@ Sitemap: {sitemap_url}
         sitemap_url=normalize_canonical_domain(request.build_absolute_uri('/sitemap.xml'))
     )
     return HttpResponse(robots_content, content_type='text/plain')
+
+
+@require_http_methods(["GET"])
+def indexnow_key_view(request):
+    """
+    Serve IndexNow key verification file.
+    """
+    key = getattr(settings, 'INDEXNOW_KEY', 'c7a8b9f0e1d2c3b4a5f6e7d8c9b0a1f2')
+    return HttpResponse(key, content_type='text/plain')
+
 
 
 from django.contrib.auth.models import AnonymousUser

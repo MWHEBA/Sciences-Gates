@@ -103,7 +103,7 @@ class GSCClient:
         return start.isoformat(), end.isoformat()
 
     def _query(self, days: int, dimensions: list, row_limit: int = 25,
-               dimension_filter: dict | None = None) -> list:
+               dimension_filter: getattr(__import__('typing'), 'Optional')[dict] = None) -> list:
         """Execute a GSC searchAnalytics.query call."""
         service = self._get_service()
         if not service:
