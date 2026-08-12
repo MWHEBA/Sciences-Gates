@@ -35,11 +35,30 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
     form_class = ContactLeadForm
     template_name = 'leads/submit.html'
     
+    def get(self, request, *args, **kwargs):
+        """
+        Clear any lingering success messages from prior form submissions when loading
+        the GET submit page, preventing unexpected success banners upon page entrance.
+        """
+        storage = messages.get_messages(request)
+        remaining_messages = []
+        for message in storage:
+            if message.level != messages.SUCCESS:
+                remaining_messages.append(message)
+        
+        for msg in remaining_messages:
+            messages.add_message(request, msg.level, msg.message, extra_tags=msg.extra_tags)
+
+        return super().get(request, *args, **kwargs)
+
     def get_success_url(self):
+        import urllib.parse
         lead_type = self.request.POST.get('lead_type') or 'contact'
+        name = self.request.POST.get('name', '').strip()
         referer = self.request.META.get('HTTP_REFERER', '').lower()
         subtype = 'institute' if 'institute' in referer else 'university'
-        return f"{reverse('leads:thank_you')}?lead_type={lead_type}&subtype={subtype}"
+        encoded_name = urllib.parse.quote(name)
+        return f"{reverse('leads:thank_you')}?lead_type={lead_type}&subtype={subtype}&name={encoded_name}"
 
     def post(self, request, *args, **kwargs):
         from django.core.cache import cache
@@ -102,17 +121,6 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         # Save lead to database
         lead.save()
         
-        # Add success message in Arabic
-        if lead.lead_type == 'registration':
-            msg = 'تم استقبال طلب التسجيل بنجاح. سيتم التواصل معك قريباً.'
-        else:
-            msg = 'تم استقبال استفسارك بنجاح. سيتم التواصل معك قريباً.'
-            
-        messages.success(
-            self.request,
-            msg
-        )
-        
         # Redirect to thank you page
         return super().form_valid(form)
     
@@ -139,7 +147,31 @@ def thank_you_view(request):
     """
     Display thank you message after lead submission.
     
-    Shows success message and provides link back to home page.
+    Prepares dynamic pre-filled WhatsApp link context for immediate student follow-up.
     """
-    return render(request, 'leads/thank_you.html')
+    import urllib.parse
+    from apps.core.models import SiteSettings
+    try:
+        site_settings = request._site_settings if hasattr(request, '_site_settings') else SiteSettings.get_settings()
+        whatsapp_clean = site_settings.whatsapp_primary_clean or '60182638888'
+    except Exception:
+        whatsapp_clean = '60182638888'
+
+    lead_type = request.GET.get('lead_type', 'contact')
+    lead_name = request.GET.get('name', '').strip()
+
+    lead_type_str = 'طلب التسجيل' if lead_type == 'registration' else 'الاستفسار'
+    if lead_name:
+        wa_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str}) باسم: {lead_name}، وأود المتابعة معكم."
+    else:
+        wa_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str}) وأود المتابعة معكم لسرعة الإجراءات."
+
+    whatsapp_prefilled_encoded = urllib.parse.quote(wa_text)
+
+    context = {
+        'whatsapp_clean': whatsapp_clean,
+        'whatsapp_prefilled_encoded': whatsapp_prefilled_encoded,
+    }
+    return render(request, 'leads/thank_you.html', context)
+
 

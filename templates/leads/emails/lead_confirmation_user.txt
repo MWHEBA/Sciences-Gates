@@ -1,0 +1,24 @@
+مرحباً {{ lead.name }}،
+
+شكراً لتواصلك مع بوابات العلوم (Science Gates).
+تم استقبال {% if lead.lead_type == 'registration' %}طلب التسجيل{% else %}استفسارك{% endif %} بنجاح، وسيتواصل معك أحد مستشارينا الأكاديميين في أقرب وقت.
+
+⚡ لسرعة التواصل والإجابة الفورية:
+يمكنك التواصل معنا مباشرة عبر الواتساب لمتابعة طلبك فوراً:
+https://wa.me/{{ whatsapp_clean }}{% if whatsapp_prefilled_encoded %}?text={{ whatsapp_prefilled_encoded }}{% endif %}
+
+تفاصيل الرسالة:
+----------------------------------------
+نوع الطلب: {{ lead_type_display }}
+الاسم الكامل: {{ lead.name }}
+رقم الهاتف: {{ lead.phone }}
+{% if lead.email %}البريد الإلكتروني: {{ lead.email }}{% endif %}
+{% if lead.nationality %}الجنسية: {{ lead.nationality }}{% endif %}
+{% if lead.residence_country %}دولة الإقامة: {{ lead.residence_country }}{% endif %}
+{% if lead.study_level %}المرحلة الدراسية: {{ lead.study_level }}{% endif %}
+{% if lead.institution_name %}المؤسسة التعليمية: {{ lead.institution_name }}{% endif %}
+{% if lead.message %}محتوى الرسالة: {{ lead.message }}{% endif %}
+----------------------------------------
+
+مع تحيات فريق بوابات العلوم
+© {{ current_year }} بوابات العلوم. جميع الحقوق محفوظة.

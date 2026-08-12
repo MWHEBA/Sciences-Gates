@@ -527,13 +527,13 @@ class LeadEmailNotificationSignalTests(TestCase):
     """
     
     def test_email_sent_on_lead_creation(self):
-        """Test that email is sent when a new lead is created."""
+        """Test that admin email and applicant confirmation email are sent when a new lead is created."""
         from .models import Lead, LeadType
         
         # Clear the test mailbox
         mail.outbox = []
         
-        # Create a new lead
+        # Create a new lead with email
         lead = Lead.objects.create(
             lead_type=LeadType.REGISTRATION,
             name='أحمد محمد',
@@ -542,14 +542,42 @@ class LeadEmailNotificationSignalTests(TestCase):
             message='أريد التسجيل في الجامعة'
         )
         
-        # Check that one email was sent
-        self.assertEqual(len(mail.outbox), 1)
+        # Check that two emails were sent (1 for Admin, 1 for Applicant)
+        self.assertEqual(len(mail.outbox), 2)
         
-        # Check email details
-        email = mail.outbox[0]
-        self.assertIn('أحمد محمد', email.subject)
-        self.assertIn('طلب تسجيل', email.subject)
-    
+        # Check admin email details
+        admin_email = mail.outbox[0]
+        self.assertIn('أحمد محمد', admin_email.subject)
+        self.assertIn('طلب تسجيل', admin_email.subject)
+
+        # Check applicant confirmation email details
+        user_email = mail.outbox[1]
+        self.assertEqual(user_email.to, ['ahmed@example.com'])
+        self.assertIn('تم استلام طلب التسجيل بنجاح', user_email.subject)
+        self.assertIn('أحمد محمد', user_email.body)
+        self.assertIn('https://wa.me/', user_email.body)
+
+    def test_applicant_confirmation_email_sent(self):
+        """Test applicant confirmation email content and pre-filled WhatsApp link."""
+        from .models import Lead, LeadType
+        mail.outbox = []
+
+        lead = Lead.objects.create(
+            lead_type=LeadType.CONTACT,
+            name='سارة محمود',
+            email='sara@example.com',
+            phone='+201099998888',
+            message='استفسار عن القبول'
+        )
+
+        self.assertEqual(len(mail.outbox), 2)
+        user_email = mail.outbox[1]
+
+        self.assertEqual(user_email.to, ['sara@example.com'])
+        self.assertIn('تم استلام استفسارك بنجاح', user_email.subject)
+        self.assertIn('سارة محمود', user_email.body)
+        self.assertIn('wa.me', user_email.body)
+
     def test_email_not_sent_on_lead_update(self):
         """Test that email is NOT sent when an existing lead is updated."""
         from .models import Lead, LeadType
@@ -590,7 +618,7 @@ class LeadEmailNotificationSignalTests(TestCase):
             referrer='https://google.com'
         )
         
-        # Check email content
+        # Check email content (admin email)
         email = mail.outbox[0]
         self.assertIn('فاطمة علي', email.body)
         self.assertIn('fatima@example.com', email.body)
@@ -697,8 +725,8 @@ class LeadEmailNotificationSignalTests(TestCase):
             message='رسالة 2'
         )
         
-        # Check that two emails were sent
-        self.assertEqual(len(mail.outbox), 2)
+        # Check that four emails were sent (2 per lead)
+        self.assertEqual(len(mail.outbox), 4)
     
     def test_email_includes_lead_type_display(self):
         """Test that email includes the display name of lead type."""
@@ -752,7 +780,7 @@ class LeadEmailNotificationSignalTests(TestCase):
     
     @override_settings(ADMIN_EMAIL='')
     def test_email_not_sent_when_admin_email_empty(self):
-        """Test that email is not sent when ADMIN_EMAIL is empty."""
+        """Test that admin email is not sent when ADMIN_EMAIL is empty and lead has no email."""
         from .models import Lead, LeadType
         
         mail.outbox = []
@@ -760,12 +788,12 @@ class LeadEmailNotificationSignalTests(TestCase):
         lead = Lead.objects.create(
             lead_type=LeadType.REGISTRATION,
             name='اختبار',
-            email='test@example.com',
+            email='',
             phone='+201234567890',
             message='رسالة'
         )
         
-        # No email should be sent
+        # No email should be sent when admin email is empty and lead email is empty
         self.assertEqual(len(mail.outbox), 0)
     
     def test_email_handles_missing_optional_fields(self):
@@ -783,11 +811,11 @@ class LeadEmailNotificationSignalTests(TestCase):
             # No source_page, referrer, or UTM parameters
         )
         
-        # Email should still be sent
-        self.assertEqual(len(mail.outbox), 1)
+        # Both admin email and user confirmation email should be sent
+        self.assertEqual(len(mail.outbox), 2)
         
         email = mail.outbox[0]
-        # Should contain "غير محدد" (not specified) for missing fields
+        # Should contain "غير محدد" (not specified) for missing fields in admin email
         self.assertIn('غير محدد', email.body)
     
     def test_email_with_special_characters_in_name(self):
@@ -804,8 +832,8 @@ class LeadEmailNotificationSignalTests(TestCase):
             message='رسالة'
         )
         
-        # Email should be sent successfully
-        self.assertEqual(len(mail.outbox), 1)
+        # Admin email and applicant email should be sent successfully
+        self.assertEqual(len(mail.outbox), 2)
         
         email = mail.outbox[0]
         self.assertIn('أحمد محمد علي-الشرقاوي', email.subject)
@@ -826,8 +854,8 @@ class LeadEmailNotificationSignalTests(TestCase):
             message=long_message
         )
         
-        # Email should be sent successfully
-        self.assertEqual(len(mail.outbox), 1)
+        # Admin email and applicant email should be sent successfully
+        self.assertEqual(len(mail.outbox), 2)
         
         email = mail.outbox[0]
         self.assertIn(long_message, email.body)
@@ -853,7 +881,7 @@ class LeadEmailNotificationPropertyBasedTests(HypothesisTestCase):
         message=st.text(min_size=1)
     )
     def test_email_sent_for_any_valid_lead(self, lead_type, name, email, phone, message):
-        """Property: Email is sent for any valid lead creation.
+        """Property: Emails are sent for any valid lead creation.
         
         **Validates: Requirement 5.7** - THE Platform SHALL send email notifications to administrators when a Lead_Form is submitted
         """
@@ -867,8 +895,9 @@ class LeadEmailNotificationPropertyBasedTests(HypothesisTestCase):
             message=message
         )
         
-        # Email should be sent
-        self.assertEqual(len(mail.outbox), 1)
+        # Both admin notification email and applicant confirmation email should be sent
+        self.assertEqual(len(mail.outbox), 2)
+
         
         # Email should contain sanitized lead name (newlines removed)
         email_obj = mail.outbox[0]
