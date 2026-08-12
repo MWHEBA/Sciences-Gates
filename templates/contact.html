@@ -94,6 +94,12 @@
                 
                 <form action="{% url 'leads:submit' %}" method="post" class="space-y-4">
                     {% csrf_token %}
+                    <!-- Honeypot field (hidden from users) -->
+                    <div style="display:none;" aria-hidden="true">
+                        <input type="text" name="website" tabindex="-1" autocomplete="off">
+                    </div>
+                    <input type="hidden" name="lead_type" value="contact">
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل *</label>
                         <input type="text" name="name" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="أدخل اسمك الثلاثي">
@@ -122,8 +128,18 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">تفاصيل الاستفسار</label>
-                        <textarea name="notes" rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="اكتب التخصص أو الجامعة التي ترغب بالاستفسار عنها..."></textarea>
+                        <textarea name="message" rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="اكتب التخصص أو الجامعة التي ترغب بالاستفسار عنها..."></textarea>
                     </div>
+
+                    {% if TURNSTILE_SITE_KEY %}
+                    <!-- Cloudflare Turnstile -->
+                    <div class="flex justify-center my-4">
+                        <div class="cf-turnstile-explicit" data-sitekey="{{ TURNSTILE_SITE_KEY }}" data-theme="light"></div>
+                    </div>
+                    <script>window.TURNSTILE_SITE_KEY = "{{ TURNSTILE_SITE_KEY }}";</script>
+                    <script src="{% static 'js/turnstile-handler.js' %}"></script>
+                    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback" async defer></script>
+                    {% endif %}
 
                     <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 px-6 rounded-lg transition duration-200 shadow-md">
                         إرسال الطلب وحجز استشارة مجانية

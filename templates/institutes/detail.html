@@ -868,9 +868,8 @@
                          {% if TURNSTILE_SITE_KEY %}
                          <!-- Cloudflare Turnstile -->
                          <div class="reg-form-group" style="display: flex; justify-content: center; margin-top: 15px; margin-bottom: 15px;">
-                             <div class="cf-turnstile" data-sitekey="{{ TURNSTILE_SITE_KEY }}" data-theme="light"></div>
+                             <div class="cf-turnstile-explicit" data-sitekey="{{ TURNSTILE_SITE_KEY }}" data-theme="light"></div>
                          </div>
-                         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
                          {% endif %}
                     </div>
                 </div>
@@ -897,5 +896,10 @@
 </div>
 {% endblock %}
 {% block extra_js %}
+{% if TURNSTILE_SITE_KEY %}
+<script>window.TURNSTILE_SITE_KEY = "{{ TURNSTILE_SITE_KEY }}";</script>
+<script src="{% static 'js/turnstile-handler.js' %}"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback" async defer></script>
+{% endif %}
 <script src="{% static 'js/registration-wizard.js' %}"></script>
 {% endblock %}

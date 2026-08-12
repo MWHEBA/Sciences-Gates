@@ -35,6 +35,9 @@
                 return false;
             }
         }
+        if (typeof window.renderTurnstileModal === 'function') {
+            window.renderTurnstileModal();
+        }
         return true;
     };
 })();

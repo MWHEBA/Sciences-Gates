@@ -50,10 +50,15 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         is_testing = getattr(settings, 'TESTING', False)
         submissions = cache.get(rate_key, 0)
         
-        if submissions >= 3 and not is_testing:
-            messages.error(request, 'تم تجاوز الحد الأقصى للطلبات المسموحة في الساعة. يرجى المحاولة لاحقاً.')
+        if submissions >= 5 and not is_testing:
+            messages.error(
+                request, 
+                'لقد قمت بإرسال الحد الأقصى المسموح به من الاستفسارات (5 طلبات في الساعة) لحماية الخدمة وضمان جودة المتابعة. طلباتك السابقة وصلت وسيتواصل معك مستشارنا قريباً، أو يمكنك التواصل المباشر عبر الواتساب للاستجابة الفورية.'
+            )
             form = self.get_form()
-            return self.form_invalid(form)
+            # Set attribute so form_invalid won't append generic error message
+            self.rate_limit_exceeded = True
+            return super().form_invalid(form)
             
         cache.set(rate_key, submissions + 1, 3600)
         return super().post(request, *args, **kwargs)
@@ -117,11 +122,12 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         
         Display error messages and re-render form.
         """
-        # Add error message in Arabic
-        messages.error(
-            self.request,
-            'حدث خطأ في النموذج. يرجى التحقق من البيانات المدخلة.'
-        )
+        # Only add generic error if rate limit was not the cause
+        if not getattr(self, 'rate_limit_exceeded', False):
+            messages.error(
+                self.request,
+                'حدث خطأ في النموذج. يرجى التحقق من البيانات المدخلة.'
+            )
         
         return super().form_invalid(form)
 

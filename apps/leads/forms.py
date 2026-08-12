@@ -239,31 +239,43 @@ class LeadBaseForm(forms.ModelForm):
         # Cloudflare Turnstile Verification
         from django.conf import settings
         is_testing = getattr(settings, 'TESTING', False)
+        turnstile_secret = getattr(settings, 'TURNSTILE_SECRET_KEY', '')
+        turnstile_site_key = getattr(settings, 'TURNSTILE_SITE_KEY', '')
         
-        from django.conf import settings
-        turnstile_secret = getattr(settings, 'TURNSTILE_SECRET_KEY', None)
-        
-        if turnstile_secret and not is_testing:
+        if turnstile_secret and turnstile_site_key and not is_testing:
             import requests
             turnstile_response = self.data.get('cf-turnstile-response') if self.data else None
-            if not turnstile_response:
-                raise ValidationError('يرجى التحقق من اختبار الأمان (Turnstile).')
+            turnstile_blocked = self.data.get('turnstile_blocked') if self.data else None
             
-            try:
-                verify_url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
-                resp = requests.post(verify_url, data={
-                    'secret': turnstile_secret,
-                    'response': turnstile_response,
-                }, timeout=10)
-                
-                result = resp.json()
-                if not result.get('success'):
-                    raise ValidationError('فشل التحقق من اختبار الأمان (Turnstile). يرجى المحاولة مرة أخرى.')
-            except ValidationError:
-                raise
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).error(f"Turnstile verification request failed: {e}")
+            # If client reported AdBlocker blocked turnstile script
+            if not turnstile_response and turnstile_blocked == '1':
+                if cleaned_data.get('website'):
+                    raise ValidationError('Invalid submission')
+            elif not turnstile_response:
+                raise ValidationError('يرجى التحقق من اختبار الأمان (Turnstile).')
+            else:
+                try:
+                    verify_url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+                    payload = {
+                        'secret': turnstile_secret,
+                        'response': turnstile_response,
+                    }
+                    resp = requests.post(verify_url, data=payload, timeout=10)
+                    result = resp.json()
+                    
+                    if not result.get('success'):
+                        error_codes = result.get('error-codes', [])
+                        import logging
+                        logging.getLogger(__name__).warning(f"Turnstile verification failed. Error codes: {error_codes}")
+                        if getattr(settings, 'DEBUG', False) and ('hostname-mismatch' in error_codes or 'invalid-input-secret' in error_codes):
+                            pass
+                        else:
+                            raise ValidationError('فشل التحقق من اختبار الأمان (Turnstile). يرجى المحاولة مرة أخرى.')
+                except ValidationError:
+                    raise
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f"Turnstile verification request failed: {e}")
 
         # Handle merging nationality and custom_nationality
         nationality = cleaned_data.get('nationality')
