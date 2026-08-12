@@ -122,6 +122,9 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         
         Display error messages and re-render form.
         """
+        import logging
+        logging.getLogger(__name__).warning(f"Lead form submission invalid. Form errors: {form.errors.as_json()}")
+
         # Only add generic error if rate limit was not the cause
         if not getattr(self, 'rate_limit_exceeded', False):
             messages.error(

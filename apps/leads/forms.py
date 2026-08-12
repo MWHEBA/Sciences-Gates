@@ -142,8 +142,8 @@ class LeadBaseForm(forms.ModelForm):
     )
 
     agree_to_privacy = forms.BooleanField(
-        required=True,
-        error_messages={'required': 'يجب الموافقة على سياسة الخصوصية والشروط للمتابعة.'},
+        required=False,
+        initial=True,
         label='أوافق على سياسة الخصوصية والشروط والأحكام'
     )
 
@@ -151,9 +151,20 @@ class LeadBaseForm(forms.ModelForm):
         model = Lead
         fields = []
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.data:
+            # Fallback: if phone is missing but phone_number is present in data, combine country_code + phone_number
+            if not self.data.get('phone') and self.data.get('phone_number'):
+                mutable_data = self.data.copy()
+                cc = mutable_data.get('country_code', '')
+                pn = mutable_data.get('phone_number', '')
+                mutable_data['phone'] = f"{cc}{pn}".strip()
+                self.data = mutable_data
+
     def save(self, commit=True):
         instance = super().save(commit=False)
-        if self.cleaned_data.get('agree_to_privacy'):
+        if self.cleaned_data.get('agree_to_privacy', True):
             from django.utils import timezone
             instance.privacy_consent = True
             instance.privacy_consent_at = timezone.now()
@@ -226,7 +237,7 @@ class LeadBaseForm(forms.ModelForm):
             nationality = nationality.strip()
             # Normalize country name to demonym if in NATIONALITY_MAP
             return NATIONALITY_MAP.get(nationality, nationality)
-        return nationality
+        return nationality or 'غير محدد'
 
     def clean(self):
         """
@@ -235,6 +246,14 @@ class LeadBaseForm(forms.ModelForm):
         cleaned_data = super().clean()
         if cleaned_data.get('website'):
             raise ValidationError('Invalid submission')
+
+        # If agree_to_privacy was omitted in POST data, default to True (implied consent by submission)
+        if 'agree_to_privacy' not in self.data:
+            cleaned_data['agree_to_privacy'] = True
+        elif self.data.get('agree_to_privacy') in [False, 'false', '0']:
+            raise ValidationError('يجب الموافقة على سياسة الخصوصية والشروط للمتابعة.')
+        else:
+            cleaned_data['agree_to_privacy'] = True
 
         # Cloudflare Turnstile Verification
         from django.conf import settings
@@ -303,10 +322,9 @@ class ContactLeadForm(LeadBaseForm):
     """
     nationality = NormalizedChoiceField(
         choices=NATIONALITY_CHOICES,
-        required=True,
+        required=False,
         widget=forms.Select(attrs={
             'class': 'form-control',
-            'required': True,
         }),
         label='الجنسية'
     )
@@ -365,6 +383,27 @@ class ContactLeadForm(LeadBaseForm):
         self.fields['lead_type'].initial = LeadType.CONTACT
         self.fields['email'].required = True
         self.fields['message'].required = False
+        self.fields['nationality'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Handle study_degree from contact page if provided
+        if self.data and self.data.get('study_degree'):
+            degree_map = {
+                'bachelor': 'بكالوريوس',
+                'master': 'ماجستير',
+                'phd': 'دكتوراه',
+                'english': 'دورة لغة إنجليزية',
+            }
+            deg_val = self.data.get('study_degree')
+            deg_label = degree_map.get(deg_val, deg_val)
+            existing_msg = cleaned_data.get('message', '') or ''
+            if f"المرحلة الدراسية: {deg_label}" not in existing_msg:
+                if existing_msg:
+                    cleaned_data['message'] = f"المرحلة الدراسية: {deg_label}\n{existing_msg}"
+                else:
+                    cleaned_data['message'] = f"المرحلة الدراسية: {deg_label}"
+        return cleaned_data
 
 
 class RegistrationLeadForm(LeadBaseForm):
