@@ -192,11 +192,20 @@ SITE_NAME = config('SITE_NAME', default='بوابات العلوم للدراس�
 # The schema.py _normalize_url guard provides a second line of defence, but the .env must be correct.
 SITE_URL = config('SITE_URL', default='http://localhost:8000')
 
-# Security Settings
+# Security & CSRF Settings
 SECURE_HSTS_SECONDS = 0  # Set to 31536000 in production
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='https://sciencesgates.com,https://www.sciencesgates.com,http://sciencesgates.com,http://www.sciencesgates.com,http://localhost:8000,http://127.0.0.1:8000',
+    cast=Csv()
+)
+CSRF_COOKIE_AGE = 31449600  # 1 year session lifetime for CSRF token
+CSRF_COOKIE_SAMESITE = 'Lax'
+
 
 
 

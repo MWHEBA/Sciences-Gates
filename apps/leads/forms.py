@@ -279,7 +279,7 @@ class LeadBaseForm(forms.ModelForm):
                         'secret': turnstile_secret,
                         'response': turnstile_response,
                     }
-                    resp = requests.post(verify_url, data=payload, timeout=10)
+                    resp = requests.post(verify_url, data=payload, timeout=5)
                     result = resp.json()
                     
                     if not result.get('success'):
@@ -294,7 +294,10 @@ class LeadBaseForm(forms.ModelForm):
                     raise
                 except Exception as e:
                     import logging
-                    logging.getLogger(__name__).error(f"Turnstile verification request failed: {e}")
+                    logging.getLogger(__name__).warning(f"Turnstile verification network request failed or timed out: {e}. Falling back to honeypot validation.")
+                    if cleaned_data.get('website'):
+                        raise ValidationError('Invalid submission')
+
 
         # Handle merging nationality and custom_nationality
         nationality = cleaned_data.get('nationality')

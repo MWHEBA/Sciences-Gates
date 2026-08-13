@@ -118,3 +118,70 @@ class VisaTrackingViewTestCase(TestCase):
         self.assertEqual(Lead.objects.count(), 0)
 
 
+class CsrfFailureHandlerTestCase(TestCase):
+    """
+    اختبارات دالة التعامل مع فشل رمز الحماية csrf_failure
+    """
+
+    def test_public_visitor_csrf_failure_redirects_to_referer_not_dashboard_login(self):
+        """التحقق من عدم تحويل الزائر العام إلى لوحة التحكم عند فشل CSRF وإنما توجيهه لصفحته السابقة"""
+        from apps.core.views import csrf_failure
+        from django.test import RequestFactory
+
+        factory = RequestFactory()
+        request = factory.post('/leads/submit/', data={'source_page': '/universities/ukm/'})
+        request.META['HTTP_REFERER'] = 'https://sciencesgates.com/universities/ukm/'
+        
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        setattr(request, 'session', {})
+        setattr(request, '_messages', FallbackStorage(request))
+        
+        from django.contrib.auth.models import AnonymousUser
+        request.user = AnonymousUser()
+
+        response = csrf_failure(request)
+        self.assertEqual(response.status_code, 302)
+        # يجب ألا يوجه الزائر لصفحة دخول الأدمن نهائياً
+        self.assertNotIn('/dashboard/login/', response.url)
+        self.assertNotIn('/sg/login/', response.url)
+        self.assertEqual(response.url, '/universities/ukm/')
+
+    def test_ajax_csrf_failure_returns_json_403(self):
+        """التحقق من إرجاع استجابة JSON 403 عند فشل CSRF في طلبات AJAX"""
+        from apps.core.views import csrf_failure
+        from django.test import RequestFactory
+
+        factory = RequestFactory()
+        request = factory.post('/leads/submit/', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        
+        from django.contrib.auth.models import AnonymousUser
+        request.user = AnonymousUser()
+
+        response = csrf_failure(request)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertIn('csrf_error', response.content.decode('utf-8'))
+
+    def test_dashboard_csrf_failure_redirects_to_dashboard_login(self):
+        """التحقق من توجيه مسؤول النظام إلى صفحة تسجيل دخول الأدمن إذا فشل CSRF أثناء التواجد باللوحة"""
+        from apps.core.views import csrf_failure
+        from django.test import RequestFactory
+
+        factory = RequestFactory()
+        request = factory.post('/sg/login/')
+        request.META['HTTP_REFERER'] = 'https://sciencesgates.com/sg/login/'
+        
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        setattr(request, 'session', {})
+        setattr(request, '_messages', FallbackStorage(request))
+        
+        from django.contrib.auth.models import AnonymousUser
+        request.user = AnonymousUser()
+
+        response = csrf_failure(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('dashboard:login'))
+
+
+
+

@@ -246,6 +246,16 @@ USE_X_FORWARDED_HOST = True
 # These prevent cookie interception over unencrypted connections
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = False  # Allows JS to sync CSRF token cookie across multi-tab forms
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_AGE = 31449600  # 1 year
+
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='https://sciencesgates.com,https://www.sciencesgates.com,http://sciencesgates.com,http://www.sciencesgates.com',
+    cast=Csv()
+)
+
 
 # SECURE_CONTENT_TYPE_NOSNIFF
 # Prevents browsers from MIME-sniffing a response away from the declared Content-Type

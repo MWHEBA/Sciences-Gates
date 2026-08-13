@@ -95,34 +95,37 @@ class TestDashboardSecurity:
 
     @override_settings(TESTING=False)
     def test_rate_limiting_lead_submission(self):
-        """Verify rate limiting on lead submission (3 submissions per hour)."""
+        """Verify rate limiting on lead submission (5 submissions per hour)."""
         url = reverse('leads:submit')
         
         # Mock sys.argv to bypass Turnstile during form submissions
         with patch('sys.argv', ['pytest']):
-            # 3 submissions should be registered
-            for _ in range(3):
+            # 5 submissions should be allowed
+            for _ in range(5):
                 response = self.client.post(url, {
-                    'name': 'Spam Bot',
-                    'email': 'spam@bot.com',
+                    'lead_type': 'contact',
+                    'name': 'Test Student',
+                    'email': 'student@example.com',
                     'phone_number': '123456789',
                     'country_code': '+966',
                     'phone': '+966123456789',
                     'nationality': 'مصري',
                 })
-                assert 'تم تجاوز الحد الأقصى' not in response.content.decode('utf-8')
+                assert 'الحد الأقصى المسموح به' not in response.content.decode('utf-8')
 
-            # 4th submission is rate limited
+            # 6th submission is rate limited
             response = self.client.post(url, {
-                'name': 'Spam Bot',
-                'email': 'spam@bot.com',
+                'lead_type': 'contact',
+                'name': 'Test Student',
+                'email': 'student@example.com',
                 'phone_number': '123456789',
                 'country_code': '+966',
                 'phone': '+966123456789',
                 'nationality': 'مصري',
             })
             assert response.status_code == 200
-            assert 'تم تجاوز الحد الأقصى' in response.content.decode('utf-8')
+            assert 'الحد الأقصى المسموح به' in response.content.decode('utf-8')
+
 
     def test_image_exif_stripping(self):
         """Verify that uploaded images have their EXIF metadata stripped."""

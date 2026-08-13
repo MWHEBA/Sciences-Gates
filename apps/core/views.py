@@ -246,17 +246,58 @@ class LegacyUrlDetailView(View):
 def csrf_failure(request, reason=""):
     """
     Custom CSRF failure handler.
-    If the user is already authenticated or attempting login while authenticated,
-    redirect seamlessly to dashboard or home with a friendly message instead of showing 403 debug screen.
+    Handles CSRF failures gracefully for both public visitors and dashboard admins.
+    Prevents public visitors (submitting contact/lead forms) from being redirected to the admin login page.
     """
+    from django.http import JsonResponse
+    from django.conf import settings
+
+    # 1. Handle AJAX / JSON requests
+    is_ajax = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or 'application/json' in request.META.get('HTTP_ACCEPT', '')
+        or request.content_type == 'application/json'
+    )
+    if is_ajax:
+        return JsonResponse({
+            'success': False,
+            'csrf_error': True,
+            'message': 'انتهت الجلسة المؤقتة للنموذج، يرجى إعادة تحميل الصفحة والمحاولة مرة أخرى.'
+        }, status=403)
+
+    # 2. Handle authenticated users
     if request.user.is_authenticated:
         messages.info(request, 'أنت مسجل الدخول بالفعل.')
         if getattr(request.user, 'is_staff', False):
             return redirect('dashboard:home')
         return redirect('home')
-    
-    messages.warning(request, 'انتهت الجلسة المؤقتة للنموذج، يرجى التحديث والمحاولة مرة أخرى.')
-    return redirect('dashboard:login')
+
+    # 3. Determine if request originated from dashboard area
+    referer = request.META.get('HTTP_REFERER', '')
+    path = request.path or ''
+    dashboard_prefix = f"/{getattr(settings, 'DASHBOARD_URL', 'sg/').strip('/')}"
+    admin_prefix = f"/{getattr(settings, 'ADMIN_URL', 'mw-admin/').strip('/')}"
+
+    is_dashboard = (
+        path.startswith(dashboard_prefix) or 
+        path.startswith(admin_prefix) or 
+        dashboard_prefix in referer or 
+        admin_prefix in referer
+    )
+
+    if is_dashboard:
+        messages.warning(request, 'انتهت الجلسة المؤقتة للنموذج، يرجى التحديث والمحاولة مرة أخرى.')
+        return redirect('dashboard:login')
+
+    # 4. Public Visitor: redirect back to source_page, referer, or home (never dashboard:login)
+    messages.warning(request, 'انتهت الجلسة المؤقتة للنموذج، يرجى إعادة محاولة إرسال البيانات.')
+    source_page = request.POST.get('source_page')
+    if source_page and source_page.startswith('/'):
+        return redirect(source_page)
+    if referer and referer.startswith(('http://', 'https://')):
+        return redirect(referer)
+    return redirect('home')
+
 
 
 class PrivacyView(TemplateView):
