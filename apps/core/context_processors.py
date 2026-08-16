@@ -148,7 +148,7 @@ def mega_menu_context(request):
             .exclude(slug__startswith='سكن-')
             .order_by('order', 'name')
         )
-        public_univs = build_curated_list_with_dedup_fallback(public_slots, public_pool, 8)
+        public_univs = build_curated_list_with_dedup_fallback(public_slots, public_pool, 8, append_remaining=True)
 
         # Private Universities Pool
         private_pool = (
@@ -159,7 +159,7 @@ def mega_menu_context(request):
             .exclude(slug__startswith='سكن-')
             .order_by('order', 'name')
         )
-        private_univs = build_curated_list_with_dedup_fallback(private_slots, private_pool, 8)
+        private_univs = build_curated_list_with_dedup_fallback(private_slots, private_pool, 8, append_remaining=True)
 
         # Language Institutes Pool
         institute_pool = (
@@ -168,7 +168,7 @@ def mega_menu_context(request):
             .exclude(slug__icontains='معاهد')
             .order_by('order', 'name')
         )
-        institutes = build_curated_list_with_dedup_fallback(institute_slots, institute_pool, 8)
+        institutes = build_curated_list_with_dedup_fallback(institute_slots, institute_pool, 8, append_remaining=True)
 
         # Fetch Major Categories with at least one published major
         major_categories = list(

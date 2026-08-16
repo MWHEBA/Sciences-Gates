@@ -33,7 +33,7 @@ def auto_shift_order_if_changed(form, model_class, instance, filter_kwargs=None)
             qs.filter(order__gte=target_order).update(order=models.F('order') + 1)
 
 
-def build_curated_list_with_dedup_fallback(assigned_items_dict, pool_queryset, total_needed):
+def build_curated_list_with_dedup_fallback(assigned_items_dict, pool_queryset, total_needed, append_remaining=False):
     """
     Builds a curated list of entities (Universities, Institutes, Majors):
     1. Collects all valid published assigned items.
@@ -41,37 +41,53 @@ def build_curated_list_with_dedup_fallback(assigned_items_dict, pool_queryset, t
     3. For any slot without a valid assigned item, fills it with the first available item 
        from pool_queryset (filtered by publish_status='published') that is NOT in assigned_ids,
        ordered by ('order', 'name').
-    4. Returns a list of exactly `total_needed` items (or as many as available).
+    4. Returns a list of `total_needed` items (or as many as available).
+    5. If append_remaining=True, appends all remaining published items from pool_queryset.
     """
     assigned_ids = set()
-    for slot_num, item in assigned_items_dict.items():
+    for slot_num, item in (assigned_items_dict or {}).items():
         if item and getattr(item, 'publish_status', None) == 'published':
             assigned_ids.add(item.pk)
 
     final_list = []
+    limit = total_needed if total_needed is not None else 8
     try:
         qs = pool_queryset.filter(publish_status='published')
         if assigned_ids:
             qs = qs.exclude(pk__in=assigned_ids)
-        available_fallbacks = list(qs.order_by('order', 'name')[:total_needed])
+        available_fallbacks = list(qs.order_by('order', 'name')[:limit])
     except Exception:
         qs = pool_queryset.filter(publish_status='published')
         if assigned_ids:
             qs = qs.exclude(pk__in=assigned_ids)
-        available_fallbacks = list(qs.order_by('name')[:total_needed])
+        available_fallbacks = list(qs.order_by('name')[:limit])
     fallback_idx = 0
 
-    for slot_num in range(1, total_needed + 1):
-        item = assigned_items_dict.get(slot_num)
+    used_ids = set()
+    for slot_num in range(1, limit + 1):
+        item = (assigned_items_dict or {}).get(slot_num)
         if item and getattr(item, 'publish_status', None) == 'published':
             final_list.append(item)
+            used_ids.add(item.pk)
         else:
             # Pick next available fallback item
             if fallback_idx < len(available_fallbacks):
                 fallback = available_fallbacks[fallback_idx]
                 final_list.append(fallback)
-                assigned_ids.add(fallback.pk)
+                used_ids.add(fallback.pk)
                 fallback_idx += 1
+
+    if append_remaining:
+        try:
+            remaining_qs = pool_queryset.filter(publish_status='published')
+            if used_ids:
+                remaining_qs = remaining_qs.exclude(pk__in=used_ids)
+            final_list.extend(list(remaining_qs.order_by('order', 'name')))
+        except Exception:
+            remaining_qs = pool_queryset.filter(publish_status='published')
+            if used_ids:
+                remaining_qs = remaining_qs.exclude(pk__in=used_ids)
+            final_list.extend(list(remaining_qs.order_by('name')))
 
     return final_list
 

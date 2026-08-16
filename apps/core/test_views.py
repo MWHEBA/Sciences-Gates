@@ -45,6 +45,40 @@ class MegaMenuContextTestCase(TestCase):
             self.assertIn('menu_institutes', context)
             self.assertIn('menu_major_categories', context)
 
+    def test_build_curated_list_with_append_remaining(self):
+        """Test that build_curated_list_with_dedup_fallback returns all items when append_remaining=True."""
+        from apps.core.navigation import build_curated_list_with_dedup_fallback
+        from apps.universities.models import University
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        # Create dummy image
+        img = SimpleUploadedFile("test.png", b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82", content_type="image/png")
+        
+        univs = []
+        for i in range(12):
+            univ = University.objects.create(
+                name=f'University {i+1:02d}',
+                slug=f'univ-{i+1:02d}',
+                university_type='public',
+                publish_status='published',
+                order=i+1,
+                logo=img,
+                main_image=img,
+                description='Test Description',
+                location='kl',
+            )
+            univs.append(univ)
+
+        pool = University.objects.filter(publish_status='published', university_type='public').order_by('order', 'name')
+        
+        # Test without append_remaining (should return exactly 8)
+        limited_list = build_curated_list_with_dedup_fallback({}, pool, total_needed=8, append_remaining=False)
+        self.assertEqual(len(limited_list), 8)
+
+        # Test with append_remaining (should return all 12)
+        full_list = build_curated_list_with_dedup_fallback({}, pool, total_needed=8, append_remaining=True)
+        self.assertEqual(len(full_list), 12)
+
 
 from django.test import override_settings
 
