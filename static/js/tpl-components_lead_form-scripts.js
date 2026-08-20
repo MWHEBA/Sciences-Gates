@@ -287,8 +287,22 @@
         }
     });
     
-    // Global listener to combine numbers on form submit
+    // Global listener to combine numbers on form submit and prevent double submit
     document.addEventListener('submit', function(e) {
+        var form = e.target;
+        if (form && form.method && form.method.toUpperCase() === 'POST') {
+            if (form.dataset.submitting === 'true') {
+                e.preventDefault();
+                return false;
+            }
+            var submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+            submitBtns.forEach(function(btn) {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'wait';
+            });
+        }
+
         var wrappers = e.target.querySelectorAll('.intl-phone-wrapper');
         wrappers.forEach(function(wrapper) {
             var parent = wrapper.parentNode;

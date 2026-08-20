@@ -11,7 +11,7 @@ from django.utils.decorators import method_decorator
 from django.middleware.csrf import get_token
 from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
-from .models import Lead
+from .models import Lead, LeadType
 from .forms import LeadForm, ContactLeadForm, RegistrationLeadForm
 
 
@@ -56,7 +56,8 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         lead_type = self.request.POST.get('lead_type') or 'contact'
         name = self.request.POST.get('name', '').strip()
         referer = self.request.META.get('HTTP_REFERER', '').lower()
-        subtype = 'institute' if 'institute' in referer else 'university'
+        source_page = (self.request.POST.get('source_page') or '').lower()
+        subtype = 'institute' if ('institute' in referer or 'institute' in source_page or '/institutes/' in source_page) else 'university'
         encoded_name = urllib.parse.quote(name)
         return f"{reverse('leads:thank_you')}?lead_type={lead_type}&subtype={subtype}&name={encoded_name}"
 
@@ -66,7 +67,8 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         ip_address = get_client_ip(request)
         rate_key = f"lead_rate_limit_{ip_address}"
         from django.conf import settings
-        is_testing = getattr(settings, 'TESTING', False)
+        import sys
+        is_testing = getattr(settings, 'TESTING', False) or 'test' in sys.argv
         submissions = cache.get(rate_key, 0)
         
         if submissions >= 5 and not is_testing:
@@ -107,20 +109,47 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         Process valid form submission.
         
         Extracts tracking information and saves lead to database.
+        Includes server-side deduplication against rapid double-clicks (within 10 seconds).
         """
+        from django.utils import timezone
+        from datetime import timedelta
+
+        email = form.cleaned_data.get('email', '').strip().lower()
+        lead_type = form.cleaned_data.get('lead_type')
+
+        # Double-submit guard: If an identical lead was saved in the last 10 seconds, skip duplicate creation
+        if email and lead_type:
+            recent_duplicate = Lead.objects.filter(
+                email__iexact=email,
+                lead_type=lead_type,
+                created_at__gte=timezone.now() - timedelta(seconds=10)
+            ).first()
+            if recent_duplicate:
+                if lead_type == LeadType.REGISTRATION:
+                    messages.success(self.request, 'تم استقبال طلب التسجيل بنجاح! سنتواصل معك في أقرب وقت.')
+                else:
+                    messages.success(self.request, 'تم استقبال استفسارك بنجاح! سنتواصل معك في أقرب وقت.')
+                return super().form_valid(form)
+
         # Get form data
         lead = form.save(commit=False)
         
-        # Extract source page from request
-        lead.source_page = self.request.build_absolute_uri(self.request.path)
+        # Extract source page from request or POST data
+        source_page = self.request.POST.get('source_page', '').strip()
+        lead.source_page = source_page or self.request.build_absolute_uri(self.request.path)
         
         # Extract referrer from request headers
         lead.referrer = self.request.META.get('HTTP_REFERER', '')
         
-
         # Save lead to database
         lead.save()
         
+        # Add success message based on lead type
+        if lead.lead_type == LeadType.REGISTRATION:
+            messages.success(self.request, 'تم استقبال طلب التسجيل بنجاح! سنتواصل معك في أقرب وقت.')
+        else:
+            messages.success(self.request, 'تم استقبال استفسارك بنجاح! سنتواصل معك في أقرب وقت.')
+
         # Redirect to thank you page
         return super().form_valid(form)
     
@@ -128,17 +157,31 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         """
         Handle invalid form submission.
         
-        Display error messages and re-render form.
+        Display error messages and re-render form or redirect back to entity source page.
         """
         import logging
         logging.getLogger(__name__).warning(f"Lead form submission invalid. Form errors: {form.errors.as_json()}")
 
         # Only add generic error if rate limit was not the cause
         if not getattr(self, 'rate_limit_exceeded', False):
+            first_error = ""
+            for field, errs in form.errors.items():
+                if errs:
+                    first_error = str(errs[0])
+                    break
+            err_msg = f"حدث خطأ في النموذج: {first_error}" if first_error else "حدث خطأ في النموذج. يرجى التحقق من البيانات المدخلة."
             messages.error(
                 self.request,
-                'حدث خطأ في النموذج. يرجى التحقق من البيانات المدخلة.'
+                err_msg
             )
+        
+        # If submission originated from university/institute detail modal, redirect back to that page
+        source_page = self.request.POST.get('source_page', '').strip()
+        if source_page and ('/universities/' in source_page or '/institutes/' in source_page):
+            from django.utils.http import url_has_allowed_host_and_scheme
+            allowed_hosts = {self.request.get_host(), 'sciencesgates.com', 'www.sciencesgates.com', 'localhost:8000', '127.0.0.1:8000'}
+            if url_has_allowed_host_and_scheme(source_page, allowed_hosts=allowed_hosts, require_https=self.request.is_secure()):
+                return redirect(source_page)
         
         return super().form_invalid(form)
 

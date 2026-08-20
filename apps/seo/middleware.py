@@ -67,10 +67,18 @@ class Page404TrackingMiddleware:
             logger.warning("Page404TrackingMiddleware: Failed to log 404 for path %s: %s", path, exc)
 
 
+from django.http.response import HttpResponseRedirectBase
+
+
+class HttpResponsePermanentRedirect308(HttpResponseRedirectBase):
+    status_code = 308
+
+
 class CanonicalDomainMiddleware(MiddlewareMixin):
     """
     Middleware to enforce canonical non-www domain (https://sciencesgates.com).
-    Redirects www.sciencesgates.com requests to https://sciencesgates.com with HTTP 301.
+    Redirects www.sciencesgates.com requests to https://sciencesgates.com.
+    Uses HTTP 308 for POST requests to preserve the form payload and method, and HTTP 301 for GET requests.
     """
 
     def process_request(self, request):
@@ -80,5 +88,7 @@ class CanonicalDomainMiddleware(MiddlewareMixin):
             if clean_host == 'sciencesgates.com':
                 protocol = 'https'
                 new_url = f"{protocol}://{clean_host}{request.get_full_path()}"
+                if request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+                    return HttpResponsePermanentRedirect308(new_url)
                 return HttpResponsePermanentRedirect(new_url)
         return None

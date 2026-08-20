@@ -837,7 +837,7 @@
             </div>
 
             <!-- Modal Form -->
-            <form id="regWizardForm" method="POST" action="{% url 'leads:submit' %}" class="space-y-4">
+            <form id="regWizardForm" method="POST" action="{% url 'leads:submit' %}" class="space-y-4" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="lead_type" value="registration">
                 <input type="hidden" name="source_page" value="{{ request.build_absolute_uri }}">
@@ -899,7 +899,7 @@
                                         {% endfor %}
                                     </ul>
                                 </div>
-                                <input type="tel" id="reg_phone" class="intl-phone-input inl-s-49cdf8748d"
+                                <input type="tel" id="reg_phone" name="phone_number" class="intl-phone-input inl-s-49cdf8748d"
                                     placeholder="{{ default_placeholder }}" dir="ltr" required>
                             </div>
                             <input type="hidden" name="country_code" id="reg_country_code" value="{{ default_code }}">

@@ -105,9 +105,23 @@ STUDY_LEVEL_CHOICES = [
     ('', '- اختر المرحلة الدراسية -'),
     ('بكالوريوس', 'بكالوريوس'),
     ('ماجستير', 'ماجستير'),
-    ('دكتوراة', 'دكتوراة'),
+    ('دكتوراه', 'دكتوراه'),
+    ('دكتوراة', 'دكتوراه'),
     ('معهد اللغة', 'معهد اللغة'),
+    ('معهد لغة', 'معهد اللغة'),
 ]
+
+STUDY_LEVEL_MAP = {
+    'دكتوراة': 'دكتوراه',
+    'دكتوراه': 'دكتوراه',
+    'phd': 'دكتوراه',
+    'PhD': 'دكتوراه',
+    'معهد لغة': 'معهد اللغة',
+    'معهد اللغة': 'معهد اللغة',
+    'دورة لغة': 'معهد اللغة',
+    'بكالوريوس': 'بكالوريوس',
+    'ماجستير': 'ماجستير',
+}
 
 
 class NormalizedChoiceField(forms.ChoiceField):
@@ -121,6 +135,18 @@ class NormalizedChoiceField(forms.ChoiceField):
             if val_str in ['دولة أخرى غير موجودة', 'دولة أخرى', 'أخرى']:
                 val_str = 'دولة اخرى غير موجودة'
             val_str = NATIONALITY_MAP.get(val_str, val_str)
+            return super().to_python(val_str)
+        return super().to_python(value)
+
+
+class NormalizedStudyLevelField(forms.ChoiceField):
+    """
+    ChoiceField that normalizes study levels (such as 'دكتوراه' vs 'دكتوراة' and 'معهد لغة' vs 'معهد اللغة').
+    """
+    def to_python(self, value):
+        if value and isinstance(value, str):
+            val_str = value.strip()
+            val_str = STUDY_LEVEL_MAP.get(val_str, val_str)
             return super().to_python(val_str)
         return super().to_python(value)
 
@@ -255,48 +281,7 @@ class LeadBaseForm(forms.ModelForm):
         else:
             cleaned_data['agree_to_privacy'] = True
 
-        # Cloudflare Turnstile Verification
-        from django.conf import settings
-        is_testing = getattr(settings, 'TESTING', False)
-        turnstile_secret = getattr(settings, 'TURNSTILE_SECRET_KEY', '')
-        turnstile_site_key = getattr(settings, 'TURNSTILE_SITE_KEY', '')
-        
-        if turnstile_secret and turnstile_site_key and not is_testing:
-            import requests
-            turnstile_response = self.data.get('cf-turnstile-response') if self.data else None
-            turnstile_blocked = self.data.get('turnstile_blocked') if self.data else None
-            
-            # If client reported AdBlocker blocked turnstile script
-            if not turnstile_response and turnstile_blocked == '1':
-                if cleaned_data.get('website'):
-                    raise ValidationError('Invalid submission')
-            elif not turnstile_response:
-                raise ValidationError('يرجى التحقق من اختبار الأمان (Turnstile).')
-            else:
-                try:
-                    verify_url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
-                    payload = {
-                        'secret': turnstile_secret,
-                        'response': turnstile_response,
-                    }
-                    resp = requests.post(verify_url, data=payload, timeout=5)
-                    result = resp.json()
-                    
-                    if not result.get('success'):
-                        error_codes = result.get('error-codes', [])
-                        import logging
-                        logging.getLogger(__name__).warning(f"Turnstile verification failed. Error codes: {error_codes}")
-                        if getattr(settings, 'DEBUG', False) and ('hostname-mismatch' in error_codes or 'invalid-input-secret' in error_codes):
-                            pass
-                        else:
-                            raise ValidationError('فشل التحقق من اختبار الأمان (Turnstile). يرجى المحاولة مرة أخرى.')
-                except ValidationError:
-                    raise
-                except Exception as e:
-                    import logging
-                    logging.getLogger(__name__).warning(f"Turnstile verification network request failed or timed out: {e}. Falling back to honeypot validation.")
-                    if cleaned_data.get('website'):
-                        raise ValidationError('Invalid submission')
+
 
 
         # Handle merging nationality and custom_nationality
@@ -422,16 +407,16 @@ class RegistrationLeadForm(LeadBaseForm):
         }),
         label='الجنسية'
     )
-    residence_country = forms.ChoiceField(
-        choices=RESIDENCE_CHOICES,
+    residence_country = forms.CharField(
         required=True,
+        max_length=150,
         widget=forms.Select(attrs={
             'class': 'reg-select',
             'required': True,
         }),
         label='دولة الإقامة'
     )
-    study_level = forms.ChoiceField(
+    study_level = NormalizedStudyLevelField(
         choices=STUDY_LEVEL_CHOICES,
         required=True,
         widget=forms.Select(attrs={

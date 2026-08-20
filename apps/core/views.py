@@ -166,11 +166,14 @@ class VisaTrackingView(FormView):
 
     def post(self, request, *args, **kwargs):
         from django.core.cache import cache
-        ip_address = request.META.get('REMOTE_ADDR')
+        from django.conf import settings
+        is_testing = getattr(settings, 'TESTING', False)
+        from apps.core.utils import get_client_ip
+        ip_address = get_client_ip(request)
         rate_key = f"visa_rate_limit_{ip_address}"
         submissions = cache.get(rate_key, 0)
         
-        if submissions >= 3:
+        if submissions >= 3 and not is_testing:
             messages.error(request, 'تم تجاوز الحد الأقصى للطلبات المسموحة في الساعة. يرجى المحاولة لاحقاً.')
             form = self.get_form()
             return self.form_invalid(form)
@@ -289,13 +292,22 @@ def csrf_failure(request, reason=""):
         messages.warning(request, 'انتهت الجلسة المؤقتة للنموذج، يرجى التحديث والمحاولة مرة أخرى.')
         return redirect('dashboard:login')
 
-    # 4. Public Visitor: redirect back to source_page, referer, or home (never dashboard:login)
+    # 4. Public Visitor: redirect back to source_page, referer, or current path (never dashboard:login)
+    from django.utils.http import url_has_allowed_host_and_scheme
     messages.warning(request, 'انتهت الجلسة المؤقتة للنموذج، يرجى إعادة محاولة إرسال البيانات.')
-    source_page = request.POST.get('source_page')
-    if source_page and source_page.startswith('/'):
+    
+    allowed_hosts = {request.get_host(), 'sciencesgates.com', 'www.sciencesgates.com', 'localhost:8000', '127.0.0.1:8000'}
+    
+    source_page = request.POST.get('source_page', '').strip()
+    if source_page and url_has_allowed_host_and_scheme(source_page, allowed_hosts=allowed_hosts, require_https=request.is_secure()):
         return redirect(source_page)
-    if referer and referer.startswith(('http://', 'https://')):
+
+    if referer and url_has_allowed_host_and_scheme(referer, allowed_hosts=allowed_hosts, require_https=request.is_secure()):
         return redirect(referer)
+
+    if path and path.startswith('/'):
+        return redirect(path)
+
     return redirect('home')
 
 

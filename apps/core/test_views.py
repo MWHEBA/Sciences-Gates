@@ -216,6 +216,58 @@ class CsrfFailureHandlerTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('dashboard:login'))
 
+    def test_absolute_source_page_csrf_failure_redirects_to_source_page(self):
+        """التحقق من دعم الروابط الكاملة في source_page والتوجيه إليها بدلاً من الرئيسية"""
+        from apps.core.views import csrf_failure
+        from django.test import RequestFactory
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from django.contrib.auth.models import AnonymousUser
+
+        factory = RequestFactory()
+        request = factory.post('/leads/submit/', data={'source_page': 'https://sciencesgates.com/leads/submit/'})
+        setattr(request, 'session', {})
+        setattr(request, '_messages', FallbackStorage(request))
+        request.user = AnonymousUser()
+
+        response = csrf_failure(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, 'https://sciencesgates.com/leads/submit/')
+
+    def test_missing_referer_and_source_page_falls_back_to_request_path(self):
+        """التحقق من التوجيه التلقائي إلى مسار الطلب الحالي عند غياب source_page والـ Referer"""
+        from apps.core.views import csrf_failure
+        from django.test import RequestFactory
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from django.contrib.auth.models import AnonymousUser
+
+        factory = RequestFactory()
+        request = factory.post('/leads/submit/', data={})
+        setattr(request, 'session', {})
+        setattr(request, '_messages', FallbackStorage(request))
+        request.user = AnonymousUser()
+
+        response = csrf_failure(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/leads/submit/')
+
+    def test_malicious_open_redirect_source_page_rejected(self):
+        """التحقق من رفض الروابط الخارجية الخبيثة والتوجيه لمسار الصفحة الآمنة"""
+        from apps.core.views import csrf_failure
+        from django.test import RequestFactory
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from django.contrib.auth.models import AnonymousUser
+
+        factory = RequestFactory()
+        request = factory.post('/leads/submit/', data={'source_page': 'https://malicious-phishing-site.com/steal'})
+        setattr(request, 'session', {})
+        setattr(request, '_messages', FallbackStorage(request))
+        request.user = AnonymousUser()
+
+        response = csrf_failure(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/leads/submit/')
+
+
 
 
 

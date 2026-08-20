@@ -131,10 +131,17 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const submitBtn = form.querySelector('button[type="submit"]');
                 if (submitBtn) {
+                    if (!submitBtn.hasAttribute('data-original-text')) {
+                        submitBtn.setAttribute('data-original-text', submitBtn.innerHTML);
+                    }
                     submitBtn.classList.add('is-loading');
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.innerHTML = '<span style="opacity:0.7">جاري الإرسال...</span>';
-                    submitBtn.disabled = true;
+                    // Defer disabling to prevent WebKit / iOS Safari from cancelling the form dispatch
+                    setTimeout(() => {
+                        if (!e.defaultPrevented && submitBtn) {
+                            submitBtn.innerHTML = '<span style="opacity:0.7">جاري الإرسال...</span>';
+                            submitBtn.disabled = true;
+                        }
+                    }, 60);
                 }
             }
         });

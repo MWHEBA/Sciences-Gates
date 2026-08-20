@@ -1,8 +1,12 @@
 {% load static %}
-<form method="POST" data-validate="true" class="space-y-6">
+<form method="POST" action="{% url 'leads:submit' %}" data-validate="true" class="space-y-6">
     {% csrf_token %}
     
+    <!-- Source Page -->
+    <input type="hidden" name="source_page" value="{{ source_page|default:request.build_absolute_uri }}">
+
     <!-- Honeypot Field (Hidden) -->
+    <input type="text" name="website" tabindex="-1" autocomplete="off" style="display: none;">
     {{ form.website }}
     
     <!-- Hidden lead_type - default to contact -->
@@ -92,16 +96,7 @@
             <div class="text-xs font-medium inl-s-973ad1998f">{{ form.message.errors.0 }}</div>
         {% endif %}
     </div>
-    
-    {% if TURNSTILE_SITE_KEY %}
-    <!-- Cloudflare Turnstile Explicit Container -->
-    <div class="space-y-2" style="display: flex; justify-content: center; margin-bottom: 16px;">
-        <div class="cf-turnstile-explicit" data-sitekey="{{ TURNSTILE_SITE_KEY }}" data-theme="light"></div>
-    </div>
-    <script>window.TURNSTILE_SITE_KEY = "{{ TURNSTILE_SITE_KEY }}";</script>
-    <script src="{% static 'js/turnstile-handler.js' %}"></script>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback" async defer></script>
-    {% endif %}
+
 
     <!-- Submit Button -->
     <button type="submit" class="w-full px-4 py-3 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-primary text-white hover:bg-primary-hover inl-s-cfad47e8da">

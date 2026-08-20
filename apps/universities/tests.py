@@ -318,7 +318,9 @@ class TestProgramYearlyFees:
             name='Test Uni',
             slug='test-uni',
             description='Test',
-            location='Test'
+            location='Test',
+            logo='test.png',
+            main_image='test.png'
         )
         faculty = Faculty.objects.create(
             university=uni,
@@ -351,7 +353,9 @@ class TestProgramYearlyFees:
             name='Test Uni',
             slug='test-uni',
             description='Test',
-            location='Test'
+            location='Test',
+            logo='test.png',
+            main_image='test.png'
         )
         faculty = Faculty.objects.create(
             university=uni,
@@ -394,7 +398,9 @@ class TestProgramYearlyFees:
             name='Test Uni',
             slug='test-uni',
             description='Test',
-            location='Test'
+            location='Test',
+            logo='test.png',
+            main_image='test.png'
         )
         faculty = Faculty.objects.create(
             university=uni,

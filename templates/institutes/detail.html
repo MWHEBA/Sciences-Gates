@@ -688,7 +688,7 @@
     </button>
 
     <!-- Registration Wizard Modal -->
-    <div x-show="openRegModal" class="reg-modal-overlay"
+    <div x-show="openRegModal" x-cloak class="reg-modal-overlay"
         @keydown.escape.window="openRegModal = false" style="display: none;">
         <div class="reg-modal-content" @click.away="openRegModal = false">
 
@@ -723,7 +723,7 @@
             </div>
 
             <!-- Modal Form -->
-            <form id="regWizardForm" method="POST" action="{% url 'leads:submit' %}" class="space-y-4">
+            <form id="regWizardForm" method="POST" action="{% url 'leads:submit' %}" class="space-y-4" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="lead_type" value="registration">
                 <input type="hidden" name="source_page" value="{{ request.build_absolute_uri }}">
@@ -784,7 +784,7 @@
                                         {% endfor %}
                                     </ul>
                                 </div>
-                                <input type="tel" id="reg_phone" class="intl-phone-input"
+                                <input type="tel" id="reg_phone" name="phone_number" class="intl-phone-input"
                                     placeholder="{{ default_placeholder|default:'777 777 777' }}" dir="ltr" required>
                             </div>
                             <input type="hidden" name="country_code" id="reg_country_code" value="{{ default_code|default:'+967' }}">

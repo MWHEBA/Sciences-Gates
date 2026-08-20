@@ -303,15 +303,6 @@
                         {% endif %}
                     </div>
 
-                    {% if TURNSTILE_SITE_KEY %}
-                    <!-- Cloudflare Turnstile -->
-                    <div class="form-group" style="display: flex; justify-content: center; margin-bottom: 20px;">
-                        <div class="cf-turnstile-explicit" data-sitekey="{{ TURNSTILE_SITE_KEY }}" data-theme="light"></div>
-                    </div>
-                    <script>window.TURNSTILE_SITE_KEY = "{{ TURNSTILE_SITE_KEY }}";</script>
-                    <script src="{% static 'js/turnstile-handler.js' %}"></script>
-                    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback" async defer></script>
-                    {% endif %}
 
                     <!-- زر الإرسال -->
                     <div class="form-group text-center">

@@ -414,23 +414,56 @@ function initializeAutoSlugify() {
 
 /**
  * Synchronizes the hidden csrfmiddlewaretoken input with the current document.cookie value
- * right before form submission, preventing multi-tab CSRF token mismatches.
+ * right before form submission and upon page restore from bfcache (iOS Safari/Chrome),
+ * preventing multi-tab and cached CSRF token mismatches.
  */
-function initializeCsrfAndFormSync() {
-    document.addEventListener('submit', function(e) {
-        const form = e.target;
-        if (!form || form.tagName !== 'FORM') return;
-        
-        // Extract live csrftoken from cookie if present
-        const cookieMatch = document.cookie.match(/csrftoken=([^;]+)/);
-        if (cookieMatch && cookieMatch[1]) {
-            const liveCsrfToken = cookieMatch[1];
-            const csrfInput = form.querySelector('input[name="csrfmiddlewaretoken"]');
-            if (csrfInput && csrfInput.value !== liveCsrfToken) {
-                csrfInput.value = liveCsrfToken;
+function syncAllFormsCsrf() {
+    const cookieMatch = document.cookie.match(/csrftoken=([^;]+)/);
+    if (cookieMatch && cookieMatch[1]) {
+        const liveCsrfToken = cookieMatch[1];
+        document.querySelectorAll('input[name="csrfmiddlewaretoken"]').forEach(input => {
+            if (input.value !== liveCsrfToken) {
+                input.value = liveCsrfToken;
             }
+        });
+    }
+}
+
+function unlockAllSubmitButtons() {
+    document.querySelectorAll('form').forEach(f => {
+        f.removeAttribute('data-submitting');
+    });
+    document.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(btn => {
+        btn.disabled = false;
+        btn.style.pointerEvents = '';
+        btn.style.opacity = '';
+        btn.style.cursor = '';
+        btn.classList.remove('is-loading');
+        const originalText = btn.getAttribute('data-original-text');
+        if (originalText) {
+            btn.innerHTML = originalText;
         }
+    });
+}
+
+function initializeCsrfAndFormSync() {
+    // Sync CSRF on form submit
+    document.addEventListener('submit', function(e) {
+        syncAllFormsCsrf();
     }, true);
+
+    // Sync CSRF proactively when user interacts with any form field
+    document.addEventListener('focusin', function(e) {
+        if (e.target && e.target.closest && e.target.closest('form')) {
+            syncAllFormsCsrf();
+        }
+    });
+
+    // Handle iOS WebKit Back-Forward Cache (bfcache) and tab unfreezing
+    window.addEventListener('pageshow', function(event) {
+        syncAllFormsCsrf();
+        unlockAllSubmitButtons();
+    });
 }
 
 /**
@@ -441,7 +474,7 @@ function initializeFormDraftAutoSave() {
     const publicForms = document.querySelectorAll('form[action*="leads/submit"], form:not([action*="dashboard"]):not([action*="admin"])');
     publicForms.forEach(form => {
         // Build unique storage key based on form path
-        const formKey = 'sg_lead_draft_' + window.location.pathname.replace(/\//g, '_');
+        const formKey = 'sg_lead_draft_' + window.location.pathname.split('/').join('_');
         const inputs = form.querySelectorAll('input[name="name"], input[name="email"], input[name="phone"], textarea[name="message"]');
         
         // Restore draft if present
@@ -480,25 +513,35 @@ function initializeFormDraftAutoSave() {
 }
 
 /**
- * Prevents double-submissions on slow mobile connections by locking the submit button
- * and rendering a subtle loading state upon form submit.
+ * Prevents double-submissions on 100% of forms across the public site and dashboard
+ * using global document-level delegation that captures dynamic, modal, and static forms
+ * without using button.disabled during dispatch which cancels WebKit/Safari submissions.
  */
 function initializeFormSubmitLock() {
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
-            if (!submitBtn || submitBtn.disabled) return;
-            
-            // Allow short delay for JS validations or turnstile before locking
-            setTimeout(function() {
-                if (!e.defaultPrevented) {
-                    submitBtn.disabled = true;
-                    submitBtn.style.opacity = '0.7';
-                    submitBtn.style.cursor = 'wait';
-                }
-            }, 50);
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (!form || form.tagName.toLowerCase() !== 'form') return;
+
+        // Ignore GET search/filter forms from locking
+        if (form.method && form.method.toUpperCase() === 'GET') return;
+
+        // If form is already submitting, block duplicate submission immediately
+        if (form.dataset.submitting === 'true') {
+            e.preventDefault();
+            return false;
+        }
+
+        form.dataset.submitting = 'true';
+
+        const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+        submitBtns.forEach(btn => {
+            if (!btn.hasAttribute('data-original-text')) {
+                btn.setAttribute('data-original-text', btn.innerHTML || btn.value);
+            }
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'wait';
         });
-    });
+    }, false);
 }
 

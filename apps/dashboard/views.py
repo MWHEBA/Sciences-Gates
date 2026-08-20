@@ -87,7 +87,8 @@ class DashboardLoginView(View):
         next_url = request.POST.get('next', request.GET.get('next', ''))
 
         # Lockout check by IP
-        ip_address = request.META.get('REMOTE_ADDR')
+        from apps.core.utils import get_client_ip
+        ip_address = get_client_ip(request)
         lockout_key = f"login_lockout_{ip_address}"
         attempts_key = f"login_attempts_{ip_address}"
         

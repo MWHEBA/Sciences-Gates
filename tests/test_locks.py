@@ -9,21 +9,25 @@ from apps.core.models import ContentLock
 from apps.universities.models import University
 
 @pytest.fixture
-def test_user():
+def test_user(db):
     return User.objects.create_user(username='admin1', email='admin1@test.com', password='password')
 
 @pytest.fixture
-def other_user():
+def other_user(db):
     return User.objects.create_user(username='admin2', email='admin2@test.com', password='password')
 
 @pytest.fixture
-def university():
+def university(db):
     return University.objects.create(
         name='Test University',
         slug='test-university',
         university_type='private',
-        state='kuala_lumpur',
-        city='kuala_lumpur'
+        state='kl',
+        city='kl',
+        logo='test.png',
+        main_image='test.png',
+        description='Test description',
+        location='Kuala Lumpur',
     )
 
 @pytest.mark.django_db

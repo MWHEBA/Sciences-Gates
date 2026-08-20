@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.core import mail
 from hypothesis import given, settings, strategies as st
 from hypothesis.extra.django import TestCase as HypothesisTestCase
+from django.urls import reverse
 from apps.leads.models import Lead, LeadType
 
 
@@ -903,6 +904,104 @@ class LeadEmailNotificationPropertyBasedTests(HypothesisTestCase):
         email_obj = mail.outbox[0]
         sanitized_name = name.replace('\n', ' ').replace('\r', ' ')
         self.assertIn(sanitized_name, email_obj.subject)
+
+
+class UniversityAndInstituteRegistrationModalTests(TestCase):
+    """
+    اختبارات إرسال نموذج التسجيل السريع من صفحات الجامعات والمعاهد
+    """
+
+    def test_registration_form_normalizes_phd_and_accepts_various_countries(self):
+        """التحقق من قبول تسجيل الدكتوراه (دكتوراه/دكتوراة) والدول المتعددة في RegistrationLeadForm"""
+        from apps.leads.forms import RegistrationLeadForm
+
+        data = {
+            'lead_type': 'registration',
+            'name': 'طالب دكتوراه',
+            'email': 'phd.student@example.com',
+            'phone': '+966501234567',
+            'nationality': 'سعودي',
+            'institution_name': 'جامعة الملايا',
+            'residence_country': 'المملكة العربية السعودية',
+            'study_level': 'دكتوراه',
+            'address': 'الرياض - حي النخيل',
+            'message': 'أرغب بالتسجيل في برنامج دكتوراه الهندسة',
+        }
+        form = RegistrationLeadForm(data=data)
+        self.assertTrue(form.is_valid(), f"Form errors: {form.errors}")
+        self.assertEqual(form.cleaned_data['study_level'], 'دكتوراه')
+        self.assertEqual(form.cleaned_data['residence_country'], 'المملكة العربية السعودية')
+
+    def test_registration_form_normalizes_language_institute(self):
+        """التحقق من قبول تسجيل معهد اللغة (معهد لغة / معهد اللغة)"""
+        from apps.leads.forms import RegistrationLeadForm
+
+        data = {
+            'lead_type': 'registration',
+            'name': 'طالب معهد',
+            'email': 'institute.student@example.com',
+            'phone': '+905551234567',
+            'nationality': 'تركي',
+            'institution_name': 'معهد EMS للغات',
+            'residence_country': 'تركيا',
+            'study_level': 'معهد لغة',
+            'address': 'إسطنبول',
+            'message': 'أريد كورس لغة 6 أشهر',
+        }
+        form = RegistrationLeadForm(data=data)
+        self.assertTrue(form.is_valid(), f"Form errors: {form.errors}")
+        self.assertEqual(form.cleaned_data['study_level'], 'معهد اللغة')
+        self.assertEqual(form.cleaned_data['residence_country'], 'تركيا')
+
+    def test_registration_submit_from_university_page_preserves_source_page(self):
+        """التحقق من حفظ رابط صفحة الجامعة المصدر عند تقديم طلب تسجيل"""
+        from django.urls import reverse
+        url = reverse('leads:submit')
+        payload = {
+            'lead_type': 'registration',
+            'name': 'محمد عبد الله',
+            'email': 'mohamed@example.com',
+            'country_code': '+60',
+            'phone_number': '123456789',
+            'nationality': 'مصري',
+            'institution_name': 'جامعة UKM',
+            'residence_country': 'مصر',
+            'study_level': 'بكالوريوس',
+            'address': 'القاهرة',
+            'source_page': 'https://sciencesgates.com/universities/ukm/',
+        }
+        response = self.client.post(url, payload, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('lead_type=registration', response.url)
+        self.assertIn('subtype=university', response.url)
+
+        lead = Lead.objects.filter(email='mohamed@example.com').first()
+        self.assertIsNotNone(lead)
+        self.assertEqual(lead.source_page, 'https://sciencesgates.com/universities/ukm/')
+
+    def test_double_submit_deduplication(self):
+        """Test that rapid double-clicks (submitting twice in seconds) create only 1 Lead record."""
+        url = reverse('leads:submit')
+        payload = {
+            'lead_type': 'contact',
+            'name': 'خالد سامي',
+            'email': 'khaled_double@example.com',
+            'phone': '+201099887766',
+            'nationality': 'مصري',
+            'message': 'استفسار أولي',
+        }
+        # First submission
+        res1 = self.client.post(url, payload, follow=True)
+        self.assertEqual(res1.status_code, 200)
+
+        # Second submission immediately
+        res2 = self.client.post(url, payload, follow=True)
+        self.assertEqual(res2.status_code, 200)
+
+        # Exactly 1 Lead record should exist in DB
+        leads_count = Lead.objects.filter(email='khaled_double@example.com').count()
+        self.assertEqual(leads_count, 1)
+
 
 
 
