@@ -585,3 +585,115 @@
         box-shadow: 0 0 0 3px var(--primary-muted);
     }
 }
+
+/* ─── Select2 Styling for University Programs ─── */
+.fpm-programs-table .select2-container {
+    width: 100% !important;
+    text-align: right;
+    direction: rtl;
+}
+
+.fpm-programs-table .select2-container--default .select2-selection--single {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    height: 36px;
+    display: flex;
+    align-items: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fpm-programs-table .select2-container--default .select2-selection--single:focus,
+.fpm-programs-table .select2-container--default.select2-container--open .select2-selection--single {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-muted);
+    outline: none;
+}
+
+.fpm-programs-table .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--text-primary);
+    line-height: 34px;
+    padding-right: 10px;
+    padding-left: 26px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.fpm-programs-table .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: var(--text-muted);
+}
+
+.fpm-programs-table .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 34px;
+    left: 8px;
+    right: auto;
+    width: 18px;
+}
+
+.fpm-programs-table .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: var(--text-muted) transparent transparent transparent;
+}
+
+.fpm-programs-table .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent var(--text-muted) transparent;
+}
+
+.fpm-programs-table .select2-container--default .select2-selection--single .select2-selection__clear {
+    color: var(--text-muted);
+    float: left;
+    margin-left: 20px;
+    font-size: 16px;
+    line-height: 34px;
+}
+
+.select2-dropdown {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    direction: rtl;
+    text-align: right;
+    z-index: 9999;
+    font-family: inherit;
+}
+
+.select2-search--dropdown {
+    padding: 8px;
+}
+
+.select2-search--dropdown .select2-search__field {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    font-size: 13px;
+    color: var(--text-primary);
+    background-color: var(--surface);
+    outline: none;
+    direction: rtl;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.select2-search--dropdown .select2-search__field:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-muted);
+}
+
+.select2-results__option {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text-primary);
+    font-family: inherit;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.select2-container--default .select2-results__option[aria-selected="true"] {
+    background-color: var(--primary);
+    color: var(--white);
+}
+

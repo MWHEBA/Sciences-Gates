@@ -13,12 +13,14 @@
 <link rel="stylesheet" href="{% static 'css/tags_input.css' %}">
 <link rel="stylesheet" href="{% static 'css/relations_select.css' %}">
 <link rel="stylesheet" href="{% static 'css/attachments-manager.css' %}">
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 {% endblock %}
 
 {% block content_wrapper %}
 <!-- Template for Major Select Dropdown (used by JS to copy options) -->
 <div style="display: none;" id="major-select-template-container">
-    <select class="fpm-program-input fpm-program-input--select" dir="rtl">
+    <select class="fpm-program-input fpm-program-input--select fpm-major-select" dir="rtl">
         <option value="">---------</option>
         {% for choice_val, choice_label in form.fields.related_majors.choices %}
             {% if choice_val %}
@@ -377,7 +379,7 @@
                                                     <th>التخصصات</th>
                                                     <th>المدة الدراسية</th>
                                                     <th>الرسوم السنوية</th>
-                                                    <th>الرسوم التفصيلية بالسنوات (اختياري)</th>
+                                                    <th>الرسوم بالسنوات (اختياري)</th>
                                                     <th width="40"></th>
                                                 </tr>
                                             </thead>
@@ -1194,6 +1196,9 @@ document.addEventListener('DOMContentLoaded', function() {
 {% endblock %}
 
 {% block extra_js %}
+<!-- jQuery & Select2 JS Integration -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{% static 'js/html_editor.js' %}"></script>
 <script src="{% static 'js/faculty-programs-manager.js' %}"></script>
 <script src="{% static 'js/faq-manager.js' %}"></script>

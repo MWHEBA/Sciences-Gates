@@ -26,6 +26,8 @@ class FacultyProgramsManager {
         this.attachItemHandlers();
         this.updateState();
         this.initTextareaAutoResize();
+        this.initMajorSelect2();
+        this.setupSelect2Autofocus();
     }
 
     initTextareaAutoResize() {
@@ -179,7 +181,7 @@ class FacultyProgramsManager {
                             <th>التخصصات</th>
                             <th>المدة الدراسية</th>
                             <th>الرسوم السنوية</th>
-                            <th>الرسوم التفصيلية بالسنوات (اختياري)</th>
+                            <th>الرسوم بالسنوات (اختياري)</th>
                             <th width="40"></th>
                         </tr>
                     </thead>
@@ -253,6 +255,9 @@ class FacultyProgramsManager {
             wrapper.querySelectorAll('.fpm-program-input--textarea').forEach(textarea => {
                 this.autoResizeTextarea(textarea);
             });
+            
+            // تهيئة Select2 للبرامج داخل الكلية بعد فتحها
+            this.initMajorSelect2(wrapper);
         }
     }
 
@@ -336,6 +341,9 @@ class FacultyProgramsManager {
         programsContainer.appendChild(row);
         totalFormsInput.value = programIndex + 1;
         
+        // تهيئة Select2 للتخصص المرتبط بالسطر الجديد
+        this.initMajorSelect2(row);
+
         // Focus على حقل الاسم
         const nameInput = row.querySelector('[name$="-name"]');
         setTimeout(() => nameInput.focus(), 100);
@@ -975,6 +983,46 @@ class FacultyProgramsManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // ─── تهيئة Select2 للتخصص المرتبط ───
+    initMajorSelect2(context) {
+        if (typeof jQuery === 'undefined' || !jQuery.fn.select2) return;
+        const selector = '.fpm-major-select, select[name$="-major"]';
+        const $targets = context ? jQuery(context).find(selector).addBack(selector) : jQuery(selector);
+        
+        $targets.each(function() {
+            const $el = jQuery(this);
+            // تجاهل القالب المخفي
+            if ($el.closest('#major-select-template-container').length) return;
+            if (!$el.hasClass('select2-hidden-accessible')) {
+                $el.select2({
+                    placeholder: 'اختر التخصص المرتبط',
+                    allowClear: true,
+                    dir: 'rtl',
+                    width: '100%'
+                });
+            }
+        });
+    }
+
+    // ─── فوكس أوتوماتيك على خانة البحث عند فتح القائمة ───
+    setupSelect2Autofocus() {
+        if (typeof jQuery === 'undefined') return;
+        if (window._select2MajorAutofocusAttached) return;
+        window._select2MajorAutofocusAttached = true;
+
+        jQuery(document).on('select2:open', function() {
+            const focusSearch = function() {
+                const searchField = document.querySelector('.select2-container--open .select2-search__field');
+                if (searchField) {
+                    searchField.focus();
+                }
+            };
+            focusSearch();
+            setTimeout(focusSearch, 30);
+            setTimeout(focusSearch, 100);
+        });
     }
 }
 
