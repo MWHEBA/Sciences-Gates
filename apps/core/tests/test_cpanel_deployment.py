@@ -811,10 +811,19 @@ class IntegrationTest(TestCase):
         """Test that content can be created and retrieved from database."""
         from apps.universities.models import University
         
+        image_content = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'
+        uploaded_file = SimpleUploadedFile(
+            name='test_content_image.png',
+            content=image_content,
+            content_type='image/png'
+        )
+        
         # Create a test university
         university = University.objects.create(
             name='Test University',
             slug='test-university',
+            logo=uploaded_file,
+            main_image=uploaded_file,
             description='Test description',
             location='Test Location',
             admission_requirements='Test requirements'

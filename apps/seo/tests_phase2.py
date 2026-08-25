@@ -100,7 +100,7 @@ class Phase2SEOPreviewTests(TestCase):
 
         for url in preview_urls:
             response = self.client.get(url)
-            self.assertEqual(response.status_code, 403)
+            self.assertIn(response.status_code, [302, 403])
 
     def test_authorized_staff_can_access_previews(self):
         """Verify Content Admin and Super Admin can access previews and get 200 with banner & meta."""

@@ -949,7 +949,10 @@ class ImageDownloaderDuplicateTests(TestCase):
         uni = University.objects.create(
             name='Test University for Signals',
             slug='test-uni-signals',
-            logo='media_library/university_logo/uni-logo.webp'
+            logo='media_library/university_logo/uni-logo.webp',
+            main_image='media_library/university_images/uni-main.webp',
+            description='Test description for signals test',
+            location='Kuala Lumpur'
         )
 
         # Count should remain 1 (no duplicate MediaFile created)
@@ -1079,6 +1082,10 @@ class ContentMapperRedirectAndMediaReplacementTests(TestCase):
         uni = University.objects.create(
             name='جامعة مالايا',
             slug='um-slug',
+            logo='media_library/university_logo/um-logo.webp',
+            main_image='media_library/university_images/um-main.webp',
+            description='وصف جامعة مالايا',
+            location='كوالالمبور',
             university_type='public'
         )
         wp_data = {
@@ -1164,6 +1171,9 @@ class ContentMapperRedirectAndMediaReplacementTests(TestCase):
             name='جامعة اختبار',
             slug='test-uni-media',
             logo='old_logo.png',
+            main_image='media_library/university_images/test-main.webp',
+            description='وصف جامعة اختبار',
+            location='كوالالمبور',
             university_type='public'
         )
         
@@ -1398,7 +1408,10 @@ class BulkSaveAPITests(TestCase):
             'name': 'جامعة الشارقة',
             'slug': 'sharjah-university',
             'city_raw': 'كوالالمبور',
-            'images': {},
+            'images': {
+                'logo': {'url': 'https://example.com/logo.png'},
+                'main_image': {'url': 'https://example.com/main.jpg'}
+            },
             'fields': {
                 'location': {'value': 'الشارقة', 'confidence': 'high'},
                 'description': {'value': 'وصف', 'confidence': 'high'},
@@ -1421,16 +1434,17 @@ class BulkSaveAPITests(TestCase):
         }
         mock_get.return_value = mock_response
 
-        data = self.post_bulk_save(
-            'https://old-site.com/university/sharjah-university/',
-            'university'
-        )
-        self.assertTrue(data['success'])
-        
-        from apps.universities.models import Program
-        prog = Program.objects.get(name='بكالوريوس الهندسة الكهربائية')
-        self.assertEqual(prog.duration, 'غير محدد')
-        self.assertEqual(prog.tuition_fees, 'غير محدد')
+        with patch('apps.importer.views.download_and_optimize_image', return_value=(self.mock_image, None)):
+            data = self.post_bulk_save(
+                'https://old-site.com/university/sharjah-university/',
+                'university'
+            )
+            self.assertTrue(data['success'])
+            
+            from apps.universities.models import Program
+            prog = Program.objects.get(name='بكالوريوس الهندسة الكهربائية')
+            self.assertEqual(prog.duration, 'غير محدد')
+            self.assertEqual(prog.tuition_fees, 'غير محدد')
 
     @patch('apps.importer.services.wp_client.requests.get')
     def test_bulk_save_program_cleanup_validation(self, mock_get):
@@ -1446,7 +1460,10 @@ class BulkSaveAPITests(TestCase):
             'name': 'جامعة عجمان',
             'slug': 'ajman-university',
             'city_raw': 'كوالالمبور',
-            'images': {},
+            'images': {
+                'logo': {'url': 'https://example.com/logo.png'},
+                'main_image': {'url': 'https://example.com/main.jpg'}
+            },
             'fields': {
                 'location': {'value': 'عجمان', 'confidence': 'high'},
                 'description': {'value': 'وصف', 'confidence': 'high'},
@@ -1474,17 +1491,18 @@ class BulkSaveAPITests(TestCase):
         }
         mock_get.return_value = mock_response
 
-        data = self.post_bulk_save(
-            'https://old-site.com/university/ajman-university/',
-            'university'
-        )
-        self.assertTrue(data['success'])
-        
-        from apps.universities.models import Program
-        self.assertFalse(Program.objects.filter(duration='3 سنوات').exists())
-        
-        prog = Program.objects.get(duration='4 سنوات')
-        self.assertEqual(prog.name, "ب" * 200)
+        with patch('apps.importer.views.download_and_optimize_image', return_value=(self.mock_image, None)):
+            data = self.post_bulk_save(
+                'https://old-site.com/university/ajman-university/',
+                'university'
+            )
+            self.assertTrue(data['success'])
+            
+            from apps.universities.models import Program
+            self.assertFalse(Program.objects.filter(duration='3 سنوات').exists())
+            
+            prog = Program.objects.get(duration='4 سنوات')
+            self.assertEqual(prog.name, "ب" * 200)
 
     @patch('apps.importer.services.wp_client.requests.get')
     def test_bulk_save_image_replacement_on_update(self, mock_get):
@@ -1498,6 +1516,9 @@ class BulkSaveAPITests(TestCase):
             name='جامعة عجمان القديمة',
             slug='ajman-uni-image-test',
             logo='old_logo.png',
+            main_image='media_library/university_images/ajman-main.webp',
+            description='وصف جامعة عجمان القديمة',
+            location='عجمان',
             university_type='public'
         )
         
