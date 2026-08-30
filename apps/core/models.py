@@ -258,17 +258,17 @@ class UserProfile(models.Model):
 
     @property
     def is_super_admin(self):
-        return self.role == UserRole.SUPER_ADMIN
+        return self.role == UserRole.SUPER_ADMIN or getattr(self.user, 'is_superuser', False)
 
     @property
     def is_content_admin(self):
         """Check if user is content admin."""
-        return self.role == UserRole.CONTENT_ADMIN
+        return self.role == UserRole.CONTENT_ADMIN or self.is_super_admin
 
     @property
     def is_seo_admin(self):
         """Check if user is SEO admin."""
-        return self.role == UserRole.SEO_ADMIN
+        return self.role == UserRole.SEO_ADMIN or self.is_super_admin
 
 
 class AuthorProfile(models.Model):

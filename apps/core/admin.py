@@ -23,6 +23,10 @@ class UserProfileAdmin(admin.ModelAdmin):
         }),
     )
 
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deleting UserProfile directly to avoid creating orphaned user accounts."""
+        return False
+
 
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):

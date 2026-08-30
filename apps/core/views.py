@@ -270,9 +270,21 @@ def csrf_failure(request, reason=""):
 
     # 2. Handle authenticated users
     if request.user.is_authenticated:
-        messages.info(request, 'أنت مسجل الدخول بالفعل.')
+        from apps.dashboard.mixins import validate_dashboard_user
+        from django.contrib.auth import logout
+
         if getattr(request.user, 'is_staff', False):
-            return redirect('dashboard:home')
+            is_valid, reason = validate_dashboard_user(request.user)
+            if is_valid:
+                messages.info(request, 'أنت مسجل الدخول بالفعل.')
+                return redirect('dashboard:home')
+
+            # Broken session on CSRF failure: cleanly flush to prevent bouncing
+            logout(request)
+            messages.warning(request, 'انتهت صلاحية الجلسة، يرجى إعادة تسجيل الدخول.')
+            return redirect('dashboard:login')
+
+        messages.info(request, 'أنت مسجل الدخول بالفعل.')
         return redirect('home')
 
     # 3. Determine if request originated from dashboard area

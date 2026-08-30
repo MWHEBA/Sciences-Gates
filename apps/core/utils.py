@@ -549,9 +549,9 @@ def validate_attachment_file(value):
         return
 
     try:
-        limit = 10 * 1024 * 1024
+        limit = 30 * 1024 * 1024
         if hasattr(value, 'size') and value.size > limit:
-            raise ValidationError('حجم الملف كبير جداً. الحد الأقصى المسموح به هو 10 ميجابايت.')
+            raise ValidationError('حجم الملف كبير جداً. الحد الأقصى المسموح به هو 30 ميجابايت.')
     except (FileNotFoundError, OSError):
         pass
 

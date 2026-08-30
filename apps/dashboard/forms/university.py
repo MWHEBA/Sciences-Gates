@@ -678,6 +678,13 @@ class ProgramFormSetForm(YearlyFeesFormMixin, forms.ModelForm):
             'sort_order': 'ترتيب العرض',
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        name = cleaned_data.get('name')
+        if not self.instance.pk and not name:
+            return cleaned_data
+        return cleaned_data
+
 
 # Nested Program Formset
 NestedProgramFormSet = inlineformset_factory(
@@ -827,6 +834,14 @@ class UniversityAttachmentForm(forms.ModelForm):
             'title': 'عنوان الملف',
             'file': 'الملف',
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        title = cleaned_data.get('title')
+        file = cleaned_data.get('file')
+        if not self.instance.pk and not title and not file:
+            return cleaned_data
+        return cleaned_data
 
 
 UniversityAttachmentFormSet = inlineformset_factory(

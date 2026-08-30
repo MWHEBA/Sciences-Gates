@@ -179,11 +179,11 @@ class SecurityHeadersMiddleware:
         # 1. Content-Security-Policy (Alpine.js & Tailwind compliant)
         csp_policy = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net www.googletagmanager.com https://challenges.cloudflare.com; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net www.googletagmanager.com; "
             "style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com cdn.jsdelivr.net; "
             "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net data:; "
             "img-src 'self' data: https:; "
-            "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://challenges.cloudflare.com; "
+            "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; "
             "connect-src 'self' www.google-analytics.com https://get.geojs.io https://ipapi.co; "
             "object-src 'none'; "
             "base-uri 'self'; "
@@ -213,6 +213,15 @@ class SecurityHeadersMiddleware:
         media_prefix = settings.MEDIA_URL.rstrip('/')
         if media_prefix and request.path.startswith(media_prefix):
             response['X-Robots-Tag'] = 'noindex'
+
+        # 5. Prevent caching for administrative and dashboard pages
+        dashboard_prefix = f"/{getattr(settings, 'DASHBOARD_URL', 'sg/').strip('/')}"
+        admin_prefix = f"/{getattr(settings, 'ADMIN_URL', 'mw-admin/').strip('/')}"
+        path = request.path or ''
+        if path.startswith(dashboard_prefix) or path.startswith(admin_prefix):
+            response['Cache-Control'] = 'private, no-cache, no-store, must-revalidate, max-age=0'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
 
         return response
 

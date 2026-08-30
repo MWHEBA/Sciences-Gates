@@ -142,10 +142,10 @@
 
             <!-- Quick Facts Card (Mobile Only) -->
             <div class="detail-sidebar-card d-lg-none" style="margin-bottom: 2rem;">
-                <h3 class="detail-sidebar-title">
+                <h2 class="detail-sidebar-title">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     معلومات سريعة
-                </h3>
+                </h2>
                 <dl class="detail-sidebar-list">
                     <div class="detail-sidebar-item">
                         <dt class="detail-sidebar-label">المدينة:</dt>
@@ -469,10 +469,10 @@
             
             <!-- Quick Facts Sidebar Card -->
             <div class="detail-sidebar-card d-none d-lg-block">
-                <h3 class="detail-sidebar-title">
+                <h2 class="detail-sidebar-title">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     معلومات سريعة
-                </h3>
+                </h2>
                 <dl class="detail-sidebar-list">
                     <div class="detail-sidebar-item">
                         <dt class="detail-sidebar-label">المدينة:</dt>
@@ -860,17 +860,9 @@
                                required>
                        </div>
 
-                       <div class="reg-form-group">
-                           <label for="reg_notes">ملاحظات</label>
                             <textarea id="reg_notes" name="message" class="reg-textarea"
                                placeholder="أدخل أي تفاصيل أو متطلبات خاصة..."></textarea>
                        </div>
-                         {% if TURNSTILE_SITE_KEY %}
-                         <!-- Cloudflare Turnstile -->
-                         <div class="reg-form-group" style="display: flex; justify-content: center; margin-top: 15px; margin-bottom: 15px;">
-                             <div class="cf-turnstile-explicit" data-sitekey="{{ TURNSTILE_SITE_KEY }}" data-theme="light"></div>
-                         </div>
-                         {% endif %}
                     </div>
                 </div>
 
@@ -896,10 +888,5 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-{% if TURNSTILE_SITE_KEY %}
-<script>window.TURNSTILE_SITE_KEY = "{{ TURNSTILE_SITE_KEY }}";</script>
-<script src="{% static 'js/turnstile-handler.js' %}"></script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback" async defer></script>
-{% endif %}
 <script src="{% static 'js/registration-wizard.js' %}"></script>
 {% endblock %}

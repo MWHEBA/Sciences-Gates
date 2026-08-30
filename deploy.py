@@ -30,9 +30,8 @@ except ImportError:
     PARAMIKO_AVAILABLE = False
 
 class DeploymentManager:
-    def __init__(self, force=False, purge_cloudflare=False):
+    def __init__(self, force=False):
         self.force = force
-        self.purge_cloudflare = purge_cloudflare
         # تحميل إعدادات من .env
         self.load_env_settings()
         
@@ -1198,77 +1197,6 @@ class DeploymentManager:
             except Exception as e:
                 print(f"  ⚠️  تعذّر تنفيذ أوامر ما بعد النشر: {e}")
 
-        # مسح كاش كلاود فلير للملفات الاستاتيك المعدلة المرفوعة
-        self._purge_cloudflare_target_urls()
-
-    def _purge_cloudflare_target_urls(self):
-        """مسح كاش كلاود فلير للملفات المرفوعة"""
-        # إذا تم طلب مسح الكاش بالكامل يدوياً
-        if getattr(self, 'purge_cloudflare', False):
-            print("\n⚡ تم طلب مسح كاش كلاود فلير بالكامل يدوياً. جاري التنفيذ...")
-            cmd = [sys.executable, "scripts/manage_cloudflare.py", "--action", "purge_cache", "--all"]
-            try:
-                result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-                if result.returncode == 0:
-                    print("  ✅ تم مسح كاش كلاود فلير بالكامل بنجاح.")
-                else:
-                    print(f"  ❌ فشل مسح كاش كلاود فلير بالكامل: {result.stderr or result.stdout}")
-            except Exception as e:
-                print(f"  ⚠️  فشل تشغيل سكربت مسح الكاش: {e}")
-            return
-
-        uploaded_list = getattr(self, 'uploaded_files', []) or []
-        if not uploaded_list:
-            return
-            
-        static_urls = []
-        has_non_static = False
-        site_url = self.site_url or "https://sciencesgates.com"
-        site_url = site_url.rstrip('/')
-        
-        for f in uploaded_list:
-            f_str = str(f).replace('\\', '/')
-            if f_str.startswith('static/'):
-                url = f"{site_url}/{f_str}"
-                static_urls.append(url)
-            elif not f_str.endswith('.htaccess') and not f_str.endswith('.deploy_hashes.json') and not f_str.endswith('.txt'):
-                has_non_static = True
-                
-        # إذا تم تعديل كود بايثون أو قوالب HTML، نقوم بمسح الكاش بالكامل
-        if has_non_static:
-            print("\n⚡ تم كشف تعديل في القوالب أو كود التطبيق المرفوع. جاري مسح كاش كلاود فلير بالكامل (Purge Everything)...")
-            cmd = [sys.executable, "scripts/manage_cloudflare.py", "--action", "purge_cache", "--all"]
-            try:
-                result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-                if result.returncode == 0:
-                    print("  ✅ تم مسح كاش كلاود فلير بالكامل بنجاح.")
-                else:
-                    print(f"  ❌ فشل مسح كاش كلاود فلير بالكامل: {result.stderr or result.stdout}")
-            except Exception as e:
-                print(f"  ⚠️  فشل تشغيل سكربت مسح الكاش: {e}")
-            return
-            
-        if not static_urls:
-            return
-            
-        print(f"\n⚡ تم كشف تعديل في {len(static_urls)} ملف استاتيك مرفوع. جاري مسح كاش المحدد في كلاود فلير...")
-        
-        # تجنب تجاوز طول سطر الأوامر الأقصى بتقسيم الروابط
-        chunk_size = 20
-        for i in range(0, len(static_urls), chunk_size):
-            chunk = static_urls[i:i+chunk_size]
-            urls_str = ",".join(chunk)
-            
-            cmd = [sys.executable, "scripts/manage_cloudflare.py", "--action", "purge_cache", "--urls", urls_str]
-            try:
-                result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-                if result.returncode == 0:
-                    print(f"  ✅ تم مسح كاش كلاود فلير لـ {len(chunk)} رابط.")
-                else:
-                    print(f"  ❌ فشل مسح كاش كلاود فلير: {result.stderr or result.stdout}")
-            except Exception as e:
-                print(f"  ⚠️  فشل تشغيل سكربت مسح الكاش: {e}")
-
     def _write_htaccess_files(self, ssh):
         """كتابة ملفات .htaccess لتفعيل الكاش والضغط على السيرفر الأصلي"""
         print("  ⏳ إعداد ملفات .htaccess للتخزين المؤقت والضغط (Caching & GZIP)...")
@@ -1651,12 +1579,11 @@ def main():
                        default='modified', help='وضع النشر')
     parser.add_argument('--file', type=str, help='ملف محدد للرفع')
     parser.add_argument('--force', action='store_true', help='بدون تأكيد')
-    parser.add_argument('--purge-cloudflare', action='store_true', help='مسح كاش كلاود فلير بالكامل')
     
     args = parser.parse_args()
     
     try:
-        deploy_manager = DeploymentManager(force=args.force, purge_cloudflare=args.purge_cloudflare)
+        deploy_manager = DeploymentManager(force=args.force)
         
         if args.mode == 'test':
             deploy_manager.test_connection()

@@ -37,7 +37,10 @@ from apps.institutes.models import Institute, Course
 from apps.majors.models import Major, MajorCategory
 from apps.articles.models import Article, Category, Tag, IgnoredSimilarity
 from apps.core.models import SiteSettings, ContentLock, UserProfile, UserRole
-from apps.dashboard.mixins import SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin, ContentOrSEOAdminRequiredMixin, DashboardMixin
+from apps.dashboard.mixins import (
+    SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin,
+    ContentOrSEOAdminRequiredMixin, DashboardMixin, validate_dashboard_user
+)
 from apps.dashboard.forms import (
     UserCreateForm, UserUpdateForm, RedirectForm, 
     UniversityForm, UniversityFAQFormSet, UniversityFacultyFormSet, FacultyForm, ProgramFormSet, UniversityAttachmentFormSet,
@@ -62,29 +65,58 @@ class DashboardLoginView(View):
     @method_decorator(csrf_protect)
     def get(self, request):
         """Display login form."""
+        from django.utils.http import url_has_allowed_host_and_scheme
+
+        next_url = request.GET.get('next', '').strip()
+        # Sanitize next_url to prevent self-looping
+        if next_url:
+            clean_next = next_url.split('?')[0].rstrip('/')
+            login_path = reverse('dashboard:login').rstrip('/')
+            if clean_next == login_path or clean_next.endswith('/login') or '/api/' in clean_next:
+                next_url = ''
+
         if request.user.is_authenticated:
-            if request.user.is_staff:
-                return redirect('dashboard:home')
-            else:
+            if not request.user.is_staff:
                 return redirect('home')
-        return render(request, self.template_name)
+
+            is_valid, reason = validate_dashboard_user(request.user)
+            if is_valid:
+                return redirect('dashboard:home')
+
+            # Broken / incomplete session: cleanly logout to break any redirect loop
+            logout(request)
+            if reason == 'missing_profile':
+                messages.error(request, 'لم يتم العثور على ملف المستخدم. يرجى التواصل مع المسؤول.')
+            elif reason == 'user_inactive':
+                messages.error(request, 'تم تعطيل هذا الحساب. يرجى مراجعة إدارة النظام.')
+            else:
+                messages.error(request, 'جلسة العمل غير صالحة، يرجى تسجيل الدخول مجدداً.')
+
+        return render(request, self.template_name, {'next': next_url})
 
     @method_decorator(csrf_protect)
     def post(self, request):
         """Handle login form submission."""
         if request.user.is_authenticated:
-            if request.user.is_staff:
-                return redirect('dashboard:home')
-            else:
+            if not request.user.is_staff:
                 return redirect('home')
+            is_valid, _ = validate_dashboard_user(request.user)
+            if is_valid:
+                return redirect('dashboard:home')
 
         from django.utils.http import url_has_allowed_host_and_scheme
         from django.core.cache import cache
 
-        
-        username = request.POST.get('username', '')
+        username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
-        next_url = request.POST.get('next', request.GET.get('next', ''))
+        next_url = request.POST.get('next', request.GET.get('next', '')).strip()
+
+        # Sanitize next_url to prevent self-referencing and API loops
+        if next_url:
+            clean_next = next_url.split('?')[0].rstrip('/')
+            login_path = reverse('dashboard:login').rstrip('/')
+            if clean_next == login_path or clean_next.endswith('/login') or '/api/' in clean_next:
+                next_url = ''
 
         # Lockout check by IP
         from apps.core.utils import get_client_ip
@@ -107,6 +139,9 @@ class DashboardLoginView(View):
             if not user.is_staff:
                 messages.error(request, 'ليس لديك صلاحيات للوصول إلى لوحة التحكم')
                 return render(request, self.template_name, {'next': next_url})
+
+            # Auto-heal profile for any staff member if missing
+            UserProfile.objects.get_or_create(user=user)
 
             # Clear attempts on successful login
             cache.delete(attempts_key)
@@ -137,9 +172,8 @@ class DashboardLogoutView(View):
     يتعامل مع تسجيل خروج المستخدمين من لوحة التحكم
     """
 
-    @method_decorator(login_required(login_url='dashboard:login'))
-    def get(self, request):
-        """Handle logout."""
+    def dispatch(self, request, *args, **kwargs):
+        """Unconditionally flush the session on both GET and POST requests."""
         logout(request)
         messages.success(request, 'تم تسجيل الخروج بنجاح')
         return redirect('dashboard:login')
@@ -1570,7 +1604,27 @@ class UniversityCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
         logger = logging.getLogger(__name__)
         logger.debug(f"Form errors: {form.errors}")
         if self._is_ajax():
-            return JsonResponse({"status": "error", "errors": form.errors}, status=400)
+            context = self.get_context_data()
+            all_errors = {}
+            for field, errors in form.errors.items():
+                all_errors[field] = errors
+            for fs_name in ['faq_formset', 'faculty_formset', 'attachment_formset']:
+                fs = context.get(fs_name)
+                if fs and not fs.is_valid():
+                    for i, form_err in enumerate(fs.errors):
+                        if form_err:
+                            all_errors[f'{fs_name}_{i}'] = form_err
+                    if fs.non_form_errors():
+                        all_errors[f'{fs_name}_non_field'] = list(fs.non_form_errors())
+                    if fs_name == 'faculty_formset':
+                        for i, faculty_form in enumerate(fs):
+                            if hasattr(faculty_form, 'program_formset') and not faculty_form.program_formset.is_valid():
+                                for j, prog_err in enumerate(faculty_form.program_formset.errors):
+                                    if prog_err:
+                                        all_errors[f'faculty_{i}_program_{j}'] = prog_err
+                                if faculty_form.program_formset.non_form_errors():
+                                    all_errors[f'faculty_{i}_program_non_field'] = list(faculty_form.program_formset.non_form_errors())
+            return JsonResponse({"status": "error", "errors": all_errors}, status=400)
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{error}')
@@ -1818,7 +1872,27 @@ class UniversityUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, 
     def form_invalid(self, form):
         """Handle form errors."""
         if self._is_ajax():
-            return JsonResponse({"status": "error", "errors": form.errors}, status=400)
+            context = self.get_context_data()
+            all_errors = {}
+            for field, errors in form.errors.items():
+                all_errors[field] = errors
+            for fs_name in ['faq_formset', 'faculty_formset', 'attachment_formset']:
+                fs = context.get(fs_name)
+                if fs and not fs.is_valid():
+                    for i, form_err in enumerate(fs.errors):
+                        if form_err:
+                            all_errors[f'{fs_name}_{i}'] = form_err
+                    if fs.non_form_errors():
+                        all_errors[f'{fs_name}_non_field'] = list(fs.non_form_errors())
+                    if fs_name == 'faculty_formset':
+                        for i, faculty_form in enumerate(fs):
+                            if hasattr(faculty_form, 'program_formset') and not faculty_form.program_formset.is_valid():
+                                for j, prog_err in enumerate(faculty_form.program_formset.errors):
+                                    if prog_err:
+                                        all_errors[f'faculty_{i}_program_{j}'] = prog_err
+                                if faculty_form.program_formset.non_form_errors():
+                                    all_errors[f'faculty_{i}_program_non_field'] = list(faculty_form.program_formset.non_form_errors())
+            return JsonResponse({"status": "error", "errors": all_errors}, status=400)
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{error}')
@@ -4728,12 +4802,15 @@ from datetime import datetime
 
 
 @require_http_methods(["POST"])
-@login_required
 def editor_image_upload(request):
     """
     Handle image upload for the HTML editor.
     يتعامل مع رفع الصور للمحرر
     """
+    if not request.user.is_authenticated or not request.user.is_staff:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.META.get('HTTP_ACCEPT', ''):
+            return JsonResponse({'error': 'غير مصرح بالوصول، يرجى تسجيل الدخول كمسؤول'}, status=401)
+        return redirect('dashboard:login')
     try:
         if 'image' not in request.FILES:
             return JsonResponse({'error': 'لا توجد صورة'}, status=400)
@@ -6598,11 +6675,16 @@ class ArticleManualMergeView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin
         return render(request, self.template_name, context)
 
 
-class LinkSearchApiView(LoginRequiredMixin, View):
+class LinkSearchApiView(View):
     """
     API view for searching published internal entities (Universities, Institutes, Majors, Articles)
     with Arabic normalization for use in the HTML Editor link insertion modal.
     """
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return JsonResponse({'error': 'Unauthorized', 'results': []}, status=401)
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         from apps.search.utils import get_db_search_variations
         

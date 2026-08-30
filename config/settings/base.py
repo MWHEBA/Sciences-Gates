@@ -152,9 +152,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Admin site configuration
+# Admin and Dashboard site configuration
 ADMIN_URL = 'mw-admin/'
 DASHBOARD_URL = 'sg/'
+LOGIN_URL = 'dashboard:login'
+LOGIN_REDIRECT_URL = 'dashboard:home'
+LOGOUT_REDIRECT_URL = 'dashboard:login'
 
 # Django Sites Framework
 SITE_ID = 1
@@ -242,9 +245,6 @@ STORAGES = {
     },
 }
 
-# Cloudflare Turnstile Settings
-TURNSTILE_SITE_KEY = config('TURNSTILE_SITE_KEY', default='')
-TURNSTILE_SECRET_KEY = config('TURNSTILE_SECRET_KEY', default='')
 
 # IndexNow Key Configuration
 INDEXNOW_KEY = config('INDEXNOW_KEY', default='c7a8b9f0e1d2c3b4a5f6e7d8c9b0a1f2')
@@ -253,5 +253,9 @@ INDEXNOW_KEY = config('INDEXNOW_KEY', default='c7a8b9f0e1d2c3b4a5f6e7d8c9b0a1f2'
 THUMBNAIL_QUALITY = 75
 THUMBNAIL_FORMAT = 'WEBP'
 THUMBNAIL_PRESERVE_FORMAT = False
+
+# Upload File Size Settings (Allows attachments up to 30MB)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 35 * 1024 * 1024  # 35 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 35 * 1024 * 1024  # 35 MB
 
 

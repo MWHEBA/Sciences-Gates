@@ -51,11 +51,11 @@ class SchemaIntegrityTests(TestCase):
         self.assertIn('"@id": "https://sciencesgates.com/author/dr-mohammad-kayali/#person"', content)
         self.assertIn('"@id": "https://sciencesgates.com/#organization"', content)
 
-    def test_article_schema_blogposting(self):
+    def test_article_schema_newsarticle(self):
         response = self.client.get(f'/articles/{self.article.slug}/')
         self.assertEqual(response.status_code, 200)
         content = response.content.decode('utf-8')
-        self.assertIn('"@type": "BlogPosting"', content)
+        self.assertIn('"@type": "NewsArticle"', content)
         self.assertIn('"headline":', content)
 
     def test_indexnow_txt_endpoint(self):

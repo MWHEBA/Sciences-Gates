@@ -53,7 +53,7 @@ class SchemaAuditAndEntityGraphTests(TestCase):
 
     def test_article_linked_author_and_publisher(self):
         article_schema = SchemaGenerator.generate_article_schema(self.article, self.request)
-        self.assertEqual(article_schema['@type'], 'BlogPosting')
+        self.assertEqual(article_schema['@type'], 'NewsArticle')
         self.assertTrue(article_schema['publisher']['@id'].endswith('#organization'))
         self.assertTrue(article_schema['author']['@id'].endswith('#person'))
 

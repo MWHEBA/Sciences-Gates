@@ -70,7 +70,6 @@ def site_settings_context(request):
         'site_settings': site_settings,
         'GA4_MEASUREMENT_ID': ga4_id,
         'ENABLE_GA4': enable_ga4,
-        'TURNSTILE_SITE_KEY': getattr(settings, 'TURNSTILE_SITE_KEY', ''),
     }
 
 

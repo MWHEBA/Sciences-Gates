@@ -173,21 +173,29 @@ class SchemaGenerator:
         return schema
     
     @staticmethod
+    def to_json_ld(schema_dict):
+        """Convert a schema dictionary to a JSON-LD formatted string."""
+        return json.dumps(schema_dict, ensure_ascii=False, indent=2)
+
+    @staticmethod
     def generate_article_schema(article, request=None):
         base_url = _get_base_url(request)
         article_url = _normalize_url(request.build_absolute_uri(article.get_absolute_url()) if request else f"{base_url}articles/{article.slug}/")
         logo_url = _normalize_url(request.build_absolute_uri(static('images/og-default.jpg')) if request else f"{base_url}static/images/og-default.jpg")
 
+        author_username = article.author.username if getattr(article, 'author', None) and getattr(article.author, 'username', None) else 'dr-mohammad-kayali'
+        author_name = article.author_display_name if getattr(article, 'author', None) else 'د. محمد الكيالي'
+
         schema = {
             "@context": "https://schema.org",
-            "@type": "BlogPosting",
-            "@id": f"{article_url}#blogposting",
+            "@type": "NewsArticle",
+            "@id": f"{article_url}#newsarticle",
             "mainEntityOfPage": {
                 "@type": "WebPage",
                 "@id": article_url
             },
-            "headline": article.get_meta_title(),
-            "description": article.get_meta_description(),
+            "headline": article.get_meta_title() if hasattr(article, 'get_meta_title') else (getattr(article, 'meta_title', None) or getattr(article, 'title', '')),
+            "description": article.get_meta_description() if hasattr(article, 'get_meta_description') else (getattr(article, 'meta_description', None) or getattr(article, 'content', '')),
             "image": [logo_url],
             "datePublished": article.publish_date.replace(microsecond=0).isoformat() if getattr(article, 'publish_date', None) else None,
             "dateModified": article.updated_at.replace(microsecond=0).isoformat() if getattr(article, 'updated_at', None) else None,
@@ -195,9 +203,9 @@ class SchemaGenerator:
             "url": article_url,
             "author": {
                 "@type": "Person",
-                "@id": f"{base_url}author/dr-mohammad-kayali/#person",
-                "name": article.author_display_name,
-                "url": f"{base_url}author/dr-mohammad-kayali/"
+                "@id": f"{base_url}author/{author_username}/#person",
+                "name": author_name,
+                "url": f"{base_url}author/{author_username}/"
             },
             "publisher": {
                 "@type": "Organization",
@@ -211,13 +219,16 @@ class SchemaGenerator:
         }
         
         if getattr(article, 'featured_image', None) and hasattr(article.featured_image, 'url'):
-            img_url = request.build_absolute_uri(article.featured_image.url) if request else f"{base_url}{article.featured_image.url.lstrip('/')}"
-            schema["image"] = {
-                "@type": "ImageObject",
-                "url": _normalize_url(img_url),
-                "width": 1200,
-                "height": 630
-            }
+            try:
+                img_url = request.build_absolute_uri(article.featured_image.url) if request else f"{base_url}{article.featured_image.url.lstrip('/')}"
+                schema["image"] = {
+                    "@type": "ImageObject",
+                    "url": _normalize_url(img_url),
+                    "width": 1200,
+                    "height": 630
+                }
+            except Exception:
+                pass
         
         return schema
     

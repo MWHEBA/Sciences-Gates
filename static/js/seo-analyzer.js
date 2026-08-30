@@ -405,8 +405,15 @@
 
       var saveJson = await saveResp.json().catch(function () { return {}; });
       if (!saveResp.ok || saveJson.status !== 'success') {
-        status.innerHTML = '<span style="color:var(--danger)">⚠️ فشل حفظ المسودة المؤقتة لتشغيل التحليل.</span>';
-        details.innerHTML = '<pre style="white-space:pre-wrap;background:var(--danger-light);color:var(--danger);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:10px;font-size:12px;direction:ltr;text-align:left;">' + escapeHtml(JSON.stringify(saveJson, null, 2)) + '</pre>';
+        var errList = '';
+        if (saveJson.errors && typeof saveJson.errors === 'object') {
+          for (var field in saveJson.errors) {
+            var msgs = Array.isArray(saveJson.errors[field]) ? saveJson.errors[field].join('، ') : (typeof saveJson.errors[field] === 'object' ? JSON.stringify(saveJson.errors[field]) : String(saveJson.errors[field]));
+            errList += '<li style="margin-bottom:4px;"><strong>' + escapeHtml(field) + ':</strong> ' + escapeHtml(msgs) + '</li>';
+          }
+        }
+        status.innerHTML = '<span style="color:var(--danger)">⚠️ تعذر حفظ المسودة لوجود حقول تحتاج مراجعة في النموذج:</span>';
+        details.innerHTML = '<div style="background:var(--danger-light);color:var(--danger);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:12px;font-size:13px;direction:rtl;text-align:right;"><ul style="margin:0;padding-right:20px;">' + (errList || '<li>يرجى مراجعة الحقول الإلزامية أو المرفقات في الصفحة.</li>') + '</ul></div>';
         details.style.display = 'block';
         return;
       }

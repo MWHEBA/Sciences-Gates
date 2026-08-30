@@ -16,15 +16,15 @@ class TestArticleAttachmentValidation:
     """Test case for ArticleAttachment validation and cleanup."""
 
     def test_file_size_validation(self):
-        """Test that file sizes over 10MB are rejected."""
-        # Create a mock file with size 11MB
-        large_file = SimpleUploadedFile("large.pdf", b"a" * (11 * 1024 * 1024))
+        """Test that file sizes over 30MB are rejected."""
+        # Create a mock file with size 31MB
+        large_file = SimpleUploadedFile("large.pdf", b"a" * (31 * 1024 * 1024))
         with pytest.raises(ValidationError) as exc_info:
             validate_attachment_file(large_file)
         assert 'حجم الملف كبير جداً' in str(exc_info.value)
 
-        # File size 9MB should pass
-        small_file = SimpleUploadedFile("small.pdf", b"a" * (9 * 1024 * 1024))
+        # File size 29MB should pass
+        small_file = SimpleUploadedFile("small.pdf", b"a" * (29 * 1024 * 1024))
         validate_attachment_file(small_file)  # Should not raise exception
 
     def test_file_extension_validation(self):
