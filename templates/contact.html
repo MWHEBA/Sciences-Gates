@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}اتصل بنا | بوابات العلوم للدراسة في ماليزيا{% endblock %}
-{% block meta_description %}تواصل مع فريق بوابات العلوم للاستشارات التعليمية والقبولات الجامعية في ماليزيا. اتصل بنا عبر الهاتف أو البريد الإلكتروني أو زيارة مقرنا في كوالالمبور.{% endblock %}
+{% block title %}اتصل بنا | شركة بوابات العلوم للدراسة في ماليزيا{% endblock %}
+{% block meta_description %}تواصل مع فريق شركة بوابات العلوم للاستشارات التعليمية والقبولات الجامعية في ماليزيا. اتصل بنا عبر الهاتف أو البريد الإلكتروني أو زيارة مقرنا في كوالالمبور.{% endblock %}
 
 {% block schema_markup %}
 {{ block.super }}
@@ -12,12 +12,12 @@
   "@type": "ContactPage",
   "@id": "https://sciencesgates.com/contact/#webpage",
   "url": "https://sciencesgates.com/contact/",
-  "name": "اتصل بنا - بوابات العلوم",
-  "description": "تواصل مع مستشاري بوابات العلوم للحصول على القبولات الجامعية في ماليزيا.",
+  "name": "اتصل بنا - شركة بوابات العلوم",
+  "description": "تواصل مع مستشاري شركة بوابات العلوم للحصول على القبولات الجامعية في ماليزيا.",
   "mainEntity": {
     "@type": "Organization",
     "@id": "https://sciencesgates.com/#organization",
-    "name": "بوابات العلوم - Sciences Gates",
+    "name": "شركة بوابات العلوم - Sciences Gates",
     "telephone": "{{ site_settings.phone_primary|default:'+60182638888' }}",
     "email": "{{ site_settings.email|default:'info@sciencesgates.com' }}",
     "address": {
