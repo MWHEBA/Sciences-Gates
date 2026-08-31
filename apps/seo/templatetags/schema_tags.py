@@ -181,6 +181,10 @@ def university_schema(context, university):
     if getattr(university, 'telephone', None):
         schema["telephone"] = university.telephone
         
+    # Add priceRange if available
+    if getattr(university, 'min_tuition_annual_usd', None):
+        schema["priceRange"] = f"From ${university.min_tuition_annual_usd:,} USD/year"
+
     # Add sameAs (website) if available
     if getattr(university, 'website', None):
         schema["sameAs"] = university.website
@@ -213,6 +217,9 @@ def institute_schema(context, institute):
         "url": request.build_absolute_uri(institute.get_absolute_url()),
         "inLanguage": "ar",
     }
+
+    if getattr(institute, 'min_course_fee_usd', None):
+        schema["priceRange"] = f"From ${institute.min_course_fee_usd:,} USD"
     
     # Add logo if available
     if getattr(institute, 'main_image', None):

@@ -172,6 +172,8 @@ class SEOMixin(models.Model):
         """Generate robots meta tag content."""
         index = 'index' if self.robots_index else 'noindex'
         follow = 'follow' if self.robots_follow else 'nofollow'
+        if self.robots_index:
+            return f'{index}, {follow}, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
         return f'{index}, {follow}'
 
     def get_og_title(self):

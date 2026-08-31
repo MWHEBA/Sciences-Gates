@@ -31,7 +31,6 @@ Disallow: /{admin_url}/
 Disallow: /{dashboard_url}/
 Disallow: /api/
 Disallow: /*.json$
-Disallow: /*?*page=
 Disallow: /*?*sort=
 Disallow: /*?*filter=
 
@@ -42,17 +41,16 @@ Disallow: /{admin_url}/
 Disallow: /{dashboard_url}/
 Disallow: /api/
 Disallow: /*.json$
-Disallow: /*?*page=
 Disallow: /*?*sort=
 Disallow: /*?*filter=
 
+# User-agent: Bingbot
 User-agent: Bingbot
 Allow: /
 Disallow: /{admin_url}/
 Disallow: /{dashboard_url}/
 Disallow: /api/
 Disallow: /*.json$
-Disallow: /*?*page=
 Disallow: /*?*sort=
 Disallow: /*?*filter=
 

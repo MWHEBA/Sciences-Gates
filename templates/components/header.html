@@ -368,7 +368,7 @@
                                   <!-- Mobile submenu (parsed by JS) -->
                                   <ul class="it-submenu d-xl-none">
                                      <li class="has-dropdown">
-                                        <a href="#">الجامعات الحكومية</a>
+                                        <a href="{% url 'universities:list' %}?type=public">الجامعات الحكومية</a>
                                         <ul class="it-submenu">
                                            {% for univ in menu_public_univs %}
                                            <li><a href="{{ univ.get_absolute_url }}">{{ univ.name }}</a></li>
@@ -376,7 +376,7 @@
                                         </ul>
                                      </li>
                                      <li class="has-dropdown">
-                                        <a href="#">الجامعات الخاصة</a>
+                                        <a href="{% url 'universities:list' %}?type=private">الجامعات الخاصة</a>
                                         <ul class="it-submenu">
                                            {% for univ in menu_private_univs %}
                                            <li><a href="{{ univ.get_absolute_url }}">{{ univ.name }}</a></li>

@@ -74,6 +74,13 @@ class Redirect(TimestampedModel):
             if not self.new_url.startswith(('http://', 'https://')):
                 self.new_url = self.normalize_path(self.new_url)
         super().save(*args, **kwargs)
+        from django.core.cache import cache
+        cache.delete('active_redirects_dict')
+
+    def delete(self, *args, **kwargs):
+        from django.core.cache import cache
+        cache.delete('active_redirects_dict')
+        return super().delete(*args, **kwargs)
 
     @property
     def old_url_decoded(self):

@@ -236,9 +236,17 @@ def build_search_query(query_string, filters=None):
     if filters.get('university_type'):
         universities = universities.filter(university_type=filters['university_type'])
     if filters.get('min_tuition'):
-        universities = universities.filter(tuition_fees__gte=filters['min_tuition'])
+        try:
+            min_val = int(float(str(filters['min_tuition']).replace(',', '').strip()))
+            universities = universities.filter(min_tuition_annual_usd__gte=min_val)
+        except (ValueError, TypeError):
+            pass
     if filters.get('max_tuition'):
-        universities = universities.filter(tuition_fees__lte=filters['max_tuition'])
+        try:
+            max_val = int(float(str(filters['max_tuition']).replace(',', '').strip()))
+            universities = universities.filter(min_tuition_annual_usd__lte=max_val)
+        except (ValueError, TypeError):
+            pass
         
     universities = list(universities.prefetch_related('related_majors', 'related_articles'))
     
@@ -248,9 +256,6 @@ def build_search_query(query_string, filters=None):
         inst_q |= Q(name__icontains=term) | Q(slug__icontains=term) | Q(description__icontains=term)
         
     institutes = Institute.objects.filter(inst_q, publish_status='published')
-    
-    if filters.get('institute_type'):
-        institutes = institutes.filter(institute_type=filters['institute_type'])
         
     institutes = list(institutes.prefetch_related('related_articles'))
     

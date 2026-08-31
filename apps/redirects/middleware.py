@@ -52,26 +52,32 @@ class RedirectMiddleware(MiddlewareMixin):
         # Get the request path (without query string)
         request_path = normalized_path
         
-        # Check both the path as requested, and with/without trailing slash
-        paths_to_check = [request_path]
-        if request_path.endswith('/'):
-            paths_to_check.append(request_path[:-1])
-        else:
-            paths_to_check.append(request_path + '/')
+        # Check both the path as requested, and with/without trailing slash + URL unquoted variants
+        import urllib.parse
+        base_paths = [request_path, urllib.parse.unquote(request_path)]
+        paths_to_check = set()
+        for p in base_paths:
+            paths_to_check.add(p)
+            if p.endswith('/'):
+                paths_to_check.add(p[:-1])
+            else:
+                paths_to_check.add(p + '/')
             
-        # Try to find an active redirect matching the old URL
-        redirect = Redirect.objects.filter(
-            old_url__in=paths_to_check,
-            is_active=True
-        ).first()
-        
-        if redirect:
-            # Perform atomic update on database without model save lifecycle overhead
-            from django.db.models import F
-            Redirect.objects.filter(id=redirect.id).update(hit_count=F('hit_count') + 1)
-            
-            # Return 301 permanent redirect
-            return HttpResponsePermanentRedirect(redirect.new_url)
+        from django.core.cache import cache
+        redirects_map = cache.get('active_redirects_dict')
+        if redirects_map is None:
+            redirects_map = {
+                r['old_url']: (r['id'], r['new_url'])
+                for r in Redirect.objects.filter(is_active=True).values('id', 'old_url', 'new_url')
+            }
+            cache.set('active_redirects_dict', redirects_map, 300)
+
+        for path in paths_to_check:
+            if path in redirects_map:
+                red_id, new_url = redirects_map[path]
+                from django.db.models import F
+                Redirect.objects.filter(id=red_id).update(hit_count=F('hit_count') + 1)
+                return HttpResponsePermanentRedirect(new_url)
         
         # No redirect found, continue with normal request processing
         return None

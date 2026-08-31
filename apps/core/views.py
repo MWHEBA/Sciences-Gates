@@ -221,25 +221,28 @@ class LegacyUrlDetailView(View):
     Dynamically routes to University, Institute, Major, or Article detail views.
     """
     def dispatch(self, request, *args, **kwargs):
-        slug = kwargs.get('slug')
+        import urllib.parse
+        raw_slug = kwargs.get('slug') or ''
+        unquoted_slug = urllib.parse.unquote(raw_slug)
+        slug_candidates = list(dict.fromkeys([raw_slug, unquoted_slug]))
         
         # Check University
-        university = University.objects.filter(slug=slug).first()
+        university = University.objects.filter(slug__in=slug_candidates).first()
         if university:
             return redirect(university.get_absolute_url(), permanent=True)
                 
         # Check Institute
-        institute = Institute.objects.filter(slug=slug).first()
+        institute = Institute.objects.filter(slug__in=slug_candidates).first()
         if institute:
             return redirect(institute.get_absolute_url(), permanent=True)
                 
         # Check Major
-        major = Major.objects.filter(slug=slug).first()
+        major = Major.objects.filter(slug__in=slug_candidates).first()
         if major:
             return redirect(major.get_absolute_url(), permanent=True)
                 
         # Check Article
-        article = Article.objects.filter(slug=slug).first()
+        article = Article.objects.filter(slug__in=slug_candidates).first()
         if article:
             return redirect(article.get_absolute_url(), permanent=True)
                 

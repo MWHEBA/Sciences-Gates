@@ -56,7 +56,7 @@ class SitemapAuditTests(TestCase):
         self.assertEqual(response.status_code, 200)
         tree = ET.fromstring(response.content)
         namespace = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         for lastmod_node in tree.findall('.//sm:lastmod', namespace):
             lastmod_str = lastmod_node.text

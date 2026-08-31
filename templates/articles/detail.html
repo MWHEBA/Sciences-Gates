@@ -9,13 +9,15 @@
 
 {% block og_title %}{{ article.og_title|default:article.title }}{% endblock %}
 {% block og_description %}{{ article.og_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}
+{% block twitter_title %}{{ article.og_title|default:article.title }}{% endblock %}
+{% block twitter_description %}{{ article.og_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}
 
 {% block og_image %}
 {% with og_img=article.get_og_image_url %}
 <meta property="og:image" content="{% if og_img %}{% if og_img|slice:":4" == "http" %}{{ og_img }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img }}{% endif %}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endif %}">
 <meta property="og:image:secure_url" content="{% if og_img %}{% if og_img|slice:":4" == "http" %}{{ og_img }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img }}{% endif %}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endif %}">
-<meta property="og:image:width" content="600">
-<meta property="og:image:height" content="600">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="thumbnail" content="{% if og_img %}{% if og_img|slice:":4" == "http" %}{{ og_img }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img }}{% endif %}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endif %}">
 <link rel="image_src" href="{% if og_img %}{% if og_img|slice:":4" == "http" %}{{ og_img }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ og_img }}{% endif %}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-default.jpg' %}{% endif %}">
 {% endwith %}
@@ -103,6 +105,28 @@
             <section class="detail-section">
                 <div class="detail-section-content article-content" data-seo-content>
                     {{ article.content|safe }}
+                </div>
+
+                <!-- Author Attribution Card (E-E-A-T) -->
+                <div class="mt-8 p-6 bg-surface-2 border border-border rounded-xl flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                    <div class="w-16 h-16 rounded-full overflow-hidden bg-primary text-white flex items-center justify-center font-bold text-xl flex-shrink-0">
+                        م ك
+                    </div>
+                    <div class="text-center sm:text-right flex-grow">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
+                            <h4 class="text-base font-bold text-text-primary m-0">
+                                <a href="/author/dr-mohammad-kayali/" class="hover:text-primary transition-colors text-text-primary no-underline">د. محمد كيالي</a>
+                            </h4>
+                            <span class="text-xs text-text-muted">مستشار أكاديمي وخبير قبولات ماليزيا</span>
+                        </div>
+                        <p class="text-xs text-text-secondary leading-relaxed m-0 mb-3">
+                            خبير ومستشار معتمد في التوجيه الأكاديمي والقبولات الجامعية في ماليزيا. حاصل على درجة الدكتوراه وله العديد من الأبحاث والأدلة الإرشادية للطلاب الدوليين.
+                        </p>
+                        <a href="/author/dr-mohammad-kayali/" class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                            <span>عرض السيرة الذاتية وكافة المقالات</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </a>
+                    </div>
                 </div>
             </section>
 

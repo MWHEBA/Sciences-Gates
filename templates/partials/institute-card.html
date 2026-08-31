@@ -36,7 +36,7 @@
         <div class="it-course-price-box">
             <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-body);">
                 الرسوم تبدأ من: 
-                <strong style="color: var(--secondary); font-weight: 700;">{{ institute.avg_cost|default:"تواصل معنا" }}</strong>
+                <strong style="color: var(--secondary); font-weight: 700;">{{ institute.get_min_course_fee_display|default:"تواصل معنا" }}</strong>
             </span>
             <div class="it-course-action-link" style="color: var(--primary); font-weight: 500;">
                 <span>اقرأ المزيد</span>

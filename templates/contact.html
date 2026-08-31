@@ -18,8 +18,8 @@
     "@type": "Organization",
     "@id": "https://sciencesgates.com/#organization",
     "name": "بوابات العلوم - Sciences Gates",
-    "telephone": "+60123456789",
-    "email": "info@sciencesgates.com",
+    "telephone": "{{ site_settings.phone_primary|default:'+60182638888' }}",
+    "email": "{{ site_settings.email|default:'info@sciencesgates.com' }}",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Kuala Lumpur City Centre",

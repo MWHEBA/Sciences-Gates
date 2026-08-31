@@ -124,6 +124,12 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='الرسوم لا تشمل',
         help_text='ما لا تشمله الرسوم الموضحة (مثال: المصروف الشخصي، السكن...)'
     )
+    min_course_fee_usd = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='الحد الأدنى للرسوم بالدولار',
+        help_text='الحد الأدنى التقديري للرسوم بالدولار الأمريكي (USD) لعرضها في البطاقات ومقتطفات جوجل.'
+    )
 
 
     # Relationships
@@ -179,6 +185,12 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
         if city_name and city_name != state_display and "عام" not in city_name:
             return f"{city_name}، {state_display}"
         return state_display
+
+    def get_min_course_fee_display(self):
+        """Returns the formatted starting fee in USD or None."""
+        if self.min_course_fee_usd:
+            return f"{self.min_course_fee_usd:,} $"
+        return None
 
 
 class InstituteFAQ(models.Model):

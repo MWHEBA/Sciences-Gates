@@ -48,7 +48,7 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
             ('klang', 'كلانغ'),
             ('subang-jaya', 'سوبانغ جايا'),
             ('ampang-jaya', 'أمبانغ جايا'),
-            ('kajang', 'كاجanغ'),
+            ('kajang', 'كاجانغ'),
             ('cyberjaya', 'سيبرجايا'),
             ('putrajaya', 'بوتراجايا'),
             ('rawang', 'راوانغ'),
@@ -341,6 +341,12 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='رسوم تدفع مرة واحدة',
         help_text='جداول الرسوم الإضافية التي تدفع مرة واحدة بصيغة JSON'
     )
+    min_tuition_annual_usd = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='الحد الأدنى للرسوم السنوية بالدولار',
+        help_text='الحد الأدنى التقديري للرسوم السنوية بالدولار الأمريكي (USD) لعرضها في البطاقات ومقتطفات جوجل.'
+    )
 
 
     # Relationships
@@ -407,6 +413,12 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         if city_name and city_name != state_display and "عام" not in city_name:
             return f"{city_name}، {state_display}"
         return state_display
+
+    def get_min_tuition_display(self):
+        """Returns the formatted starting tuition fee in USD or None."""
+        if self.min_tuition_annual_usd:
+            return f"{self.min_tuition_annual_usd:,} $ سنوياً"
+        return None
 
 
 class Faculty(models.Model):

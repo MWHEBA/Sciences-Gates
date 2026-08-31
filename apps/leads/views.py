@@ -55,11 +55,13 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         import urllib.parse
         lead_type = self.request.POST.get('lead_type') or 'contact'
         name = self.request.POST.get('name', '').strip()
+        institution_name = self.request.POST.get('institution_name', '').strip()
         referer = self.request.META.get('HTTP_REFERER', '').lower()
         source_page = (self.request.POST.get('source_page') or '').lower()
         subtype = 'institute' if ('institute' in referer or 'institute' in source_page or '/institutes/' in source_page) else 'university'
         encoded_name = urllib.parse.quote(name)
-        return f"{reverse('leads:thank_you')}?lead_type={lead_type}&subtype={subtype}&name={encoded_name}"
+        encoded_institution = urllib.parse.quote(institution_name)
+        return f"{reverse('leads:thank_you')}?lead_type={lead_type}&subtype={subtype}&name={encoded_name}&institution={encoded_institution}"
 
     def post(self, request, *args, **kwargs):
         from django.core.cache import cache
@@ -116,14 +118,19 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
 
         email = form.cleaned_data.get('email', '').strip().lower()
         lead_type = form.cleaned_data.get('lead_type')
+        institution_name = form.cleaned_data.get('institution_name', '').strip()
 
-        # Double-submit guard: If an identical lead was saved in the last 10 seconds, skip duplicate creation
+        # Double-submit guard: If an identical lead for the same entity was saved in the last 10 seconds, skip duplicate creation
         if email and lead_type:
-            recent_duplicate = Lead.objects.filter(
-                email__iexact=email,
-                lead_type=lead_type,
-                created_at__gte=timezone.now() - timedelta(seconds=10)
-            ).first()
+            duplicate_filter = {
+                'email__iexact': email,
+                'lead_type': lead_type,
+                'created_at__gte': timezone.now() - timedelta(seconds=10)
+            }
+            if institution_name:
+                duplicate_filter['institution_name'] = institution_name
+
+            recent_duplicate = Lead.objects.filter(**duplicate_filter).first()
             if recent_duplicate:
                 if lead_type == LeadType.REGISTRATION:
                     messages.success(self.request, 'تم استقبال طلب التسجيل بنجاح! سنتواصل معك في أقرب وقت.')
@@ -134,12 +141,24 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         # Get form data
         lead = form.save(commit=False)
         
-        # Extract source page from request or POST data
+        # Extract source page from request or POST data (safely truncate to 200 chars for URLField safety)
         source_page = self.request.POST.get('source_page', '').strip()
-        lead.source_page = source_page or self.request.build_absolute_uri(self.request.path)
+        raw_source = source_page or self.request.build_absolute_uri(self.request.path)
+        lead.source_page = raw_source[:200]
         
-        # Extract referrer from request headers
-        lead.referrer = self.request.META.get('HTTP_REFERER', '')
+        # Extract referrer from request headers (safely truncate to 200 chars for URLField safety)
+        raw_referrer = self.request.META.get('HTTP_REFERER', '')
+        lead.referrer = raw_referrer[:200]
+
+        # Extract UTM parameters
+        lead.utm_source = (self.request.POST.get('utm_source') or self.request.GET.get('utm_source') or '')[:150] or None
+        lead.utm_medium = (self.request.POST.get('utm_medium') or self.request.GET.get('utm_medium') or '')[:150] or None
+        lead.utm_campaign = (self.request.POST.get('utm_campaign') or self.request.GET.get('utm_campaign') or '')[:200] or None
+        lead.utm_term = (self.request.POST.get('utm_term') or self.request.GET.get('utm_term') or '')[:200] or None
+        lead.utm_content = (self.request.POST.get('utm_content') or self.request.GET.get('utm_content') or '')[:200] or None
+        
+        from apps.core.utils import get_client_ip
+        lead.ip_address = get_client_ip(self.request)
         
         # Save lead to database
         lead.save()
@@ -202,9 +221,14 @@ def thank_you_view(request):
 
     lead_type = request.GET.get('lead_type', 'contact')
     lead_name = request.GET.get('name', '').strip()
+    institution = request.GET.get('institution', '').strip()
 
     lead_type_str = 'طلب التسجيل' if lead_type == 'registration' else 'الاستفسار'
-    if lead_name:
+    if institution and lead_name:
+        wa_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str} في {institution}) باسم: {lead_name}، وأود المتابعة معكم."
+    elif institution:
+        wa_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str} في {institution})، وأود المتابعة معكم."
+    elif lead_name:
         wa_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str}) باسم: {lead_name}، وأود المتابعة معكم."
     else:
         wa_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str}) وأود المتابعة معكم لسرعة الإجراءات."

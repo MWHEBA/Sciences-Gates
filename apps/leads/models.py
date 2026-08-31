@@ -104,6 +104,43 @@ class Lead(TimestampedModel):
         verbose_name='المرجع',
         help_text='رابط المرجع (HTTP Referrer)'
     )
+    utm_source = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name='مصدر الحملة (utm_source)',
+        help_text='مثل: google, facebook, tiktok, instagram'
+    )
+    utm_medium = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name='وسيط الحملة (utm_medium)',
+        help_text='مثل: cpc, story, organic, direct'
+    )
+    utm_campaign = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name='اسم الحملة (utm_campaign)'
+    )
+    utm_term = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name='الكلمة المفتاحية (utm_term)'
+    )
+    utm_content = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name='محتوى الإعلان (utm_content)'
+    )
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        verbose_name='عنوان IP'
+    )
 
     # Status fields
     status = models.CharField(

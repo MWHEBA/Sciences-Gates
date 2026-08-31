@@ -110,7 +110,14 @@ def send_lead_notification_email(sender, instance, created, **kwargs):
             whatsapp_clean = site_settings.whatsapp_primary_clean or '60182638888'
 
             lead_type_str = 'طلب تسجيل' if instance.lead_type == 'registration' else 'استفسار'
-            whatsapp_prefilled_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str}) باسم: {instance.name}، وأود المتابعة معكم."
+            if instance.institution_name and instance.name:
+                whatsapp_prefilled_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str} في {instance.institution_name}) باسم: {instance.name}، وأود المتابعة معكم."
+            elif instance.institution_name:
+                whatsapp_prefilled_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str} في {instance.institution_name})، وأود المتابعة معكم."
+            elif instance.name:
+                whatsapp_prefilled_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str}) باسم: {instance.name}، وأود المتابعة معكم."
+            else:
+                whatsapp_prefilled_text = f"مرحباً شركة بوابات العلوم، قمت بالتقديم عبر الموقع لـ ({lead_type_str}) وأود المتابعة معكم لسرعة الإجراءات."
             whatsapp_prefilled_encoded = urllib.parse.quote(whatsapp_prefilled_text)
 
             user_context = {

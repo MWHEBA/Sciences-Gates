@@ -1,191 +1,303 @@
+/**
+ * Registration Wizard Controller
+ * Handles client-side step validation, inline error highlighting,
+ * Enter key progression, phone number normalization, and form submit synchronization.
+ */
 (function () {
-    // Validation for step 1
-    window.validateStep1 = function () {
-        var name = (document.getElementById('reg_name') || {}).value || '';
-        var email = (document.getElementById('reg_email') || {}).value || '';
-        var phone = (document.getElementById('reg_phone') || {}).value || '';
-        var nationality = (document.getElementById('reg_nationality') || {}).value || '';
+    'use strict';
 
-        name = name.trim();
-        email = email.trim();
-        phone = phone.trim();
-
-        if (!name) {
-            alert('يرجى إدخال اسم الطالب الكامل.');
-            return false;
+    // Helper to display inline error message
+    function setFieldError(fieldId, errorMsg) {
+        var field = document.getElementById(fieldId);
+        var errorContainer = document.getElementById(fieldId + '_error');
+        if (field) {
+            field.classList.add('reg-input--invalid');
         }
-        if (!email) {
-            alert('يرجى إدخال البريد الإلكتروني.');
-            return false;
-        }
-        var emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailReg.test(email)) {
-            alert('يرجى إدخال بريد إلكتروني صحيح.');
-            return false;
-        }
-        if (!phone) {
-            alert('يرجى إدخال رقم الهاتف.');
-            return false;
-        }
-        if (!nationality) {
-            alert('يرجى اختيار الجنسية.');
-            return false;
-        }
-        if (['دولة اخرى غير موجودة', 'دولة أخرى غير موجودة', 'دولة أخرى', 'أخرى'].indexOf(nationality) !== -1) {
-            var customNat = document.getElementById('reg_custom_nationality');
-            if (customNat && !customNat.value.trim()) {
-                alert('يرجى كتابة اسم الدولة/الجنسية الأخرى.');
-                return false;
-            }
-        }
-        return true;
-    };
-
-    // Validation for step 2
-    window.validateStep2 = function () {
-        var level = (document.getElementById('reg_level') || {}).value || '';
-        var residence = (document.getElementById('reg_residence') || {}).value || '';
-        var address = (document.getElementById('reg_address') || {}).value || '';
-
-        if (!level) {
-            alert('يرجى اختيار المرحلة الدراسية.');
-            return false;
-        }
-        if (!residence) {
-            alert('يرجى اختيار دولة الإقامة.');
-            return false;
-        }
-        if (!address || !address.trim()) {
-            alert('يرجى كتابة عنوان الإقامة.');
-            return false;
-        }
-        return true;
-    };
-
-    function initWizard() {
-        var wrapper = document.getElementById('regPhoneSelect');
-        var btn = document.getElementById('regPhoneBtn');
-        var dropdown = document.getElementById('regPhoneDropdown');
-        var flagImg = document.getElementById('regPhoneFlag');
-        var codeSpan = document.getElementById('regPhoneCode');
-        var hiddenCode = document.getElementById('reg_country_code');
-        var form = document.getElementById('regWizardForm');
-
-        if (wrapper && btn && dropdown && flagImg && codeSpan && hiddenCode) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                var isOpen = dropdown.classList.contains('intl-phone-dropdown--open');
-                dropdown.classList.toggle('intl-phone-dropdown--open');
-                btn.setAttribute('aria-expanded', !isOpen);
-                if (!isOpen && !dropdown.dataset.loaded) {
-                    dropdown.querySelectorAll('img[data-src]').forEach(function (img) {
-                        img.src = img.dataset.src;
-                        img.removeAttribute('data-src');
-                    });
-                    dropdown.dataset.loaded = '1';
-                }
-                if (!isOpen) {
-                    var search = document.getElementById('regPhoneSearch');
-                    if (search) setTimeout(function () { search.focus(); }, 50);
-                }
-            });
-        }
-
-        var searchInput = document.getElementById('regPhoneSearch');
-        if (searchInput && dropdown) {
-            searchInput.addEventListener('input', function () {
-                var query = this.value.trim().toLowerCase();
-                var items = dropdown.querySelectorAll('li[role="option"]');
-                items.forEach(function (li) {
-                    var name = li.querySelector('.intl-phone-name');
-                    var dial = li.querySelector('.intl-phone-dial');
-                    var text = (name ? name.textContent : '') + ' ' + (dial ? dial.textContent : '');
-                    li.style.display = text.toLowerCase().indexOf(query) > -1 ? '' : 'none';
-                });
-            });
-            searchInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') e.preventDefault();
-            });
-        }
-
-        if (dropdown) {
-            dropdown.addEventListener('click', function (e) {
-                var li = e.target.closest('li[role="option"]');
-                if (!li) return;
-                var code = li.getAttribute('data-code');
-                var flag = li.getAttribute('data-flag');
-                var placeholder = li.getAttribute('data-placeholder');
-                if (codeSpan) codeSpan.textContent = code;
-                if (flagImg) flagImg.src = 'https://flagcdn.com/w20/' + flag + '.png';
-                if (hiddenCode) hiddenCode.value = code;
-                var phoneInput = document.getElementById('reg_phone');
-                if (phoneInput && placeholder) phoneInput.placeholder = placeholder;
-                dropdown.classList.remove('intl-phone-dropdown--open');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
-            });
-        }
-
-        document.addEventListener('click', function (e) {
-            if (wrapper && !wrapper.contains(e.target)) {
-                dropdown.classList.remove('intl-phone-dropdown--open');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
-            }
-        });
-
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                if (!window.validateStep1() || !window.validateStep2()) {
-                    e.preventDefault();
-                    var submitBtn = document.getElementById('regSubmitBtn');
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.style.opacity = '';
-                        submitBtn.style.cursor = '';
-                    }
-                    form.removeAttribute('data-submitting');
-                    return false;
-                }
-
-                var submitBtn = document.getElementById('regSubmitBtn');
-                if (submitBtn) {
-                    submitBtn.style.pointerEvents = 'none';
-                    submitBtn.style.opacity = '0.7';
-                    submitBtn.innerHTML = '<span class="inline-block" style="margin-left: 6px;">⏳</span> جاري الإرسال...';
-                }
-
-                var number = document.getElementById('reg_phone');
-                var combined = document.getElementById('reg_phone_combined');
-                if (number && combined && hiddenCode) {
-                    combined.value = hiddenCode.value + number.value.replace(/^0+/, '');
-                }
-
-                var nationality = (document.getElementById('reg_nationality') || {}).value || '';
-                var level = (document.getElementById('reg_level') || {}).value || '';
-                var residence = (document.getElementById('reg_residence') || {}).value || '';
-                var address = (document.getElementById('reg_address') || {}).value || '';
-                var notes = (document.getElementById('reg_notes') || {}).value || '';
-                var entityName = (document.getElementById('reg_entity_name') || {}).value || '';
-                var entityType = (document.getElementById('reg_entity_type') || {}).value || 'مؤسسة';
-
-                var combinedMsg = "طلب تسجيل جديد في " + entityType + ": " + entityName + "\n" +
-                    "--------------------------------------------------\n" +
-                    "الجنسية: " + nationality + "\n" +
-                    "المرحلة الدراسية: " + level + "\n" +
-                    "دولة الإقامة: " + residence + "\n" +
-                    "عنوان الإقامة: " + address + "\n" +
-                    "ملاحظات إضافية:\n" + (notes ? notes : "لا يوجد");
-
-                var combinedElem = document.getElementById('reg_combined_message');
-                if (combinedElem) {
-                    combinedElem.value = combinedMsg;
-                }
-            });
+        if (errorContainer) {
+            errorContainer.textContent = errorMsg;
+            errorContainer.style.display = 'block';
         }
     }
 
+    // Helper to clear inline error message
+    function clearFieldError(fieldId) {
+        var field = document.getElementById(fieldId);
+        var errorContainer = document.getElementById(fieldId + '_error');
+        if (field) {
+            field.classList.remove('reg-input--invalid');
+        }
+        if (errorContainer) {
+            errorContainer.textContent = '';
+            errorContainer.style.display = 'none';
+        }
+    }
+
+    // Clear all step 1 errors
+    function clearStep1Errors() {
+        clearFieldError('reg_name');
+        clearFieldError('reg_email');
+        clearFieldError('reg_phone');
+        clearFieldError('reg_nationality');
+        clearFieldError('reg_custom_nationality');
+    }
+
+    // Clear all step 2 errors
+    function clearStep2Errors() {
+        clearFieldError('reg_level');
+        clearFieldError('reg_residence');
+        clearFieldError('reg_address');
+    }
+
+    // Step 1 Validation (Pure inline feedback, no browser alerts)
+    window.validateRegistrationStep1 = function () {
+        clearStep1Errors();
+        var isValid = true;
+        var firstInvalidField = null;
+
+        var nameInput = document.getElementById('reg_name');
+        var emailInput = document.getElementById('reg_email');
+        var phoneInput = document.getElementById('reg_phone');
+        var nationalitySelect = document.getElementById('reg_nationality');
+        var customNatInput = document.getElementById('reg_custom_nationality');
+
+        var nameVal = (nameInput ? nameInput.value : '').trim();
+        var emailVal = (emailInput ? emailInput.value : '').trim();
+        var phoneVal = (phoneInput ? phoneInput.value : '').trim();
+        var nationalityVal = (nationalitySelect ? nationalitySelect.value : '').trim();
+
+        // 1. Name validation
+        if (!nameVal) {
+            setFieldError('reg_name', 'يرجى إدخال اسم الطالب الكامل.');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = nameInput;
+        } else if (nameVal.length < 3) {
+            setFieldError('reg_name', 'اسم الطالب يجب أن يكون 3 أحرف على الأقل.');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = nameInput;
+        }
+
+        // 2. Email validation
+        if (!emailVal) {
+            setFieldError('reg_email', 'يرجى إدخال البريد الإلكتروني.');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = emailInput;
+        } else {
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailVal)) {
+                setFieldError('reg_email', 'صيغة البريد الإلكتروني غير صحيحة.');
+                isValid = false;
+                if (!firstInvalidField) firstInvalidField = emailInput;
+            } else if (/^(test|spam|fake|temp|dummy)@/i.test(emailVal)) {
+                setFieldError('reg_email', 'يرجى إدخال بريد إلكتروني حقيقي للتواصل.');
+                isValid = false;
+                if (!firstInvalidField) firstInvalidField = emailInput;
+            }
+        }
+
+        // 3. Phone validation
+        if (!phoneVal) {
+            setFieldError('reg_phone', 'يرجى إدخال رقم الهاتف.');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = phoneInput;
+        } else {
+            var cleanDigits = phoneVal.replace(/\D/g, '');
+            if (cleanDigits.length < 6) {
+                setFieldError('reg_phone', 'رقم الهاتف قصير جداً، يرجى كتابة الرقم كاملاً.');
+                isValid = false;
+                if (!firstInvalidField) firstInvalidField = phoneInput;
+            }
+        }
+
+        // 4. Nationality validation
+        if (!nationalityVal) {
+            setFieldError('reg_nationality', 'يرجى اختيار الجنسية.');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = nationalitySelect;
+        } else if (['دولة اخرى غير موجودة', 'دولة أخرى غير موجودة', 'دولة أخرى', 'أخرى'].indexOf(nationalityVal) !== -1) {
+            var customVal = (customNatInput ? customNatInput.value : '').trim();
+            if (!customVal) {
+                setFieldError('reg_custom_nationality', 'يرجى كتابة اسم الدولة أو الجنسية.');
+                isValid = false;
+                if (!firstInvalidField) firstInvalidField = customNatInput;
+            }
+        }
+
+        if (!isValid && firstInvalidField) {
+            firstInvalidField.focus();
+        }
+
+        return isValid;
+    };
+
+    // Step 2 Validation (Pure inline feedback, no browser alerts)
+    window.validateRegistrationStep2 = function () {
+        clearStep2Errors();
+        var isValid = true;
+        var firstInvalidField = null;
+
+        var levelSelect = document.getElementById('reg_level');
+        var residenceSelect = document.getElementById('reg_residence');
+        var addressInput = document.getElementById('reg_address');
+
+        var levelVal = (levelSelect ? levelSelect.value : '').trim();
+        var residenceVal = (residenceSelect ? residenceSelect.value : '').trim();
+        var addressVal = (addressInput ? addressInput.value : '').trim();
+
+        // 1. Level validation
+        if (!levelVal) {
+            setFieldError('reg_level', 'يرجى اختيار المرحلة الدراسية.');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = levelSelect;
+        }
+
+        // 2. Residence country validation
+        if (!residenceVal) {
+            setFieldError('reg_residence', 'يرجى اختيار دولة الإقامة الحالية.');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = residenceSelect;
+        }
+
+        // 3. Address / City validation
+        if (!addressVal) {
+            setFieldError('reg_address', 'يرجى كتابة المدينة أو العنوان الحالي.');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = addressInput;
+        }
+
+        if (!isValid && firstInvalidField) {
+            firstInvalidField.focus();
+        }
+
+        return isValid;
+    };
+
+    // Backward compatibility aliases
+    window.validateStep1 = window.validateRegistrationStep1;
+    window.validateStep2 = window.validateRegistrationStep2;
+
+    // Attach real-time input error clearing and enter key interception
+    function initRegistrationWizard() {
+        var form = document.getElementById('regWizardForm');
+        if (!form) return;
+
+        // Auto-clear errors on typing
+        var inputIds = [
+            'reg_name', 'reg_email', 'reg_phone',
+            'reg_nationality', 'reg_custom_nationality',
+            'reg_level', 'reg_residence', 'reg_address'
+        ];
+
+        inputIds.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', function () {
+                    clearFieldError(id);
+                });
+                el.addEventListener('change', function () {
+                    clearFieldError(id);
+                });
+            }
+        });
+
+        // Intercept Enter key on Step 1 inputs to smoothly advance to Step 2
+        var step1Inputs = form.querySelectorAll('#reg_name, #reg_email, #reg_phone, #reg_custom_nationality');
+        step1Inputs.forEach(function (input) {
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var nextBtn = document.getElementById('regNextBtn');
+                    if (nextBtn) {
+                        nextBtn.click();
+                    } else if (window.validateRegistrationStep1()) {
+                        var alpineContainer = form.closest('[x-data]');
+                        if (alpineContainer && alpineContainer.__x && alpineContainer.__x.$data) {
+                            alpineContainer.__x.$data.regStep = 2;
+                        }
+                    }
+                }
+            });
+        });
+
+        // Form Submit Handler
+        form.addEventListener('submit', function (e) {
+            // Live CSRF Synchronization
+            if (typeof window.syncAllFormsCsrf === 'function') {
+                window.syncAllFormsCsrf();
+            }
+
+            var s1Valid = window.validateRegistrationStep1();
+            if (!s1Valid) {
+                e.preventDefault();
+                var alpineContainer = form.closest('[x-data]');
+                if (alpineContainer && alpineContainer.__x && alpineContainer.__x.$data) {
+                    alpineContainer.__x.$data.regStep = 1;
+                }
+                form.removeAttribute('data-submitting');
+                return false;
+            }
+
+            var s2Valid = window.validateRegistrationStep2();
+            if (!s2Valid) {
+                e.preventDefault();
+                var alpineContainer = form.closest('[x-data]');
+                if (alpineContainer && alpineContainer.__x && alpineContainer.__x.$data) {
+                    alpineContainer.__x.$data.regStep = 2;
+                }
+                form.removeAttribute('data-submitting');
+                return false;
+            }
+
+            // Normalization: Combine country code and phone number (stripping leading zeros)
+            var phoneInput = document.getElementById('reg_phone');
+            var hiddenCode = document.getElementById('reg_country_code') || form.querySelector('input[name="country_code"]');
+            var combinedPhone = document.getElementById('reg_phone_combined') || form.querySelector('input[name="phone"]');
+
+            if (phoneInput && combinedPhone) {
+                var codeVal = hiddenCode ? hiddenCode.value.trim() : '+60';
+                var cleanPhone = phoneInput.value.trim().replace(/^0+/, '');
+                combinedPhone.value = codeVal + cleanPhone;
+            }
+
+            // Build structured summary message
+            var nationality = (document.getElementById('reg_nationality') || {}).value || '';
+            var customNat = (document.getElementById('reg_custom_nationality') || {}).value || '';
+            if (['دولة اخرى غير موجودة', 'دولة أخرى غير موجودة', 'دولة أخرى', 'أخرى'].indexOf(nationality) !== -1 && customNat.trim()) {
+                nationality = customNat.trim() + ' (دولة أخرى)';
+            }
+
+            var level = (document.getElementById('reg_level') || {}).value || '';
+            var residence = (document.getElementById('reg_residence') || {}).value || '';
+            var address = (document.getElementById('reg_address') || {}).value || '';
+            var notes = (document.getElementById('reg_notes') || {}).value || '';
+            var entityName = (document.getElementById('reg_institution_name') || {}).value || '';
+            var entityType = (document.getElementById('reg_entity_type') || {}).value || 'مؤسسة';
+
+            var summaryMsg = "طلب تسجيل جديد في " + entityType + ": " + entityName + "\n" +
+                "--------------------------------------------------\n" +
+                "الجنسية: " + nationality + "\n" +
+                "المرحلة الدراسية: " + level + "\n" +
+                "دولة الإقامة: " + residence + "\n" +
+                "عنوان الإقامة: " + address + "\n" +
+                "ملاحظات إضافية:\n" + (notes ? notes : "لا يوجد");
+
+            var messageInput = document.getElementById('reg_combined_message') || form.querySelector('input[name="message"]');
+            if (messageInput) {
+                messageInput.value = summaryMsg;
+            }
+
+            // Set loading button visual state
+            var submitBtn = document.getElementById('regSubmitBtn');
+            if (submitBtn) {
+                submitBtn.style.pointerEvents = 'none';
+                submitBtn.style.opacity = '0.7';
+                submitBtn.innerHTML = '⏳ جاري إرسال طلب التسجيل...';
+            }
+        });
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initWizard);
+        document.addEventListener('DOMContentLoaded', initRegistrationWizard);
     } else {
-        initWizard();
+        initRegistrationWizard();
     }
 })();

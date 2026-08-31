@@ -212,6 +212,7 @@ class StaticSitemap(BaseSitemap):
         return [
             'home',
             'about_us',
+            'contact',
             'visa_tracking',
             'privacy',
             'terms',
@@ -245,6 +246,8 @@ class StaticSitemap(BaseSitemap):
             return 1.0
         elif item in ['universities:list', 'institutes:list', 'majors:list', 'articles:list']:
             return 0.8
+        elif item == 'contact':
+            return 0.7
         return 0.5
 
     def changefreq(self, item):
@@ -255,6 +258,22 @@ class StaticSitemap(BaseSitemap):
         return 'monthly'
 
 
+class AuthorSitemap(BaseSitemap):
+    """Sitemap for author profile pages (E-E-A-T)."""
+    priority = 0.8
+    changefreq = 'monthly'
+
+    def items(self):
+        from apps.core.models import AuthorProfile
+        return AuthorProfile.objects.all().order_by('id')
+
+    def location(self, item):
+        return reverse('author_detail', kwargs={'slug': item.slug})
+
+    def lastmod(self, item):
+        return None
+
+
 sitemaps = {
     'universities': UniversitySitemap,
     'institutes': InstituteSitemap,
@@ -262,5 +281,6 @@ sitemaps = {
     'articles': ArticleSitemap,
     'major_categories': MajorCategorySitemap,
     'article_categories': ArticleCategorySitemap,
+    'authors': AuthorSitemap,
     'static': StaticSitemap,
 }

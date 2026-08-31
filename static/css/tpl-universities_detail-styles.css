@@ -244,44 +244,49 @@
         }
     }
 
-    /* Modal Styles */
+    /* ==========================================================================
+       Registration Wizard Modal (Hardened Responsive Sticky Architecture)
+       ========================================================================== */
     .reg-modal-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
+        inset: 0;
         width: 100%;
         height: 100%;
-        background: rgba(11, 45, 77, 0.5);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        z-index: 1000;
+        background: rgba(11, 45, 77, 0.55);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 1050;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 16px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
     }
 
     .reg-modal-content {
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: var(--radius-xl);
+        border-radius: var(--radius-lg);
         box-shadow: var(--shadow-lg);
         width: 100%;
         max-width: 600px;
-        overflow: visible;
+        margin: auto;
         display: flex;
         flex-direction: column;
-        animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: visible;
+        animation: modalFadeIn 0.25s ease-out;
         direction: rtl;
         text-align: right;
+        position: relative;
     }
 
     @keyframes modalFadeIn {
         from {
             opacity: 0;
-            transform: translateY(20px) scale(0.95);
+            transform: translateY(16px) scale(0.97);
         }
-
         to {
             opacity: 1;
             transform: translateY(0) scale(1);
@@ -289,218 +294,279 @@
     }
 
     .reg-modal-header {
-        background: var(--primary);
-        color: #ffffff;
-        padding: 20px 24px;
+        background: var(--surface);
+        color: var(--text-primary);
+        padding: 20px 24px 16px;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
-        border-top-left-radius: var(--radius-xl);
-        border-top-right-radius: var(--radius-xl);
+        gap: 12px;
+        border-bottom: 1px solid var(--border);
+        border-top-left-radius: var(--radius-lg);
+        border-top-right-radius: var(--radius-lg);
+        flex-shrink: 0;
+    }
+
+    .reg-modal-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--secondary);
+        background: var(--surface-2);
+        padding: 2px 10px;
+        border-radius: var(--radius-full);
+        margin-bottom: 6px;
+        border: 1px solid var(--border);
     }
 
     .reg-modal-title {
         font-size: 1.15rem;
         font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 4px 0;
+        line-height: 1.3;
+    }
+
+    .reg-modal-subtitle {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin: 0;
+        line-height: 1.4;
     }
 
     .reg-modal-close {
-        background: transparent;
-        border: none;
-        color: rgba(255, 255, 255, 0.8);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
         cursor: pointer;
-        padding: 4px;
-        border-radius: 50%;
-        transition: all 0.2s;
+        padding: 8px;
+        border-radius: var(--radius-md);
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
     }
 
     .reg-modal-close:hover {
-        color: #ffffff;
-        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+        background: var(--border);
     }
 
-    .reg-modal-body {
-        padding: 24px;
-        overflow: visible;
-        margin-top: 0 !important;
-    }
-
-    .reg-modal-footer {
-        padding: 16px 24px;
+    /* Wizard Step Bar */
+    .reg-modal-wizard-header {
+        padding: 12px 24px;
         background: var(--surface-2);
-        border-top: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        border-bottom-left-radius: var(--radius-xl);
-        border-bottom-right-radius: var(--radius-xl);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
     }
 
-    /* Floating Widget Slide-Out Animations */
-    .whatsapp-widget,
-    .admin-dashboard-float,
-    .admin-edit-float {
-        transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, transform 0.3s !important;
-    }
-
-    /* Right side hide */
-    .reg-float-btn.floating-hide {
-        translate: 80px 0;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    /* Left side hide */
-    .whatsapp-widget.floating-hide,
-    .admin-dashboard-float.floating-hide,
-    .admin-edit-float.floating-hide {
-        translate: -80px 0;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    /* Step Wizard Indicators */
-    .reg-wizard {
+    .reg-wizard-steps {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 8px 0;
+        width: 100%;
+        max-width: 440px;
+        margin: 0 auto;
     }
 
-    .reg-wizard-step {
+    .reg-step-item {
         display: flex;
         align-items: center;
         gap: 8px;
     }
 
-    .reg-wizard-number {
-        width: 32px;
-        height: 32px;
+    .reg-step-number {
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
-        background-color: var(--surface-2);
-        border: 2px solid var(--border-strong);
+        background: var(--surface);
+        border: 1.5px solid var(--border-strong);
         color: var(--text-secondary);
+        font-size: 0.8rem;
         font-weight: 700;
-        font-size: 0.9rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
 
-    .reg-wizard-step--active .reg-wizard-number {
-        background-color: var(--primary);
+    .reg-step-item.active .reg-step-number {
+        background: var(--primary);
         border-color: var(--primary);
         color: #ffffff;
     }
 
-    .reg-wizard-step--completed .reg-wizard-number {
-        background-color: var(--success);
+    .reg-step-item.completed .reg-step-number {
+        background: var(--success);
         border-color: var(--success);
         color: #ffffff;
     }
 
-    .reg-wizard-label {
+    .reg-step-label {
         font-size: 0.85rem;
         font-weight: 600;
         color: var(--text-secondary);
     }
 
-    .reg-wizard-step--active .reg-wizard-label {
+    .reg-step-item.active .reg-step-label {
         color: var(--primary);
         font-weight: 700;
     }
 
-    .reg-wizard-line {
+    .reg-step-divider {
         flex: 1;
         height: 2px;
-        background-color: var(--border-strong);
-        margin: 0 16px;
-        max-width: 80px;
+        background: var(--border-strong);
+        margin: 0 12px;
+        min-width: 20px;
+        max-width: 60px;
+        transition: background 0.2s ease;
     }
 
-    .reg-wizard-line--active {
-        background-color: var(--primary);
+    .reg-step-divider.active {
+        background: var(--primary);
     }
 
-    /* Form fields styling */
+    /* Form Container & Body Area */
+    .reg-wizard-form {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        overflow: visible;
+        margin: 0;
+    }
+
+    .reg-modal-scrollable {
+        flex: 1 1 auto;
+        overflow: visible;
+        padding: 20px 24px;
+    }
+
+    .reg-modal-scrollable .intl-phone-select {
+        position: relative;
+        z-index: 30;
+    }
+
+    .reg-modal-scrollable .intl-phone-dropdown {
+        z-index: 1080;
+    }
+
+    .reg-step-pane {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
     .reg-form-group {
-        margin-bottom: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: relative;
     }
 
-    .reg-form-group label {
-        display: block;
-        font-size: 0.85rem;
+    .reg-form-label {
+        font-size: 0.875rem;
         font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 6px;
     }
 
-    .reg-input {
+    .reg-required-mark {
+        color: var(--danger);
+        font-weight: 700;
+    }
+
+    .reg-optional-mark {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-weight: normal;
+    }
+
+    .reg-form-input,
+    .reg-form-select,
+    .reg-form-textarea {
         width: 100%;
         padding: 10px 14px;
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-sm);
+        border-radius: var(--radius-md);
         font-size: 0.95rem;
         font-family: inherit;
         color: var(--text-primary);
         background-color: var(--surface);
         transition: border-color 0.2s, box-shadow 0.2s;
         outline: none;
+        box-sizing: border-box;
     }
 
-    .reg-input:focus {
+    .reg-form-input:focus,
+    .reg-form-select:focus,
+    .reg-form-textarea:focus {
         border-color: var(--primary);
         box-shadow: 0 0 0 3px var(--primary-light);
     }
 
-    .reg-select {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-sm);
-        font-size: 0.95rem;
-        font-family: inherit;
-        color: var(--text-primary);
-        background-color: var(--surface);
-        outline: none;
-        cursor: pointer;
+    .reg-input--invalid {
+        border-color: var(--danger) !important;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
     }
 
-    .reg-select:focus {
-        border-color: var(--primary);
+    .reg-field-error {
+        font-size: 0.75rem;
+        color: var(--danger);
+        font-weight: 500;
+        min-height: 0;
+        display: none;
     }
 
-    .reg-textarea {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-sm);
-        font-size: 0.95rem;
-        font-family: inherit;
-        color: var(--text-primary);
-        background-color: var(--surface);
-        outline: none;
+    .reg-field-error:not(:empty) {
+        display: block;
+        margin-top: 2px;
+    }
+
+    .reg-form-textarea {
         resize: vertical;
-        min-height: 80px;
+        min-height: 70px;
     }
 
-    .reg-textarea:focus {
-        border-color: var(--primary);
+    /* Modal Footer */
+    .reg-modal-footer {
+        padding: 14px 24px;
+        background: var(--surface-2);
+        border-top: 1px solid var(--border);
+        border-bottom-left-radius: var(--radius-lg);
+        border-bottom-right-radius: var(--radius-lg);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .reg-footer-actions {
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .reg-footer-btns {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        justify-content: flex-end;
     }
 
     .reg-btn {
         padding: 10px 20px;
-        border-radius: var(--radius-sm);
-        font-size: 0.95rem;
+        border-radius: var(--radius-md);
+        font-size: 0.9rem;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
-        border: none;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
         font-family: inherit;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
     }
 
     .reg-btn--primary {
@@ -513,13 +579,61 @@
     }
 
     .reg-btn--secondary {
-        background-color: transparent;
-        color: var(--text-secondary);
-        border: 1px solid var(--border-strong);
+        background-color: var(--surface);
+        color: var(--text-primary);
+        border-color: var(--border-strong);
     }
 
     .reg-btn--secondary:hover {
         background-color: var(--surface-2);
+    }
+
+    .reg-privacy-notice {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-align: center;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 640px) {
+        .reg-modal-overlay {
+            padding: 8px;
+            align-items: flex-end;
+        }
+
+        .reg-modal-content {
+            max-height: calc(100vh - 16px);
+            max-height: calc(100dvh - 16px);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .reg-modal-header {
+            padding: 16px 18px 12px;
+        }
+
+        .reg-modal-wizard-header {
+            padding: 10px 16px;
+        }
+
+        .reg-modal-scrollable {
+            padding: 16px 18px;
+        }
+
+        .reg-modal-footer {
+            padding: 12px 18px;
+        }
+
+        .reg-footer-btns {
+            width: 100%;
+        }
+
+        .reg-footer-btns .reg-btn {
+            flex: 1;
+            text-align: center;
+        }
     }
 
     /* Quick Info Section */

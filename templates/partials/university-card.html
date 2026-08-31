@@ -26,17 +26,19 @@
                 <svg class="svg-icon ml-2 text-secondary"><use href="{% static 'images/icons.svg' %}#icon-location"></use></svg>
                 {{ university.get_location_display }}
             </span>
+            {% if university.faculties.count > 0 %}
             <span>
                 <svg class="svg-icon ml-2 text-secondary"><use href="{% static 'images/icons.svg' %}#icon-graduation-cap"></use></svg>
                 {{ university.faculties.count }} كليات
             </span>
+            {% endif %}
         </div>
         
         <!-- رسوم التسجيل ورابط التفاصيل -->
         <div class="it-course-price-box">
             <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-body);">
                 الرسوم تبدأ من: 
-                <strong style="color: var(--secondary); font-weight: 700;">{{ university.avg_cost|default:"تواصل معنا" }}</strong>
+                <strong style="color: var(--secondary); font-weight: 700;">{{ university.get_min_tuition_display|default:"تواصل معنا" }}</strong>
             </span>
             <div class="it-course-action-link" style="color: var(--primary); font-weight: 500;">
                 <span>اقرأ المزيد</span>
