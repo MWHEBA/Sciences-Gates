@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Science Gates (بوابات العلوم للدراسة في ماليزيا) is a professional educational content platform focused on Malaysian universities, institutes, study majors, and educational articles. The platform serves as a structured SEO-optimized website built with Django, MySQL, Django Templates, Tailwind CSS, and Alpine.js, designed for cPanel deployment. Version 1 will be Arabic-only with RTL support, with architecture designed to support future multilingual expansion without rebuilding. The system provides comprehensive SEO capabilities, lead generation, and content management through a professional Custom Dashboard across four core content types: Universities, Institutes, Majors, and Articles.
+Science Gates (شركة بوابات العلوم للدراسة في ماليزيا) is a professional educational content platform focused on Malaysian universities, institutes, study majors, and educational articles. The platform serves as a structured SEO-optimized website built with Django, MySQL, Django Templates, Tailwind CSS, and Alpine.js, designed for cPanel deployment. Version 1 will be Arabic-only with RTL support, with architecture designed to support future multilingual expansion without rebuilding. The system provides comprehensive SEO capabilities, lead generation, and content management through a professional Custom Dashboard across four core content types: Universities, Institutes, Majors, and Articles.
 
 ## Glossary
 

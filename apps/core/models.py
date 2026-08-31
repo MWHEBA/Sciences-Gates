@@ -374,7 +374,7 @@ class SiteSettings(models.Model):
     # General Settings
     site_name = models.CharField(
         max_length=200,
-        default='بوابات العلوم',
+        default='شركة بوابات العلوم',
         verbose_name='اسم الموقع'
     )
     site_description = models.TextField(

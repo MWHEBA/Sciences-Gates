@@ -6,7 +6,7 @@
 {% load schema_tags %}
 {% load seo_tags %}
 
-{% block title %}{{ university.meta_title|default:university.name }} - بوابات العلوم{% endblock %}
+{% block title %}{{ university.meta_title|default:university.name }} - شركة بوابات العلوم{% endblock %}
 {% block meta_description %}{{ university.meta_description|default:university.description|clean_desc }}{% endblock %}
 
 {% block og_title %}{{ university.og_title|default:university.meta_title|default:university.name }}{% endblock %}

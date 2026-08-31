@@ -191,7 +191,7 @@ class Article(TimestampedModel, PublishableModel, SEOMixin):
         """Return the author's full name, username, or a default fallback."""
         if self.author:
             return self.author.get_full_name() or self.author.username
-        return "بوابات العلوم"
+        return "شركة بوابات العلوم"
 
     def save(self, *args, **kwargs):
         """Store old slug for redirect creation if slug changes."""

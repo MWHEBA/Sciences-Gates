@@ -12,7 +12,7 @@ def _make_engine(full_page_overrides=None, main_content_overrides=None, focus_ke
     profile = profile_for("universities")
 
     full_page = {
-        "title": "جامعة ماليزيا العالمية - بوابات العلوم",
+        "title": "جامعة ماليزيا العالمية - شركة بوابات العلوم",
         "meta_description": "وصف تعريفي واضح لجامعة ماليزيا العالمية يتجاوز مئة وعشرين حرفاً لضمان الجودة.",
         "canonical": "https://sciencesgates.com/universities/test/",
         "robots": "index, follow",

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This document provides the comprehensive technical design for the Science Gates platform (بوابات العلوم للدراسة في ماليزيا), an Arabic-language educational content platform focused on Malaysian universities, institutes, study majors, and educational articles. The platform is built with Django, MySQL/MariaDB, Django Templates, Tailwind CSS, and Alpine.js, designed for cPanel deployment.
+This document provides the comprehensive technical design for the Science Gates platform (شركة بوابات العلوم للدراسة في ماليزيا), an Arabic-language educational content platform focused on Malaysian universities, institutes, study majors, and educational articles. The platform is built with Django, MySQL/MariaDB, Django Templates, Tailwind CSS, and Alpine.js, designed for cPanel deployment.
 
 **Version 1 Scope**: Arabic-only with RTL support, architecture designed for future multilingual expansion without rebuilding.
 
@@ -2958,7 +2958,7 @@ def render_organization_schema():
     schema = {
         '@context': 'https://schema.org',
         '@type': 'Organization',
-        'name': 'بوابات العلوم للدراسة في ماليزيا',
+        'name': 'شركة بوابات العلوم للدراسة في ماليزيا',
         'url': 'https://sciencegates.com',
         'logo': 'https://sciencegates.com/static/images/logo.png',
         'sameAs': [
@@ -2983,7 +2983,7 @@ def render_article_schema(article):
         },
         'publisher': {
             '@type': 'Organization',
-            'name': 'بوابات العلوم للدراسة في ماليزيا',
+            'name': 'شركة بوابات العلوم للدراسة في ماليزيا',
             'logo': {
                 '@type': 'ImageObject',
                 'url': 'https://sciencegates.com/static/images/logo.png'
@@ -3652,7 +3652,7 @@ module.exports = {
         <div class="navbar-container">
             <!-- Logo -->
             <a href="{% url 'home' %}" class="navbar-logo">
-                <img src="{% static 'images/logo.svg' %}" alt="بوابات العلوم">
+                <img src="{% static 'images/logo.svg' %}" alt="شركة بوابات العلوم">
             </a>
             
             <!-- Desktop Menu -->

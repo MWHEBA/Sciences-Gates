@@ -17,7 +17,7 @@ class AboutViewTestCase(TestCase):
     def test_about_us_page_content(self):
         """Test that the about-us page displays correct company content."""
         response = self.client.get(reverse('about_us'))
-        self.assertContains(response, 'بوابات العلوم')
+        self.assertContains(response, 'شركة بوابات العلوم')
         self.assertContains(response, 'Sciences Gates')
         self.assertContains(response, 'محمد كيالي')
         self.assertContains(response, 'دكتوراه علوم الحاسوب')

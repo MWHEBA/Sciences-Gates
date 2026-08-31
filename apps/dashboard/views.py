@@ -5050,7 +5050,7 @@ class SMTPTestView(SuperAdminRequiredMixin, View):
                 subject='Sciences Gates - اختبار إعدادات الـ SMTP',
                 body=(
                     'مرحباً،\n\n'
-                    'هذه رسالة تلقائية لتأكيد نجاح اتصال وإعدادات خادم البريد (SMTP) الخاص بموقع بوابات العلوم (Sciences Gates).\n\n'
+                    'هذه رسالة تلقائية لتأكيد نجاح اتصال وإعدادات خادم البريد (SMTP) الخاص بموقع شركة بوابات العلوم (Sciences Gates).\n\n'
                     f'الإعدادات المستخدمة:\n'
                     f'- الخادم: {host}\n'
                     f'- المنفذ: {port}\n'

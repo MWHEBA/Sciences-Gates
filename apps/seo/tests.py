@@ -169,8 +169,8 @@ class TestSchemaGenerator:
         
         assert schema['@context'] == 'https://schema.org'
         assert schema['@type'] == 'WebSite'
-        assert 'بوابات العلوم' in schema['name']
-        assert 'بوابات العلوم' in schema['alternateName']
+        assert 'شركة بوابات العلوم' in schema['name']
+        assert 'شركة بوابات العلوم' in schema['alternateName']
     
     def test_organization_schema_generation(self):
         """Test organization schema generation."""
@@ -180,7 +180,7 @@ class TestSchemaGenerator:
         
         assert schema['@context'] == 'https://schema.org'
         assert schema['@type'] == 'Organization'
-        assert 'بوابات العلوم' in schema['name']
+        assert 'شركة بوابات العلوم' in schema['name']
         assert schema['inLanguage'] == 'ar'
     
     def test_organization_schema_has_contact_point(self):
@@ -287,10 +287,10 @@ class TestSchemaGenerator:
         """Test that JSON-LD conversion preserves Arabic characters."""
         from apps.seo.schema import SchemaGenerator
         
-        schema = {'@context': 'https://schema.org', 'name': 'بوابات العلوم'}
+        schema = {'@context': 'https://schema.org', 'name': 'شركة بوابات العلوم'}
         json_ld = SchemaGenerator.to_json_ld(schema)
         
-        assert 'بوابات العلوم' in json_ld
+        assert 'شركة بوابات العلوم' in json_ld
 
 
 @pytest.mark.django_db
@@ -388,7 +388,7 @@ class TestArticleSchemaGenerator:
         
         assert 'publisher' in schema
         assert schema['publisher']['@type'] == 'Organization'
-        assert 'بوابات العلوم' in schema['publisher']['name']
+        assert 'شركة بوابات العلوم' in schema['publisher']['name']
     
     def test_article_schema_includes_url(self):
         """Test article schema includes article URL."""
@@ -422,7 +422,7 @@ class TestArticleSchemaGenerator:
         
         assert 'author' in schema
         assert schema['author']['@type'] == 'Person'
-        assert 'بوابات العلوم' in schema['author']['name'] or 'الكيالي' in schema['author']['name']
+        assert 'شركة بوابات العلوم' in schema['author']['name'] or 'الكيالي' in schema['author']['name']
 
 
 @pytest.mark.django_db

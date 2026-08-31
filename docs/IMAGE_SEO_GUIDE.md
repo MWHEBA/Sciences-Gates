@@ -74,7 +74,7 @@ IMG_1234
 {% seo_image university.main_image.url university.main_image_alt "" 800 600 "w-full" %}
 
 {# مع eager loading للصور فوق الطية #}
-{% seo_image hero_image.url "بوابات العلوم" "" 1200 630 "w-full" "eager" %}
+{% seo_image hero_image.url "شركة بوابات العلوم" "" 1200 630 "w-full" "eager" %}
 ```
 
 **الناتج HTML:**
