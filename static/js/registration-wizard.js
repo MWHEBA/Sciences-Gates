@@ -1,10 +1,23 @@
 /**
  * Registration Wizard Controller
  * Handles client-side step validation, inline error highlighting,
- * Enter key progression, phone number normalization, and form submit synchronization.
+ * Eastern Arabic numeral conversion, phone number normalization,
+ * Submit lock recovery, and smooth step navigation.
  */
 (function () {
     'use strict';
+
+    // Helper to convert Eastern Arabic numerals (٠-٩) and Persian numerals (۰-۹) to standard ASCII (0-9)
+    function convertArabicNumerals(str) {
+        if (!str) return '';
+        return str
+            .replace(/[٠-٩]/g, function (d) {
+                return String.fromCharCode(d.charCodeAt(0) - 1632 + 48);
+            })
+            .replace(/[۰-۹]/g, function (d) {
+                return String.fromCharCode(d.charCodeAt(0) - 1776 + 48);
+            });
+    }
 
     // Helper to display inline error message
     function setFieldError(fieldId, errorMsg) {
@@ -48,6 +61,22 @@
         clearFieldError('reg_address');
     }
 
+    // Helper to reset submit button state on validation failure
+    function resetSubmitButtonState() {
+        var form = document.getElementById('regWizardForm');
+        if (form) {
+            form.removeAttribute('data-submitting');
+        }
+        var submitBtn = document.getElementById('regSubmitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.pointerEvents = '';
+            submitBtn.style.opacity = '';
+            submitBtn.style.cursor = '';
+            submitBtn.innerHTML = 'إرسال طلب التسجيل';
+        }
+    }
+
     // Step 1 Validation (Pure inline feedback, no browser alerts)
     window.validateRegistrationStep1 = function () {
         clearStep1Errors();
@@ -62,7 +91,12 @@
 
         var nameVal = (nameInput ? nameInput.value : '').trim();
         var emailVal = (emailInput ? emailInput.value : '').trim();
-        var phoneVal = (phoneInput ? phoneInput.value : '').trim();
+        var rawPhone = (phoneInput ? phoneInput.value : '').trim();
+        var phoneVal = convertArabicNumerals(rawPhone);
+        if (phoneInput && rawPhone !== phoneVal) {
+            phoneInput.value = phoneVal;
+        }
+
         var nationalityVal = (nationalitySelect ? nationalitySelect.value : '').trim();
 
         // 1. Name validation
@@ -123,6 +157,9 @@
         }
 
         if (!isValid && firstInvalidField) {
+            if (typeof firstInvalidField.scrollIntoView === 'function') {
+                firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
             firstInvalidField.focus();
         }
 
@@ -165,6 +202,9 @@
         }
 
         if (!isValid && firstInvalidField) {
+            if (typeof firstInvalidField.scrollIntoView === 'function') {
+                firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
             firstInvalidField.focus();
         }
 
@@ -199,6 +239,17 @@
             }
         });
 
+        // Convert Arabic numerals in real time on phone input
+        var phoneInput = document.getElementById('reg_phone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function () {
+                var converted = convertArabicNumerals(this.value);
+                if (this.value !== converted) {
+                    this.value = converted;
+                }
+            });
+        }
+
         // Intercept Enter key on Step 1 inputs to smoothly advance to Step 2
         var step1Inputs = form.querySelectorAll('#reg_name, #reg_email, #reg_phone, #reg_custom_nationality');
         step1Inputs.forEach(function (input) {
@@ -212,6 +263,8 @@
                         var alpineContainer = form.closest('[x-data]');
                         if (alpineContainer && alpineContainer.__x && alpineContainer.__x.$data) {
                             alpineContainer.__x.$data.regStep = 2;
+                            var scrollContainer = form.querySelector('.reg-modal-scrollable');
+                            if (scrollContainer) scrollContainer.scrollTop = 0;
                         }
                     }
                 }
@@ -232,7 +285,7 @@
                 if (alpineContainer && alpineContainer.__x && alpineContainer.__x.$data) {
                     alpineContainer.__x.$data.regStep = 1;
                 }
-                form.removeAttribute('data-submitting');
+                resetSubmitButtonState();
                 return false;
             }
 
@@ -243,18 +296,17 @@
                 if (alpineContainer && alpineContainer.__x && alpineContainer.__x.$data) {
                     alpineContainer.__x.$data.regStep = 2;
                 }
-                form.removeAttribute('data-submitting');
+                resetSubmitButtonState();
                 return false;
             }
 
-            // Normalization: Combine country code and phone number (stripping leading zeros)
-            var phoneInput = document.getElementById('reg_phone');
+            // Normalization: Combine country code and phone number (stripping non-digits and leading zeros)
             var hiddenCode = document.getElementById('reg_country_code') || form.querySelector('input[name="country_code"]');
             var combinedPhone = document.getElementById('reg_phone_combined') || form.querySelector('input[name="phone"]');
 
             if (phoneInput && combinedPhone) {
                 var codeVal = hiddenCode ? hiddenCode.value.trim() : '+60';
-                var cleanPhone = phoneInput.value.trim().replace(/^0+/, '');
+                var cleanPhone = convertArabicNumerals(phoneInput.value).replace(/\D/g, '').replace(/^0+/, '');
                 combinedPhone.value = codeVal + cleanPhone;
             }
 

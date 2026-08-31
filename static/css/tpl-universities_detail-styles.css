@@ -86,10 +86,10 @@
         max-width: 48px;
         height: 48px;
         background-color: var(--primary);
-        color: #ffffff;
-        border: none;
-        border-radius: 9999px;
-        box-shadow: 0 6px 20px rgba(11, 45, 77, 0.2);
+        color: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-full);
+        box-shadow: 0 4px 16px rgba(11, 45, 77, 0.2);
         cursor: pointer;
         z-index: 996;
         display: inline-flex;
@@ -97,40 +97,27 @@
         justify-content: flex-start;
         padding: 12px;
         overflow: hidden;
-        transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s, transform 0.3s, box-shadow 0.3s, translate 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+        transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, opacity 0.4s ease;
         text-decoration: none;
-        border: 1px solid rgba(255, 255, 255, 0.1);
         white-space: nowrap;
-        animation: regFloatAttention 2.8s ease-in-out infinite;
-    }
-
-    .reg-float-btn::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.28) 42%, transparent 58%);
-        transform: translateX(130%);
-        animation: regFloatShine 3.4s ease-in-out infinite;
-        pointer-events: none;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .reg-float-btn svg {
         width: 24px;
         height: 24px;
         flex-shrink: 0;
-        stroke: #ffffff;
+        stroke: var(--white);
         position: relative;
         z-index: 1;
-        animation: regFloatIconNudge 2.8s ease-in-out infinite;
     }
 
     .reg-float-btn:hover {
         max-width: 450px;
         padding: 10px 16px 10px 24px;
         background-color: var(--primary-hover);
-        transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(11, 45, 77, 0.4);
-        animation-play-state: paused;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(11, 45, 77, 0.3);
     }
 
     .reg-float-text {
@@ -142,57 +129,10 @@
         align-items: flex-start;
         text-align: right;
         line-height: 1.25;
-        transition: opacity 0.3s ease, transform 0.3s ease;
-        transform: translateX(10px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        transform: translateX(8px);
         position: relative;
         z-index: 1;
-    }
-
-    .reg-float-btn:hover::after,
-    .reg-float-btn:hover svg {
-        animation-play-state: paused;
-    }
-
-    @keyframes regFloatAttention {
-        0%, 100% {
-            box-shadow: 0 6px 20px rgba(11, 45, 77, 0.2), 0 0 0 0 rgba(200, 160, 65, 0);
-        }
-
-        45% {
-            box-shadow: 0 10px 28px rgba(11, 45, 77, 0.3), 0 0 0 10px rgba(200, 160, 65, 0.16);
-        }
-
-        70% {
-            box-shadow: 0 6px 20px rgba(11, 45, 77, 0.2), 0 0 0 16px rgba(200, 160, 65, 0);
-        }
-    }
-
-    @keyframes regFloatShine {
-        0%, 38%, 100% {
-            transform: translateX(130%);
-        }
-
-        58% {
-            transform: translateX(-130%);
-        }
-    }
-
-    @keyframes regFloatIconNudge {
-        0%, 72%, 100% {
-            transform: rotate(0deg) scale(1);
-        }
-
-        78% {
-            transform: rotate(-8deg) scale(1.08);
-        }
-
-        84% {
-            transform: rotate(7deg) scale(1.08);
-        }
-
-        90% {
-            transform: rotate(0deg) scale(1);
-        }
     }
 
     .reg-float-btn:hover .reg-float-text {
@@ -204,7 +144,7 @@
     .reg-float-title {
         font-size: 0.95rem;
         font-weight: 700;
-        color: #ffffff;
+        color: var(--white);
     }
 
     .reg-float-subtitle {
@@ -228,7 +168,7 @@
             max-width: 48px;
             padding: 12px;
             transform: none;
-            box-shadow: 0 6px 20px rgba(11, 45, 77, 0.2);
+            box-shadow: 0 4px 16px rgba(11, 45, 77, 0.2);
         }
 
         .reg-float-text {
@@ -236,23 +176,15 @@
         }
     }
 
-    @media (prefers-reduced-motion: reduce) {
-        .reg-float-btn,
-        .reg-float-btn::after,
-        .reg-float-btn svg {
-            animation: none;
-        }
-    }
-
     /* ==========================================================================
-       Registration Wizard Modal (Hardened Responsive Sticky Architecture)
+       Registration Wizard Modal (Hardened iOS WebKit Responsive Architecture)
        ========================================================================== */
     .reg-modal-overlay {
         position: fixed;
         inset: 0;
         width: 100%;
         height: 100%;
-        background: rgba(11, 45, 77, 0.55);
+        background: var(--primary-overlay);
         backdrop-filter: blur(4px);
         -webkit-backdrop-filter: blur(4px);
         z-index: 1050;
@@ -263,6 +195,7 @@
         overflow-y: auto;
         overscroll-behavior: contain;
         touch-action: pan-y;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .reg-modal-content {
@@ -271,12 +204,12 @@
         border-radius: var(--radius-lg);
         box-shadow: var(--shadow-lg);
         width: 100%;
-        max-width: 600px;
+        max-width: 580px;
         margin: auto;
         display: flex;
         flex-direction: column;
         overflow: visible;
-        animation: modalFadeIn 0.25s ease-out;
+        animation: modalFadeIn 0.15s ease-out;
         direction: rtl;
         text-align: right;
         position: relative;
@@ -285,18 +218,18 @@
     @keyframes modalFadeIn {
         from {
             opacity: 0;
-            transform: translateY(16px) scale(0.97);
+            transform: translateY(6px);
         }
         to {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            transform: translateY(0);
         }
     }
 
     .reg-modal-header {
         background: var(--surface);
         color: var(--text-primary);
-        padding: 20px 24px 16px;
+        padding: 16px 20px 12px;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
@@ -315,7 +248,7 @@
         background: var(--surface-2);
         padding: 2px 10px;
         border-radius: var(--radius-full);
-        margin-bottom: 6px;
+        margin-bottom: 4px;
         border: 1px solid var(--border);
     }
 
@@ -323,7 +256,7 @@
         font-size: 1.15rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin: 0 0 4px 0;
+        margin: 0 0 2px 0;
         line-height: 1.3;
     }
 
@@ -339,13 +272,16 @@
         border: 1px solid var(--border);
         color: var(--text-secondary);
         cursor: pointer;
-        padding: 8px;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 10px;
         border-radius: var(--radius-md);
-        transition: all 0.2s ease;
+        transition: background-color 0.2s ease, color 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .reg-modal-close:hover {
@@ -355,7 +291,7 @@
 
     /* Wizard Step Bar */
     .reg-modal-wizard-header {
-        padding: 12px 24px;
+        padding: 10px 20px;
         background: var(--surface-2);
         border-bottom: 1px solid var(--border);
         flex-shrink: 0;
@@ -388,19 +324,19 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s ease;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
     .reg-step-item.active .reg-step-number {
         background: var(--primary);
         border-color: var(--primary);
-        color: #ffffff;
+        color: var(--white);
     }
 
     .reg-step-item.completed .reg-step-number {
         background: var(--success);
         border-color: var(--success);
-        color: #ffffff;
+        color: var(--white);
     }
 
     .reg-step-label {
@@ -421,7 +357,7 @@
         margin: 0 12px;
         min-width: 20px;
         max-width: 60px;
-        transition: background 0.2s ease;
+        transition: background-color 0.2s ease;
     }
 
     .reg-step-divider.active {
@@ -440,7 +376,7 @@
     .reg-modal-scrollable {
         flex: 1 1 auto;
         overflow: visible;
-        padding: 20px 24px;
+        padding: 16px 20px;
     }
 
     .reg-modal-scrollable .intl-phone-select {
@@ -450,12 +386,13 @@
 
     .reg-modal-scrollable .intl-phone-dropdown {
         z-index: 1080;
+        background: var(--surface);
     }
 
     .reg-step-pane {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 14px;
     }
 
     .reg-form-group {
@@ -486,16 +423,21 @@
     .reg-form-select,
     .reg-form-textarea {
         width: 100%;
-        padding: 10px 14px;
+        padding: 9px 12px;
+        min-height: 44px;
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-md);
-        font-size: 0.95rem;
+        border-radius: var(--radius-sm);
+        font-size: 1rem;
         font-family: inherit;
         color: var(--text-primary);
         background-color: var(--surface);
         transition: border-color 0.2s, box-shadow 0.2s;
         outline: none;
         box-sizing: border-box;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .reg-form-input:focus,
@@ -507,7 +449,7 @@
 
     .reg-input--invalid {
         border-color: var(--danger) !important;
-        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+        box-shadow: 0 0 0 3px var(--danger-light) !important;
     }
 
     .reg-field-error {
@@ -524,13 +466,13 @@
     }
 
     .reg-form-textarea {
-        resize: vertical;
-        min-height: 70px;
+        resize: none;
+        min-height: 60px;
     }
 
     /* Modal Footer */
     .reg-modal-footer {
-        padding: 14px 24px;
+        padding: 12px 20px max(12px, env(safe-area-inset-bottom));
         background: var(--surface-2);
         border-top: 1px solid var(--border);
         border-bottom-left-radius: var(--radius-lg);
@@ -556,22 +498,24 @@
 
     .reg-btn {
         padding: 10px 20px;
-        border-radius: var(--radius-md);
-        font-size: 0.9rem;
+        min-height: 44px;
+        border-radius: var(--radius-sm);
+        font-size: 0.95rem;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
         border: 1px solid transparent;
         font-family: inherit;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .reg-btn--primary {
         background-color: var(--primary);
-        color: #ffffff;
+        color: var(--white);
     }
 
     .reg-btn--primary:hover {
@@ -596,34 +540,39 @@
         line-height: 1.4;
     }
 
-    /* Mobile Responsive */
+    /* Mobile Responsive (WebKit & iOS Hardened) */
     @media (max-width: 640px) {
         .reg-modal-overlay {
             padding: 8px;
-            align-items: flex-end;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            background: var(--primary-overlay);
         }
 
         .reg-modal-content {
-            max-height: calc(100vh - 16px);
-            max-height: calc(100dvh - 16px);
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
+            border-radius: var(--radius-lg);
+            overflow: visible;
         }
 
         .reg-modal-header {
-            padding: 16px 18px 12px;
+            padding: 12px 16px 8px;
+        }
+
+        .reg-modal-subtitle {
+            display: none;
         }
 
         .reg-modal-wizard-header {
-            padding: 10px 16px;
+            padding: 8px 14px;
         }
 
         .reg-modal-scrollable {
-            padding: 16px 18px;
+            padding: 12px 16px 16px;
+            overflow: visible;
         }
 
         .reg-modal-footer {
-            padding: 12px 18px;
+            padding: 10px 16px max(10px, env(safe-area-inset-bottom));
         }
 
         .reg-footer-btns {
