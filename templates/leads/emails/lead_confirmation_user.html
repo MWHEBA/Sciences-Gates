@@ -93,6 +93,11 @@
                                     <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">المؤسسة التعليمية</td>
                                     <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead.institution_name }}</td>
                                 </tr>
+                                {% elif 'تخصص' in lead.source_page_name %}
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">التخصص المطلوب</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead.source_page_name }}</td>
+                                </tr>
                                 {% endif %}
                                 {% if lead.message %}
                                 <tr>

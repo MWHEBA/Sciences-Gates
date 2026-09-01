@@ -2,13 +2,14 @@
 ==================================
 
 نوع الرسالة: {{ lead_type_display }}
-الاسم: {{ lead.name }}
-رقم الهاتف: {{ lead.phone }}
+الاسم الكامل: {{ lead.name }}
+رقم الهاتف: {{ lead.phone }}{% if lead.phone_clean %} (واتساب: https://wa.me/{{ lead.phone_clean }}){% endif %}
 {% if lead.email %}البريد الإلكتروني: {{ lead.email }}{% endif %}
 {% if lead.nationality %}الجنسية: {{ lead.nationality }}{% endif %}
 {% if lead.residence_country %}دولة الإقامة: {{ lead.residence_country }}{% endif %}
 {% if lead.study_level %}المرحلة الدراسية: {{ lead.study_level }}{% endif %}
-{% if lead.institution_name %}المؤسسة التعليمية: {{ lead.institution_name }}{% endif %}
+{% if lead.institution_name %}المؤسسة التعليمية: {{ lead.institution_name }}
+{% elif 'تخصص' in lead.source_page_name %}التخصص المطلوب: {{ lead.source_page_name }}{% endif %}
 {% if lead.address %}العنوان: {{ lead.address }}{% endif %}
 
 {% if lead.message %}
@@ -20,10 +21,11 @@
 
 معلومات التتبع والمصدر:
 ------------------
-صفحة الإرسال: {{ lead.source_page|default:"غير محدد" }}
-المرجع: {{ lead.referrer|default:"غير محدد" }}
+{% if lead.source_page_name %}اسم الصفحة: {{ lead.source_page_name }}{% endif %}
+صفحة الإرسال: {{ lead.source_page_decoded|default:"غير محدد" }}
+المصدر: {{ lead.traffic_source_display }}{% if lead.referrer and not lead.utm_source %} ({{ lead.referrer }}){% endif %}
 
-وقت الإرسال: {{ lead.created_at|date:"Y-m-d H:i:s" }}
+وقت الإرسال: {{ lead.created_at|date:"Y-m-d H:i:s" }} (توقيت ماليزيا GMT+8)
 
 ---
 © {{ current_year }} شركة بوابات العلوم (Science Gates). جميع الحقوق محفوظة.

@@ -163,22 +163,10 @@
             var nationality = (document.getElementById('reg_nationality') || {}).value || '';
             var level = (document.getElementById('reg_level') || {}).value || '';
             var residence = (document.getElementById('reg_residence') || {}).value || '';
-            var address = (document.getElementById('reg_address') || {}).value || '';
             var notes = (document.getElementById('reg_notes') || {}).value || '';
-            var entityName = (document.getElementById('reg_entity_name') || {}).value || '';
-            var entityType = (document.getElementById('reg_entity_type') || {}).value || 'مؤسسة';
-
-            var combinedMsg = "طلب تسجيل جديد في " + entityType + ": " + entityName + "\n" +
-                "--------------------------------------------------\n" +
-                "الجنسية: " + nationality + "\n" +
-                "المرحلة الدراسية: " + level + "\n" +
-                "دولة الإقامة: " + residence + "\n" +
-                "عنوان الإقامة: " + address + "\n" +
-                "ملاحظات إضافية:\n" + (notes ? notes : "لا يوجد");
-
             var combinedElem = document.getElementById('reg_combined_message');
             if (combinedElem) {
-                combinedElem.value = combinedMsg;
+                combinedElem.value = notes ? notes.trim() : '';
             }
         });
     }

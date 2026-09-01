@@ -225,3 +225,28 @@ class SecurityHeadersMiddleware:
 
         return response
 
+
+class UTMAttributionMiddleware:
+    """
+    Middleware that captures UTM marketing parameters from query strings upon landing
+    and preserves them in session (request.session['sg_utm']) for attribution persistence
+    across multi-page browsing sessions.
+    Zero-overhead: only touches session if UTM parameters are actively present in GET.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.method == 'GET' and hasattr(request, 'session'):
+            utm_params = {}
+            for param in ('utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'):
+                val = request.GET.get(param)
+                if val:
+                    utm_params[param] = val.strip()
+            
+            if utm_params:
+                existing = request.session.get('sg_utm', {})
+                existing.update(utm_params)
+                request.session['sg_utm'] = existing
+
+        return self.get_response(request)

@@ -60,6 +60,11 @@
                     'event_category': 'Engagement',
                     'event_label': 'Institute Application'
                 });
+            } else if (subtype === 'major') {
+                gtag('event', 'major_apply_success', {
+                    'event_category': 'Engagement',
+                    'event_label': 'Major Application'
+                });
             } else {
                 gtag('event', 'university_apply_success', {
                     'event_category': 'Engagement',

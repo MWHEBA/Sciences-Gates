@@ -32,6 +32,11 @@ class LeadAdmin(admin.ModelAdmin):
         'updated_at',
         'source_page',
         'referrer',
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'utm_term',
+        'utm_content',
     )
     
     fieldsets = (
@@ -41,6 +46,11 @@ class LeadAdmin(admin.ModelAdmin):
                 'name',
                 'email',
                 'phone',
+                'institution_name',
+                'nationality',
+                'study_level',
+                'residence_country',
+                'address',
                 'message',
                 'is_read',
                 'notes',
@@ -50,6 +60,12 @@ class LeadAdmin(admin.ModelAdmin):
             'fields': (
                 'source_page',
                 'referrer',
+                'utm_source',
+                'utm_medium',
+                'utm_campaign',
+                'utm_term',
+                'utm_content',
+                'ip_address',
             ),
             'classes': ('collapse',)
         }),

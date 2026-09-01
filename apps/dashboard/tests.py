@@ -969,7 +969,9 @@ class TestUniversityViews:
             city="kl",
             university_type="private",
             description="Test Description",
-            location="Test Location"
+            location="Test Location",
+            logo="test.png",
+            main_image="test.png"
         )
         
         # Create an existing faculty

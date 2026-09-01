@@ -51,6 +51,11 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
 
         return super().get(request, *args, **kwargs)
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
+
     def get_success_url(self):
         import urllib.parse
         lead_type = self.request.POST.get('lead_type') or 'contact'
@@ -58,7 +63,22 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         institution_name = self.request.POST.get('institution_name', '').strip()
         referer = self.request.META.get('HTTP_REFERER', '').lower()
         source_page = (self.request.POST.get('source_page') or '').lower()
-        subtype = 'institute' if ('institute' in referer or 'institute' in source_page or '/institutes/' in source_page) else 'university'
+        
+        # Determine exact subtype
+        if 'institutes' in referer or 'institutes' in source_page or 'institute' in referer or 'institute' in source_page:
+            subtype = 'institute'
+        elif 'majors' in referer or 'majors' in source_page or 'courses' in referer or 'courses' in source_page:
+            subtype = 'major'
+        elif 'universities' in referer or 'universities' in source_page or 'university' in referer or 'university' in source_page:
+            subtype = 'university'
+        else:
+            subtype = 'university'
+
+        # If lead was created and resolved entity name
+        created_lead = getattr(self, 'created_lead', None)
+        if not institution_name and created_lead:
+            institution_name = created_lead.source_entity_short
+
         encoded_name = urllib.parse.quote(name)
         encoded_institution = urllib.parse.quote(institution_name)
         return f"{reverse('leads:thank_you')}?lead_type={lead_type}&subtype={subtype}&name={encoded_name}&institution={encoded_institution}"
@@ -115,53 +135,45 @@ class LeadSubmitView(BreadcrumbMixin, FormView):
         """
         from django.utils import timezone
         from datetime import timedelta
+        from django.db.models import Q
 
         email = form.cleaned_data.get('email', '').strip().lower()
+        phone = form.cleaned_data.get('phone', '').strip()
         lead_type = form.cleaned_data.get('lead_type')
         institution_name = form.cleaned_data.get('institution_name', '').strip()
 
-        # Double-submit guard: If an identical lead for the same entity was saved in the last 10 seconds, skip duplicate creation
-        if email and lead_type:
-            duplicate_filter = {
-                'email__iexact': email,
-                'lead_type': lead_type,
-                'created_at__gte': timezone.now() - timedelta(seconds=10)
-            }
-            if institution_name:
-                duplicate_filter['institution_name'] = institution_name
+        # Double-submit guard: If an identical lead (by email or phone) was saved in the last 10 seconds, skip duplicate creation
+        if (email or phone) and lead_type:
+            time_window = timezone.now() - timedelta(seconds=10)
+            dup_query = Q(lead_type=lead_type, created_at__gte=time_window)
+            if email and phone:
+                dup_query &= (Q(email__iexact=email) | Q(phone=phone))
+            elif email:
+                dup_query &= Q(email__iexact=email)
+            else:
+                dup_query &= Q(phone=phone)
 
-            recent_duplicate = Lead.objects.filter(**duplicate_filter).first()
+            if institution_name:
+                dup_query &= Q(institution_name=institution_name)
+
+            recent_duplicate = Lead.objects.filter(dup_query).first()
             if recent_duplicate:
+                self.created_lead = recent_duplicate
                 if lead_type == LeadType.REGISTRATION:
                     messages.success(self.request, 'تم استقبال طلب التسجيل بنجاح! سنتواصل معك في أقرب وقت.')
                 else:
                     messages.success(self.request, 'تم استقبال استفسارك بنجاح! سنتواصل معك في أقرب وقت.')
                 return super().form_valid(form)
 
-        # Get form data
+        # Save lead to database using form.save()
         lead = form.save(commit=False)
-        
-        # Extract source page from request or POST data (safely truncate to 200 chars for URLField safety)
-        source_page = self.request.POST.get('source_page', '').strip()
-        raw_source = source_page or self.request.build_absolute_uri(self.request.path)
-        lead.source_page = raw_source[:200]
-        
-        # Extract referrer from request headers (safely truncate to 200 chars for URLField safety)
-        raw_referrer = self.request.META.get('HTTP_REFERER', '')
-        lead.referrer = raw_referrer[:200]
-
-        # Extract UTM parameters
-        lead.utm_source = (self.request.POST.get('utm_source') or self.request.GET.get('utm_source') or '')[:150] or None
-        lead.utm_medium = (self.request.POST.get('utm_medium') or self.request.GET.get('utm_medium') or '')[:150] or None
-        lead.utm_campaign = (self.request.POST.get('utm_campaign') or self.request.GET.get('utm_campaign') or '')[:200] or None
-        lead.utm_term = (self.request.POST.get('utm_term') or self.request.GET.get('utm_term') or '')[:200] or None
-        lead.utm_content = (self.request.POST.get('utm_content') or self.request.GET.get('utm_content') or '')[:200] or None
         
         from apps.core.utils import get_client_ip
         lead.ip_address = get_client_ip(self.request)
         
         # Save lead to database
         lead.save()
+        self.created_lead = lead
         
         # Add success message based on lead type
         if lead.lead_type == LeadType.REGISTRATION:

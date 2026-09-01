@@ -42,11 +42,18 @@
                                 </tr>
                                 <tr>
                                     <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">الاسم الكامل</td>
-                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead.name }}</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px; font-weight: 600;">{{ lead.name }}</td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">رقم الهاتف</td>
-                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px; direction: ltr; text-align: right;">{{ lead.phone }}</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">
+                                        <span dir="ltr" style="font-weight: 600; color: #11243A; display: inline-block;">{{ lead.phone }}</span>
+                                        {% if lead.phone_clean %}
+                                        <a href="https://wa.me/{{ lead.phone_clean }}" target="_blank" style="display: inline-block; margin-right: 8px; padding: 4px 10px; background-color: #25D366; color: #FFFFFF; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold;">
+                                            💬 فتح واتساب
+                                        </a>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% if lead.email %}
                                 <tr>
@@ -77,7 +84,12 @@
                                 {% if lead.institution_name %}
                                 <tr>
                                     <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">المؤسسة التعليمية</td>
-                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px;">{{ lead.institution_name }}</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #0B2D4D; font-size: 14px; font-weight: 600;">{{ lead.institution_name }}</td>
+                                </tr>
+                                {% elif 'تخصص' in lead.source_page_name %}
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px;">التخصص المطلوب</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #0B2D4D; font-size: 14px; font-weight: 600;">{{ lead.source_page_name }}</td>
                                 </tr>
                                 {% endif %}
                                 {% if lead.address %}
@@ -89,7 +101,7 @@
                                 {% if lead.message %}
                                 <tr>
                                     <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; background-color: #F8FAFC; color: #11243A; font-weight: 600; font-size: 14px; vertical-align: top;">محتوى الرسالة</td>
-                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #43576B; font-size: 14px; line-height: 1.6; white-space: pre-line;">{{ lead.message }}</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #EAF0F7; color: #11243A; font-size: 14px; line-height: 1.6; white-space: pre-line;">{{ lead.message }}</td>
                                 </tr>
                                 {% endif %}
                             </table>
@@ -97,25 +109,43 @@
                             <!-- Metadata Section -->
                             <div style="background-color: #F8FAFC; border: 1px solid #EAF0F7; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
                                 <h3 style="color: #0B2D4D; font-size: 14px; margin-top: 0; margin-bottom: 12px; font-weight: 600;">معلومات التتبع والمصدر:</h3>
-                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 12px; color: #6B7C8F; line-height: 1.6;">
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13px; color: #6B7C8F; line-height: 1.6;">
                                     {% if lead.source_page %}
                                     <tr>
-                                        <td width="30%" style="padding: 4px 0; font-weight: bold;">صفحة الإرسال:</td>
-                                        <td width="70%" style="padding: 4px 0; word-break: break-all; direction: ltr; text-align: left;">
-                                            <a href="{{ lead.source_page }}" style="color: #C8A041; text-decoration: none;">{{ lead.source_page }}</a>
+                                        <td width="25%" style="padding: 6px 0; font-weight: bold; color: #11243A; vertical-align: top;">صفحة الإرسال:</td>
+                                        <td width="75%" style="padding: 6px 0;">
+                                            {% if lead.source_page_name %}
+                                            <div style="font-weight: bold; color: #0B2D4D; font-size: 13px; margin-bottom: 2px;">{{ lead.source_page_name }}</div>
+                                            {% endif %}
+                                            <a href="{{ lead.source_page }}" target="_blank" style="color: #C8A041; text-decoration: none; word-break: break-all;">
+                                                <span dir="ltr" style="unicode-bidi: isolate; display: inline-block; text-align: left;">{{ lead.source_page_decoded }}</span>
+                                            </a>
                                         </td>
                                     </tr>
                                     {% endif %}
-                                    {% if lead.referrer %}
                                     <tr>
-                                        <td style="padding: 4px 0; font-weight: bold;">المرجع (Referrer):</td>
-                                        <td style="padding: 4px 0; word-break: break-all; direction: ltr; text-align: left;">{{ lead.referrer }}</td>
+                                        <td style="padding: 6px 0; font-weight: bold; color: #11243A; vertical-align: top;">المصدر:</td>
+                                        <td style="padding: 6px 0; color: #43576B;">
+                                            {% if lead.is_direct_source %}
+                                            <span style="font-weight: 600; color: #718096;">مباشر</span>
+                                            {% else %}
+                                            <span style="font-weight: 600; color: #0B2D4D;">{{ lead.traffic_source_display }}</span>
+                                            {% if lead.referrer and not lead.utm_source %}
+                                            <div style="margin-top: 2px;">
+                                                <a href="{{ lead.referrer }}" target="_blank" style="color: #718096; text-decoration: none; font-size: 11px; word-break: break-all;">
+                                                    <span dir="ltr" style="unicode-bidi: isolate; display: inline-block;">{{ lead.referrer_decoded }}</span>
+                                                </a>
+                                            </div>
+                                            {% endif %}
+                                            {% endif %}
+                                        </td>
                                     </tr>
-                                    {% endif %}
 
                                     <tr>
-                                        <td style="padding: 4px 0; font-weight: bold;">تاريخ الإرسال:</td>
-                                        <td style="padding: 4px 0; direction: ltr; text-align: left;">{{ lead.created_at|date:"Y-m-d H:i:s" }}</td>
+                                        <td style="padding: 6px 0; font-weight: bold; color: #11243A;">تاريخ الإرسال:</td>
+                                        <td style="padding: 6px 0; direction: ltr; text-align: right; color: #43576B;">
+                                            {{ lead.created_at|date:"Y-m-d H:i:s" }} <span style="color: #718096; font-size: 11px; direction: rtl;">(توقيت ماليزيا GMT+8)</span>
+                                        </td>
                                     </tr>
                                 </table>
                             </div>

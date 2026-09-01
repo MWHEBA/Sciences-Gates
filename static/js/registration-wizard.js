@@ -321,20 +321,9 @@
             var residence = (document.getElementById('reg_residence') || {}).value || '';
             var address = (document.getElementById('reg_address') || {}).value || '';
             var notes = (document.getElementById('reg_notes') || {}).value || '';
-            var entityName = (document.getElementById('reg_institution_name') || {}).value || '';
-            var entityType = (document.getElementById('reg_entity_type') || {}).value || 'مؤسسة';
-
-            var summaryMsg = "طلب تسجيل جديد في " + entityType + ": " + entityName + "\n" +
-                "--------------------------------------------------\n" +
-                "الجنسية: " + nationality + "\n" +
-                "المرحلة الدراسية: " + level + "\n" +
-                "دولة الإقامة: " + residence + "\n" +
-                "عنوان الإقامة: " + address + "\n" +
-                "ملاحظات إضافية:\n" + (notes ? notes : "لا يوجد");
-
             var messageInput = document.getElementById('reg_combined_message') || form.querySelector('input[name="message"]');
             if (messageInput) {
-                messageInput.value = summaryMsg;
+                messageInput.value = notes ? notes.trim() : '';
             }
 
             // Set loading button visual state

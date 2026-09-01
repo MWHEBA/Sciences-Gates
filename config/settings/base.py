@@ -65,6 +65,7 @@ MIDDLEWARE = [
     'apps.core.middleware.SecurityHeadersMiddleware',
     'apps.seo.middleware.CanonicalDomainMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'apps.core.middleware.UTMAttributionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

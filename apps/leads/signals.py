@@ -67,10 +67,20 @@ def send_lead_notification_email(sender, instance, created, **kwargs):
                 'current_year': datetime.datetime.now().year,
             }
             
-            # Build email subject in Arabic
+            # Build email subject in Arabic with smart entity context
             raw_name = str(instance.name or '')
-            sanitized_name = raw_name.replace('\n', ' ').replace('\r', ' ')
-            subject = f'رسالة جديدة من {sanitized_name} - {instance.get_lead_type_display()}'
+            sanitized_name = raw_name.replace('\n', ' ').replace('\r', ' ').strip()
+            entity_label = instance.source_entity_short
+            if instance.lead_type == 'registration':
+                if entity_label:
+                    subject = f'📋 طلب تسجيل جديد: {sanitized_name} ({entity_label})'
+                else:
+                    subject = f'📋 طلب تسجيل جديد: {sanitized_name}'
+            else:
+                if entity_label:
+                    subject = f'💬 استفسار جديد: {sanitized_name} ({entity_label})'
+                else:
+                    subject = f'💬 استفسار جديد: {sanitized_name}'
             
             # Render HTML and Plain Text templates
             html_body = render_to_string('leads/emails/lead_notification_admin.html', context)
@@ -158,35 +168,40 @@ def send_lead_notification_email(sender, instance, created, **kwargs):
     # 3. Dispatch Emails Asynchronously in Background Thread
     # ----------------------------------------------------
     def _send_emails_async():
-        if admin_email_msg:
-            try:
-                admin_email_msg.send(fail_silently=False)
-                logger.info(
-                    f'Lead admin notification email sent successfully. '
-                    f'Lead ID: {instance.id}, Name: {instance.name}'
-                )
-            except Exception as e:
-                logger.error(
-                    f'Failed to send lead admin notification email. '
-                    f'Lead ID: {instance.id}, Name: {instance.name}, '
-                    f'Error: {str(e)}',
-                    exc_info=True
-                )
+        from django.db import connections
+        try:
+            if admin_email_msg:
+                try:
+                    admin_email_msg.send(fail_silently=False)
+                    logger.info(
+                        f'Lead admin notification email sent successfully. '
+                        f'Lead ID: {instance.id}, Name: {instance.name}'
+                    )
+                except Exception as e:
+                    logger.error(
+                        f'Failed to send lead admin notification email. '
+                        f'Lead ID: {instance.id}, Name: {instance.name}, '
+                        f'Error: {str(e)}',
+                        exc_info=True
+                    )
 
-        if user_email_msg:
-            try:
-                user_email_msg.send(fail_silently=False)
-                logger.info(
-                    f'Lead user confirmation email sent successfully. '
-                    f'Lead ID: {instance.id}, Recipient: {user_recipient}'
-                )
-            except Exception as e:
-                logger.error(
-                    f'Failed to send lead applicant confirmation email. '
-                    f'Lead ID: {instance.id}, Recipient: {user_recipient}, '
-                    f'Error: {str(e)}',
-                    exc_info=True
-                )
+            if user_email_msg:
+                try:
+                    user_email_msg.send(fail_silently=False)
+                    logger.info(
+                        f'Lead user confirmation email sent successfully. '
+                        f'Lead ID: {instance.id}, Recipient: {user_recipient}'
+                    )
+                except Exception as e:
+                    logger.error(
+                        f'Failed to send lead applicant confirmation email. '
+                        f'Lead ID: {instance.id}, Recipient: {user_recipient}, '
+                        f'Error: {str(e)}',
+                        exc_info=True
+                    )
+        finally:
+            # Ensure DB connection handles are cleanly closed in background thread
+            connections.close_all()
 
     # In testing mode (e.g. pytest / unittest checking mail.outbox), send synchronously
     import sys

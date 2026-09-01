@@ -168,15 +168,17 @@
                         {% endif %}
                     </div>
 
+                    {% if lead.nationality %}
                     <!-- Nationality -->
                     <div>
                         <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
                             الجنسية
                         </p>
                         <p style="font-size: 13px; color: var(--text-primary); margin: 0;">
-                            {{ lead.nationality|default:"-" }}
+                            {{ lead.nationality }}
                         </p>
                     </div>
+                    {% endif %}
 
                     {% if lead.lead_type == 'registration' %}
                     <!-- Institution Name -->
@@ -251,37 +253,74 @@
                             صفحة المصدر
                         </p>
                         {% if lead.source_page %}
+                        <div style="margin-bottom: 4px;">
+                            <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">
+                                {{ lead.source_page_name }}
+                            </span>
+                        </div>
                         <a href="{{ lead.source_page }}" target="_blank"
-                           style="font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; cursor: pointer;
-                                  word-break: break-all;"
+                           style="font-size: 12px; color: var(--primary); text-decoration: none; cursor: pointer; word-break: break-all;"
                            onmouseover="this.style.textDecoration='underline'"
                            onmouseout="this.style.textDecoration='none'">
-                            {{ lead.source_page_name }}
+                            <span dir="ltr" style="unicode-bidi: isolate; display: inline-block;">{{ lead.source_page_decoded }}</span>
                         </a>
                         {% else %}
                         <p style="font-size: 12px; color: var(--text-muted); margin: 0;">-</p>
                         {% endif %}
                     </div>
 
-                    <!-- Referrer -->
+                    <!-- Source -->
                     <div>
                         <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
-                            المرجع (Referrer)
+                            المصدر
                         </p>
-                        {% if lead.referrer_name == "رابط مباشر" or not lead.referrer %}
-                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">رابط مباشر</p>
+                        {% if lead.is_direct_source %}
+                        <p style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 0;">مباشر</p>
                         {% else %}
+                        <p style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0 0 4px 0;">
+                            {{ lead.traffic_source_display }}
+                        </p>
+                        {% if lead.referrer and not lead.utm_source %}
                         <a href="{{ lead.referrer }}" target="_blank"
-                           style="font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; cursor: pointer;
-                                  word-break: break-all;"
+                           style="font-size: 12px; color: var(--primary); text-decoration: none; cursor: pointer; word-break: break-all;"
                            onmouseover="this.style.textDecoration='underline'"
                            onmouseout="this.style.textDecoration='none'">
-                            {{ lead.referrer_name }}
+                            <span dir="ltr" style="unicode-bidi: isolate; display: inline-block;">{{ lead.referrer_decoded }}</span>
                         </a>
+                        {% endif %}
                         {% endif %}
                     </div>
 
-
+                    {% if lead.utm_source or lead.utm_campaign %}
+                    <!-- Campaign Details -->
+                    <div style="grid-column: span 2; padding-top: 12px; border-top: 1px solid var(--border);">
+                        <p style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px 0;">
+                            تفاصيل الحملة الإعلانية (UTM Parameters)
+                        </p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px;">
+                            {% if lead.utm_source %}
+                            <span style="padding: 2px 8px; background-color: var(--surface-hover, #F1F5F9); border-radius: 4px; border: 1px solid var(--border);">
+                                <strong>المنصة:</strong> {{ lead.utm_source }}
+                            </span>
+                            {% endif %}
+                            {% if lead.utm_campaign %}
+                            <span style="padding: 2px 8px; background-color: var(--surface-hover, #F1F5F9); border-radius: 4px; border: 1px solid var(--border);">
+                                <strong>الحملة:</strong> {{ lead.utm_campaign }}
+                            </span>
+                            {% endif %}
+                            {% if lead.utm_medium %}
+                            <span style="padding: 2px 8px; background-color: var(--surface-hover, #F1F5F9); border-radius: 4px; border: 1px solid var(--border);">
+                                <strong>الوسيط:</strong> {{ lead.utm_medium }}
+                            </span>
+                            {% endif %}
+                            {% if lead.utm_content %}
+                            <span style="padding: 2px 8px; background-color: var(--surface-hover, #F1F5F9); border-radius: 4px; border: 1px solid var(--border);">
+                                <strong>المحتوى:</strong> {{ lead.utm_content }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 

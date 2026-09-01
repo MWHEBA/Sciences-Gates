@@ -178,6 +178,7 @@ class LeadBaseForm(forms.ModelForm):
         fields = []
 
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
         if self.data:
             # Fallback: if phone is missing but phone_number is present in data, combine country_code + phone_number
@@ -200,6 +201,48 @@ class LeadBaseForm(forms.ModelForm):
                 instance.privacy_policy_version = getattr(settings_obj, 'privacy_policy_version', '1.0') or '1.0'
             except Exception:
                 instance.privacy_policy_version = '1.0'
+
+        # 1. Source Page and Referrer extraction
+        if self.data:
+            post_source = (self.data.get('source_page') or '').strip()
+            post_referrer = (self.data.get('referrer') or '').strip()
+            
+            if not instance.source_page:
+                if post_source and not post_source.endswith('/leads/submit/') and not post_source.endswith('/leads/submit'):
+                    instance.source_page = post_source
+                elif post_referrer:
+                    instance.source_page = post_referrer
+                elif post_source:
+                    instance.source_page = post_source
+
+            if not instance.referrer and post_referrer:
+                instance.referrer = post_referrer
+
+            # 2. Extract UTM parameters from self.data or request.session
+            session_utm = {}
+            if self.request and hasattr(self.request, 'session'):
+                session_utm = self.request.session.get('sg_utm', {})
+
+            def _get_utm(key, max_len):
+                val = (self.data.get(key) or session_utm.get(key) or '').strip()
+                return val[:max_len] if val else None
+
+            if not instance.utm_source:
+                instance.utm_source = _get_utm('utm_source', 150)
+            if not instance.utm_medium:
+                instance.utm_medium = _get_utm('utm_medium', 150)
+            if not instance.utm_campaign:
+                instance.utm_campaign = _get_utm('utm_campaign', 200)
+            if not instance.utm_term:
+                instance.utm_term = _get_utm('utm_term', 200)
+            if not instance.utm_content:
+                instance.utm_content = _get_utm('utm_content', 200)
+
+            # 3. Handle notes if message is not populated
+            notes_val = (self.data.get('notes') or '').strip()
+            if notes_val and not instance.message:
+                instance.message = notes_val
+
         if commit:
             instance.save()
         return instance
@@ -263,7 +306,7 @@ class LeadBaseForm(forms.ModelForm):
             nationality = nationality.strip()
             # Normalize country name to demonym if in NATIONALITY_MAP
             return NATIONALITY_MAP.get(nationality, nationality)
-        return nationality or 'غير محدد'
+        return nationality or ''
 
     def clean(self):
         """

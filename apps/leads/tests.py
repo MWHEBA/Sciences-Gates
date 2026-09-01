@@ -325,7 +325,7 @@ class LeadModelFieldsTests(TestCase):
     def test_phone_field_max_length(self):
         """Test phone field max_length."""
         field = Lead._meta.get_field('phone')
-        self.assertEqual(field.max_length, 20)
+        self.assertEqual(field.max_length, 50)
     
     def test_source_page_field_blank(self):
         """Test source_page field is blank=True."""
@@ -663,7 +663,7 @@ class LeadEmailNotificationSignalTests(TestCase):
         
         email = mail.outbox[0]
         # Body should contain Arabic text
-        self.assertIn('الاسم:', email.body)
+        self.assertIn('الاسم', email.body)
         self.assertIn('البريد الإلكتروني:', email.body)
         self.assertIn('رقم الهاتف:', email.body)
         self.assertIn('نوع الرسالة:', email.body)
@@ -900,9 +900,9 @@ class LeadEmailNotificationPropertyBasedTests(HypothesisTestCase):
         self.assertEqual(len(mail.outbox), 2)
 
         
-        # Email should contain sanitized lead name (newlines removed)
+        # Email should contain sanitized lead name (newlines removed and stripped)
         email_obj = mail.outbox[0]
-        sanitized_name = name.replace('\n', ' ').replace('\r', ' ')
+        sanitized_name = name.replace('\n', ' ').replace('\r', ' ').strip()
         self.assertIn(sanitized_name, email_obj.subject)
 
 
@@ -1001,6 +1001,139 @@ class UniversityAndInstituteRegistrationModalTests(TestCase):
         # Exactly 1 Lead record should exist in DB
         leads_count = Lead.objects.filter(email='khaled_double@example.com').count()
         self.assertEqual(leads_count, 1)
+
+    def test_lead_source_page_normalization_and_entity_resolution(self):
+        """Test URL normalization to HTTPS and smart Arabic entity name resolution."""
+        from apps.articles.models import Article
+        Article.objects.create(title="دليل الدراسة في ماليزيا", slug="دليل-الدراسة-في-ماليزيا", content="محتوى تجريبي")
+
+        lead = Lead.objects.create(
+            lead_type=LeadType.CONTACT,
+            name='سارة كمال',
+            phone='+60123456789',
+            source_page='/articles/%D8%AF%D9%84%D9%8A%D9%84-%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D8%A9-%D9%81%D9%8A-%D9%85%D8%A7%D9%84%D9%8A%D8%B2%D9%8A%D8%A7/'
+        )
+        self.assertTrue(lead.source_page.startswith('https://sciencesgates.com/articles/'))
+        self.assertIn('دليل-الدراسة-في-ماليزيا', lead.source_page_decoded)
+        self.assertEqual(lead.source_page_name, 'مقال: دليل الدراسة في ماليزيا')
+
+        lead_uni = Lead.objects.create(
+            lead_type=LeadType.REGISTRATION,
+            name='سارة كمال',
+            phone='+60123456789',
+            source_page='/universities/%D8%AC%D8%A7%D9%85%D8%B9%D8%A9-%D8%AA%D8%A7%D9%8A%D9%84%D9%88%D8%B1/'
+        )
+        self.assertTrue(lead_uni.source_page.startswith('https://sciencesgates.com/universities/'))
+        self.assertIn('جامعة-تايلور', lead_uni.source_page_decoded)
+        self.assertEqual(lead_uni.source_page_name, 'جامعة: جامعة تايلور')
+
+    def test_lead_phone_clean_whatsapp_link(self):
+        """Test phone cleaning and WhatsApp link validation."""
+        lead_valid = Lead.objects.create(
+            lead_type=LeadType.CONTACT,
+            name='علي سالم',
+            phone='+60 18-263 8888'
+        )
+        self.assertEqual(lead_valid.phone_clean, '60182638888')
+
+        lead_short = Lead.objects.create(
+            lead_type=LeadType.CONTACT,
+            name='عمرو',
+            phone='12345'
+        )
+        self.assertEqual(lead_short.phone_clean, '')
+
+    def test_traffic_source_display_with_utm_and_direct(self):
+        """Test traffic source display for campaigns, referrers, and direct visits."""
+        lead_utm = Lead.objects.create(
+            lead_type=LeadType.CONTACT,
+            name='ياسر حسني',
+            phone='+201011112222',
+            utm_source='facebook',
+            utm_campaign='%D8%AD%D9%85%D9%84%D8%A9_%D8%A7%D9%84%D8%B5%D9%8A%D9%81_2026'
+        )
+        self.assertIn('إعلان فيسبوك', lead_utm.traffic_source_display)
+        self.assertIn('حملة: حملة الصيف 2026', lead_utm.traffic_source_display)
+        self.assertFalse(lead_utm.is_direct_source)
+
+        lead_direct = Lead.objects.create(
+            lead_type=LeadType.CONTACT,
+            name='منى',
+            phone='+201033334444',
+            referrer='https://sciencesgates.com/about-us/'
+        )
+        self.assertEqual(lead_direct.traffic_source_display, 'مباشر')
+        self.assertTrue(lead_direct.is_direct_source)
+
+    def test_session_attribution_persistence_in_form(self):
+        """Test that LeadBaseForm automatically retrieves UTM parameters from session across pages."""
+        session = self.client.session
+        session['sg_utm'] = {
+            'utm_source': 'google',
+            'utm_campaign': 'study_malaysia_2026'
+        }
+        session.save()
+
+        url = reverse('leads:submit')
+        payload = {
+            'lead_type': 'contact',
+            'name': 'طارق سعيد',
+            'email': 'tarek_utm@example.com',
+            'phone': '+201055556666',
+            'nationality': 'مصري',
+            'message': 'استفسار عن التسجيل',
+            'source_page': 'https://sciencesgates.com/universities/',
+        }
+        res = self.client.post(url, payload, follow=True)
+        self.assertEqual(res.status_code, 200)
+
+        saved_lead = Lead.objects.filter(email='tarek_utm@example.com').first()
+        self.assertIsNotNone(saved_lead)
+        self.assertEqual(saved_lead.utm_source, 'google')
+        self.assertEqual(saved_lead.utm_campaign, 'study_malaysia_2026')
+
+    def test_lead_email_notification_subject_contains_entity_name(self):
+        """Test that admin email notification subject includes the university/major name."""
+        from django.core import mail
+        mail.outbox.clear()
+
+        lead = Lead.objects.create(
+            lead_type=LeadType.REGISTRATION,
+            name='حسن كيالي',
+            email='hassan_sub@example.com',
+            phone='+97455554444',
+            institution_name='جامعة تايلور Taylor\'s',
+            source_page='https://sciencesgates.com/universities/taylors/'
+        )
+
+        self.assertGreaterEqual(len(mail.outbox), 1)
+        admin_email = mail.outbox[0]
+        self.assertIn('حسن كيالي', admin_email.subject)
+        self.assertIn('جامعة تايلور', admin_email.subject)
+
+    def test_csv_export_view_uses_decoded_urls_and_sources(self):
+        """Test that CSV export outputs readable Arabic URLs and 'مباشر' sources."""
+        from django.contrib.auth.models import User
+        admin_user = User.objects.create_superuser('admin_csv', 'admin_csv@example.com', 'pass1234')
+        self.client.force_login(admin_user)
+
+        Lead.objects.create(
+            lead_type=LeadType.REGISTRATION,
+            name='كريم عادل',
+            email='karim_csv@example.com',
+            phone='+201077778888',
+            source_page='https://sciencesgates.com/universities/%D8%AC%D8%A7%D9%85%D8%B9%D8%A9-%D9%85%D8%A7%D9%84%D8%A7%D9%8A%D8%A7/',
+            referrer='https://sciencesgates.com/'
+        )
+
+        url = reverse('dashboard:lead_export')
+        response = self.client.get(f"{url}?lead_type=registration")
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8-sig')
+        self.assertIn('اسم صفحة الإرسال', content)
+        self.assertIn('جامعة مالايا', content)
+        self.assertIn('مباشر', content)
+
 
 
 
