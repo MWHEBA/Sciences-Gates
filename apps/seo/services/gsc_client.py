@@ -290,9 +290,10 @@ class GSCClient:
                 result[key].sort(key=lambda x: (x["clicks"], x["impressions"]), reverse=True)
             result["weak"].sort(key=lambda x: x["impressions"], reverse=True)
 
-            # Keep only the top 15 pages in each category to avoid bloating HTML
-            for key in ["winners", "quick_wins", "growth", "low_visibility", "weak", "broken"]:
+            # Keep only the top 15 pages in performance categories (and top 50 for broken 404s) to avoid bloating HTML
+            for key in ["winners", "quick_wins", "growth", "low_visibility", "weak"]:
                 result[key] = result[key][:15]
+            result["broken"] = result["broken"][:50]
 
             cache.set(cache_key, result, CACHE_TTL)
             cache.set(fallback_cache_key, result, 60 * 60 * 24 * 7)

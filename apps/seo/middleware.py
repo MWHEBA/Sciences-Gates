@@ -1,6 +1,7 @@
 import logging
 from django.db import transaction
 from django.http import HttpResponsePermanentRedirect
+from django.utils import timezone
 from django.utils.deprecation import MiddlewareMixin
 from .models import Page404Log
 
@@ -61,6 +62,13 @@ class Page404TrackingMiddleware:
                 ua_short = user_agent[:150]
                 ua_dict[ua_short] = ua_dict.get(ua_short, 0) + 1
                 log.user_agents = ua_dict
+
+                # Update daily hits tracking
+                today_str = timezone.now().strftime('%Y-%m-%d')
+                if hasattr(log, 'daily_hits'):
+                    daily = log.daily_hits or {}
+                    daily[today_str] = daily.get(today_str, 0) + 1
+                    log.daily_hits = daily
 
                 log.save()
         except Exception as exc:

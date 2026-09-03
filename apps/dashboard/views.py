@@ -537,6 +537,7 @@ class SearchConsoleView(SEOAdminRequiredMixin, View):
             'bracketted_pages': {},
             'top_queries': [],
             'gsc_data_stale': False,
+            'total_broken_count': 0,
         }
 
         if connected:
@@ -545,9 +546,14 @@ class SearchConsoleView(SEOAdminRequiredMixin, View):
                 bracketted_data = gsc.get_bracketted_pages(days)
                 top_queries_data = gsc.get_top_queries(days, limit=10)
 
-                # Fetch 404 logs from database and group by path variations (trailing slash)
+                # Fetch 404 logs from database filtered by the selected date range and group by path variations
+                from django.utils import timezone
+                from datetime import timedelta
                 from apps.seo.models import Page404Log
                 from collections import defaultdict
+                
+                cutoff_date = timezone.now() - timedelta(days=days)
+                cutoff_str = cutoff_date.strftime('%Y-%m-%d')
                 
                 grouped_logs = defaultdict(lambda: {
                     "hits": 0,
@@ -557,13 +563,23 @@ class SearchConsoleView(SEOAdminRequiredMixin, View):
                     "paths": set()
                 })
                 
-                for log in Page404Log.objects.filter(is_ignored=False):
+                for log in Page404Log.objects.filter(is_ignored=False, last_hit__gte=cutoff_date):
+                    # Calculate hits strictly within the selected date range
+                    daily_hits = getattr(log, 'daily_hits', None)
+                    if daily_hits:
+                        period_hits = sum(count for d_str, count in daily_hits.items() if d_str >= cutoff_str)
+                    else:
+                        period_hits = log.hits
+
+                    if period_hits <= 0:
+                        continue
+
                     path_key = log.path.rstrip('/')
                     if not path_key:
                         path_key = '/'
                     
                     data = grouped_logs[path_key]
-                    data["hits"] += log.hits
+                    data["hits"] += period_hits
                     if not data["last_hit"] or log.last_hit > data["last_hit"]:
                         data["last_hit"] = log.last_hit
                         
@@ -574,15 +590,21 @@ class SearchConsoleView(SEOAdminRequiredMixin, View):
                     
                     data["paths"].add(log.path)
                 
-                # Sort groups by hits descending, then by last_hit descending
+                # Filter groups to only those with at least 10 hits (visits) in the selected period
+                qualified_groups = [
+                    item for item in grouped_logs.items()
+                    if item[1]["hits"] >= 10
+                ]
+
+                # Sort groups by hits descending (largest to smallest), then by last_hit descending
                 sorted_groups = sorted(
-                    grouped_logs.items(),
+                    qualified_groups,
                     key=lambda x: (x[1]["hits"], x[1]["last_hit"]),
                     reverse=True
                 )
                 
                 broken_pages = []
-                for path_key, data in sorted_groups[:15]:
+                for path_key, data in sorted_groups[:50]:
                     # Display the variation with the trailing slash if it exists
                     display_path = sorted(list(data["paths"]), key=len, reverse=True)[0]
                     
@@ -604,10 +626,29 @@ class SearchConsoleView(SEOAdminRequiredMixin, View):
                         "egy_position": None,
                         "top_query": None,
                     })
+
+                # Include any additional 404 pages detected by Google Search Console during this period (at least 10 visits)
+                gsc_broken = bracketted_data.get("broken", [])
+                seen_paths = {p["path"].rstrip('/') for p in broken_pages}
+                extra_gsc = [
+                    gp for gp in gsc_broken 
+                    if gp.get("path", "").rstrip('/') not in seen_paths and gp.get("clicks", 0) >= 10
+                ]
+                
+                total_broken_count = len(sorted_groups) + len(extra_gsc)
+                if extra_gsc:
+                    broken_pages.extend(extra_gsc)
+                    # Re-sort all broken pages by visits descending (largest to smallest)
+                    broken_pages.sort(key=lambda x: x["clicks"], reverse=True)
+                
+                broken_pages = broken_pages[:50]
+
                 bracketted_data["broken"] = broken_pages
+                bracketted_data["total_broken_count"] = total_broken_count
 
                 context['summary'] = summary_data
                 context['bracketted_pages'] = bracketted_data
+                context['total_broken_count'] = total_broken_count
                 context['top_queries'] = top_queries_data.get('queries', [])
 
                 if (summary_data.get('is_stale') or 

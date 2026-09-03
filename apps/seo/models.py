@@ -38,6 +38,7 @@ class Page404Log(models.Model):
     last_hit = models.DateTimeField(auto_now=True, verbose_name="تاريخ آخر محاولة")
     referrers = models.JSONField(default=dict, blank=True, verbose_name="مصادر الزيارة (Referrers)")
     user_agents = models.JSONField(default=dict, blank=True, verbose_name="المتصفحات / الأجهزة")
+    daily_hits = models.JSONField(default=dict, blank=True, verbose_name="الزيارات اليومية")
     is_ignored = models.BooleanField(default=False, verbose_name="متجاهل")
 
     class Meta:

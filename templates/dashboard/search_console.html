@@ -168,7 +168,7 @@
                 </button>
                 <button onclick="switchTab('broken', this)" id="tab-btn-broken"
                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors text-muted hover:text-primary">
-                    أخطاء 404 ({{ bracketted_pages.broken|length }})
+                    أخطاء 404 ({% if total_broken_count and total_broken_count > bracketted_pages.broken|length %}{{ bracketted_pages.broken|length }} من {{ total_broken_count }}{% else %}{{ bracketted_pages.broken|length|default:0 }}{% endif %})
                 </button>
             </div>
         </div>
@@ -191,6 +191,11 @@
             
             <div id="pages-table-empty" class="p-8 text-center hidden">
                 <p class="text-sm m-0" style="color: var(--text-muted);">لا توجد صفحات في هذا التصنيف حالياً</p>
+            </div>
+
+            <!-- 404 Info Banner -->
+            <div id="broken-info-banner" class="px-5 py-2.5 text-xs border-t hidden items-center justify-between" style="background-color: var(--bg-light); border-color: var(--border); color: var(--text-muted);">
+                <span>يتم عرض أعلى <strong style="color: var(--text-primary);" id="broken-display-count">0</strong> مساراً بحسب عدد محاولات الزيارة من إجمالي <strong style="color: var(--text-primary);" id="broken-total-count">0</strong> مسار تم رصدهم خلال آخر {{ selected_days }} يوم.</span>
             </div>
         </div>
     </div>
@@ -414,6 +419,22 @@ function renderTable() {
     
     tbody.innerHTML = '';
     
+    const brokenBanner = document.getElementById('broken-info-banner');
+    if (brokenBanner) {
+        if (activeTab === 'broken' && list.length > 0) {
+            const total = brackettedPages.total_broken_count !== undefined ? brackettedPages.total_broken_count : list.length;
+            const dispSpan = document.getElementById('broken-display-count');
+            const totalSpan = document.getElementById('broken-total-count');
+            if (dispSpan) dispSpan.textContent = list.length;
+            if (totalSpan) totalSpan.textContent = total;
+            brokenBanner.classList.remove('hidden');
+            brokenBanner.classList.add('flex');
+        } else {
+            brokenBanner.classList.add('hidden');
+            brokenBanner.classList.remove('flex');
+        }
+    }
+    
     if (list.length === 0) {
         tbody.classList.add('hidden');
         emptyDiv.classList.remove('hidden');
@@ -555,6 +576,31 @@ function showToast(message, level = 'success') {
     }));
 }
 
+function updateTabButtonCount(tabName) {
+    const btn = document.getElementById(`tab-btn-${tabName}`);
+    if (!btn) return;
+    const list = brackettedPages[tabName] || [];
+    const count = list.length;
+    const labels = {
+        winners: 'المتصدرة',
+        quick_wins: 'فرص قريبة',
+        growth: 'منطقة نمو',
+        low_visibility: 'ظهور متأخر',
+        weak: 'صفحات ضعيفة',
+        broken: 'أخطاء 404'
+    };
+    if (tabName === 'broken') {
+        const total = brackettedPages.total_broken_count !== undefined ? brackettedPages.total_broken_count : count;
+        if (total > count) {
+            btn.textContent = `${labels[tabName]} (${count} من ${total})`;
+        } else {
+            btn.textContent = `${labels[tabName]} (${count})`;
+        }
+    } else {
+        btn.textContent = `${labels[tabName]} (${count})`;
+    }
+}
+
 function submitRedirect(event) {
     event.preventDefault();
     const newUrl = document.getElementById('redirect-new-url').value.trim();
@@ -591,22 +637,11 @@ function submitRedirect(event) {
             if (idx > -1) {
                 brackettedPages[activeTab].splice(idx, 1);
             }
-            
-            // Update tab button count
-            const btn = document.getElementById(`tab-btn-${activeTab}`);
-            if (btn) {
-                const count = brackettedPages[activeTab].length;
-                const labels = {
-                    winners: 'المتصدرة',
-                    quick_wins: 'فرص قريبة',
-                    growth: 'منطقة نمو',
-                    low_visibility: 'ظهور متأخر',
-                    weak: 'صفحات ضعيفة',
-                    broken: 'أخطاء 404'
-                };
-                btn.textContent = `${labels[activeTab]} (${count})`;
+            if (activeTab === 'broken' && typeof brackettedPages.total_broken_count === 'number') {
+                brackettedPages.total_broken_count = Math.max(0, brackettedPages.total_broken_count - 1);
             }
             
+            updateTabButtonCount(activeTab);
             renderTable();
         } else {
             const errDiv = document.getElementById('redirect-modal-error');
@@ -655,22 +690,11 @@ function ignore404(path, event) {
             if (idx > -1) {
                 brackettedPages[activeTab].splice(idx, 1);
             }
-            
-            // Update tab button count
-            const btn = document.getElementById(`tab-btn-${activeTab}`);
-            if (btn) {
-                const count = brackettedPages[activeTab].length;
-                const labels = {
-                    winners: 'المتصدرة',
-                    quick_wins: 'فرص قريبة',
-                    growth: 'منطقة نمو',
-                    low_visibility: 'ظهور متأخر',
-                    weak: 'صفحات ضعيفة',
-                    broken: 'أخطاء 404'
-                };
-                btn.textContent = `${labels[activeTab]} (${count})`;
+            if (activeTab === 'broken' && typeof brackettedPages.total_broken_count === 'number') {
+                brackettedPages.total_broken_count = Math.max(0, brackettedPages.total_broken_count - 1);
             }
             
+            updateTabButtonCount(activeTab);
             renderTable();
         } else {
             alert('❌ ' + (data.error || 'حدث خطأ أثناء تجاهل الرابط.'));

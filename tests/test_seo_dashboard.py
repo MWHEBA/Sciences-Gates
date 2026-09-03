@@ -197,3 +197,132 @@ class TestSearchConsoleDashboard:
         assert "is_active" not in keys
         assert response.context["edit_url_name"] == "dashboard:redirect_edit"
         assert response.context["delete_url_name"] == "dashboard:redirect_delete"
+
+    @patch('apps.seo.services.gsc_client.GSCClient.is_connected')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_summary')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_bracketted_pages')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_top_queries')
+    def test_search_console_view_404_limit_and_total_count(
+        self, mock_top_queries, mock_brackets, mock_summary, mock_connected,
+        client, seo_admin_user
+    ):
+        mock_connected.return_value = True
+        mock_summary.return_value = {"total_clicks": 10, "total_impressions": 100, "avg_ctr": 10.0, "avg_position": 1.0, "days": 28, "is_stale": False}
+        mock_brackets.return_value = {"winners": [], "quick_wins": [], "growth": [], "low_visibility": [], "weak": [], "broken": [], "is_stale": False}
+        mock_top_queries.return_value = {"queries": [], "is_stale": False}
+
+        # Create 60 Page404Log items with hits >= 10
+        for i in range(60):
+            Page404Log.objects.create(path=f"/broken-page-{i}/", hits=i + 10)
+
+        client.force_login(seo_admin_user)
+        url = reverse('dashboard:search_console')
+        response = client.get(url)
+
+        assert response.status_code == 200
+        assert response.context["total_broken_count"] == 60
+        assert len(response.context["bracketted_pages"]["broken"]) == 50
+        # Assert highest hits comes first
+        assert response.context["bracketted_pages"]["broken"][0]["clicks"] == 69
+
+    @patch('apps.seo.services.gsc_client.GSCClient.is_connected')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_summary')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_bracketted_pages')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_top_queries')
+    def test_search_console_view_404_date_range_filter(
+        self, mock_top_queries, mock_brackets, mock_summary, mock_connected,
+        client, seo_admin_user
+    ):
+        from django.utils import timezone
+        from datetime import timedelta
+
+        mock_connected.return_value = True
+        mock_summary.return_value = {"total_clicks": 0, "total_impressions": 0, "avg_ctr": 0, "avg_position": 0, "days": 7, "is_stale": False}
+        mock_brackets.return_value = {"winners": [], "quick_wins": [], "growth": [], "low_visibility": [], "weak": [], "broken": [], "is_stale": False}
+        mock_top_queries.return_value = {"queries": [], "is_stale": False}
+
+        recent_date = (timezone.now() - timedelta(days=2)).strftime('%Y-%m-%d')
+        old_date = (timezone.now() - timedelta(days=20)).strftime('%Y-%m-%d')
+
+        # Create 1 recent 404 (2 days ago) and 1 old 404 (20 days ago), both hits >= 10
+        recent = Page404Log.objects.create(path="/recent-404/", hits=15, daily_hits={recent_date: 15})
+        old = Page404Log.objects.create(path="/old-404/", hits=12, daily_hits={old_date: 12})
+        Page404Log.objects.filter(pk=old.pk).update(last_hit=timezone.now() - timedelta(days=20))
+
+        client.force_login(seo_admin_user)
+        
+        # When querying with days=7, only recent should appear
+        resp_7 = client.get(reverse('dashboard:search_console') + "?days=7")
+        assert resp_7.status_code == 200
+        assert resp_7.context["total_broken_count"] == 1
+        assert resp_7.context["bracketted_pages"]["broken"][0]["path"] == "/recent-404/"
+        assert resp_7.context["bracketted_pages"]["broken"][0]["clicks"] == 15
+
+        # When querying with days=28, both should appear, sorted descending (15, 12)
+        mock_summary.return_value["days"] = 28
+        resp_28 = client.get(reverse('dashboard:search_console') + "?days=28")
+        assert resp_28.status_code == 200
+        assert resp_28.context["total_broken_count"] == 2
+        assert resp_28.context["bracketted_pages"]["broken"][0]["clicks"] == 15
+        assert resp_28.context["bracketted_pages"]["broken"][1]["clicks"] == 12
+
+    @patch('apps.seo.services.gsc_client.GSCClient.is_connected')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_summary')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_bracketted_pages')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_top_queries')
+    def test_search_console_view_404_min_10_hits_filter(
+        self, mock_top_queries, mock_brackets, mock_summary, mock_connected,
+        client, seo_admin_user
+    ):
+        from django.utils import timezone
+        today_str = timezone.now().strftime('%Y-%m-%d')
+
+        mock_connected.return_value = True
+        mock_summary.return_value = {"total_clicks": 0, "total_impressions": 0, "avg_ctr": 0, "avg_position": 0, "days": 28, "is_stale": False}
+        mock_brackets.return_value = {"winners": [], "quick_wins": [], "growth": [], "low_visibility": [], "weak": [], "broken": [], "is_stale": False}
+        mock_top_queries.return_value = {"queries": [], "is_stale": False}
+
+        # Page with 10 hits (should qualify)
+        Page404Log.objects.create(path="/qualified-404/", hits=10, daily_hits={today_str: 10})
+        # Page with 9 hits (should be excluded)
+        Page404Log.objects.create(path="/low-hits-404/", hits=9, daily_hits={today_str: 9})
+
+        client.force_login(seo_admin_user)
+        resp = client.get(reverse('dashboard:search_console'))
+        assert resp.status_code == 200
+        assert resp.context["total_broken_count"] == 1
+        assert resp.context["bracketted_pages"]["broken"][0]["path"] == "/qualified-404/"
+        assert resp.context["bracketted_pages"]["broken"][0]["clicks"] == 10
+
+    @patch('apps.seo.services.gsc_client.GSCClient.is_connected')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_summary')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_bracketted_pages')
+    @patch('apps.seo.services.gsc_client.GSCClient.get_top_queries')
+    def test_search_console_view_404_sorted_descending(
+        self, mock_top_queries, mock_brackets, mock_summary, mock_connected,
+        client, seo_admin_user
+    ):
+        from django.utils import timezone
+        today_str = timezone.now().strftime('%Y-%m-%d')
+
+        mock_connected.return_value = True
+        mock_summary.return_value = {"total_clicks": 0, "total_impressions": 0, "avg_ctr": 0, "avg_position": 0, "days": 7, "is_stale": False}
+        mock_brackets.return_value = {"winners": [], "quick_wins": [], "growth": [], "low_visibility": [], "weak": [], "broken": [], "is_stale": False}
+        mock_top_queries.return_value = {"queries": [], "is_stale": False}
+
+        Page404Log.objects.create(path="/medium-404/", hits=20, daily_hits={today_str: 20})
+        Page404Log.objects.create(path="/highest-404/", hits=50, daily_hits={today_str: 50})
+        Page404Log.objects.create(path="/lowest-404/", hits=10, daily_hits={today_str: 10})
+
+        client.force_login(seo_admin_user)
+        resp = client.get(reverse('dashboard:search_console') + "?days=7")
+        assert resp.status_code == 200
+        broken = resp.context["bracketted_pages"]["broken"]
+        assert len(broken) == 3
+        # Assert strict descending order (50, 20, 10)
+        assert broken[0]["path"] == "/highest-404/"
+        assert broken[0]["clicks"] == 50
+        assert broken[1]["path"] == "/medium-404/"
+        assert broken[1]["clicks"] == 20
+        assert broken[2]["path"] == "/lowest-404/"
+        assert broken[2]["clicks"] == 10
