@@ -49,7 +49,17 @@ def send_lead_notification_email(sender, instance, created, **kwargs):
             
         recipient_list = [user.email for user in staff_users if user.email]
         
-        # Fallback to settings.ADMIN_EMAIL if no staff emails are configured/enabled
+        # Include primary site contact email from SiteSettings if configured
+        try:
+            site_settings = SiteSettings.get_settings()
+            if site_settings and site_settings.email and site_settings.email.strip():
+                primary_email = site_settings.email.strip()
+                if primary_email not in recipient_list:
+                    recipient_list.append(primary_email)
+        except Exception as e:
+            logger.warning(f"Could not load SiteSettings primary email: {e}")
+
+        # Fallback to settings.ADMIN_EMAIL if no staff emails or primary email are configured/enabled
         if not recipient_list:
             admin_email = settings.ADMIN_EMAIL
             if isinstance(admin_email, str):

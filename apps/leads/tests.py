@@ -684,6 +684,32 @@ class LeadEmailNotificationSignalTests(TestCase):
         
         email = mail.outbox[0]
         self.assertIn('admin@example.com', email.to)
+
+    def test_email_sent_to_site_settings_primary_email(self):
+        """Test that email is sent to primary email in SiteSettings if set."""
+        from .models import Lead, LeadType
+        from apps.core.models import SiteSettings
+
+        site_settings = SiteSettings.get_settings()
+        site_settings.email = 'primary_contact@sciencesgates.com'
+        site_settings.save()
+
+        mail.outbox = []
+
+        lead = Lead.objects.create(
+            lead_type=LeadType.REGISTRATION,
+            name='سامي حسن',
+            email='sami@example.com',
+            phone='+201234567899',
+            message='رسالة'
+        )
+
+        admin_email = mail.outbox[0]
+        self.assertIn('primary_contact@sciencesgates.com', admin_email.to)
+
+        # Clean up
+        site_settings.email = ''
+        site_settings.save()
     
     def test_email_from_address(self):
         """Test that email is sent from DEFAULT_FROM_EMAIL."""
