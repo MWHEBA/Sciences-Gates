@@ -27,7 +27,7 @@
     <meta property="og:description" content="{% block og_description %}اكتشف أفضل الجامعات والمعاهد في ماليزيا{% endblock %}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:url" content="{% block og_url %}{% if 'sciencesgates.com' in request.get_host %}https://sciencesgates.com{{ request.path }}{% else %}{{ request.build_absolute_uri }}{% endif %}{% endblock %}">
-    <meta property="og:site_name" content="شركة بوابات العلوم للدراسة في ماليزيا">
+    <meta property="og:site_name" content="شركة بوابات العلوم">
     <meta property="og:locale" content="ar_SA">
     {% block og_image %}
     <meta property="og:image" content="{% if 'sciencesgates.com' in request.get_host %}https://sciencesgates.com{% else %}{{ request.scheme }}://{{ request.get_host }}{% endif %}{% static 'images/og-default.jpg' %}">

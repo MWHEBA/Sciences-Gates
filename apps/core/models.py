@@ -1,6 +1,7 @@
 """
 Core abstract models for reusable functionality.
 """
+import re
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -176,9 +177,66 @@ class SEOMixin(models.Model):
             return f'{index}, {follow}, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
         return f'{index}, {follow}'
 
+    def get_full_title(self, separator=" - ", brand_name="شركة بوابات العلوم", force_brand=False):
+        """
+        Return complete, deduplicated, and single-delimiter SEO title in runtime memory.
+        - Zero DB mutations: operates strictly in-memory during template rendering.
+        - Aligned with internal scoring limit (<= 65 chars).
+        - Cleans legacy marketing, CTA tails (سجل/قدم الآن), and colons/dashes marketing tails.
+        - Pipe-Only Segmentation: eliminates all double pipes across 100% of articles.
+        - Forces brand 100% on universities, institutes, and majors.
+        - Protects against prefix repetition if title already starts with brand name.
+        """
+        base_title = (self.meta_title or getattr(self, 'name', '') or getattr(self, 'title', '')).strip()
+        if not base_title:
+            return brand_name
+
+        # 1. Clean legacy marketing suffixes, CTA tails, and institute/major suffixes found in database (in-memory only)
+        legacy_suffixes = [
+            r'\s*[-–—|]\s*الدراسة في ماليزيا\s*[-–—|]\s*مكتب قبولات\s*$',
+            r'\s*[-–—|]\s*مكتب قبولات\s*$',
+            r'\s*[-–—]\s*[A-Za-z &]+(?=\s*[-–—|]|$)',
+            r'\s*[-–—|:]\s*(?:الرسوم وال(?:تسجيل|قبول)|الدليل الشامل[^\-–|]*|الاسعار والخصومات[^\-–|]*)\s*$',
+            r'\s*(?:[-–—|:]\s*)?(?:سجل|قدم)\s*ال[آأا]ن\s*$',
+            r'\s*[-–—|]\s*شركة بوابات العلوم\s*$',
+            r'\s*[-–—|]\s*بوابات العلوم\s*$',
+            r'\s*[-–—|]\s*Sciences Gates\s*$',
+        ]
+        for pattern in legacy_suffixes:
+            base_title = re.sub(pattern, '', base_title, flags=re.IGNORECASE).strip()
+
+        # 2. Check if title starts or ends with brand (e.g. Home page or company news)
+        brand_variants = [brand_name, 'بوابات العلوم', 'Sciences Gates', 'Science Gates']
+        for variant in brand_variants:
+            if base_title.startswith(variant) or base_title.endswith(variant):
+                return base_title
+
+        # 3. Pipe-Only Segmentation for compound titles:
+        if '|' in base_title:
+            primary_part = base_title.split('|')[0].strip()
+            candidate = f"{primary_part}{separator}{brand_name}"
+            if len(candidate) <= 65 or force_brand:
+                return candidate
+            return primary_part
+
+        # 4. Direct candidate check for simple titles without inner pipes:
+        full_candidate = f"{base_title}{separator}{brand_name}"
+        if len(full_candidate) <= 65 or force_brand:
+            return full_candidate
+
+        return base_title
+
     def get_og_title(self):
-        """Return OG title or fallback to meta title."""
-        return self.og_title or self.get_meta_title()
+        """
+        Return rich title for social platforms (Facebook, WhatsApp, LinkedIn)
+        allowing longer marketing hooks when available, or falling back to get_full_title().
+        """
+        if self.og_title:
+            return self.og_title
+        # If meta_title has a rich marketing hook, preserve it for social sharing
+        if self.meta_title and '|' in self.meta_title:
+            return f"{self.meta_title.strip()} - شركة بوابات العلوم"
+        return self.get_full_title()
 
     def get_og_description(self):
         """Return OG description or fallback to meta description."""

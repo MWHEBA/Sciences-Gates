@@ -5,11 +5,13 @@
 {% load schema_tags %}
 {% load seo_tags %}
 
-{% block title %}{{ major.meta_title|default:major.name }} - شركة بوابات العلوم{% endblock %}
+{% block title %}{{ major.get_full_title|default:major.name }}{% endblock %}
 {% block meta_description %}{{ major.meta_description|default:major.description|clean_desc|truncatewords:30 }}{% endblock %}
 
-{% block og_title %}{{ major.og_title|default:major.name }}{% endblock %}
+{% block og_title %}{{ major.get_og_title|default:major.name }}{% endblock %}
 {% block og_description %}{{ major.og_description|default:major.description|clean_desc|truncatewords:30 }}{% endblock %}
+{% block twitter_title %}{{ major.get_og_title|default:major.name }}{% endblock %}
+{% block twitter_description %}{{ major.og_description|default:major.description|clean_desc|truncatewords:30 }}{% endblock %}
 
 {% block og_image %}
 {% with og_img=major.get_og_image_url %}

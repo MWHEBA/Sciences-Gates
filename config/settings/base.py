@@ -5,7 +5,19 @@ Environment-specific overrides are in local.py and production.py
 """
 import os
 from pathlib import Path
-from decouple import config, Csv
+try:
+    from decouple import config, Csv
+except ImportError:
+    def config(key, default=None, cast=None):
+        val = os.environ.get(key, default)
+        if cast and val is not None:
+            if cast is bool:
+                return str(val).lower() in ('true', '1', 't', 'yes', 'y')
+            return cast(val)
+        return val
+    def Csv():
+        return lambda v: [x.strip() for x in v.split(',')] if isinstance(v, str) else v
+
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent.parent

@@ -194,7 +194,7 @@ class SchemaGenerator:
                 "@type": "WebPage",
                 "@id": article_url
             },
-            "headline": article.get_meta_title() if hasattr(article, 'get_meta_title') else (getattr(article, 'meta_title', None) or getattr(article, 'title', '')),
+            "headline": article.get_full_title() if hasattr(article, 'get_full_title') else (getattr(article, 'meta_title', None) or getattr(article, 'title', '')),
             "description": article.get_meta_description() if hasattr(article, 'get_meta_description') else (getattr(article, 'meta_description', None) or getattr(article, 'content', '')),
             "image": [logo_url],
             "datePublished": article.publish_date.replace(microsecond=0).isoformat() if getattr(article, 'publish_date', None) else None,

@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ author.name }} | الخبير والمستشار الأكاديمي{% endblock %}
+{% block title %}{{ author.name }} - الخبير الأكاديمي في شركة بوابات العلوم{% endblock %}
+{% block og_title %}{{ author.name }} - الخبير الأكاديمي في شركة بوابات العلوم{% endblock %}
+{% block twitter_title %}{{ author.name }} - الخبير الأكاديمي في شركة بوابات العلوم{% endblock %}
 {% block meta_description %}{{ author.title_credentials }} - تعرف على السيرة الذاتية والخبرات الأكاديمية والمقالات المكتوبة بواسطة {{ author.name }}.{% endblock %}
 
 {% block schema_markup %}

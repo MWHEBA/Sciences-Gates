@@ -4,12 +4,12 @@
 {% load schema_tags %}
 {% load seo_tags %}
 
-{% block title %}{{ article.meta_title|default:article.title }} | شركة بوابات العلوم{% endblock %}
+{% block title %}{{ article.get_full_title|default:article.title }}{% endblock %}
 {% block meta_description %}{{ article.meta_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}
 
-{% block og_title %}{{ article.og_title|default:article.title }}{% endblock %}
+{% block og_title %}{{ article.get_og_title|default:article.title }}{% endblock %}
 {% block og_description %}{{ article.og_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}
-{% block twitter_title %}{{ article.og_title|default:article.title }}{% endblock %}
+{% block twitter_title %}{{ article.get_og_title|default:article.title }}{% endblock %}
 {% block twitter_description %}{{ article.og_description|default:article.content|striptags|truncatewords:30 }}{% endblock %}
 
 {% block og_image %}

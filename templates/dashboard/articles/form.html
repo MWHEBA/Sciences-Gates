@@ -861,21 +861,59 @@
                                     <label for="{{ form.meta_title.id_for_label }}" class="block text-sm font-normal mb-0" style="color: var(--text-secondary); margin-bottom: 0;">
                                         {{ form.meta_title.label }}
                                     </label>
-                                    <span class="text-xs" :style="metaTitle.length > 49 ? 'color: var(--danger); font-weight: bold;' : (metaTitle.length >= 24 ? 'color: var(--success);' : 'color: var(--warning);')">
-                                        <span x-text="metaTitle.length"></span> / 49 (65 شاملة اسم الموقع)
+                                    <span class="text-xs" :style="metaTitle.length > 65 ? 'color: var(--danger); font-weight: bold;' : (metaTitle.length > 44 ? 'color: var(--success); font-weight: 500;' : (metaTitle.length >= 19 ? 'color: var(--success);' : 'color: var(--warning);'))">
+                                        <span x-text="metaTitle.length"></span>
+                                        <template x-if="metaTitle.length <= 44">
+                                            <span> / 44 (مع لاحقة اسم الشركة: <span x-text="metaTitle.length + 21"></span> من 65)</span>
+                                        </template>
+                                        <template x-if="metaTitle.length > 44 && metaTitle.length <= 65">
+                                            <span> / 65 (عنوان مستقل بدون لاحقة)</span>
+                                        </template>
+                                        <template x-if="metaTitle.length > 65">
+                                            <span> / 65 (تجاوز الحد الأقصى)</span>
+                                        </template>
                                     </span>
                                 </div>
                                 {{ form.meta_title }}
                                 <div class="w-full mt-1.5" style="height: 4px; background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;">
                                     <div style="height: 100%; transition: width 0.2s ease;"
                                          :style="{ 
-                                             width: Math.min(100, (metaTitle.length / 49) * 100) + '%',
-                                             backgroundColor: metaTitle.length > 49 ? 'var(--danger)' : (metaTitle.length >= 24 ? 'var(--success)' : 'var(--warning)')
+                                             width: Math.min(100, (metaTitle.length / 65) * 100) + '%',
+                                             backgroundColor: metaTitle.length > 65 ? 'var(--danger)' : (metaTitle.length >= 19 ? 'var(--success)' : 'var(--warning)')
                                          }"></div>
                                 </div>
-                                <p class="mt-1 text-xs" style="color: var(--text-secondary); font-size: 11px;">
-                                    * يضاف اسم الموقع تلقائياً في النهاية (" | شركة بوابات العلوم" / 16 حرفاً)، لذا يوصى بطول بين 24 و 49 حرفاً للمدخل.
-                                </p>
+                                <div class="mt-1.5 text-xs" style="font-size: 11px; line-height: 1.5;">
+                                    <template x-if="!metaTitle || metaTitle.length < 19">
+                                        <p class="mb-0" style="color: var(--warning);">
+                                            * العنوان قصير: سيتم إلحاق اسم الشركة تلقائياً في النهاية (" - شركة بوابات العلوم").
+                                        </p>
+                                    </template>
+                                    <template x-if="metaTitle.length >= 19 && metaTitle.length <= 44">
+                                        <p class="mb-0" style="color: var(--success);">
+                                            * طول مثالي: يسمح بإلحاق اسم الشركة تلقائياً (" - شركة بوابات العلوم") ليصبح المجموع في نتائج البحث <span class="font-bold" x-text="metaTitle.length + 21"></span> حرفاً (أقل من 65).
+                                        </p>
+                                    </template>
+                                    <template x-if="metaTitle.length > 44 && metaTitle.length <= 65">
+                                        <p class="mb-0" style="color: var(--success);">
+                                            * طول غني ومكتمل: لن يتم إضافة لاحقة اسم الشركة لتجنب اقتطاع جوجل للعنوان، وسيظهر العنوان كاملاً كما هو في نتائج البحث (<span class="font-bold" x-text="metaTitle.length"></span> حرفاً).
+                                        </p>
+                                    </template>
+                                    <template x-if="metaTitle.length > 65">
+                                        <p class="mb-0" style="color: var(--danger); font-weight: bold;">
+                                            * تنبيه: العنوان يتجاوز 65 حرفاً وسيتم اقتطاعه (...) في نتائج بحث جوجل. يُنصح باختصاره.
+                                        </p>
+                                    </template>
+                                </div>
+                                <!-- Live SERP Title Preview -->
+                                <div class="mt-2 p-2.5 rounded-lg border text-xs" style="background-color: var(--surface-2); border-color: var(--border);">
+                                    <div class="flex items-center gap-1.5 mb-1" style="color: var(--text-secondary); font-size: 11px;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                        <span>المعاينة التلقائية في نتائج جوجل:</span>
+                                    </div>
+                                    <div class="font-medium truncate" style="color: var(--primary); font-size: 13px; line-height: 1.5;"
+                                         x-text="metaTitle ? (metaTitle.length <= 44 ? (metaTitle + ' - شركة بوابات العلوم') : metaTitle) : 'عنوان الصفحة - شركة بوابات العلوم'">
+                                    </div>
+                                </div>
                                 {% if form.meta_title.errors %}
                                     <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.meta_title.errors.0 }}</p>
                                 {% endif %}

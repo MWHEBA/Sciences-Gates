@@ -180,7 +180,7 @@ def render_twitter_card_tags(obj, request=None):
     twitter_tags.append(f'<meta name="twitter:card" content="{escape(twitter_card_type)}">')
     
     # Twitter title
-    twitter_title = getattr(obj, 'get_meta_title', lambda: '')()
+    twitter_title = getattr(obj, 'get_og_title', lambda: getattr(obj, 'get_meta_title', lambda: '')())()
     if twitter_title:
         twitter_tags.append(f'<meta name="twitter:title" content="{escape(twitter_title)}">')
     
