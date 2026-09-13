@@ -333,7 +333,7 @@
                                     </div>
 
                                     <!-- Dropdown Suggestions -->
-                                    <div x-show="showDropdown && filteredSuggestions.length"
+                                    <div x-show="showDropdown && (filteredSuggestions.length > 0 || searchQuery.trim().length > 0)"
                                          class="relations-select-dropdown"
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="opacity-0 scale-95"
@@ -343,17 +343,24 @@
                                          x-transition:leave-end="opacity-0 scale-95"
                                          style="display: none;">
                                         
-                                        <ul class="relations-select-dropdown-list">
-                                            <template x-for="(suggestion, index) in filteredSuggestions" :key="suggestion.id">
-                                                <li @click="selectItem(suggestion)"
-                                                    :class="{
-                                                        'relations-select-dropdown-item': true,
-                                                        'active': index === activeIndex
-                                                    }"
-                                                    x-html="highlightMatch(suggestion.name)">
-                                                </li>
-                                            </template>
-                                        </ul>
+                                        <template x-if="filteredSuggestions.length > 0">
+                                            <ul class="relations-select-dropdown-list">
+                                                <template x-for="(suggestion, index) in filteredSuggestions" :key="suggestion.id">
+                                                    <li @click="selectItem(suggestion)"
+                                                        :class="{
+                                                            'relations-select-dropdown-item': true,
+                                                            'active': index === activeIndex
+                                                        }"
+                                                        x-html="highlightMatch(suggestion.name)">
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template x-if="filteredSuggestions.length === 0 && searchQuery.trim().length > 0">
+                                            <div class="relations-select-dropdown-no-results">
+                                                لا توجد نتائج مطابقة للبحث
+                                            </div>
+                                        </template>
                                     </div>
                                     
                                     <!-- Recently Used Universities -->
@@ -424,7 +431,7 @@
                                     </div>
 
                                     <!-- Dropdown Suggestions -->
-                                    <div x-show="showDropdown && filteredSuggestions.length"
+                                    <div x-show="showDropdown && (filteredSuggestions.length > 0 || searchQuery.trim().length > 0)"
                                          class="relations-select-dropdown"
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="opacity-0 scale-95"
@@ -434,17 +441,24 @@
                                          x-transition:leave-end="opacity-0 scale-95"
                                          style="display: none;">
                                         
-                                        <ul class="relations-select-dropdown-list">
-                                            <template x-for="(suggestion, index) in filteredSuggestions" :key="suggestion.id">
-                                                <li @click="selectItem(suggestion)"
-                                                    :class="{
-                                                        'relations-select-dropdown-item': true,
-                                                        'active': index === activeIndex
-                                                    }"
-                                                    x-html="highlightMatch(suggestion.name)">
-                                                </li>
-                                            </template>
-                                        </ul>
+                                        <template x-if="filteredSuggestions.length > 0">
+                                            <ul class="relations-select-dropdown-list">
+                                                <template x-for="(suggestion, index) in filteredSuggestions" :key="suggestion.id">
+                                                    <li @click="selectItem(suggestion)"
+                                                        :class="{
+                                                            'relations-select-dropdown-item': true,
+                                                            'active': index === activeIndex
+                                                        }"
+                                                        x-html="highlightMatch(suggestion.name)">
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template x-if="filteredSuggestions.length === 0 && searchQuery.trim().length > 0">
+                                            <div class="relations-select-dropdown-no-results">
+                                                لا توجد نتائج مطابقة للبحث
+                                            </div>
+                                        </template>
                                     </div>
                                     
                                     <!-- Recently Used Institutes -->
@@ -515,7 +529,7 @@
                                     </div>
 
                                     <!-- Dropdown Suggestions -->
-                                    <div x-show="showDropdown && filteredSuggestions.length"
+                                    <div x-show="showDropdown && (filteredSuggestions.length > 0 || searchQuery.trim().length > 0)"
                                          class="relations-select-dropdown"
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="opacity-0 scale-95"
@@ -525,17 +539,24 @@
                                          x-transition:leave-end="opacity-0 scale-95"
                                          style="display: none;">
                                         
-                                        <ul class="relations-select-dropdown-list">
-                                            <template x-for="(suggestion, index) in filteredSuggestions" :key="suggestion.id">
-                                                <li @click="selectItem(suggestion)"
-                                                    :class="{
-                                                        'relations-select-dropdown-item': true,
-                                                        'active': index === activeIndex
-                                                    }"
-                                                    x-html="highlightMatch(suggestion.name)">
-                                                </li>
-                                            </template>
-                                        </ul>
+                                        <template x-if="filteredSuggestions.length > 0">
+                                            <ul class="relations-select-dropdown-list">
+                                                <template x-for="(suggestion, index) in filteredSuggestions" :key="suggestion.id">
+                                                    <li @click="selectItem(suggestion)"
+                                                        :class="{
+                                                            'relations-select-dropdown-item': true,
+                                                            'active': index === activeIndex
+                                                        }"
+                                                        x-html="highlightMatch(suggestion.name)">
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template x-if="filteredSuggestions.length === 0 && searchQuery.trim().length > 0">
+                                            <div class="relations-select-dropdown-no-results">
+                                                لا توجد نتائج مطابقة للبحث
+                                            </div>
+                                        </template>
                                     </div>
                                     
                                     <!-- Recently Used Majors -->

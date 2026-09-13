@@ -266,6 +266,9 @@ class IgnoredSimilarity(models.Model):
         verbose_name = 'تشابه متجاهل'
         verbose_name_plural = 'التشابهات المتجاهلة'
 
+    def __str__(self):
+        return f"{self.article_a} ~ {self.article_b}"
+
 
 class ArticleAttachment(TimestampedModel):
     """File attachment for an article."""

@@ -42,6 +42,10 @@ class TestUniversityListView:
             publish_status='unpublished'
         )
     
+    def test_university_str(self):
+        """Test that University string representation returns its name."""
+        assert str(self.university) == 'جامعة ماليزيا'
+
     def test_list_view_returns_200(self):
         """Test that list view returns 200 status code."""
         response = self.client.get(reverse('universities:list'))
