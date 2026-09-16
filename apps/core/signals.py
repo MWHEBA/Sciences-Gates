@@ -268,9 +268,21 @@ def invalidate_sitemap_cache_signal(sender, instance, **kwargs):
         logger.error(f'Error invalidating sitemap cache: {e}')
 
 
+def invalidate_general_faq_cache(sender, instance, **kwargs):
+    """Clear general FAQs and sitemap cache when GeneralFAQ changes."""
+    from django.core.cache import cache
+    try:
+        cache.delete('global_faqs_published_all')
+        cache.delete('global_faqs_home_featured')
+        logger.info('General FAQ cache invalidated due to save/delete of GeneralFAQ.')
+    except Exception as e:
+        logger.error(f'Error invalidating General FAQ cache: {e}')
+
+
 def connect_media_signals():
     """Connect all media synchronization signals and cache invalidations."""
     from django.db.models.signals import post_save, post_delete, pre_delete
+    from apps.core.models import GeneralFAQ
     from apps.universities.models import University
     from apps.institutes.models import Institute
     from apps.majors.models import Major
@@ -299,11 +311,16 @@ def connect_media_signals():
     post_save.connect(invalidate_mega_menu_cache, sender=Major)
     post_delete.connect(invalidate_mega_menu_cache, sender=Major)
 
+    # Invalidate General FAQ Cache
+    post_save.connect(invalidate_general_faq_cache, sender=GeneralFAQ)
+    post_delete.connect(invalidate_general_faq_cache, sender=GeneralFAQ)
+
     # Invalidate Sitemap Cache
-    for model_cls in [University, Institute, Major, MajorCategory, Article]:
+    for model_cls in [University, Institute, Major, MajorCategory, Article, GeneralFAQ]:
         post_save.connect(invalidate_sitemap_cache_signal, sender=model_cls)
         post_delete.connect(invalidate_sitemap_cache_signal, sender=model_cls)
 
 
 # Connect signals automatically on import
 connect_media_signals()
+

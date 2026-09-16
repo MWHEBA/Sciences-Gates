@@ -213,6 +213,7 @@ class StaticSitemap(BaseSitemap):
             'home',
             'about_us',
             'contact',
+            'faq',
             'visa_tracking',
             'privacy',
             'terms',
@@ -244,7 +245,7 @@ class StaticSitemap(BaseSitemap):
     def priority(self, item):
         if item == 'home':
             return 1.0
-        elif item in ['universities:list', 'institutes:list', 'majors:list', 'articles:list']:
+        elif item in ['universities:list', 'institutes:list', 'majors:list', 'articles:list', 'faq']:
             return 0.8
         elif item == 'contact':
             return 0.7
@@ -253,7 +254,7 @@ class StaticSitemap(BaseSitemap):
     def changefreq(self, item):
         if item == 'home':
             return 'daily'
-        elif item in ['universities:list', 'institutes:list', 'majors:list', 'articles:list']:
+        elif item in ['universities:list', 'institutes:list', 'majors:list', 'articles:list', 'faq']:
             return 'weekly'
         return 'monthly'
 

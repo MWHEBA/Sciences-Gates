@@ -25,6 +25,8 @@ def resolve_entity_name_from_path(path_clean, query_string=''):
         return "صفحة من نحن"
     elif first == 'contact':
         return "صفحة اتصل بنا"
+    elif first in ('faq', 'faqs'):
+        return "صفحة الأسئلة الشائعة"
     elif first == 'visa-tracking':
         return "صفحة تتبع التأشيرة (EMGS)"
     elif first == 'privacy':
@@ -350,12 +352,13 @@ class Lead(TimestampedModel):
         if self.source_page:
             s_page = self.source_page.strip()
             if s_page.startswith('/'):
-                base_site_url = getattr(settings, 'SITE_URL', 'https://sciencesgates.com').rstrip('/')
-                s_page = f"{base_site_url}{s_page}"
+                s_page = f"https://sciencesgates.com{s_page}"
             if s_page.startswith('http://sciencesgates.com'):
                 s_page = s_page.replace('http://sciencesgates.com', 'https://sciencesgates.com', 1)
             elif s_page.startswith('http://www.sciencesgates.com'):
                 s_page = s_page.replace('http://www.sciencesgates.com', 'https://sciencesgates.com', 1)
+            elif s_page.startswith('https://www.sciencesgates.com'):
+                s_page = s_page.replace('https://www.sciencesgates.com', 'https://sciencesgates.com', 1)
             self.source_page = s_page[:500]
 
         if self.referrer:

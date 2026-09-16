@@ -1163,6 +1163,98 @@ class ContentVersion(models.Model):
         return f"{self.content_type.model} #{self.object_id} - v{self.version_number}"
 
 
+class GeneralFAQ(TimestampedModel):
+    """
+    Model for managing general platform FAQs (Study in Malaysia FAQs).
+    يدعم إدارة الأسئلة الشائعة العامة وتصنيفاتها والظهور في الرئيسية والكاش الذكي.
+    """
+    CATEGORY_CHOICES = [
+        ('admissions', 'القبول والتسجيل'),
+        ('visa', 'الفيزا والإقامة'),
+        ('costs', 'التكاليف والمعيشة'),
+        ('english', 'اللغة والآيلتس'),
+        ('recognition', 'الاعتراف والاعتماد'),
+        ('services', 'خدمات بوابات العلوم'),
+    ]
+
+    question = models.CharField(
+        max_length=500,
+        verbose_name='السؤال',
+        db_index=True
+    )
+    slug = models.SlugField(
+        max_length=200,
+        unique=True,
+        blank=True,
+        verbose_name='الرابط الدائم (Slug)',
+        help_text='معرف لاتيني فريد للرابط المباشر (مثل: admission-requirements). اتركه فارغاً للتوليد التلقائي.'
+    )
+    answer = models.TextField(
+        verbose_name='الإجابة',
+        help_text='يدعم تنسيق HTML والروابط وعزل <bdi>'
+    )
+    category = models.CharField(
+        max_length=50,
+        choices=CATEGORY_CHOICES,
+        default='admissions',
+        verbose_name='التصنيف',
+        db_index=True
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='الترتيب',
+        db_index=True
+    )
+    is_featured = models.BooleanField(
+        default=False,
+        verbose_name='مميز في الصفحة الرئيسية',
+        db_index=True
+    )
+    is_published = models.BooleanField(
+        default=True,
+        verbose_name='منشور',
+        db_index=True
+    )
+
+    class Meta:
+        verbose_name = 'سؤال شائع'
+        verbose_name_plural = 'الأسئلة الشائعة العامة'
+        ordering = ['order', 'created_at']
+        indexes = [
+            models.Index(fields=['is_published', 'order']),
+            models.Index(fields=['is_published', 'is_featured', 'order']),
+            models.Index(fields=['category', 'is_published', 'order']),
+        ]
+
+    def __str__(self):
+        return self.question
+
+    def save(self, *args, **kwargs):
+        # 1. Clean and sanitize HTML answer
+        from apps.core.sanitizer import sanitize_article_html
+        if self.answer:
+            self.answer = sanitize_article_html(self.answer)
+
+        # 2. Ensure a clean latin slug exists
+        if not self.slug:
+            import uuid
+            from django.utils.text import slugify
+            candidate = slugify(self.question)
+            if candidate:
+                self.slug = candidate[:180]
+            else:
+                self.slug = f"faq-{self.category}-{uuid.uuid4().hex[:8]}"
+
+        # 3. Ensure slug uniqueness if collision occurs
+        orig_slug = self.slug
+        counter = 1
+        while GeneralFAQ.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+            self.slug = f"{orig_slug[:170]}-{counter}"
+            counter += 1
+
+        super().save(*args, **kwargs)
+
+
 
 
 

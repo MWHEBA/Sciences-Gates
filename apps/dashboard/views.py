@@ -36,7 +36,7 @@ from apps.universities.models import University, Faculty, Program
 from apps.institutes.models import Institute, Course
 from apps.majors.models import Major, MajorCategory
 from apps.articles.models import Article, Category, Tag, IgnoredSimilarity
-from apps.core.models import SiteSettings, ContentLock, UserProfile, UserRole
+from apps.core.models import SiteSettings, ContentLock, UserProfile, UserRole, GeneralFAQ
 from apps.dashboard.mixins import (
     SuperAdminRequiredMixin, SEOAdminRequiredMixin, ContentAdminRequiredMixin,
     ContentOrSEOAdminRequiredMixin, DashboardMixin, validate_dashboard_user
@@ -47,7 +47,7 @@ from apps.dashboard.forms import (
     InstituteForm, CourseFormSet, InstituteAttachmentFormSet, InstituteFAQFormSet,
     MajorForm, MajorCategoryForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet, MajorFAQFormSet, MajorAttachmentFormSet,
     ArticleForm, ArticleFAQFormSet, ArticleAttachmentFormSet, CategoryForm, TagForm, SiteSettingsForm, SiteSEOSettingsForm,
-    DashboardPasswordResetForm
+    DashboardPasswordResetForm, GeneralFAQForm
 )
 from apps.articles.models import Category, Tag
 from apps.seo.mixins import DashboardBreadcrumbMixin
@@ -6899,6 +6899,185 @@ class ContentVersionRestoreView(ContentAdminRequiredMixin, View):
         except Exception as e:
             logger.error(f"Error restoring version {version_id}: {e}", exc_info=True)
             return JsonResponse({'error': f'حدث خطأ أثناء استرجاع النسخة: {str(e)}'}, status=500)
+
+
+# ==========================================
+# General Platform FAQs Dashboard Views
+# ==========================================
+
+class GeneralFAQListView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, ListView):
+    """
+    List and filter general platform FAQs with quick toggle controls.
+    عرض وتصفية الأسئلة الشائعة العامة مع التحكم السريع.
+    """
+    model = GeneralFAQ
+    template_name = 'dashboard/faqs/list.html'
+    context_object_name = 'faqs'
+    paginate_by = 25
+
+    def get_breadcrumbs(self):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .current('الأسئلة الشائعة العامة')
+            .build())
+
+    def get_queryset(self):
+        queryset = GeneralFAQ.objects.all().order_by('order', 'created_at')
+        category = self.request.GET.get('category', '').strip()
+        search = self.request.GET.get('search', '').strip()
+        status = self.request.GET.get('status', '').strip()
+
+        if category:
+            queryset = queryset.filter(category=category)
+        if search:
+            queryset = queryset.filter(
+                Q(question__icontains=search) |
+                Q(answer__icontains=search) |
+                Q(slug__icontains=search)
+            )
+        if status == 'published':
+            queryset = queryset.filter(is_published=True)
+        elif status == 'unpublished':
+            queryset = queryset.filter(is_published=False)
+        elif status == 'featured':
+            queryset = queryset.filter(is_featured=True)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        all_qs = GeneralFAQ.objects.all()
+        context['page_title'] = 'الأسئلة الشائعة العامة'
+        context['page_description'] = 'إدارة الأسئلة الشائعة وتصنيفاتها والظهور في الصفحة الرئيسية'
+        context['total_count'] = all_qs.count()
+        context['published_count'] = all_qs.filter(is_published=True).count()
+        context['featured_count'] = all_qs.filter(is_featured=True).count()
+        context['categories'] = GeneralFAQ.CATEGORY_CHOICES
+        context['selected_category'] = self.request.GET.get('category', '')
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['search_query'] = self.request.GET.get('search', '')
+        context['action_buttons'] = [
+            {
+                'url': reverse_lazy('dashboard:faq_create'),
+                'label': 'إضافة سؤال جديد',
+                'variant': 'primary',
+            }
+        ]
+        return context
+
+
+class GeneralFAQCreateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, CreateView):
+    """Create a new general FAQ."""
+    model = GeneralFAQ
+    form_class = GeneralFAQForm
+    template_name = 'dashboard/faqs/form.html'
+    success_url = reverse_lazy('dashboard:faq_list')
+
+    def get_breadcrumbs(self):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add('الأسئلة الشائعة العامة', reverse('dashboard:faq_list'))
+            .current('إضافة سؤال جديد')
+            .build())
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'تمت إضافة السؤال الشائع بنجاح.')
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'إضافة سؤال شائع جديد'
+        context['page_description'] = 'إضافة سؤال جديد لمنصة بوابات العلوم'
+        context['is_create'] = True
+        return context
+
+
+class GeneralFAQUpdateView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, UpdateView):
+    """Update an existing general FAQ."""
+    model = GeneralFAQ
+    form_class = GeneralFAQForm
+    template_name = 'dashboard/faqs/form.html'
+    success_url = reverse_lazy('dashboard:faq_list')
+
+    def get_breadcrumbs(self):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add('الأسئلة الشائعة العامة', reverse('dashboard:faq_list'))
+            .current('تعديل السؤال')
+            .build())
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'تم تحديث السؤال الشائع بنجاح.')
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'تعديل السؤال الشائع'
+        context['page_description'] = self.object.question
+        context['is_create'] = False
+        return context
+
+
+class GeneralFAQDeleteView(ContentAdminRequiredMixin, DashboardBreadcrumbMixin, DeleteView):
+    """Delete a general FAQ with confirmation."""
+    model = GeneralFAQ
+    template_name = 'dashboard/faqs/confirm_delete.html'
+    success_url = reverse_lazy('dashboard:faq_list')
+
+    def get_breadcrumbs(self):
+        return (BreadcrumbTrail()
+            .add_section('dashboard')
+            .add('الأسئلة الشائعة العامة', reverse('dashboard:faq_list'))
+            .current('حذف السؤال')
+            .build())
+
+    def delete(self, request, *args, **kwargs):
+        faq = self.get_object()
+        question_title = faq.question
+        messages.success(request, f'تم حذف السؤال "{question_title}" بنجاح.')
+        return super().delete(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'تأكيد حذف السؤال الشائع'
+        context['cancel_url'] = reverse_lazy('dashboard:faq_list')
+        return context
+
+
+class GeneralFAQToggleView(ContentAdminRequiredMixin, View):
+    """
+    Toggle is_published or is_featured status of a GeneralFAQ via AJAX or POST.
+    """
+    def post(self, request, pk):
+        faq = get_object_or_404(GeneralFAQ, pk=pk)
+        field = request.POST.get('field', 'is_published')
+
+        if field == 'is_featured':
+            faq.is_featured = not faq.is_featured
+            faq.save()
+            action_text = 'تمييز' if faq.is_featured else 'إلغاء تمييز'
+            msg = f'تم {action_text} السؤال في الصفحة الرئيسية بنجاح.'
+            value = faq.is_featured
+        else:
+            faq.is_published = not faq.is_published
+            faq.save()
+            action_text = 'نشر' if faq.is_published else 'إلغاء نشر'
+            msg = f'تم {action_text} السؤال بنجاح.'
+            value = faq.is_published
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('format') == 'json':
+            return JsonResponse({
+                'status': 'success',
+                'field': field,
+                'value': value,
+                'message': msg,
+            })
+
+        messages.success(request, msg)
+        return redirect('dashboard:faq_list')
+
 
 
 

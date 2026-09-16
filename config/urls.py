@@ -6,7 +6,8 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
-from apps.core.views import HomeView, AboutView, ContactView, VisaTrackingView, LegacyUrlDetailView, PrivacyView, TermsView
+from django.views.generic import RedirectView
+from apps.core.views import HomeView, AboutView, ContactView, FAQView, VisaTrackingView, LegacyUrlDetailView, PrivacyView, TermsView
 from apps.seo.views import robots_txt, indexnow_key_view, llms_txt
 from apps.seo.sitemaps import sitemaps
 from apps.articles.views import AuthorDetailView
@@ -15,6 +16,8 @@ urlpatterns = [
     path('', HomeView.as_view(), name='home'),
     path('about-us/', AboutView.as_view(), name='about_us'),
     path('contact/', ContactView.as_view(), name='contact'),
+    path('faq/', FAQView.as_view(), name='faq'),
+    path('faqs/', RedirectView.as_view(pattern_name='faq', permanent=True), name='faqs_redirect'),
     path('visa-tracking/', VisaTrackingView.as_view(), name='visa_tracking'),
     path('privacy/', PrivacyView.as_view(), name='privacy'),
     path('terms/', TermsView.as_view(), name='terms'),

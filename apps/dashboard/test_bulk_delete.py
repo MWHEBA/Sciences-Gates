@@ -75,6 +75,7 @@ class TestBulkActions:
         u1 = University.objects.create(
             name='University 1',
             slug='uni-1',
+            location='Kuala Lumpur',
             logo='test.png',
             main_image='test.png',
             description='Test 1',
@@ -83,6 +84,7 @@ class TestBulkActions:
         u2 = University.objects.create(
             name='University 2',
             slug='uni-2',
+            location='Kuala Lumpur',
             logo='test.png',
             main_image='test.png',
             description='Test 2',

@@ -1,0 +1,526 @@
+{% extends 'base.html' %}
+{% load static schema_tags %}
+
+{% block title %}الأسئلة الشائعة حول الدراسة في ماليزيا (FAQ) - شركة بوابات العلوم{% endblock %}
+{% block og_title %}الأسئلة الشائعة حول الدراسة في ماليزيا (FAQ) - شركة بوابات العلوم{% endblock %}
+{% block twitter_title %}الأسئلة الشائعة حول الدراسة في ماليزيا (FAQ) - شركة بوابات العلوم{% endblock %}
+{% block meta_description %}إجابات شاملة وموثقة لكافة الأسئلة الشائعة حول الدراسة في الجامعات الماليزية والمعاهد، شروط القبول والتسجيل، تكاليف الدراسة والمعيشة، وإجراءات تأشيرة الطالب EMGS.{% endblock %}
+{% block og_description %}إجابات شاملة وموثقة لكافة الأسئلة الشائعة حول الدراسة في الجامعات الماليزية والمعاهد، شروط القبول والتسجيل، تكاليف الدراسة والمعيشة، وإجراءات تأشيرة الطالب EMGS.{% endblock %}
+{% block twitter_description %}إجابات شاملة وموثقة لكافة الأسئلة الشائعة حول الدراسة في الجامعات الماليزية والمعاهد، شروط القبول والتسجيل، تكاليف الدراسة والمعيشة، وإجراءات تأشيرة الطالب EMGS.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/faq-page.css' %}">
+{% endblock %}
+
+{% block schema_markup %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for faq in faqs %}
+    {
+      "@type": "Question",
+      "name": "{{ faq.question|escapejs }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{ faq.answer|striptags|escapejs }}"
+      }
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+{% include "components/page_hero.html" with title="الأسئلة الشائعة حول الدراسة في ماليزيا" subtitle="دليلك المتكامل للإجابة عن شروط القبول، التكاليف، التأشيرة، ومعادلة الشهادات الأكاديمية" %}
+
+<section class="faq-page-wrapper">
+    <!-- Top Controls Toolbar (Wider 1180px container for pills & search) -->
+    <div class="faq-controls-container">
+        <div class="faq-controls-card">
+            <!-- Search Bar -->
+            <div class="faq-search-box">
+                <label for="faq-search-input" class="sr-only">ابحث في الأسئلة الشائعة</label>
+                <div class="faq-search-input-group">
+                    <span class="faq-search-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </span>
+                    <input 
+                        id="faq-search-input"
+                        type="search" 
+                        placeholder="ابحث عن سؤالك (مثال: شروط القبول، تكلفة السكن، تأشيرة الطالب، آيلتس...)"
+                        class="faq-search-input"
+                        autocomplete="off"
+                        aria-label="ابحث في الأسئلة الشائعة"
+                    >
+                    <button 
+                        type="button" 
+                        id="faq-search-clear"
+                        class="faq-search-clear"
+                        aria-label="مسح البحث"
+                        style="display: none;"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div class="faq-pills-wrapper">
+                <div class="faq-pills-scroll" role="tablist" aria-label="تصنيفات الأسئلة">
+                    <button 
+                        type="button"
+                        role="tab"
+                        data-category="all"
+                        aria-selected="true"
+                        class="faq-pill-btn active"
+                    >
+                        <span>كافة الأسئلة</span>
+                        <span class="faq-pill-count" id="pill-count-all">{{ total_faqs_count }}</span>
+                    </button>
+
+                    {% for cat in faq_categories %}
+                    <button 
+                        type="button"
+                        role="tab"
+                        data-category="{{ cat.id }}"
+                        aria-selected="false"
+                        class="faq-pill-btn"
+                    >
+                        <span>{{ cat.name }}</span>
+                        <span class="faq-pill-count">{{ cat.count }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main FAQ Content (Optimized 960px reading container) -->
+    <div class="faq-content-container">
+
+        <!-- Meta Bar: Active Filter Indicator & Expand/Collapse All Actions -->
+        <div class="faq-meta-bar">
+            <div class="faq-active-filter">
+                <span class="faq-active-filter-label">الفلتر النشط:</span>
+                <span class="faq-active-filter-badge" id="faq-active-filter-name">كافة الأسئلة</span>
+            </div>
+            <div class="faq-meta-actions">
+                <button type="button" id="faq-btn-expand-all" class="faq-meta-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    <span>توسيع الكل</span>
+                </button>
+                <span class="faq-meta-divider" aria-hidden="true">|</span>
+                <button type="button" id="faq-btn-collapse-all" class="faq-meta-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    <span>طي الكل</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- FAQ Accordion List (Server-Rendered for SEO & Instant Interactive Filtering) -->
+        <div class="faq-accordion-list" id="faq-accordion-list">
+            {% for faq in faqs %}
+            <article 
+                class="faq-card" 
+                id="faq-{{ faq.slug }}"
+                data-faq-id="{{ faq.id }}"
+                data-slug="{{ faq.slug }}"
+                data-category="{{ faq.category }}"
+                data-question="{{ faq.question }}"
+            >
+                <!-- Question Header Button -->
+                <button 
+                    type="button" 
+                    class="faq-card-header"
+                    aria-expanded="false"
+                    aria-controls="faq-answer-{{ faq.id }}"
+                >
+                    <div class="faq-card-title-wrap">
+                        <div class="faq-badges-row">
+                            <span class="faq-badge-category">{{ faq.category_name }}</span>
+                            {% if faq.featured %}
+                            <span class="faq-badge-featured">شائع</span>
+                            {% endif %}
+                        </div>
+                        <h3 class="faq-card-question">{{ faq.question }}</h3>
+                    </div>
+                    <span class="faq-chevron-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </span>
+                </button>
+
+                <!-- Answer Body -->
+                <div class="faq-card-body" id="faq-answer-{{ faq.id }}">
+                    <div class="faq-rich-content">
+                        {{ faq.answer|safe }}
+                    </div>
+
+                    <!-- Footer Utilities: Copy Direct Link + Helpful Feedback -->
+                    <div class="faq-card-footer">
+                        <button 
+                            type="button" 
+                            class="faq-share-btn"
+                            data-share-slug="{{ faq.slug }}"
+                            title="نسخ رابط هذا السؤال للمشاركة"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                            <span class="faq-share-text">مشاركة السؤال</span>
+                        </button>
+
+                        <div class="faq-feedback-group" data-feedback-id="{{ faq.id }}">
+                            <span class="faq-feedback-label">هل كانت الإجابة مفيدة؟</span>
+                            <button type="button" class="faq-feedback-btn" data-rate="yes" aria-label="نعم مفيدة">👍 نعم</button>
+                            <button type="button" class="faq-feedback-btn" data-rate="no" aria-label="غير مفيدة">👎 لا</button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <!-- Empty State (When no search/filter matches found) -->
+        <div class="faq-empty-state" id="faq-empty-state">
+            <div class="faq-empty-icon" aria-hidden="true">🔍</div>
+            <h3 class="faq-empty-title">لم نعثر على نتائج مطابقة لبحثك</h3>
+            <p class="faq-empty-desc">
+                لم نجد إجابة مباشرة تطابق عبارتك "<strong id="faq-empty-query"></strong>". يمكنك إعادة ضبط البحث أو التحدث مباشرة مع مستشارنا الأكاديمي.
+            </p>
+            <div class="faq-empty-actions">
+                <button type="button" id="faq-btn-reset-search" class="faq-empty-btn-reset">
+                    إعادة ضبط البحث
+                </button>
+                <a 
+                    id="faq-whatsapp-link"
+                    href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60182638888' }}?text={% filter urlencode %}مرحباً شركة بوابات العلوم، أبحث عن إجابة بخصوص الأسئلة الشائعة للدراسة في ماليزيا{% endfilter %}" 
+                    target="_blank" 
+                    rel="noopener" 
+                    class="faq-empty-btn-whatsapp"
+                >
+                    اسأل مستشارك عبر واتساب فوراً
+                </a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- Professional Pure JS & AJAX Interactive Engine -->
+<script>
+(function() {
+    'use strict';
+
+    // State
+    var currentCategory = 'all';
+    var searchQuery = '';
+    var searchDebounceTimer = null;
+    var rawFeedback = {};
+
+    // Elements
+    var searchInput = document.getElementById('faq-search-input');
+    var searchClearBtn = document.getElementById('faq-search-clear');
+    var pillButtons = document.querySelectorAll('.faq-pill-btn');
+    var visibleCountEl = document.getElementById('faq-visible-count');
+    var expandAllBtn = document.getElementById('faq-btn-expand-all');
+    var collapseAllBtn = document.getElementById('faq-btn-collapse-all');
+    var emptyStateEl = document.getElementById('faq-empty-state');
+    var emptyQueryEl = document.getElementById('faq-empty-query');
+    var resetSearchBtn = document.getElementById('faq-btn-reset-search');
+    var activeFilterBadgeEl = document.getElementById('faq-active-filter-name');
+    var whatsappLink = document.getElementById('faq-whatsapp-link');
+    var faqCards = document.querySelectorAll('.faq-card');
+
+    // Load Feedback Cache
+    try {
+        var cached = localStorage.getItem('sg_faq_feedback');
+        if (cached) {
+            rawFeedback = JSON.parse(cached);
+        }
+    } catch(e) {}
+
+    // Initialize feedback widgets
+    document.querySelectorAll('.faq-feedback-group').forEach(function(group) {
+        var faqId = group.getAttribute('data-feedback-id');
+        if (rawFeedback[faqId]) {
+            group.innerHTML = '<span class="faq-feedback-thanks">شكراً لتقييمك! نسعى دائماً لتحديث إجاباتنا.</span>';
+        }
+    });
+
+    // Arabic normalization helper
+    function normalizeArabic(text) {
+        if (!text) return '';
+        return text
+            .toString()
+            .toLowerCase()
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/[\u064B-\u065F\u0670]/g, '')
+            .replace(/[أإآٱ]/g, 'ا')
+            .replace(/ة/g, 'ه')
+            .replace(/ى/g, 'ي')
+            .replace(/[\s\-_]+/g, ' ')
+            .trim();
+    }
+
+    // Update Active Filter Badge
+    function updateActiveFilterBadge() {
+        if (!activeFilterBadgeEl) return;
+        var activeBtn = document.querySelector('.faq-pill-btn.active');
+        var catName = 'كافة الأسئلة';
+        if (activeBtn) {
+            var labelSpan = activeBtn.querySelector('span:first-child');
+            if (labelSpan) catName = labelSpan.textContent.trim();
+        }
+        if (searchQuery.length > 0) {
+            if (currentCategory !== 'all') {
+                activeFilterBadgeEl.textContent = catName + ' + بحث: "' + searchQuery + '"';
+            } else {
+                activeFilterBadgeEl.textContent = 'بحث: "' + searchQuery + '"';
+            }
+        } else {
+            activeFilterBadgeEl.textContent = catName;
+        }
+    }
+
+    // Filter Logic
+    function applyFilter() {
+        var normQuery = normalizeArabic(searchQuery);
+        var visibleCount = 0;
+
+        faqCards.forEach(function(card) {
+            var cardCat = card.getAttribute('data-category');
+            var cardQ = normalizeArabic(card.getAttribute('data-question') || '');
+            var contentEl = card.querySelector('.faq-rich-content');
+            var cardA = normalizeArabic(contentEl ? contentEl.textContent : '');
+
+            var matchCat = (currentCategory === 'all' || cardCat === currentCategory);
+            var matchQuery = true;
+
+            if (normQuery.length > 0) {
+                matchQuery = (cardQ.indexOf(normQuery) !== -1 || cardA.indexOf(normQuery) !== -1);
+            }
+
+            if (matchCat && matchQuery) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Update Active Filter Badge
+        updateActiveFilterBadge();
+
+        // Toggle Empty State
+        if (visibleCount === 0) {
+            if (emptyStateEl) emptyStateEl.style.display = 'block';
+            if (emptyQueryEl) emptyQueryEl.textContent = searchQuery || (currentCategory !== 'all' ? 'هذا التصنيف' : '');
+            if (whatsappLink) {
+                var waBase = "https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60182638888' }}?text=";
+                var waMsg = "مرحباً شركة بوابات العلوم، أبحث عن إجابة بخصوص: " + (searchQuery || "الأسئلة الشائعة");
+                whatsappLink.href = waBase + encodeURIComponent(waMsg);
+            }
+        } else {
+            if (emptyStateEl) emptyStateEl.style.display = 'none';
+        }
+    }
+
+    // Optional Background AJAX Sync for analytics or extended querying
+    function syncAjaxSearch(query, category) {
+        if (!window.fetch) return;
+        var url = window.location.pathname + '?ajax=1&q=' + encodeURIComponent(query) + '&category=' + encodeURIComponent(category);
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).catch(function(err) {
+            // Silently handled as local filtering is primary and instant
+        });
+    }
+
+    // Event: Search Input
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            searchQuery = e.target.value.trim();
+            if (searchClearBtn) {
+                searchClearBtn.style.display = searchQuery.length > 0 ? 'flex' : 'none';
+            }
+
+            applyFilter();
+
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(function() {
+                syncAjaxSearch(searchQuery, currentCategory);
+                if (searchQuery.length >= 3 && typeof window.gtag === 'function') {
+                    window.gtag('event', 'faq_search', {
+                        search_term: searchQuery,
+                        category: currentCategory
+                    });
+                }
+            }, 400);
+        });
+    }
+
+    // Event: Clear Search
+    if (searchClearBtn) {
+        searchClearBtn.addEventListener('click', function() {
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+            }
+            searchQuery = '';
+            searchClearBtn.style.display = 'none';
+            applyFilter();
+        });
+    }
+
+    // Event: Reset Search in Empty State
+    if (resetSearchBtn) {
+        resetSearchBtn.addEventListener('click', function() {
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            searchQuery = '';
+            if (searchClearBtn) searchClearBtn.style.display = 'none';
+            currentCategory = 'all';
+            pillButtons.forEach(function(btn) {
+                var isAll = btn.getAttribute('data-category') === 'all';
+                btn.classList.toggle('active', isAll);
+                btn.setAttribute('aria-selected', isAll ? 'true' : 'false');
+            });
+            applyFilter();
+        });
+    }
+
+    // Event: Category Filter Pills Click
+    pillButtons.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var selected = btn.getAttribute('data-category');
+            if (currentCategory === selected) return;
+
+            currentCategory = selected;
+
+            pillButtons.forEach(function(b) {
+                var isActive = (b.getAttribute('data-category') === selected);
+                b.classList.toggle('active', isActive);
+                b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+
+            applyFilter();
+            syncAjaxSearch(searchQuery, currentCategory);
+        });
+    });
+
+    // Event: Accordion Toggle
+    faqCards.forEach(function(card) {
+        var headerBtn = card.querySelector('.faq-card-header');
+        if (!headerBtn) return;
+
+        headerBtn.addEventListener('click', function() {
+            var isOpen = card.classList.contains('is-open');
+            card.classList.toggle('is-open', !isOpen);
+            headerBtn.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+        });
+    });
+
+    // Event: Expand All & Collapse All
+    if (expandAllBtn) {
+        expandAllBtn.addEventListener('click', function() {
+            faqCards.forEach(function(card) {
+                if (card.style.display !== 'none') {
+                    card.classList.add('is-open');
+                    var btn = card.querySelector('.faq-card-header');
+                    if (btn) btn.setAttribute('aria-expanded', 'true');
+                }
+            });
+        });
+    }
+
+    if (collapseAllBtn) {
+        collapseAllBtn.addEventListener('click', function() {
+            faqCards.forEach(function(card) {
+                card.classList.remove('is-open');
+                var btn = card.querySelector('.faq-card-header');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
+
+    // Event: Copy / Share Question Link
+    document.querySelectorAll('.faq-share-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var slug = btn.getAttribute('data-share-slug');
+            var url = window.location.origin + window.location.pathname + '#' + slug;
+            var textSpan = btn.querySelector('.faq-share-text');
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function() {
+                    if (textSpan) textSpan.textContent = 'تم نسخ الرابط!';
+                    setTimeout(function() {
+                        if (textSpan) textSpan.textContent = 'مشاركة السؤال';
+                    }, 2200);
+                });
+            } else {
+                var input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                if (textSpan) textSpan.textContent = 'تم نسخ الرابط!';
+                setTimeout(function() {
+                    if (textSpan) textSpan.textContent = 'مشاركة السؤال';
+                }, 2200);
+            }
+        });
+    });
+
+    // Event: Feedback Rating
+    document.querySelectorAll('.faq-feedback-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var group = btn.closest('.faq-feedback-group');
+            if (!group) return;
+            var faqId = group.getAttribute('data-feedback-id');
+            var rating = btn.getAttribute('data-rate');
+            rawFeedback[faqId] = rating;
+
+            try {
+                localStorage.setItem('sg_faq_feedback', JSON.stringify(rawFeedback));
+            } catch(e) {}
+
+            group.innerHTML = '<span class="faq-feedback-thanks">شكراً لتقييمك! نسعى دائماً لتحديث إجاباتنا.</span>';
+        });
+    });
+
+    // Deep Linking via URL Hash
+    var hash = window.location.hash.replace('#', '');
+    if (hash) {
+        var targetCard = document.getElementById(hash) || document.getElementById('faq-' + hash);
+        if (targetCard) {
+            targetCard.classList.add('is-open');
+            var header = targetCard.querySelector('.faq-card-header');
+            if (header) header.setAttribute('aria-expanded', 'true');
+            setTimeout(function() {
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 250);
+        }
+    }
+
+})();
+</script>
+{% endblock %}

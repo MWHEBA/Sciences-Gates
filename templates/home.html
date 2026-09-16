@@ -612,7 +612,10 @@
             <h2 class="section-title">الأسئلة الشائعة</h2>
             <p class="faq-intro__desc">جمعنا لك أبرز الأسئلة التي يطرحها الطلاب الجدد حول الدراسة والمعيشة في ماليزيا.
                 لا تتردد بالتواصل معنا لأي استفسار آخر.</p>
-            <a href="{% url 'leads:submit' %}" class="btn btn--primary">تواصل معنا الآن</a>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 1.25rem;">
+                <a href="{% url 'faq' %}" class="btn btn--primary">تصفح كافة الأسئلة (FAQ)</a>
+                <a href="{% url 'leads:submit' %}" class="btn btn--outline">تواصل معنا الآن</a>
+            </div>
         </div>
         <div>
             {% include 'partials/faq-accordion.html' with faqs=faqs %}

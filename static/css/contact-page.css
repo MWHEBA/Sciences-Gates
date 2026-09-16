@@ -1,0 +1,378 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Sciences Gates - Contact Us Page Styles
+   Calm, Minimal, Corporate & 100% CSS Variables Compliant
+   ═══════════════════════════════════════════════════════════════════ */
+
+.contact-page-wrapper {
+    background-color: var(--bg-page);
+    padding: 48px 0 72px 0;
+}
+
+.contact-container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* 2-Column Responsive Layout */
+.contact-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 32px;
+    align-items: stretch;
+}
+
+@media (max-width: 991px) {
+    .contact-main-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+}
+
+/* ─── Contact Cards ─── */
+.contact-info-card,
+.contact-form-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 36px 32px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.contact-form-card form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+@media (max-width: 576px) {
+    .contact-info-card,
+    .contact-form-card {
+        padding: 24px 20px;
+    }
+}
+
+/* ─── Legal Tag ─── */
+.contact-legal-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.contact-header-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 12px 0;
+    line-height: 1.3;
+}
+
+.contact-header-desc {
+    font-size: 0.975rem;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin: 0 0 28px 0;
+}
+
+/* ─── Contact Channels List ─── */
+.contact-channels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.contact-channel-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 18px;
+    background-color: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.contact-channel-item:hover {
+    border-color: var(--primary);
+    background-color: var(--surface);
+    transform: translateY(-1px);
+}
+
+.contact-channel-item--static {
+    cursor: default;
+}
+.contact-channel-item--static:hover {
+    border-color: var(--border);
+    background-color: var(--surface-2);
+    transform: none;
+}
+
+.contact-channel-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background-color: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.contact-channel-icon--whatsapp {
+    background-color: var(--success-light);
+    color: var(--whatsapp-green, #25D366);
+}
+
+.contact-channel-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.contact-channel-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.contact-channel-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.contact-channel-value[dir="ltr"] {
+    unicode-bidi: plaintext;
+    text-align: right;
+    display: inline-flex;
+    align-items: center;
+}
+
+.contact-channel-sub {
+    font-size: 0.825rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+.contact-channel-arrow {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-inline-start: auto;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.contact-channel-item:hover .contact-channel-arrow {
+    color: var(--primary);
+    transform: translateX(-3px);
+}
+
+/* ─── Guarantee & FAQ Boxes ─── */
+.contact-guarantee-banner {
+    background-color: var(--primary-light);
+    border: 1px solid var(--border);
+    border-right: 4px solid var(--secondary);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.contact-guarantee-icon {
+    color: var(--primary);
+    font-size: 1.4rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.contact-guarantee-title {
+    font-size: 0.925rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 0 0 4px 0;
+}
+
+.contact-guarantee-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.contact-faq-callout {
+    background-color: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.contact-faq-callout-text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.contact-faq-callout-text svg,
+.contact-faq-callout-text i {
+    color: var(--secondary);
+    flex-shrink: 0;
+}
+
+.contact-faq-callout-link {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-decoration: none;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s ease;
+}
+
+.contact-faq-callout-link svg {
+    transition: transform 0.2s ease;
+}
+
+.contact-faq-callout-link:hover {
+    color: var(--secondary);
+}
+
+.contact-faq-callout-link:hover svg {
+    transform: translateX(-3px);
+}
+
+/* ─── Form Controls & Layout ─── */
+.contact-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 576px) {
+    .contact-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.contact-form-group {
+    margin-bottom: 18px;
+}
+
+.contact-form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.contact-form-label .required-star {
+    color: var(--danger);
+}
+
+.contact-form-control {
+    width: 100%;
+    padding: 12px 14px;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.925rem;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-muted);
+}
+
+.contact-form-control::placeholder {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.contact-form-group--message {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    margin-bottom: 20px;
+}
+
+.contact-form-group--message textarea.contact-form-control {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 140px;
+    height: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+/* Submit Button */
+.contact-submit-btn {
+    width: 100%;
+    margin-top: auto;
+    padding: 14px 24px;
+    background-color: var(--primary);
+    color: var(--white);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius);
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.contact-submit-btn:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.contact-privacy-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin: 14px 0 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}

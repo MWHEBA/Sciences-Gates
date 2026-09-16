@@ -1,0 +1,51 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}تأكيد حذف السؤال - لوحة التحكم{% endblock %}
+{% block page_title %}تأكيد حذف السؤال{% endblock %}
+
+{% block content %}
+<div class="flex justify-center py-8">
+    <div class="rounded-xl border max-w-lg w-full p-6 space-y-6" style="background-color: var(--surface); border-color: var(--border);">
+        <!-- Warning Icon -->
+        <div class="flex justify-center">
+            <div class="flex items-center justify-center w-12 h-12 rounded-full" style="background-color: rgba(239, 68, 68, 0.1);">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--danger, #ef4444);" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Title and Details -->
+        <div class="text-center space-y-2">
+            <h2 class="text-lg font-semibold" style="color: var(--text-primary);">هل أنت متأكد من حذف هذا السؤال الشائع؟</h2>
+            <p class="text-sm font-medium" style="color: var(--text-secondary);">
+                "{{ object.question }}"
+            </p>
+            <span class="inline-block mt-1 px-2.5 py-0.5 rounded text-xs" style="background-color: var(--bg-light); color: var(--text-muted);">
+                {{ object.get_category_display }} (#{{ object.slug }})
+            </span>
+        </div>
+
+        <!-- Warning Alert -->
+        <div class="rounded-lg p-3.5" style="background-color: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);">
+            <p class="text-xs" style="color: var(--danger, #ef4444);">
+                <strong>تنبيه:</strong> سيتم حذف السؤال نهائياً من قاعدة البيانات وإزالته من صفحة الأسئلة والصفحة الرئيسية.
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-3">
+            <a href="{% url 'dashboard:faq_list' %}" class="flex-1 py-2 px-4 rounded-lg text-sm font-medium border text-center transition-colors" style="border-color: var(--border); color: var(--text-secondary);">
+                إلغاء
+            </a>
+            <form method="post" class="flex-1">
+                {% csrf_token %}
+                <button type="submit" class="w-full py-2 px-4 rounded-lg text-sm font-semibold text-white transition-colors cursor-pointer" style="background-color: var(--danger, #ef4444);">
+                    تأكيد الحذف
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

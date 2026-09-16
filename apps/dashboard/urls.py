@@ -88,6 +88,13 @@ urlpatterns = [
     path('articles/similarity/action/', views.ArticleSimilarityActionView.as_view(), name='article_similarity_action'),
     path('articles/similarity/merge/<int:keep_id>/<int:delete_id>/', views.ArticleManualMergeView.as_view(), name='article_manual_merge'),
     
+    # FAQ management (Content Admin)
+    path('faqs/', views.GeneralFAQListView.as_view(), name='faq_list'),
+    path('faqs/create/', views.GeneralFAQCreateView.as_view(), name='faq_create'),
+    path('faqs/<int:pk>/edit/', views.GeneralFAQUpdateView.as_view(), name='faq_edit'),
+    path('faqs/<int:pk>/delete/', views.GeneralFAQDeleteView.as_view(), name='faq_delete'),
+    path('faqs/<int:pk>/toggle/', views.GeneralFAQToggleView.as_view(), name='faq_toggle'),
+    
     # Lead management (Content Admin)
     path('leads/', views.LeadListView.as_view(), name='lead_list'),
     path('leads/export/', views.LeadExportView.as_view(), name='lead_export'),

@@ -15,11 +15,11 @@ except (ImportError, ModuleNotFoundError):
     CSSSanitizer = None
 
 
-# Allowed HTML tags for article content (includes tables, styling spans/fonts, divs)
+# Allowed HTML tags for article content (includes tables, styling spans/fonts, divs, bdi)
 ALLOWED_TAGS = [
     'p', 'br', 'strong', 'em', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote',
     'ul', 'ol', 'li', 'a', 'img', 'table', 'thead', 'tbody',
-    'tfoot', 'tr', 'th', 'td', 'colgroup', 'col', 'div', 'span', 'font'
+    'tfoot', 'tr', 'th', 'td', 'colgroup', 'col', 'div', 'span', 'font', 'bdi'
 ]
 
 # Allowed attributes for each tag
@@ -44,6 +44,7 @@ ALLOWED_ATTRIBUTES = {
     'ul': ['class', 'style', 'align', 'dir'],
     'ol': ['class', 'style', 'align', 'dir'],
     'li': ['class', 'style', 'align', 'dir'],
+    'bdi': ['dir', 'class', 'style'],
 }
 
 # Allowed CSS properties for style attributes

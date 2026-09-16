@@ -1,0 +1,149 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - لوحة التحكم{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+{% block page_description %}{{ page_description }}{% endblock %}
+
+{% block page_actions %}
+<div class="flex items-center gap-3">
+    <a href="{% url 'dashboard:faq_list' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer" style="border-color: var(--border); color: var(--text-secondary); background-color: var(--surface);">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        <span>العودة للقائمة</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<form method="post" class="space-y-6" novalidate>
+    {% csrf_token %}
+
+    {% if form.errors %}
+    <div class="p-4 rounded-xl border flex items-start gap-3" style="background-color: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.3); color: var(--danger, #ef4444);">
+        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+            <h4 class="font-semibold text-sm">يرجى تصحيح الأخطاء التالية قبل الحفظ:</h4>
+            <ul class="list-disc list-inside text-xs mt-1 space-y-1">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li><strong>{{ field }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Form Column (2 Cols) -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Question Card -->
+            <div class="p-6 rounded-xl border space-y-4" style="background-color: var(--surface); border-color: var(--border);">
+                <h3 class="text-base font-semibold pb-3 border-b" style="border-color: var(--border); color: var(--text-primary);">تفاصيل السؤال</h3>
+
+                <!-- Question Text -->
+                <div>
+                    <label for="{{ form.question.id_for_label }}" class="block text-sm font-medium mb-1.5" style="color: var(--text-primary);">
+                        {{ form.question.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.question }}
+                    {% if form.question.errors %}
+                    <p class="text-xs text-red-500 mt-1">{{ form.question.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Slug -->
+                <div>
+                    <label for="{{ form.slug.id_for_label }}" class="block text-sm font-medium mb-1.5" style="color: var(--text-primary);">
+                        {{ form.slug.label }}
+                    </label>
+                    {{ form.slug }}
+                    <p class="text-xs mt-1.5" style="color: var(--text-muted);">{{ form.slug.help_text }}</p>
+                    {% if form.slug.errors %}
+                    <p class="text-xs text-red-500 mt-1">{{ form.slug.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Answer HTML Field -->
+                <div>
+                    <label for="{{ form.answer.id_for_label }}" class="block text-sm font-medium mb-1.5" style="color: var(--text-primary);">
+                        {{ form.answer.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.answer }}
+                    <p class="text-xs mt-1.5" style="color: var(--text-muted);">يمكنك استخدام التنسيق والفقرات، القوائم النقطية، وتضمين الروابط الداخلية وعزل المصطلحات الإنجليزية بـ &lt;bdi&gt;.</p>
+                    {% if form.answer.errors %}
+                    <p class="text-xs text-red-500 mt-1">{{ form.answer.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Options Column (1 Col) -->
+        <div class="space-y-6">
+            <!-- Publishing & Category Card -->
+            <div class="p-6 rounded-xl border space-y-4" style="background-color: var(--surface); border-color: var(--border);">
+                <h3 class="text-base font-semibold pb-3 border-b" style="border-color: var(--border); color: var(--text-primary);">التصنيف والظهور</h3>
+
+                <!-- Category -->
+                <div>
+                    <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium mb-1.5" style="color: var(--text-primary);">
+                        {{ form.category.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                    <p class="text-xs text-red-500 mt-1">{{ form.category.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Order -->
+                <div>
+                    <label for="{{ form.order.id_for_label }}" class="block text-sm font-medium mb-1.5" style="color: var(--text-primary);">
+                        {{ form.order.label }}
+                    </label>
+                    {{ form.order }}
+                    <p class="text-xs mt-1.5" style="color: var(--text-muted);">{{ form.order.help_text }}</p>
+                    {% if form.order.errors %}
+                    <p class="text-xs text-red-500 mt-1">{{ form.order.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Toggles -->
+                <div class="pt-3 border-t space-y-3" style="border-color: var(--border);">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        {{ form.is_published }}
+                        <div>
+                            <span class="text-sm font-medium block" style="color: var(--text-primary);">{{ form.is_published.label }}</span>
+                            <span class="text-xs block" style="color: var(--text-muted);">{{ form.is_published.help_text }}</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        {{ form.is_featured }}
+                        <div>
+                            <span class="text-sm font-medium block" style="color: var(--text-primary);">{{ form.is_featured.label }}</span>
+                            <span class="text-xs block" style="color: var(--text-muted);">{{ form.is_featured.help_text }}</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Submit Button Card -->
+            <div class="p-6 rounded-xl border" style="background-color: var(--surface); border-color: var(--border);">
+                <button type="submit" class="w-full py-2.5 px-4 rounded-lg text-sm font-semibold text-white transition-colors cursor-pointer flex items-center justify-center gap-2" style="background-color: var(--primary);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span>حفظ السؤال</span>
+                </button>
+                <a href="{% url 'dashboard:faq_list' %}" class="w-full mt-2 py-2 px-4 rounded-lg text-sm font-medium border text-center block transition-colors" style="border-color: var(--border); color: var(--text-secondary);">
+                    إلغاء
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

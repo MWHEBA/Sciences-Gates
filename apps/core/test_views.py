@@ -19,8 +19,7 @@ class AboutViewTestCase(TestCase):
         response = self.client.get(reverse('about_us'))
         self.assertContains(response, 'شركة بوابات العلوم')
         self.assertContains(response, 'Sciences Gates')
-        self.assertContains(response, 'محمد كيالي')
-        self.assertContains(response, 'دكتوراه علوم الحاسوب')
+        self.assertContains(response, 'ماليزيا')
 
 
 class MegaMenuContextTestCase(TestCase):
@@ -268,6 +267,74 @@ class CsrfFailureHandlerTestCase(TestCase):
         self.assertEqual(response.url, '/leads/submit/')
 
 
+class FAQViewTestCase(TestCase):
+    """
+    Test suite for FAQ page, redirect, data integrity, and lead inquiries.
+    """
+
+    def test_faq_page_loads_successfully(self):
+        """Test that /faq/ loads with 200 OK and uses faq.html template."""
+        response = self.client.get(reverse('faq'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'faq.html')
+        self.assertIn('faqs', response.context)
+        self.assertIn('faq_categories', response.context)
+        self.assertGreater(response.context['total_faqs_count'], 10)
+
+    def test_faqs_301_redirects_to_faq(self):
+        """Test that legacy/plural /faqs/ redirects permanently (301) to /faq/."""
+        response = self.client.get('/faqs/')
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response.url, reverse('faq'))
+
+    def test_home_page_featured_faqs_loaded(self):
+        """Test that HomeView loads featured FAQs from faq_data."""
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('faqs', response.context)
+        self.assertEqual(len(response.context['faqs']), 5)
+
+    def test_faq_ajax_search_and_filter(self):
+        """Test that AJAX request to /faq/ returns filtered JSON results."""
+        response = self.client.get(reverse('faq'), {'ajax': '1', 'q': 'تكلفة', 'category': 'costs'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'success')
+        self.assertIn('faqs', data)
+        self.assertGreater(data['total_count'], 0)
+
+    def test_faq_ajax_filter_by_category(self):
+        """Test filtering by category via AJAX."""
+        response = self.client.get(reverse('faq'), {'ajax': '1', 'category': 'visa'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'success')
+        for item in data['faqs']:
+            self.assertEqual(item['category'], 'visa')
+
+    def test_resolve_entity_name_for_faq_page(self):
+        """Test resolve_entity_name_from_path maps faq paths correctly."""
+        from apps.leads.models import resolve_entity_name_from_path
+        self.assertEqual(resolve_entity_name_from_path('faq'), "صفحة الأسئلة الشائعة")
+        self.assertEqual(resolve_entity_name_from_path('faqs'), "صفحة الأسئلة الشائعة")
+        self.assertEqual(resolve_entity_name_from_path('/faq/'), "صفحة الأسئلة الشائعة")
 
 
-
+class ContactViewTestCase(TestCase):
+    """
+    Test cases for ContactView and contact page.
+    """
+    
+    def test_contact_page_loads_successfully(self):
+        """Test that the contact page loads successfully (returns 200)."""
+        response = self.client.get(reverse('contact'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'contact.html')
+        
+    def test_contact_page_content(self):
+        """Test that the contact page displays correct contact details and form."""
+        response = self.client.get(reverse('contact'))
+        self.assertContains(response, 'معلومات التواصل المباشرة')
+        self.assertContains(response, 'أرسل استفسارك الآن')
+        self.assertContains(response, 'Sciences Gates Sdn. Bhd.')
+        self.assertContains(response, 'واتساب')

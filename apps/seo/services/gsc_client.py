@@ -5,6 +5,7 @@ Google Search Console API Client.
 import json
 import logging
 from datetime import date, timedelta
+from typing import Optional, Dict, List, Tuple, Any
 
 from django.conf import settings
 from django.core.cache import cache
@@ -77,8 +78,10 @@ class GSCClient:
             return None
 
         try:
-            from google.oauth2 import service_account
-            from googleapiclient.discovery import build
+            import importlib
+            service_account = importlib.import_module("google.oauth2.service_account")
+            discovery = importlib.import_module("googleapiclient.discovery")
+            build = discovery.build
 
             scopes = ["https://www.googleapis.com/auth/webmasters"]
             credentials_dict = getattr(settings, "GSC_CREDENTIALS_DICT", None)
@@ -96,14 +99,14 @@ class GSCClient:
             logger.warning("GSC: Failed to build service: %s", exc)
             return None
 
-    def _date_range(self, days: int) -> tuple[str, str]:
+    def _date_range(self, days: int) -> Tuple[str, str]:
         """Return (start_date, end_date) strings for the last N days (GSC lags ~2 days)."""
         end = date.today() - timedelta(days=2)
         start = end - timedelta(days=days - 1)
         return start.isoformat(), end.isoformat()
 
     def _query(self, days: int, dimensions: list, row_limit: int = 25,
-               dimension_filter: getattr(__import__('typing'), 'Optional')[dict] = None) -> list:
+               dimension_filter: Optional[dict] = None) -> list:
         """Execute a GSC searchAnalytics.query call."""
         service = self._get_service()
         if not service:
@@ -549,7 +552,11 @@ def resolve_path_info(path, site_url=None):
             static_titles = {
                 'home': ('الرئيسية', 'page', 'صفحة'),
                 'about_us': ('من نحن', 'page', 'صفحة'),
+                'contact': ('تواصل معنا', 'page', 'صفحة'),
+                'faq': ('الأسئلة الشائعة', 'page', 'صفحة'),
                 'visa_tracking': ('تتبع التأشيرة', 'page', 'صفحة'),
+                'privacy': ('سياسة الخصوصية', 'page', 'صفحة'),
+                'terms': ('الشروط والأحكام', 'page', 'صفحة'),
                 'articles:list': ('المقالات', 'list', 'قائمة'),
                 'universities:list': ('الجامعات', 'list', 'قائمة'),
                 'institutes:list': ('المعاهد', 'list', 'قائمة'),

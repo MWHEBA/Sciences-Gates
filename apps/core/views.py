@@ -13,6 +13,9 @@ from apps.majors.models import Major
 from apps.articles.models import Article
 from apps.core.models import PublishStatus
 from apps.leads.forms import LeadForm
+from apps.seo.mixins import BreadcrumbMixin
+from apps.seo.breadcrumbs import BreadcrumbTrail
+from apps.core import faq_data
 
 
 
@@ -94,29 +97,8 @@ class HomeView(TemplateView):
             'related_majors'
         ).order_by('-publish_date')[:3]
         
-        # Temporary hardcoded FAQs for the homepage
-        faqs = [
-            {
-                'question': 'هل الشهادات الماليزية معترف بها دولياً وعربياً؟',
-                'answer': 'نعم، الجامعات الشريكة تشتمل على جامعات حكومية وخاصة مرموقة معتمدة رسمياً، من بينها جامعات مصنفة ضمن تصنيفات QS العالمية ومقبولة في الدول العربية وخارجها.'
-            },
-            {
-                'question': 'ما هي شروط القبول للدراسة في الجامعات الماليزية؟',
-                'answer': 'تختلف الشروط حسب التخصص والجامعة، ولكن بشكل عام يُشترط الحصول على شهادة الثانوية العامة بمعدل مناسب للتخصص المطلوب، بالإضافة إلى ما يثبت كفاءة اللغة الإنجليزية (مثل الآيلتس أو التوفل)، وإن لم تتوفر لديك اللغة يمكنك البدء بدورة لغة إنجليزية في الجامعة أو المعهد أولاً.'
-            },
-            {
-                'question': 'هل يمكنني الدراسة في ماليزيا بدون شهادة آيلتس (IELTS)؟',
-                'answer': 'نعم، يمكنك الحصول على قبول مشروط، والبدء بدراسة اللغة الإنجليزية في مركز اللغات التابع للجامعة أو في معهد لغة متخصص، ثم الانتقال لدراسة تخصصك الأكاديمي بعد اجتياز اختبار اللغة.'
-            },
-            {
-                'question': 'ما هي تكلفة المعيشة والسكن للطلاب في ماليزيا؟',
-                'answer': 'تُعد تكلفة المعيشة في ماليزيا مناسبة جداً واقتصادية مقارنة بالدول الغربية. تتراوح التكلفة الشهرية للمعيشة والسكن للطلاب عادةً ما بين 400 إلى 800 دولار أمريكي، شاملة السكن والطعام والمواصلات حسب نمط الحياة والمدينة.'
-            },
-            {
-                'question': 'كم تستغرق فترة الحصول على القبول الجامعي والفيزا؟',
-                'answer': 'يستغرق الحصول على القبول الأكاديمي من الجامعة عادةً ما بين 3 إلى 7 أيام عمل، بينما تستغرق إجراءات استخراج تأشيرة الطالب (VAL) من هيئة التعليم العالي الماليزي (EMGS) ما بين 3 إلى 6 أسابيع.'
-            }
-        ]
+        # Featured FAQs for homepage
+        faqs = faq_data.get_featured_faqs(5)
 
         context.update({
             'universities': universities,
@@ -149,11 +131,77 @@ class AboutView(TemplateView):
         return context
 
 
-class ContactView(TemplateView):
+class ContactView(BreadcrumbMixin, TemplateView):
     """
     Contact Us page view displaying company contact details and inquiry form.
     """
     template_name = 'contact.html'
+
+    def get_breadcrumbs(self):
+        """Define breadcrumbs for Contact page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .current('اتصل بنا')
+            .build())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if 'form' not in context:
+            from apps.leads.forms import ContactLeadForm
+            context['form'] = ContactLeadForm(initial={'lead_type': 'contact'})
+        return context
+
+
+class FAQView(BreadcrumbMixin, TemplateView):
+    """
+    Comprehensive FAQ page view with category filtering and professional AJAX/live search.
+    """
+    template_name = 'faq.html'
+
+    def get_breadcrumbs(self):
+        """Define breadcrumbs for FAQ page."""
+        return (BreadcrumbTrail()
+            .add_section('home')
+            .current('الأسئلة الشائعة')
+            .build())
+
+    def get(self, request, *args, **kwargs):
+        """Handle both standard HTML rendering and AJAX JSON filtering requests."""
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
+        if is_ajax:
+            from django.http import JsonResponse
+            from apps.search.utils import normalize_arabic
+            query = normalize_arabic(request.GET.get('q', '').strip())
+            category = request.GET.get('category', 'all').strip()
+            
+            all_faqs = faq_data.get_all_faqs()
+            filtered = []
+            for item in all_faqs:
+                if category and category != 'all' and item.get('category') != category:
+                    continue
+                if query:
+                    norm_q = normalize_arabic(item.get('question', ''))
+                    norm_a = normalize_arabic(item.get('answer', ''))
+                    if query not in norm_q and query not in norm_a:
+                        continue
+                filtered.append(item)
+                
+            return JsonResponse({
+                'status': 'success',
+                'faqs': filtered,
+                'total_count': len(filtered),
+                'total_all': len(all_faqs),
+            })
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """Fetch all FAQs and categories for initial page render."""
+        context = super().get_context_data(**kwargs)
+        all_faqs = faq_data.get_all_faqs()
+        context['faqs'] = all_faqs
+        context['faq_categories'] = faq_data.get_faq_categories()
+        context['total_faqs_count'] = len(all_faqs)
+        return context
 
 
 class VisaTrackingView(FormView):

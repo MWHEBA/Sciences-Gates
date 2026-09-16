@@ -11,6 +11,7 @@ from .institute import InstituteForm, CourseFormSet, InstituteAttachmentFormSet,
 from .major import MajorForm, MajorCategoryForm, SubjectsTableFormSet, SalaryTableFormSet, CountriesTableFormSet, MajorFAQFormSet, MajorAttachmentFormSet
 from .article import ArticleForm, ArticleFAQFormSet, CategoryForm, TagForm, ArticleAttachmentFormSet
 from .settings import SiteSettingsForm, SiteSEOSettingsForm, SEOSettingsForm
+from .faq import GeneralFAQForm
 
 
 class DashboardLoginForm(forms.Form):

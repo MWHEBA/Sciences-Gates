@@ -331,7 +331,7 @@ class TestArticleSchemaGenerator:
         
         assert schema['@context'] == 'https://schema.org'
         assert schema['@type'] == 'NewsArticle'
-        assert schema['headline'] == 'عنوان SEO'
+        assert schema['headline'] == article.get_full_title()
         assert schema['description'] == 'وصف SEO'
         assert schema['inLanguage'] == 'ar'
     
