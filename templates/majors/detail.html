@@ -42,6 +42,12 @@
 <script type="application/ld+json">
 {% breadcrumb_schema %}
 </script>
+<!-- FAQ Schema -->
+{% if faqs %}
+<script type="application/ld+json">
+{% faq_schema faqs %}
+</script>
+{% endif %}
 {% endblock %}
 
 {% block extra_css %}

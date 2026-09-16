@@ -135,8 +135,29 @@ class PageSEOAnalyzer:
         main_content["focus_keyword_count"] = keyword_count
         main_content["synonyms_counts"] = synonyms_counts
 
+        # Ensure model-level alt text fields are included in image_alts
+        if "image_alts" not in main_content:
+            main_content["image_alts"] = []
+        for alt_field in ("main_image_alt", "featured_image_alt", "logo_alt"):
+            val = str(getattr(obj, alt_field, "") or "").strip()
+            if val and val not in main_content["image_alts"]:
+                main_content["image_alts"].append(val)
+
         model_checks = ModelAwareChecker().run(obj, profile)
-        schema_results = SchemaValidator().validate(full_page.get("schemas", []), profile.expected_schemas)
+        
+        # Dynamically expect FAQPage schema if entity has associated FAQs
+        expected_schemas = list(profile.expected_schemas)
+        has_faqs = False
+        if hasattr(obj, "faqs"):
+            try:
+                has_faqs = obj.faqs.exists()
+            except Exception:
+                has_faqs = bool(getattr(obj, "faqs", None))
+
+        if has_faqs and "FAQPage" not in expected_schemas:
+            expected_schemas.append("FAQPage")
+
+        schema_results = SchemaValidator().validate(full_page.get("schemas", []), tuple(expected_schemas))
         score = SEOScoringEngine(full_page, main_content, model_checks, schema_results, profile).evaluate()
 
         report = {

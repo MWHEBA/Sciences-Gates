@@ -725,4 +725,112 @@ class TestCanonicalDomainMiddlewareAndNormalization(SimpleTestCase):
         assert normalize_canonical_domain('https://sciencesgates.com/test/') == 'https://sciencesgates.com/test/'
 
 
+class TestDynamicSchemaValidation(SimpleTestCase):
+    """Tests for dynamic schema expectation and Course / FAQPage validation."""
+
+    def test_major_profile_expects_course_schema(self):
+        from apps.seo.services.content_profiles import profile_for
+        profile = profile_for("major")
+        assert "Course" in profile.expected_schemas
+        assert "FAQPage" not in profile.expected_schemas
+
+    def test_university_profile_expects_educational_organization(self):
+        from apps.seo.services.content_profiles import profile_for
+        profile = profile_for("university")
+        assert "EducationalOrganization" in profile.expected_schemas
+        assert "FAQPage" not in profile.expected_schemas
+
+    def test_schema_validator_requires_course_fields(self):
+        from apps.seo.services.schema_validator import SchemaValidator
+        validator = SchemaValidator()
+        assert "Course" in validator.REQUIRED
+        assert "name" in validator.REQUIRED["Course"]
+        assert "description" in validator.REQUIRED["Course"]
+        assert "provider" in validator.REQUIRED["Course"]
+
+    def test_schema_validator_passes_course_schema(self):
+        from apps.seo.services.schema_validator import SchemaValidator
+        validator = SchemaValidator()
+        schemas = [
+            {
+                "valid_json": True,
+                "parsed": {
+                    "@context": "https://schema.org",
+                    "@type": "Course",
+                    "name": "هندسة البرمجيات",
+                    "description": "تخصص هندسة البرمجيات في ماليزيا",
+                    "provider": {"@type": "Organization", "name": "Sciences Gates"},
+                }
+            }
+        ]
+        results = validator.validate(schemas, expected_types=("Course",))
+        assert "Course" in results["found"]
+        missing_issues = [i for i in results["issues"] if i["code"].startswith("MISSING_SCHEMA_")]
+        assert len(missing_issues) == 0
+
+
+class TestImageAltFocusKeywordMatching(SimpleTestCase):
+    """Tests for extracting image alts across page and focus keyword / synonym matching."""
+
+    def test_parser_extracts_hero_image_alts_outside_data_seo_content(self):
+        from apps.seo.services.html_parser import SEOHTMLParser
+        html = """
+        <html>
+            <body>
+                <header class="hero">
+                    <img src="/media/hero.jpg" alt="دراسة الأمن السيبراني في ماليزيا وحماية البيانات">
+                </header>
+                <div class="content" data-seo-content>
+                    <h1>دراسة الأمن السيبراني</h1>
+                    <p>محتوى المقالة والتخصص الأكاديمي.</p>
+                    <img src="/media/logo.png" alt="شعار الجامعة">
+                </div>
+                <footer data-seo-ignore>
+                    <img src="/media/icon.png" alt="أيقونة">
+                </footer>
+            </body>
+        </html>
+        """
+        parser = SEOHTMLParser(html, "[data-seo-content]")
+        data = parser.extract_main_content_data()
+        assert "دراسة الأمن السيبراني في ماليزيا وحماية البيانات" in data["image_alts"]
+        assert "شعار الجامعة" in data["image_alts"]
+        assert "أيقونة" not in data["image_alts"]
+
+    def test_scoring_engine_matches_focus_keyword_in_alt(self):
+        from apps.seo.services.scoring import SEOScoringEngine
+        from apps.seo.services.content_profiles import profile_for
+
+        profile = profile_for("major")
+        full_page = {
+            "title": "دراسة تخصص الأمن السيبراني في ماليزيا - التفاصيل الكاملة",
+            "meta_description": "تعرف على شروط وتكاليف دراسة تخصص الأمن السيبراني في ماليزيا بالتفصيل الكامل للطلاب.",
+            "canonical": "https://sciencesgates.com/majors/cyber-security/",
+            "robots": "index, follow",
+            "h1": "دراسة تخصص الأمن السيبراني",
+            "h1_tags": ["دراسة تخصص الأمن السيبراني"],
+            "focus_keyword": "الأمن السيبراني",
+            "keyphrase_synonyms": "دراسة أمن المعلومات, دراسة سايبر",
+            "schemas": [{"valid_json": True, "parsed": {"@context": "https://schema.org", "@type": "Course", "name": "الأمن السيبراني", "description": "دراسة الأمن السيبراني", "provider": {"@type": "Organization", "name": "Sciences Gates"}}}],
+            "og_image": "https://sciencesgates.com/media/img.jpg",
+        }
+        main_content = {
+            "selector_missing": False,
+            "word_count": 400,
+            "headings": [{"level": 2, "text": "نبذة عن دراسة الأمن السيبراني في ماليزيا"}],
+            "links": [{"href": "/universities/", "text": "الجامعات"}],
+            "image_warnings": [],
+            "focus_keyword_count": 4,
+            "synonyms_counts": {"دراسة أمن المعلومات": 1},
+            "image_alts": ["دراسة الأمن السيبراني في ماليزيا وحماية البيانات في الأنظمة"],
+        }
+        engine = SEOScoringEngine(full_page, main_content, [], {"found": ["Course"], "issues": []}, profile)
+        result = engine.evaluate()
+        warning_codes = [w["code"] for w in result["warnings"]]
+        assert "FOCUS_KEYWORD_MISSING_ALT" not in warning_codes
+        assert "focus_keyword_in_alt" in result["passed_checks"]
+
+
+
+
 

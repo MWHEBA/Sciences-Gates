@@ -27,7 +27,7 @@ class ArticleSEOProfile(BaseSEOProfile):
 class UniversitySEOProfile(BaseSEOProfile):
     min_word_count: int = 600
     min_internal_links: int = 3
-    expected_schemas: tuple[str, ...] = ("EducationalOrganization", "FAQPage")
+    expected_schemas: tuple[str, ...] = ("EducationalOrganization",)
     section_checks: list[dict[str, Any]] = field(default_factory=lambda: [
         {"key": "description", "label": "وصف الجامعة", "field_names": ["description"], "min_chars": 150},
         {
@@ -62,7 +62,7 @@ class InstituteSEOProfile(BaseSEOProfile):
 class MajorSEOProfile(BaseSEOProfile):
     min_word_count: int = 300
     min_internal_links: int = 2
-    expected_schemas: tuple[str, ...] = ("FAQPage",)
+    expected_schemas: tuple[str, ...] = ("Course",)
     section_checks: list[dict[str, Any]] = field(default_factory=lambda: [
         {"key": "description", "label": "وصف التخصص", "field_names": ["description"], "min_chars": 100},
         {

@@ -206,12 +206,16 @@ class SEOHTMLParser:
         if not intro_text:
             intro_text = first_150_words
 
-        # Extract all image alt texts
+        # Extract all image alt texts across the page (including hero/featured images, excluding data-seo-ignore)
         image_alts = []
-        for img in images:
+        for img in self.soup.find_all("img"):
+            if img.find_parent(attrs={"data-seo-ignore": True}):
+                continue
             alt = img.get("alt")
             if alt is not None:
-                image_alts.append(alt.strip())
+                cleaned_alt = alt.strip()
+                if cleaned_alt:
+                    image_alts.append(cleaned_alt)
 
         return {
             "selector_missing": selector_missing,

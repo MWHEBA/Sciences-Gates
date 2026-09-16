@@ -5761,7 +5761,8 @@ class PreviewInstituteDetailView(ContentAdminRequiredMixin, PreviewMetaAndBanner
         )
         return Institute.objects.prefetch_related(
             courses_prefetch,
-            'related_articles'
+            'related_articles',
+            'faqs'
         )
 
 
@@ -5789,7 +5790,8 @@ class PreviewMajorDetailView(ContentAdminRequiredMixin, PreviewMetaAndBannerMixi
             countries_prefetch,
             'best_universities',
             'cheap_universities',
-            'related_articles'
+            'related_articles',
+            'faqs'
         )
 
 

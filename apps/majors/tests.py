@@ -127,8 +127,9 @@ class MajorModelTest(TestCase):
 
     def test_major_get_robots_content(self):
         """Test get_robots_content method."""
-        # Default should be 'index, follow'
-        self.assertEqual(self.major.get_robots_content(), 'index, follow')
+        # Default should include index, follow and modern snippet directives
+        self.assertIn('index, follow', self.major.get_robots_content())
+        self.assertIn('max-image-preview:large', self.major.get_robots_content())
         
         # Test with robots_index=False
         self.major.robots_index = False
@@ -137,7 +138,7 @@ class MajorModelTest(TestCase):
         # Test with robots_follow=False
         self.major.robots_index = True
         self.major.robots_follow = False
-        self.assertEqual(self.major.get_robots_content(), 'index, nofollow')
+        self.assertIn('index, nofollow', self.major.get_robots_content())
 
     def test_major_unpublished_not_visible(self):
         """Test that unpublished majors are not visible."""

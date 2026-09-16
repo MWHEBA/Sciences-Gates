@@ -2,6 +2,7 @@ class SchemaValidator:
     REQUIRED = {
         "EducationalOrganization": ["name", "url"],
         "NewsArticle": ["headline", "datePublished", "author"],
+        "Course": ["name", "description", "provider"],
         "FAQPage": ["mainEntity"],
         "BreadcrumbList": ["itemListElement"],
     }
