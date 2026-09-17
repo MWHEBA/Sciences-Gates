@@ -136,11 +136,11 @@ class SchemaGenerator:
             "url": base_url,
             "description": "شركة متخصصة في القبولات الجامعية والخدمات التعليمية للدراسة في ماليزيا",
             "inLanguage": "ar",
-            "taxID": "202101038492",
+            "taxID": "1309248-P",
             "identifier": {
                 "@type": "PropertyValue",
                 "propertyID": "SSM",
-                "value": "202101038492"
+                "value": "1309248-P"
             },
             "logo": {
                 "@type": "ImageObject",
