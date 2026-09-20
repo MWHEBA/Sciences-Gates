@@ -146,7 +146,6 @@
                                     {% if form.main_image.errors %}
                                         <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.main_image.errors.0 }}</p>
                                     {% endif %}
-                                </div>
                             </div>
 
                         </div>
@@ -434,165 +433,77 @@
                     </section>
                 </div>
 
-<!-- 6. رسوم الجامعات Card -->
+{% if form.instance.pk %}
+<!-- 6. البرامج والجامعات المرتبطة بالتخصص Card -->
                 <div style="background-color: var(--surface);
                             border: 1px solid var(--border);
                             border-radius: var(--radius-xl);
                             box-shadow: var(--shadow-sm);
                             padding: 24px;">
                     <section>
-                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">تكاليف دراسة التخصص</h2>
-                        
-                        <!-- Hidden field for Django form processing -->
-                        {{ form.tuition_fees }}
-                        {% if form.tuition_fees.errors %}
-                            <p class="mt-1 text-sm mb-4" style="color: var(--danger); font-weight: 500;">{{ form.tuition_fees.errors.0 }}</p>
-                        {% endif %}
-
-                        <!-- Alpine.js Table Builder -->
-                        <div x-data="tuitionFeesManager()" x-init="init()" class="space-y-4">
-                            <!-- Loop through tables -->
-                            <template x-for="(table, tIndex) in tables" :key="tIndex">
-                                <div class="border rounded-lg p-4 bg-gray-50/50 space-y-4" style="border-color: var(--border); background-color: var(--surface-2); border-radius: var(--radius-lg); margin-bottom: 16px;">
-                                    <!-- Table Title and Action Header -->
-                                    <div class="flex justify-between items-center gap-4" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px;">
-                                        <input type="text" x-model="table.title" placeholder="عنوان الجدول (مثال: الرسوم الدراسية بالتفصيل لجامعة معينة)" 
-                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                               style="background-color: var(--surface); color: var(--text-primary); border-color: var(--border); flex: 1; border-radius: var(--radius-md); padding: 8px 12px;"
-                                               @input="updateJSON()">
-                                        <button type="button" @click="removeTable(tIndex)" 
-                                                class="px-3 py-2 text-sm font-semibold rounded-lg hover:bg-red-50 text-red-600 transition-colors duration-150"
-                                                style="border: 1px solid var(--danger-light); color: var(--danger); background: transparent; cursor: pointer; border-radius: var(--radius-md); padding: 8px 16px; font-weight: 600;">
-                                            حذف الجدول
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Table Columns and Rows -->
-                                    <div class="overflow-x-auto" style="overflow-x: auto; margin-bottom: 12px;">
-                                        <table class="w-full border-collapse" style="width: 100%; border-collapse: collapse; border: 1px solid var(--border);">
-                                            <thead>
-                                                 <tr style="background-color: var(--primary-light);">
-                                                     <!-- Column Headers -->
-                                                     <template x-for="(header, hIndex) in table.headers" :key="hIndex">
-                                                         <th class="border p-2 text-right" style="border: 1px solid var(--border); padding: 10px; min-width: 150px;">
-                                                             <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
-                                                                 <input type="text" x-model="table.headers[hIndex]" 
-                                                                        class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none"
-                                                                        style="background-color: var(--surface); color: var(--text-primary); border-color: var(--border); padding: 4px 8px; font-size: 13px; border-radius: var(--radius-sm); flex: 1;"
-                                                                        @input="updateJSON()">
-                                                                 <button type="button" @click="removeColumn(tIndex, hIndex)" 
-                                                                         class="text-red-500 hover:text-red-700 font-bold px-1" style="background: transparent; border: none; cursor: pointer; color: var(--danger); font-size: 16px;" title="حذف العمود">
-                                                                     &times;
-                                                                 </button>
-                                                             </div>
-                                                         </th>
-                                                     </template>
-                                                     <!-- Action Column for Add Column -->
-                                                     <th class="border p-2 text-center w-16" style="border: 1px solid var(--border); padding: 10px; width: 80px; text-align: center;">
-                                                         <button type="button" @click="addColumn(tIndex)" 
-                                                                 class="px-2 py-1 text-xs font-semibold bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                                                                 style="background: var(--primary); color: #ffffff; border: none; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 11px; cursor: pointer; font-weight: 600;">
-                                                             + عمود
-                                                         </button>
-                                                     </th>
-                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                 <!-- Rows -->
-                                                 <template x-for="(row, rIndex) in table.rows" :key="rIndex">
-                                                     <tr class="hover:bg-gray-50" style="background-color: var(--surface); border-bottom: 1px solid var(--border);">
-                                                         <template x-for="(cell, cIndex) in row" :key="cIndex">
-                                                             <td class="border p-2" style="border: 1px solid var(--border); padding: 8px;">
-                                                                 <input type="text" x-model="table.rows[rIndex][cIndex]" 
-                                                                        class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none"
-                                                                        style="background-color: var(--surface); color: var(--text-primary); border-color: var(--border); padding: 4px 8px; font-size: 13px; border-radius: var(--radius-sm);"
-                                                                        @input="updateJSON()">
-                                                             </td>
-                                                         </template>
-                                                         <!-- Action Column for Delete Row -->
-                                                         <td class="border p-2 text-center" style="border: 1px solid var(--border); padding: 8px; text-align: center;">
-                                                             <button type="button" @click="removeRow(tIndex, rIndex)" 
-                                                                     class="text-red-500 hover:text-red-700 font-bold px-2" style="background: transparent; border: none; cursor: pointer; color: var(--danger); font-size: 18px;" title="حذف الصف">
-                                                                 &times;
-                                                             </button>
-                                                         </td>
-                                                     </tr>
-                                                 </template>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    
-                                    <!-- Add Row Action -->
-                                    <div class="flex gap-2" style="display: flex; gap: 8px;">
-                                         <button type="button" @click="addRow(tIndex)" 
-                                                 class="px-3 py-1.5 text-xs font-semibold bg-green-600 text-white rounded hover:bg-green-700 transition"
-                                                 style="background: var(--success); color: #ffffff; border: none; padding: 6px 12px; border-radius: var(--radius-sm); font-size: 12px; cursor: pointer; font-weight: 600;">
-                                             + إضافة صف
-                                         </button>
-                                    </div>
-                                </div>
-                            </template>
-                            
-                            <!-- Add Table Action -->
-                            <div class="pt-2" style="padding-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
-                                 <button type="button" @click="addTable()" 
-                                         class="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                                         style="background: var(--primary); color: #ffffff; border: none; padding: 10px 20px; border-radius: var(--radius-md); font-size: 13px; cursor: pointer; font-weight: 600;">
-                                     + إضافة جدول رسوم جديد
-                                 </button>
-                                 <button type="button" @click="openImportModal()" 
-                                         class="px-4 py-2 text-sm font-semibold rounded-lg transition"
-                                         style="background: transparent; border: 1px dashed var(--border-strong); color: var(--text-secondary); padding: 10px 20px; border-radius: var(--radius-md); font-size: 13px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                         <path d="M12 5v14M5 12h14"/>
-                                     </svg>
-                                     استيراد جداول الرسوم من Elementor
-                                 </button>
+                        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin: 0;">البرامج والجامعات المرتبطة بالتخصص</h2>
+                                <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full" style="background-color: var(--primary-light); color: var(--primary);">
+                                    {{ form.instance.programs.count }}
+                                </span>
                             </div>
-
-                            <!-- Elementor Import Modal -->
-                            <div x-show="showImportModal" 
-                                 class="faq-bulk-import-modal faq-bulk-import-modal--active" 
-                                 style="display: none; position: fixed; inset: 0; z-index: 9999; align-items: center; justify-content: center;"
-                                 x-transition>
-                                 <div class="faq-bulk-import-modal__overlay" @click="closeImportModal()"></div>
-                                 <div class="faq-bulk-import-modal__content" style="max-height: 90vh; display: flex; flex-direction: column;">
-                                     <div class="faq-bulk-import-modal__header">
-                                         <h3>استيراد جداول الرسوم من Elementor</h3>
-                                         <button type="button" class="faq-bulk-import-modal__close" @click="closeImportModal()">
-                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                 <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                 <line x1="6" y1="6" x2="18" y2="18"></line>
-                                             </svg>
-                                         </button>
-                                     </div>
-                                     <div class="faq-bulk-import-modal__body" style="flex: 1; overflow-y: auto;">
-                                         <!-- Step 1: HTML Input -->
-                                         <div x-show="parsedTables.length === 0">
-                                             <p class="faq-bulk-import-instructions" style="margin-bottom: 12px;">الصق كود HTML من Elementor Accordion أو كود الجدول مباشرة:</p>
-                                             <textarea x-model="importHTML" 
-                                                       class="faq-bulk-import-textarea" 
-                                                       placeholder="الصق الكود هنا..."
-                                                       style="min-height: 250px;"></textarea>
-                                             <div class="faq-bulk-import-info" style="margin-top: 12px; font-size: 13px; color: var(--text-secondary);">
-                                                 <p><strong>💡 كيفية الاستخدام:</strong></p>
-                                                 <ul class="list-disc pr-4 space-y-1">
-                                                     <li>افتح صفحة التخصص أو الجامعة القديمة التي تحتوي على الرسوم.</li>
-                                                     <li>افتح أدوات المطور (F12) وانسخ كود الجدول أو الأكورديون كاملاً.</li>
-                                                     <li>الصقه هنا واضغط "استيراد البيانات" لتحويله إلى جدول مرن.</li>
-                                                 </ul>
-                                             </div>
-                                         </div>
-                                     </div>
-                                     <div class="faq-bulk-import-modal__footer" style="display: flex; justify-content: flex-end; gap: 8px;">
-                                         <button type="button" class="faq-bulk-import-btn-cancel" @click="closeImportModal()">إلغاء</button>
-                                         <button type="button" class="faq-bulk-import-btn-confirm" style="display: block;" @click="parseImport()">استيراد البيانات</button>
-                                     </div>
-                                 </div>
-                             </div>
+                            <span class="text-xs" style="color: var(--text-muted);">يتم ربط وإدارة البرامج من خلال صفحات الجامعات والكليات</span>
                         </div>
+
+                        {% if form.instance.programs.all %}
+                            <div style="overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-lg);">
+                                <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 13px;">
+                                    <thead>
+                                        <tr style="background-color: var(--surface-2); border-bottom: 1px solid var(--border); color: var(--text-secondary);">
+                                            <th style="padding: 10px 14px; font-weight: 600;">الجامعة</th>
+                                            <th style="padding: 10px 14px; font-weight: 600;">الكلية</th>
+                                            <th style="padding: 10px 14px; font-weight: 600;">البرنامج الأكاديمي</th>
+                                            <th style="padding: 10px 14px; font-weight: 600;">مدة الدراسة</th>
+                                            <th style="padding: 10px 14px; font-weight: 600;">الرسوم السنوية</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prog in form.instance.programs.all %}
+                                            <tr style="border-bottom: 1px solid var(--border); color: var(--text-primary);">
+                                                <td style="padding: 10px 14px; font-weight: 500;">
+                                                    {% if prog.faculty and prog.faculty.university %}
+                                                        <a href="{% url 'dashboard:university_edit' prog.faculty.university.pk %}" class="hover:underline" style="color: var(--primary);" target="_blank">
+                                                            {{ prog.faculty.university.name }}
+                                                        </a>
+                                                    {% else %}
+                                                        —
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding: 10px 14px; color: var(--text-secondary);">
+                                                    {% if prog.faculty %}
+                                                        {{ prog.faculty.name }}
+                                                    {% else %}
+                                                        —
+                                                    {% endif %}
+                                                </td>
+                                                <td style="padding: 10px 14px;">
+                                                    {{ prog.name }}
+                                                </td>
+                                                <td style="padding: 10px 14px; color: var(--text-secondary);">
+                                                    {{ prog.duration|default:"—" }}
+                                                </td>
+                                                <td style="padding: 10px 14px; color: var(--text-secondary);">
+                                                    {{ prog.tuition_fees|default:"—" }}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="p-4 rounded-lg text-center text-sm" style="background-color: var(--surface-2); border: 1px dashed var(--border); color: var(--text-muted);">
+                                لا توجد برامج أكاديمية مرتبطة بهذا التخصص حالياً في أي جامعة.
+                            </div>
+                        {% endif %}
                     </section>
                 </div>
+{% endif %}
 
 <!-- 8. مقارنة تكلفة Card -->
                 <div style="background-color: var(--surface);
@@ -1650,166 +1561,5 @@ function removeFormsetRow(btn, prefix) {
 </script>
 {% endif %}
 
-<script>
-function tuitionFeesManager() {
-    return {
-        tables: [],
-        jsonValue: '',
-        init() {
-            let textarea = document.getElementById('id_tuition_fees');
-            if (textarea && textarea.value) {
-                try {
-                    this.tables = JSON.parse(textarea.value);
-                } catch (e) {
-                    console.error("Error parsing tuition_fees JSON:", e);
-                    this.tables = [];
-                }
-            } else {
-                this.tables = [];
-            }
-            this.updateJSON();
-        },
-        addTable() {
-            this.tables.push({
-                title: 'جدول الرسوم الدراسية للجامعات',
-                headers: ['الجامعة', 'البرنامج', 'الرسوم السنوية'],
-                rows: [['', '', '']]
-            });
-            this.updateJSON();
-        },
-        removeTable(index) {
-            if (confirm('هل أنت متأكد من حذف هذا الجدول بالكامل؟')) {
-                this.tables.splice(index, 1);
-                this.updateJSON();
-            }
-        },
-        addColumn(tIndex) {
-            this.tables[tIndex].headers.push('عمود جديد');
-            this.tables[tIndex].rows.forEach(row => {
-                row.push('');
-            });
-            this.updateJSON();
-        },
-        removeColumn(tIndex, hIndex) {
-            if (this.tables[tIndex].headers.length <= 1) {
-                alert('يجب أن يحتوي الجدول على عمود واحد على الأقل.');
-                return;
-            }
-            if (confirm('هل أنت متأكد من حذف هذا العمود؟ سيتم حذف جميع البيانات المرتبطة به في هذا الجدول.')) {
-                this.tables[tIndex].headers.splice(hIndex, 1);
-                this.tables[tIndex].rows.forEach(row => {
-                    row.splice(hIndex, 1);
-                });
-                this.updateJSON();
-            }
-        },
-        addRow(tIndex) {
-            let colCount = this.tables[tIndex].headers.length;
-            let newRow = Array(colCount).fill('');
-            this.tables[tIndex].rows.push(newRow);
-            this.updateJSON();
-        },
-        removeRow(tIndex, rIndex) {
-            this.tables[tIndex].rows.splice(rIndex, 1);
-            this.updateJSON();
-        },
-        updateJSON() {
-            let textarea = document.getElementById('id_tuition_fees');
-            if (textarea) {
-                this.jsonValue = JSON.stringify(this.tables);
-                textarea.value = this.jsonValue;
-            }
-        },
-        showImportModal: false,
-        importHTML: '',
-        importErrors: [],
-        parsedTables: [],
-        openImportModal() {
-            this.importHTML = '';
-            this.importErrors = [];
-            this.parsedTables = [];
-            this.showImportModal = true;
-        },
-        closeImportModal() {
-            this.showImportModal = false;
-        },
-        parseImport() {
-            this.importErrors = [];
-            this.parsedTables = [];
-            let inputString = this.importHTML.trim();
-            if (!inputString) {
-                alert('الرجاء لصق الكود أو النص أولاً');
-                return;
-            }
-            try {
-                let isHTML = /<[a-z][\s\S]*>/i.test(inputString);
-                if (isHTML) {
-                    let parser = new DOMParser();
-                    let doc = parser.parseFromString(inputString, 'text/html');
-                    let accordion = doc.querySelector('.elementor-accordion');
-                    if (accordion) {
-                        let accItems = accordion.querySelectorAll('.elementor-accordion-item');
-                        accItems.forEach((item, idx) => {
-                            let titleEl = item.querySelector('.elementor-accordion-title');
-                            let title = titleEl ? titleEl.textContent.trim() : '';
-                            let contentEl = item.querySelector('.elementor-tab-content');
-                            if (contentEl) {
-                                let table = contentEl.querySelector('table');
-                                if (table) {
-                                    this.parsedTables.push({title, element: table});
-                                }
-                            }
-                        });
-                    } else {
-                        let directTables = doc.querySelectorAll('table');
-                        directTables.forEach((table, idx) => {
-                            let title = `جدول مستورد ${idx+1}`;
-                            let prev = table.previousElementSibling;
-                            if (prev && (prev.tagName.startsWith('H') || prev.classList.contains('elementor-heading-title'))) {
-                                title = prev.textContent.trim();
-                            }
-                            this.parsedTables.push({title, element: table});
-                        });
-                    }
-                }
-                if (this.parsedTables.length === 0) {
-                    alert('لم يتم العثور على أي جداول رسوم صالحة في الكود.');
-                    return;
-                }
-                
-                this.parsedTables.forEach((tData, tIdx) => {
-                    let headers = [];
-                    let rows = [];
-                    let headersEl = tData.element.querySelectorAll('th');
-                    if (headersEl.length > 0) {
-                        headersEl.forEach(th => headers.push(th.textContent.trim()));
-                    }
-                    let rowsEl = tData.element.querySelectorAll('tr');
-                    rowsEl.forEach(tr => {
-                        let cellsEl = tr.querySelectorAll('td');
-                        if (cellsEl.length > 0) {
-                            let rowData = [];
-                            cellsEl.forEach(td => rowData.push(td.textContent.trim()));
-                            rows.push(rowData);
-                        }
-                    });
-                    if (headers.length === 0 && rows.length > 0) {
-                        headers = Array(rows[0].length).fill('عمود');
-                    }
-                    this.tables.push({
-                        title: tData.title || 'جدول مستورد',
-                        headers: headers,
-                        rows: rows
-                    });
-                });
-                this.updateJSON();
-                this.closeImportModal();
-            } catch (err) {
-                alert('حدث خطأ أثناء تحليل الكود: ' + err.message);
-            }
-        }
-    }
-}
-</script>
 {% include "dashboard/includes/version_history_modal.html" %}
 {% endblock %}

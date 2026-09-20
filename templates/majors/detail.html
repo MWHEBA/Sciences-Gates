@@ -800,20 +800,18 @@
                     </div>
                     {% if major.study_duration %}
                     <div class="detail-sidebar-item">
-                        <dt class="detail-sidebar-label">المدة الإجمالية:</dt>
+                        <dt class="detail-sidebar-label">مدة الدراسة:</dt>
                         <dd class="detail-sidebar-value">{{ major.study_duration }}</dd>
                     </div>
-                    {% endif %}
-                    {% if major.tuition_fees %}
+                    {% elif major.bachelor_duration %}
                     <div class="detail-sidebar-item">
-                        <dt class="detail-sidebar-label">الرسوم الدراسية:</dt>
-                        <dd class="detail-sidebar-value">
-                            {% if major.is_tuition_fees_json %}
-                                <a href="#tuition-section" class="text-primary hover:underline">عرض جداول الرسوم</a>
-                            {% else %}
-                                {{ major.tuition_fees }}
-                            {% endif %}
-                        </dd>
+                        <dt class="detail-sidebar-label">مدة الدراسة:</dt>
+                        <dd class="detail-sidebar-value">{{ major.bachelor_duration }}</dd>
+                    </div>
+                    {% elif major.master_duration %}
+                    <div class="detail-sidebar-item">
+                        <dt class="detail-sidebar-label">مدة الدراسة:</dt>
+                        <dd class="detail-sidebar-value">{{ major.master_duration }}</dd>
                     </div>
                     {% endif %}
                     {% if major.study_language %}
