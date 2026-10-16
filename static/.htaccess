@@ -1,3 +1,5 @@
+PassengerEnabled off
+
 # 1. Enable GZIP Compression (mod_deflate)
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE application/javascript

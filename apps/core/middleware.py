@@ -222,6 +222,9 @@ class SecurityHeadersMiddleware:
             response['Cache-Control'] = 'private, no-cache, no-store, must-revalidate, max-age=0'
             response['Pragma'] = 'no-cache'
             response['Expires'] = '0'
+        elif 'text/html' in response.get('Content-Type', '') and 'Cache-Control' not in response:
+            # Prevent browsers and proxies from caching stale HTML referencing superseded static hashes
+            response['Cache-Control'] = 'public, max-age=0, must-revalidate'
 
         return response
 

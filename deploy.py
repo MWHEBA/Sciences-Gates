@@ -1054,7 +1054,7 @@ class DeploymentManager:
         setup_commands += [
             (f"{venv} {manage} migrate --noinput --settings=config.settings.production",
              "عمل ميجريشن لقاعدة البيانات (migrate)"),
-            (f"{venv} {manage} collectstatic --noinput --clear --settings=config.settings.production",
+            (f"{venv} {manage} collectstatic --noinput --settings=config.settings.production",
              "تجميع الملفات الثابتة (collectstatic)"),
             (f"{venv} {manage} loaddata core/fixtures/system_modules.json --settings=config.settings.production",
              "تحميل موديولات النظام (loaddata system_modules)"),
@@ -1156,7 +1156,7 @@ class DeploymentManager:
         if run_migrate:
             exec_commands.append((f"{venv} {manage} migrate --noinput --settings=config.settings.production", "عمل ميجريشن لقاعدة البيانات (migrate)"))
         if run_collectstatic:
-            exec_commands.append((f"{venv} {manage} collectstatic --noinput --clear --settings=config.settings.production", "تجميع الملفات الثابتة (collectstatic)"))
+            exec_commands.append((f"{venv} {manage} collectstatic --noinput --settings=config.settings.production", "تجميع الملفات الثابتة (collectstatic)"))
         if run_clear_cache:
             exec_commands.append((f'{venv} {manage} shell -c "from django.core.cache import cache; cache.clear()"', "مسح كاش تطبيق الويب (clear django cache)"))
 
@@ -1234,9 +1234,9 @@ class DeploymentManager:
             elif not f_str.endswith('.htaccess') and not f_str.endswith('.deploy_hashes.json') and not f_str.endswith('.txt'):
                 has_non_static = True
                 
-        # إذا تم تعديل كود بايثون أو قوالب HTML، نقوم بمسح الكاش بالكامل
-        if has_non_static:
-            print("\n⚡ تم كشف تعديل في القوالب أو كود التطبيق المرفوع. جاري مسح كاش كلاود فلير بالكامل (Purge Everything)...")
+        # إذا تم تعديل كود بايثون أو قوالب HTML أو ملفات أصول ثابتة، نقوم بمسح الكاش بالكامل لضمان تحديث روابط الهاش في الـ HTML
+        if has_non_static or static_urls:
+            print("\n⚡ تم كشف تعديل في الأصول الثابتة أو القوالب أو كود التطبيق. جاري مسح كاش كلاود فلير بالكامل (Purge Everything)...")
             cmd = [sys.executable, "scripts/manage_cloudflare.py", "--action", "purge_cache", "--all"]
             try:
                 result = subprocess.run(cmd, capture_output=True, text=True, check=False)
@@ -1276,7 +1276,9 @@ class DeploymentManager:
             sftp = ssh.open_sftp()
             
             # 1. ملف staticfiles/.htaccess
-            static_htaccess = r"""# 1. Enable GZIP Compression (mod_deflate)
+            static_htaccess = r"""PassengerEnabled off
+
+# 1. Enable GZIP Compression (mod_deflate)
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE application/javascript
     AddOutputFilterByType DEFLATE application/rss+xml
