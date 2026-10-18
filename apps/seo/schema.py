@@ -132,15 +132,17 @@ class SchemaGenerator:
             "@type": "Organization",
             "@id": f"{base_url}#organization",
             "name": "شركة بوابات العلوم",
-            "alternateName": ["شركة بوابات العلوم", "Sciences Gates", "شركة بوابات العلوم للدراسة في ماليزيا"],
+            "legalName": "SCIENCES GATES SDN. BHD.",
+            "alternateName": ["شركة بوابات العلوم", "Sciences Gates", "Sciences Gates Sdn. Bhd.", "شركة بوابات العلوم للدراسة في ماليزيا"],
             "url": base_url,
             "description": "شركة متخصصة في القبولات الجامعية والخدمات التعليمية للدراسة في ماليزيا",
             "inLanguage": "ar",
-            "taxID": "1309248-P",
+            "foundingDate": "2018-12-31",
+            "taxID": "201801047216 (1309248-P)",
             "identifier": {
                 "@type": "PropertyValue",
                 "propertyID": "SSM",
-                "value": "1309248-P"
+                "value": "201801047216 (1309248-P)"
             },
             "logo": {
                 "@type": "ImageObject",
@@ -164,7 +166,10 @@ class SchemaGenerator:
             },
             "address": {
                 "@type": "PostalAddress",
+                "streetAddress": "Level 12, Block A, M Suites, Jalan Ampang",
                 "addressLocality": "Kuala Lumpur",
+                "addressRegion": "Wilayah Persekutuan Kuala Lumpur",
+                "postalCode": "50450",
                 "addressCountry": "MY"
             },
             "sameAs": same_as_links

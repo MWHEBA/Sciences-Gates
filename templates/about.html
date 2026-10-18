@@ -1,50 +1,76 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}عن الشركة - شركة بوابات العلوم{% endblock %}
-{% block og_title %}عن الشركة - شركة بوابات العلوم{% endblock %}
-{% block twitter_title %}عن الشركة - شركة بوابات العلوم{% endblock %}
-{% block meta_description %}بوابات العلوم للدراسة في ماليزيا (Sciences Gates Sdn. Bhd.) شركة تعليمية متخصصة في مساعدة الطلاب الدوليين على اختيار الجامعات والحصول على القبول الجامعي مجاناً.{% endblock %}
+{% block title %}عن الشركة - شركة بوابات العلوم للدراسة في ماليزيا{% endblock %}
+{% block og_title %}عن الشركة - شركة بوابات العلوم للدراسة في ماليزيا{% endblock %}
+{% block twitter_title %}عن الشركة - شركة بوابات العلوم للدراسة في ماليزيا{% endblock %}
+{% block meta_description %}تعرف على شركة بوابات العلوم (Sciences Gates Sdn. Bhd.)، خبرة منذ 2010 في الاستشارات والقبولات الجامعية في ماليزيا، مسجلة رسمياً برقم SSM: 201801047216.{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/marquee.css' %}">
 <style>
-    /* ═══════════════════════════════════════════
-       Design System Styles for About Page
-       Calm, Minimal, Elegant & 100% CSS Variables
-       ═══════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════════
+       Sciences Gates - About Us Page Styles
+       100% Pure CSS Variables | Flat Colors Only | Calm & Minimal
+       ═══════════════════════════════════════════════════════════════ */
 
-    .about-intro-box {
-        background-color: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 40px;
+    :root {
+        --sg-surface: var(--bg-white, #ffffff);
+        --sg-surface-muted: var(--bg-gray, #f8fafc);
+        --sg-border: var(--border-color, #e2e8f0);
+        --sg-text-main: var(--text-dark, #1e293b);
+        --sg-text-muted: var(--text-body, #475569);
+        --sg-primary: var(--primary, #0f2a4a);
+        --sg-primary-hover: var(--primary-hover, #173e6d);
+        --sg-primary-soft: var(--primary-light, #f0f4f8);
+        --sg-secondary: var(--secondary, #c8a041);
+        --sg-radius: var(--radius-md, 8px);
+        --sg-radius-lg: var(--radius-lg, 16px);
+        --sg-radius-full: var(--radius-full, 9999px);
     }
 
-    .about-legal-tag {
+    /* Shared Box Containers */
+    .sg-card-box {
+        background-color: var(--sg-surface);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius-lg);
+        padding: 40px;
+    }
+    @media (max-width: 768px) {
+        .sg-card-box {
+            padding: 24px 18px;
+        }
+    }
+
+    .sg-badge-tag {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background-color: var(--primary-light);
-        color: var(--primary);
+        background-color: var(--sg-primary-soft);
+        color: var(--sg-primary);
         padding: 6px 14px;
-        border-radius: var(--radius-sm);
+        border-radius: var(--sg-radius);
         font-size: 0.85rem;
         font-weight: 700;
         margin-bottom: 20px;
     }
+    .sg-badge-tag svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
 
-    .about-lead-p {
-        font-size: 1.1rem;
-        line-height: 1.8;
-        color: var(--text-primary);
+    .sg-lead-text {
+        font-size: 1.125rem;
+        line-height: 1.85;
+        color: var(--sg-text-main);
         margin-bottom: 16px;
     }
 
-    .about-sub-p {
+    .sg-body-text {
         font-size: 1rem;
-        line-height: 1.75;
-        color: var(--text-secondary);
+        line-height: 1.8;
+        color: var(--sg-text-muted);
         margin-bottom: 0;
     }
 
@@ -67,95 +93,234 @@
     }
 
     .about-stat-item {
-        background-color: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
+        background-color: var(--sg-surface-muted);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius);
         padding: 20px 16px;
         text-align: center;
     }
     .about-stat-item__num {
         font-size: 1.85rem;
         font-weight: 800;
-        color: var(--primary);
+        color: var(--sg-primary);
         line-height: 1.1;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
     }
     .about-stat-item__lbl {
         font-size: 0.85rem;
-        color: var(--text-secondary);
+        color: var(--sg-text-muted);
         font-weight: 600;
     }
 
-    /* Services Box */
-    .services-box {
-        background-color: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 36px;
+    /* SSM Legal Registration Box & Responsive Key-Value Grid */
+    .ssm-legal-container {
+        margin-top: 32px;
+        padding-top: 28px;
+        border-top: 1px solid var(--sg-border);
+    }
+    .ssm-legal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .ssm-legal-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--sg-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .ssm-legal-title svg {
+        color: var(--sg-secondary);
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
     }
 
-    .services-features-grid {
+    .ssm-verify-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background-color: var(--sg-primary);
+        color: var(--white, #ffffff);
+        padding: 10px 18px;
+        border-radius: var(--sg-radius);
+        font-size: 0.875rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background-color 0.2s ease;
+    }
+    .ssm-verify-btn svg {
+        flex-shrink: 0;
+    }
+    .ssm-verify-btn:hover {
+        background-color: var(--sg-primary-hover);
+        color: var(--white, #ffffff);
+    }
+
+    .ssm-data-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-        margin-top: 24px;
-        margin-bottom: 28px;
+        gap: 12px;
     }
     @media (max-width: 768px) {
-        .services-features-grid {
+        .ssm-data-grid {
             grid-template-columns: 1fr;
         }
     }
+    .ssm-data-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background-color: var(--sg-surface-muted);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius);
+        font-size: 0.925rem;
+    }
+    .ssm-data-row__label {
+        font-weight: 700;
+        color: var(--sg-text-muted);
+    }
+    .ssm-data-row__value {
+        font-weight: 700;
+        color: var(--sg-primary);
+        text-align: left;
+        direction: ltr;
+        unicode-bidi: plaintext;
+    }
 
-    .service-feature-pill {
+    /* Vision, Mission, Values (3 Cards) */
+    .vmv-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 24px;
+    }
+    @media (max-width: 991px) {
+        .vmv-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .vmv-card {
+        background-color: var(--sg-surface);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius-lg);
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+    }
+    .vmv-card__icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--sg-radius);
+        background-color: var(--sg-primary-soft);
+        color: var(--sg-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 18px;
+    }
+    .vmv-card__icon-wrap svg {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        color: var(--sg-primary);
+    }
+    .vmv-card__title {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--sg-primary);
+        margin-bottom: 12px;
+    }
+    .vmv-card__desc {
+        font-size: 0.95rem;
+        line-height: 1.75;
+        color: var(--sg-text-muted);
+        margin: 0;
+        flex-grow: 1;
+    }
+
+    /* Comprehensive Services Grid (5 Cards) */
+    .services-grid-5 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 28px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 991px) {
+        .services-grid-5 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 576px) {
+        .services-grid-5 {
+            grid-template-columns: 1fr;
+        }
+    }
+    .service-card-clean {
+        background-color: var(--sg-surface-muted);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius);
+        padding: 22px 20px;
         display: flex;
         align-items: flex-start;
-        gap: 12px;
-        padding: 16px;
-        background-color: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
+        gap: 14px;
     }
-    .service-feature-pill i {
-        color: var(--secondary);
-        font-size: 1.1rem;
-        margin-top: 2px;
+    .service-card-clean svg,
+    .service-card-clean i {
+        color: var(--sg-secondary);
+        width: 22px;
+        height: 22px;
+        margin-top: 3px;
         flex-shrink: 0;
     }
-    .service-feature-pill span {
-        font-size: 0.95rem;
-        color: var(--text-primary);
-        line-height: 1.6;
+    .service-card-clean h3 {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--sg-text-main);
+        margin: 0 0 6px 0;
+    }
+    .service-card-clean p {
+        font-size: 0.925rem;
+        line-height: 1.65;
+        color: var(--sg-text-muted);
+        margin: 0;
     }
 
-    /* Free & Direct Payment Guarantee Banner */
+    /* Guarantee Banner */
     .payment-guarantee-banner {
-        background-color: var(--primary-light);
-        border: 1px solid var(--primary);
-        border-right: 5px solid var(--secondary);
-        border-radius: var(--radius);
+        background-color: var(--sg-primary-soft);
+        border: 1px solid var(--sg-primary);
+        border-right: 5px solid var(--sg-secondary);
+        border-radius: var(--sg-radius);
         padding: 20px 24px;
         display: flex;
         align-items: center;
         gap: 16px;
     }
+    .payment-guarantee-banner svg,
     .payment-guarantee-banner i {
-        color: var(--primary);
-        font-size: 1.75rem;
+        color: var(--sg-primary);
+        width: 28px;
+        height: 28px;
         flex-shrink: 0;
     }
     .payment-guarantee-banner p {
         font-size: 1rem;
         font-weight: 700;
-        color: var(--primary);
+        color: var(--sg-primary);
         line-height: 1.6;
         margin: 0;
     }
 
-    /* ═══════════════════════════════════════════
-       Academic Team Section Styles (Strict RTL Layout)
-       ═══════════════════════════════════════════ */
-
+    /* Academic Team Section */
     .about-centered-header {
         text-align: center;
         max-width: 780px;
@@ -170,13 +335,13 @@
     .about-centered-header .section-title-premium {
         font-size: 2rem;
         font-weight: 800;
-        color: var(--text-primary);
+        color: var(--sg-text-main);
         margin-bottom: 16px;
         text-align: center;
     }
     .about-centered-header .section-desc-premium {
         font-size: 1.05rem;
-        color: var(--text-secondary);
+        color: var(--sg-text-muted);
         line-height: 1.8;
         margin: 0;
         text-align: center;
@@ -197,23 +362,19 @@
     }
 
     .doctor-card {
-        background-color: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
+        background-color: var(--sg-surface);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius-lg);
         padding: 32px 24px 24px 24px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         height: 100%;
-        box-shadow: var(--shadow-sm);
-        transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        transition: border-color 0.2s ease;
     }
     .doctor-card:hover {
-        border-color: var(--primary);
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-md);
+        border-color: var(--sg-primary);
     }
-
     .doctor-header {
         display: flex;
         align-items: center;
@@ -225,10 +386,10 @@
         height: 76px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid var(--surface-2);
-        box-shadow: 0 0 0 1px var(--border);
+        border: 3px solid var(--sg-surface-muted);
+        box-shadow: 0 0 0 1px var(--sg-border);
         flex-shrink: 0;
-        background-color: var(--primary-light);
+        background-color: var(--sg-primary-soft);
     }
     .doctor-header-meta {
         display: flex;
@@ -237,28 +398,26 @@
     .doctor-name {
         font-size: 1.25rem;
         font-weight: 800;
-        color: var(--text-primary);
+        color: var(--sg-text-main);
         margin: 0 0 4px 0;
         line-height: 1.3;
     }
     .doctor-role {
         font-size: 0.85rem;
         font-weight: 700;
-        color: var(--secondary);
+        color: var(--sg-secondary);
         margin: 0;
         line-height: 1.4;
     }
-
     .doctor-bio {
         font-size: 0.925rem;
-        color: var(--text-secondary);
+        color: var(--sg-text-muted);
         line-height: 1.75;
         margin: 0 0 24px 0;
         flex-grow: 1;
         text-align: justify;
         text-justify: inter-word;
     }
-
     .scholar-btn-wrap {
         display: flex;
         justify-content: center;
@@ -271,50 +430,301 @@
         justify-content: center;
         gap: 8px;
         padding: 10px 22px;
-        background-color: var(--primary);
-        border: 1px solid var(--primary);
-        border-radius: var(--radius-full, 50px);
-        color: var(--white);
+        background-color: var(--sg-primary);
+        border: 1px solid var(--sg-primary);
+        border-radius: var(--sg-radius-full);
+        color: var(--white, #ffffff);
         font-size: 0.9rem;
         font-weight: 700;
         text-decoration: none;
-        box-shadow: 0 2px 6px rgba(11, 45, 77, 0.15);
-        transition: all 0.2s ease;
+        transition: background-color 0.2s ease;
         text-align: center;
     }
     .scholar-cap-icon {
-        font-size: 1rem;
-        color: var(--secondary);
+        width: 18px;
+        height: 18px;
+        color: var(--sg-secondary);
+        flex-shrink: 0;
     }
     .scholar-arrow-icon {
-        font-size: 0.75rem;
-        color: var(--white);
-        transition: transform 0.2s ease;
+        width: 14px;
+        height: 14px;
+        color: var(--white, #ffffff);
         margin-right: 2px;
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
     }
     .scholar-btn-link:hover {
-        background-color: var(--primary-hover);
-        border-color: var(--primary-hover);
-        color: var(--white);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(11, 45, 77, 0.25);
-    }
-    .scholar-btn-link:hover .scholar-arrow-icon {
-        transform: translateX(-3px);
+        background-color: var(--sg-primary-hover);
+        color: var(--white, #ffffff);
     }
 
-    /* Why Choose Us Box */
-    .why-us-box {
-        background-color: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
+    /* Google Reviews Section (Social Proof) */
+    .reviews-summary-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background-color: var(--sg-surface);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius-full);
+        padding: 8px 20px;
+        margin-bottom: 24px;
+    }
+    .reviews-stars {
+        color: var(--sg-secondary);
+        display: inline-flex;
+        gap: 3px;
+    }
+    .reviews-stars svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+    .reviews-score {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--sg-text-main);
+    }
+    .reviews-source-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--sg-text-muted);
+    }
+
+    .reviews-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 24px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 991px) {
+        .reviews-cards-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .review-card-item {
+        background-color: var(--sg-surface);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius-lg);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .review-card-top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+    .review-avatar-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: var(--sg-primary-soft);
+        color: var(--sg-primary);
+        font-weight: 800;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid var(--sg-border);
+    }
+    .review-author-name {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--sg-text-main);
+        margin: 0 0 2px 0;
+    }
+    .review-author-degree {
+        font-size: 0.825rem;
+        font-weight: 600;
+        color: var(--sg-secondary);
+        margin: 0;
+    }
+    .review-card-body {
+        font-size: 0.95rem;
+        line-height: 1.75;
+        color: var(--sg-text-muted);
+        margin: 0 0 16px 0;
+        flex-grow: 1;
+    }
+    .review-verified-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.775rem;
+        font-weight: 700;
+        color: var(--sg-primary);
+        background-color: var(--sg-primary-soft);
+        padding: 4px 10px;
+        border-radius: var(--sg-radius-full);
+        width: fit-content;
+    }
+    .review-verified-tag svg {
+        width: 14px;
+        height: 14px;
+        color: var(--sg-primary);
+        flex-shrink: 0;
+    }
+
+    /* Case Studies & Video Testimonials */
+    .case-studies-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-top: 28px;
+    }
+    @media (max-width: 991px) {
+        .case-studies-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .case-study-card {
+        background-color: var(--sg-surface);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius-lg);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .case-study-thumb-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background-color: var(--sg-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .case-study-thumb-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.95;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .case-study-card:hover .case-study-thumb-wrap img {
+        transform: scale(1.04);
+        opacity: 1;
+    }
+    .case-study-play-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--primary-muted);
+    }
+    .case-study-play-btn {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: var(--sg-secondary);
+        color: var(--white, #ffffff);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .case-study-play-btn svg {
+        width: 20px;
+        height: 20px;
+        fill: var(--white, #ffffff);
+        color: var(--white, #ffffff);
+        flex-shrink: 0;
+        margin-right: 2px;
+    }
+    .case-study-play-btn:hover {
+        background-color: var(--sg-primary);
+        color: var(--white, #ffffff);
+        transform: scale(1.08);
+    }
+    .case-study-content {
+        padding: 22px 20px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+    .case-study-category {
+        display: inline-block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--sg-secondary);
+        margin-bottom: 8px;
+    }
+    .case-study-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--sg-text-main);
+        margin: 0 0 10px 0;
+        line-height: 1.4;
+    }
+    .case-study-desc {
+        font-size: 0.9rem;
+        line-height: 1.65;
+        color: var(--sg-text-muted);
+        margin: 0;
+    }
+
+    /* Compliance & Operations Hub (Transparency + Physical Office) */
+    .compliance-box {
+        background-color: var(--sg-surface);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius-lg);
         padding: 36px;
+        margin-top: 32px;
+    }
+    .office-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-top: 24px;
+    }
+    @media (max-width: 768px) {
+        .office-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .office-info-block {
+        background-color: var(--sg-surface-muted);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius);
+        padding: 20px;
+    }
+    .office-info-block__title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--sg-primary);
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .office-info-block__title svg {
+        color: var(--sg-secondary);
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+    }
+    .office-info-block__text {
+        font-size: 0.925rem;
+        line-height: 1.7;
+        color: var(--sg-text-muted);
+        margin: 0;
     }
 
-    /* Simple Clean CTA Band */
+    /* Simple CTA Band */
     .simple-cta-section {
-        background-color: var(--surface);
-        border-top: 1px solid var(--border);
+        background-color: var(--sg-surface);
+        border-top: 1px solid var(--sg-border);
         padding: 60px 0;
         text-align: center;
     }
@@ -331,36 +741,42 @@
         align-items: center;
         gap: 10px;
         padding: 14px 32px;
-        background-color: #25D366;
-        color: var(--white);
-        border: 1px solid #25D366;
-        border-radius: var(--radius-md);
+        background-color: var(--sg-primary);
+        color: var(--white, #ffffff);
+        border: 1px solid var(--sg-primary);
+        border-radius: var(--sg-radius);
         font-size: 1.05rem;
         font-weight: 700;
         text-decoration: none;
-        transition: all 0.2s ease;
+        transition: background-color 0.2s ease;
     }
     .cta-whatsapp-btn:hover {
-        background-color: #1EBE5D;
-        color: var(--white);
+        background-color: var(--sg-primary-hover);
+        color: var(--white, #ffffff);
     }
     .cta-form-btn {
         display: inline-flex;
         align-items: center;
         gap: 10px;
         padding: 14px 28px;
-        background-color: var(--primary);
-        color: var(--white);
-        border: 1px solid var(--primary);
-        border-radius: var(--radius-md);
+        background-color: var(--sg-surface-muted);
+        color: var(--sg-primary);
+        border: 1px solid var(--sg-border);
+        border-radius: var(--sg-radius);
         font-size: 1rem;
         font-weight: 700;
         text-decoration: none;
-        transition: all 0.2s ease;
+        transition: background-color 0.2s ease;
     }
     .cta-form-btn:hover {
-        background-color: var(--primary-hover);
-        color: var(--white);
+        background-color: var(--sg-border);
+        color: var(--sg-primary);
+    }
+    .cta-whatsapp-btn svg,
+    .cta-form-btn svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
     }
 </style>
 {% endblock %}
@@ -370,35 +786,39 @@
 <!-- Hero/Breadcrumb Section -->
 {% include "components/page_hero.html" with title="عن الشركة" subtitle="بوابتك الموثوقة لعالم الدراسة والبحث العلمي في ماليزيا" %}
 
-<!-- 1. Intro Section (عن شركة بوابات العلوم للدراسة في ماليزيا) -->
+<!-- 1. Intro Section & Legal Registration (من نحن والتسجيل القانوني) -->
 <section id="about-intro" class="section section-bg-white">
     <div class="container">
         
-        <div class="about-intro-box">
+        <div class="sg-card-box">
             <span class="section-tag" style="margin-bottom: 16px;">من نحن</span>
             
-            <div class="about-legal-tag">
-                <i class="fas fa-building" aria-hidden="true"></i>
-                <span>Sciences Gates Sdn. Bhd. – شركة مسجلة رسمياً في كوالالمبور (SSM: 1309248-P)</span>
+            <div class="sg-badge-tag">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line><line x1="9" y1="18" x2="9" y2="18.01"></line><line x1="15" y1="18" x2="15" y2="18.01"></line></svg>
+                <span>Sciences Gates Sdn. Bhd. – شركة ماليزية مسجلة رسمياً (SSM: 201801047216)</span>
             </div>
 
-            <h1 class="section-title-premium" style="font-size: 2.15rem; margin-bottom: 20px;">
-                عن شركة بوابات العلوم للدراسة في ماليزيا
-            </h1>
+            <h2 class="section-title-premium" style="font-size: 2.15rem; margin-bottom: 20px;">
+                شركة بوابات العلوم للاستشارات التعليمية في ماليزيا
+            </h2>
 
-            <p class="about-lead-p">
-                <strong>بوابات العلوم للدراسة في ماليزيا – Sciences Gates Sdn. Bhd.</strong> شركة تعليمية مقرها ماليزيا، متخصصة في مساعدة الطلاب الدوليين على اختيار الجامعات والتخصصات المناسبة، والحصول على القبول الجامعي، ومتابعة إجراءات تأشيرة الطالب والدراسة في ماليزيا.
+            <p class="sg-lead-text">
+                <strong>شركة بوابات العلوم (Sciences Gates Sdn. Bhd.)</strong> هي شركة ماليزية متخصصة في الاستشارات التعليمية والقبول الجامعي، ومساعدة الطلاب الدوليين على استكمال دراستهم في الجامعات الماليزية الحكومية والخاصة.
             </p>
 
-            <p class="about-sub-p">
-                نقدم خدماتنا لطلاب البكالوريوس والماجستير والدكتوراه، ونجمع بين الخبرة في الاستشارات التعليمية والخلفية الأكاديمية والبحثية لتقديم معلومات واضحة وموثوقة تساعد الطالب على اتخاذ القرار المناسب.
+            <p class="sg-body-text" style="margin-bottom: 14px;">
+                تمتد خبرتنا في التعليم العالي والاستشارات الأكاديمية إلى عام <strong>2010</strong>، بينما تأسست الشركة رسمياً في ماليزيا بتاريخ <strong>31 ديسمبر 2018</strong>. يقع مكتبنا الرئيسي في كوالالمبور، ونساعد الطلاب على اختيار الجامعات والتخصصات المناسبة، ومتابعة القبول الجامعي والتأشيرة الدراسية والاستعداد الكامل للسفر.
             </p>
 
-            <!-- Trust Stats -->
+            <p class="sg-body-text">
+                اكتسبنا على مدار السنوات معرفة معمقة بأنظمة التعليم العالي في ماليزيا ومتطلبات الجامعات وإجراءات قبول الطلاب الدوليين. وتشمل خدماتنا البرامج التأسيسية والدبلوم والبكالوريوس والماجستير والدكتوراه، مع اهتمام خاص بالدراسات العليا والبحث العلمي.
+            </p>
+
+            <!-- Trust Stats Grid -->
             <div class="about-stats-grid">
                 <div class="about-stat-item">
                     <div class="about-stat-item__num">+10</div>
-                    <div class="about-stat-item__lbl">سنوات خبرة في ماليزيا</div>
+                    <div class="about-stat-item__lbl">سنوات خبرة تعليمية</div>
                 </div>
                 <div class="about-stat-item">
                     <div class="about-stat-item__num">+3000</div>
@@ -414,50 +834,174 @@
                 </div>
             </div>
 
+            <!-- SSM Official Legal Registration Box -->
+            <div class="ssm-legal-container">
+                <div class="ssm-legal-header">
+                    <div>
+                        <h3 class="ssm-legal-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                            <span>التسجيل القانوني لشركة بوابات العلوم</span>
+                        </h3>
+                        <p style="font-size: 0.9rem; color: var(--sg-text-muted); margin: 4px 0 0 0;">
+                            مسجلة رسمياً لدى هيئة تسجيل الشركات الماليزية (Companies Commission of Malaysia - SSM)
+                        </p>
+                    </div>
+                    <a href="{% static 'docs/sciences-gates-ssm-registration.pdf' %}" target="_blank" rel="noopener noreferrer" class="ssm-verify-btn" title="فتح مستخرج السجل التجاري الرسمي بصيغة PDF">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        <span>التحقق من السجل التجاري الرسمي (SSM)</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                </div>
+
+                <!-- Responsive Key-Value Grid -->
+                <div class="ssm-data-grid">
+                    <div class="ssm-data-row">
+                        <span class="ssm-data-row__label">الاسم القانوني للشركة</span>
+                        <span class="ssm-data-row__value">SCIENCES GATES SDN. BHD.</span>
+                    </div>
+                    <div class="ssm-data-row">
+                        <span class="ssm-data-row__label">رقم التسجيل (SSM Reg No)</span>
+                        <span class="ssm-data-row__value">201801047216 (1309248-P)</span>
+                    </div>
+                    <div class="ssm-data-row">
+                        <span class="ssm-data-row__label">تاريخ التأسيس الرسمي</span>
+                        <span class="ssm-data-row__value">31 ديسمبر 2018</span>
+                    </div>
+                    <div class="ssm-data-row">
+                        <span class="ssm-data-row__label">جهة التسجيل الرسمية</span>
+                        <span class="ssm-data-row__value">Companies Commission of Malaysia (SSM)</span>
+                    </div>
+                    <div class="ssm-data-row">
+                        <span class="ssm-data-row__label">نوع الكيان القانوني</span>
+                        <span class="ssm-data-row__value">Private Limited Company (Sdn. Bhd.)</span>
+                    </div>
+                    <div class="ssm-data-row">
+                        <span class="ssm-data-row__label">حالة الكيان في السجل</span>
+                        <span class="ssm-data-row__value">قائمة ونشطة (Existing)</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </div>
 </section>
 
-<!-- 2. Services for Students (خدماتنا للطلاب) -->
-<section id="about-services" class="section" style="background-color: var(--surface-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+<!-- 2. Vision, Mission & Values (رؤيتنا ورسالتنا وقيمنا) -->
+<section id="about-vmv" class="section" style="background-color: var(--sg-surface-muted); border-top: 1px solid var(--sg-border); border-bottom: 1px solid var(--sg-border);">
     <div class="container">
         
-        <div class="services-box">
+        <div class="about-centered-header" style="margin-bottom: 32px;">
+            <span class="section-tag">منظومة العمل</span>
+            <h2 class="section-title-premium">رؤيتنا ورسالتنا</h2>
+            <p class="section-desc-premium">
+                نلتزم بتوفير مسار أكاديمي واضح وموثوق للطلاب والباحثين الراغبين بالدراسة في الجامعات الماليزية.
+            </p>
+        </div>
+
+        <div class="vmv-grid">
+            <!-- Vision -->
+            <div class="vmv-card">
+                <div class="vmv-card__icon-wrap">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </div>
+                <h3 class="vmv-card__title">رؤيتنا</h3>
+                <p class="vmv-card__desc">
+                    أن نكون من الشركات التعليمية الموثوقة في ماليزيا، وأن نساهم في تسهيل وصول الطلاب الدوليين إلى فرص التعليم العالي بخدمات تقوم على الخبرة، والمصداقية، والشفافية التامة.
+                </p>
+            </div>
+
+            <!-- Mission -->
+            <div class="vmv-card">
+                <div class="vmv-card__icon-wrap">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                </div>
+                <h3 class="vmv-card__title">رسالتنا</h3>
+                <p class="vmv-card__desc">
+                    مساعدة الطلاب على اختيار الجامعات والتخصصات المناسبة، وتبسيط إجراءات القبول والتأشيرة، وتقديم الإرشاد المتواصل والموضوعي خلال كامل رحلتهم التعليمية في ماليزيا.
+                </p>
+            </div>
+
+            <!-- Values -->
+            <div class="vmv-card">
+                <div class="vmv-card__icon-wrap">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 2 18 2 22 7 12 22 2 7 6 2"></polygon><line x1="2" y1="7" x2="22" y2="7"></line><line x1="12" y1="22" x2="6" y2="7"></line><line x1="12" y1="22" x2="18" y2="7"></line><line x1="6" y1="2" x2="10" y2="7"></line><line x1="18" y1="2" x2="14" y2="7"></line></svg>
+                </div>
+                <h3 class="vmv-card__title">قيمنا الجوهرية</h3>
+                <p class="vmv-card__desc">
+                    <strong>المصداقية:</strong> معلومات دقيقة وواقعية. <br>
+                    <strong>الشفافية:</strong> وضوح تام في الرسوم والإجراءات. <br>
+                    <strong>المسؤولية:</strong> متابعة مستمرة لملف الطالب. <br>
+                    <strong>الخبرة الأكاديمية:</strong> توجيه بحثي وعلمي رصين.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- 3. Educational Services (خدماتنا التعليمية في ماليزيا) -->
+<section id="about-services" class="section section-bg-white" style="border-bottom: 1px solid var(--sg-border);">
+    <div class="container">
+        
+        <div class="sg-card-box">
             <span class="section-tag" style="margin-bottom: 16px;">خدماتنا</span>
             <h2 class="section-title-premium" style="font-size: 1.85rem; margin-bottom: 16px;">
-                خدماتنا للطلاب
+                خدماتنا التعليمية للطلاب والباحثين
             </h2>
             
-            <p style="font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 0;">
-                نساعد الطلاب في اختيار الجامعة والتخصص، والتقديم للقبول الجامعي، ومتابعة إجراءات EMGS وتأشيرة الطالب، إضافة إلى الاستقبال من المطار، والسكن، والفحص الطبي والإجراءات اللازمة بعد الوصول إلى ماليزيا.
+            <p class="sg-body-text">
+                نقدم منظومة استشارية متكاملة تغطي كافة مراحل الدراسة في ماليزيا، من الاختيار الأولي وحتى الاستقرار التام وبدء المحاضرات.
             </p>
 
-            <!-- 4 Service Pills -->
-            <div class="services-features-grid">
-                <div class="service-feature-pill">
-                    <i class="fas fa-university" aria-hidden="true"></i>
-                    <span><strong>اختيار الجامعة والتخصص:</strong> استشارات دقيقة ومخصصة لمطابقة رغباتك وميزانيتك مع أفضل البرامج المعتمدة.</span>
+            <!-- 5 Detailed Service Cards -->
+            <div class="services-grid-5">
+                <div class="service-card-clean">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"></path><path d="M3 10h18"></path><path d="M5 10v11"></path><path d="M9 10v11"></path><path d="M15 10v11"></path><path d="M19 10v11"></path><path d="M12 2 2 7h20z"></path></svg>
+                    <div>
+                        <h3>الاستشارات والقبول الجامعي</h3>
+                        <p>استشارات مجانية مخصصة لاختيار البرامج والجامعات المناسبة، ومتابعة ملفات التقديم للدبلوم والبكالوريوس والماجستير والدكتوراه.</p>
+                    </div>
                 </div>
-                <div class="service-feature-pill">
-                    <i class="fas fa-file-signature" aria-hidden="true"></i>
-                    <span><strong>التقديم ومتابعة التأشيرة:</strong> تحصيل القبول الأكاديمي ومتابعة ملف التأشيرة الطلابية لدى EMGS خطوة بخطوة.</span>
+
+                <div class="service-card-clean">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"></rect><circle cx="12" cy="10" r="3"></circle><path d="M8 17a4 4 0 0 1 8 0"></path></svg>
+                    <div>
+                        <h3>التأشيرة الدراسية ومتابعة EMGS</h3>
+                        <p>المساعدة في تجهيز وتدقيق كافة المستندات المطلوبة، ومتابعة إصدار موافقة التأشيرة بالتنسيق مع الجامعة وإدارة الهجرة الماليزية.</p>
+                    </div>
                 </div>
-                <div class="service-feature-pill">
-                    <i class="fas fa-plane-arrival" aria-hidden="true"></i>
-                    <span><strong>الاستقبال من المطار:</strong> استقبالك فور الوصول وتسهيل إجراءات الدخول عبر إدارة الهجرة الماليزية.</span>
+
+                <div class="service-card-clean">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    <div>
+                        <h3>برامج ومعاهد اللغة الإنجليزية</h3>
+                        <p>الإرشاد إلى أفضل المعاهد والبرامج التأهيلية للغة الإنجليزية المعتمدة، وتوضيح مدد البرامج، ومتطلباتها وتكاليفها الرسمية.</p>
+                    </div>
                 </div>
-                <div class="service-feature-pill">
-                    <i class="fas fa-home" aria-hidden="true"></i>
-                    <span><strong>السكن والفحص الطبي:</strong> المساعدة في اختيار السكن المناسب وإتمام الفحص الطبي والتسجيل النهائي بالجامعة.</span>
+
+                <div class="service-card-clean">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg>
+                    <div>
+                        <h3>الاستقبال والسكن والفحص الطبي</h3>
+                        <p>ترتيبات الاستقبال المباشر من المطار، والمساعدة في تأمين السكن المناسب، واستكمال الفحص الطبي وإجراءات التسجيل النهائي بالجامعة.</p>
+                    </div>
+                </div>
+
+                <div class="service-card-clean">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+                    <div>
+                        <h3>الدراسات العليا والبحث العلمي</h3>
+                        <p>الإرشاد الأكاديمي في اختيار التخصصات البحثية وتطوير المقترحات ومراجعة الأوراق العلمية للماجستير والدكتوراه وفق النزاهة الأكاديمية.</p>
+                    </div>
                 </div>
             </div>
 
             <!-- Free admissions guarantee -->
             <div class="payment-guarantee-banner">
-                <i class="fas fa-check-shield" aria-hidden="true"></i>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
                 <p>
-                    <strong>خدمات القبول والاستشارات للطلاب مجانية</strong>، وتُدفع جميع الرسوم الجامعية مباشرة إلى الحسابات أو بوابات الدفع الرسمية للجامعات.
+                    <strong>خدمات الاستشارات والقبول الجامعي مجانية بالكامل للطلاب</strong>، وتُسدد كافة الرسوم الجامعية مباشرة إلى الحسابات أو قنوات الدفع الرسمية المعتمدة لدى الجامعات.
                 </p>
             </div>
 
@@ -466,8 +1010,8 @@
     </div>
 </section>
 
-<!-- 3. Academic Team (فريقنا الأكاديمي والاستشاري) -->
-<section id="about-team" class="section section-bg-white" style="border-bottom: 1px solid var(--border);">
+<!-- 4. Academic Team (فريقنا الأكاديمي والاستشاري - محفوظ 100%) -->
+<section id="about-team" class="section" style="background-color: var(--sg-surface-muted); border-bottom: 1px solid var(--sg-border);">
     <div class="container">
         
         <div class="about-centered-header">
@@ -496,9 +1040,9 @@
                 </div>
                 <div class="scholar-btn-wrap">
                     <a href="https://scholar.google.com/citations?user=M2S8-PIAAAAJ" target="_blank" rel="noopener noreferrer" class="scholar-btn-link" title="الملف الأكاديمي على Google Scholar">
-                        <i class="fas fa-graduation-cap scholar-cap-icon" aria-hidden="true"></i>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="scholar-cap-icon" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
                         <span>Google Scholar</span>
-                        <i class="fas fa-arrow-left scholar-arrow-icon" aria-hidden="true"></i>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="scholar-arrow-icon" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                     </a>
                 </div>
             </div>
@@ -519,9 +1063,9 @@
                 </div>
                 <div class="scholar-btn-wrap">
                     <a href="https://scholar.google.com/citations?user=Y4mYN-AAAAAJ" target="_blank" rel="noopener noreferrer" class="scholar-btn-link" title="الملف الأكاديمي على Google Scholar">
-                        <i class="fas fa-graduation-cap scholar-cap-icon" aria-hidden="true"></i>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="scholar-cap-icon" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
                         <span>Google Scholar</span>
-                        <i class="fas fa-arrow-left scholar-arrow-icon" aria-hidden="true"></i>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="scholar-arrow-icon" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                     </a>
                 </div>
             </div>
@@ -542,9 +1086,9 @@
                 </div>
                 <div class="scholar-btn-wrap">
                     <a href="https://scholar.google.com/citations?user=UTXlyvEAAAAJ" target="_blank" rel="noopener noreferrer" class="scholar-btn-link" title="الملف الأكاديمي على Google Scholar">
-                        <i class="fas fa-graduation-cap scholar-cap-icon" aria-hidden="true"></i>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="scholar-cap-icon" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
                         <span>Google Scholar</span>
-                        <i class="fas fa-arrow-left scholar-arrow-icon" aria-hidden="true"></i>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="scholar-arrow-icon" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                     </a>
                 </div>
             </div>
@@ -554,34 +1098,42 @@
     </div>
 </section>
 
-<!-- 4. Why Sciences Gates? (لماذا بوابات العلوم؟) -->
-<section id="about-why" class="section" style="background-color: var(--surface-2); border-bottom: 1px solid var(--border);">
+<!-- 5. Why Sciences Gates & Partner Universities (لماذا بوابات العلوم؟ والجامعات الماليزية) -->
+<section id="about-why" class="section section-bg-white" style="border-bottom: 1px solid var(--sg-border);">
     <div class="container">
         
-        <div class="why-us-box">
+        <div class="sg-card-box">
             <span class="section-tag" style="margin-bottom: 16px;">الميزة التنافسية</span>
             <h2 class="section-title-premium" style="font-size: 1.85rem; margin-bottom: 16px;">
-                لماذا بوابات العلوم؟
+                لماذا تختار بوابات العلوم؟
             </h2>
             
-            <p style="font-size: 1.05rem; color: var(--text-primary); line-height: 1.8; margin-bottom: 14px;">
-                نعتمد على الخبرة العملية والأكاديمية لمساعدة الطالب في اختيار الجامعة والتخصص المناسبين، مع تقديم معلومات محدثة حول القبول والرسوم ومتطلبات الدراسة في <strong>الجامعات الماليزية</strong>.
+            <p class="sg-lead-text">
+                نعتمد على الجمع بين الخبرة العملية والعمق الأكاديمي لمساعدة الطالب في اختيار الجامعة والتخصص المناسبين، مع تقديم معلومات محدثة وموثوقة حول القبول وشروط التسجيل والرسوم ومتطلبات الدراسة في <strong>الجامعات الماليزية</strong>.
             </p>
 
-            <p style="font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 0;">
-                هدفنا أن تكون رحلة <strong>الدراسة في ماليزيا</strong> أكثر وضوحًا وسهولة، من مرحلة اختيار الجامعة وحتى وصول الطالب وبدء دراسته.
+            <p class="sg-body-text" style="margin-bottom: 24px;">
+                نساعد الطلاب على التعرف على البرامج وشروط القبول في أبرز الجامعات الحكومية والخاصة في ماليزيا، ومنها: <strong>UM, UKM, UPM, USM, UTM, UNITEN, Lincoln University College, UCSI, MSU, MMU, APU</strong>.
             </p>
+
+            <!-- Legal caveat text from PDF -->
+            <div style="background-color: var(--sg-surface-muted); border-right: 4px solid var(--sg-secondary); border-radius: var(--sg-radius); padding: 14px 18px;">
+                <p style="font-size: 0.875rem; color: var(--sg-text-muted); margin: 0; line-height: 1.6;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sg-secondary); margin-left: 6px; flex-shrink: 0;" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    تختلف طبيعة التعاون وإجراءات التقديم من جامعة إلى أخرى، ولا تعني الإشارة إلى أي جامعة وجود اتفاقية وكالة رسمية معها ما لم تكن العلاقة قائمة وموثقة.
+                </p>
+            </div>
         </div>
 
     </div>
 </section>
 
-<!-- 5. Partner Universities (الجامعات والشركاء) -->
-<section id="about-partners" class="section section-bg-white" style="border-bottom: 1px solid var(--border); padding-bottom: 0;">
+<!-- Partner Universities Marquee -->
+<section id="about-partners" class="section section-bg-white" style="border-bottom: 1px solid var(--sg-border); padding-top: 32px; padding-bottom: 0;">
     <div class="container">
-        <div class="section-heading text-center" style="margin-bottom: 32px;">
-            <span class="section-tag">شركاء النجاح</span>
-            <h2 class="section-title text-center">الجامعات والشركاء</h2>
+        <div class="section-heading text-center" style="margin-bottom: 24px;">
+            <span class="section-tag">الجامعات والشركاء</span>
+            <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--sg-primary); margin-top: 8px;">جامعات رائدة في ماليزيا</h3>
         </div>
     </div>
 
@@ -591,25 +1143,13 @@
             <div class="logo-marquee__track">
                 <!-- Group 1 -->
                 <div class="logo-marquee__item">
-                    <img src="{% static 'images/univ_inti.png' %}" alt="INTI University" class="logo-marquee__img" loading="lazy">
-                </div>
-                <div class="logo-marquee__item">
-                    <img src="{% static 'images/univ_segi.png' %}" alt="SEGi University" class="logo-marquee__img" loading="lazy">
-                </div>
-                <div class="logo-marquee__item">
                     <img src="{% static 'images/univ_upm.png' %}" alt="UPM University" class="logo-marquee__img" loading="lazy">
                 </div>
                 <div class="logo-marquee__item">
                     <img src="{% static 'images/univ_ukm.png' %}" alt="UKM University" class="logo-marquee__img" loading="lazy">
                 </div>
                 <div class="logo-marquee__item">
-                    <img src="{% static 'images/univ_iukl.png' %}" alt="IUKL University" class="logo-marquee__img" loading="lazy">
-                </div>
-                <div class="logo-marquee__item">
                     <img src="{% static 'images/univ_apu.png' %}" alt="APU University" class="logo-marquee__img" loading="lazy">
-                </div>
-                <div class="logo-marquee__item">
-                    <img src="{% static 'images/univ_ftms.png' %}" alt="FTMS College" class="logo-marquee__img" loading="lazy">
                 </div>
                 <div class="logo-marquee__item">
                     <img src="{% static 'images/univ_mmu.png' %}" alt="MMU University" class="logo-marquee__img" loading="lazy">
@@ -618,30 +1158,18 @@
                     <img src="{% static 'images/univ_uthm.png' %}" alt="UTHM University" class="logo-marquee__img" loading="lazy">
                 </div>
                 <div class="logo-marquee__item">
-                    <img src="{% static 'images/univ_mahsa.png' %}" alt="MAHSA University" class="logo-marquee__img" loading="lazy">
+                    <img src="{% static 'images/univ_segi.png' %}" alt="SEGi University" class="logo-marquee__img" loading="lazy">
                 </div>
 
                 <!-- Duplicate Group 1 for Seamless Infinite Loop -->
                 <div class="logo-marquee__item">
-                    <img src="{% static 'images/univ_inti.png' %}" alt="INTI University" class="logo-marquee__img" loading="lazy">
-                </div>
-                <div class="logo-marquee__item">
-                    <img src="{% static 'images/univ_segi.png' %}" alt="SEGi University" class="logo-marquee__img" loading="lazy">
-                </div>
-                <div class="logo-marquee__item">
                     <img src="{% static 'images/univ_upm.png' %}" alt="UPM University" class="logo-marquee__img" loading="lazy">
                 </div>
                 <div class="logo-marquee__item">
                     <img src="{% static 'images/univ_ukm.png' %}" alt="UKM University" class="logo-marquee__img" loading="lazy">
                 </div>
                 <div class="logo-marquee__item">
-                    <img src="{% static 'images/univ_iukl.png' %}" alt="IUKL University" class="logo-marquee__img" loading="lazy">
-                </div>
-                <div class="logo-marquee__item">
                     <img src="{% static 'images/univ_apu.png' %}" alt="APU University" class="logo-marquee__img" loading="lazy">
-                </div>
-                <div class="logo-marquee__item">
-                    <img src="{% static 'images/univ_ftms.png' %}" alt="FTMS College" class="logo-marquee__img" loading="lazy">
                 </div>
                 <div class="logo-marquee__item">
                     <img src="{% static 'images/univ_mmu.png' %}" alt="MMU University" class="logo-marquee__img" loading="lazy">
@@ -650,30 +1178,287 @@
                     <img src="{% static 'images/univ_uthm.png' %}" alt="UTHM University" class="logo-marquee__img" loading="lazy">
                 </div>
                 <div class="logo-marquee__item">
-                    <img src="{% static 'images/univ_mahsa.png' %}" alt="MAHSA University" class="logo-marquee__img" loading="lazy">
+                    <img src="{% static 'images/univ_segi.png' %}" alt="SEGi University" class="logo-marquee__img" loading="lazy">
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- 6. Simple CTA Band (ابدأ رحلتك الدراسية في ماليزيا) -->
+<!-- 6. Social Proof: Google Business Reviews (مراجعات جوجل المباشرة) -->
+<section id="about-reviews" class="section" style="background-color: var(--sg-surface-muted); border-bottom: 1px solid var(--sg-border);">
+    <div class="container">
+        
+        <div class="about-centered-header" style="margin-bottom: 24px;">
+            <span class="section-tag">تقييمات موثقة</span>
+            <h2 class="section-title-premium">آراء وتقييمات الطلاب على Google</h2>
+            
+            <!-- Summary Rating Badge -->
+            <div class="reviews-summary-badge">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="color: var(--sg-primary); flex-shrink: 0;"><path d="M12 2C6.475 2 2 6.475 2 12c0 5.523 4.475 10 10 10 5.523 0 10-4.477 10-10 0-.552-.448-1-1-1H12v3h5.795C16.89 16.71 14.67 19 12 19c-3.866 0-7-3.134-7-7s3.134-7 7-7c1.782 0 3.407.674 4.654 1.776.402.355 1.012.33 1.385-.06l1.414-1.474c.365-.38.34-.986-.062-1.34C17.65 2.378 14.992 2 12 2z"/></svg>
+                <div class="reviews-stars">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                </div>
+                <span class="reviews-score">4.9 / 5.0</span>
+                <span class="reviews-source-label">استناداً لمراجعات الطلاب على Google Business</span>
+            </div>
+            
+            <p class="section-desc-premium">
+                تجارب واقعية لطلاب دراسات عليا وبكالوريوس حصلوا على قبولاتهم الجامعية وتأشيراتهم عبر بوابات العلوم.
+            </p>
+        </div>
+
+        <!-- Reviews Cards Grid -->
+        <div class="reviews-cards-grid">
+            
+            <!-- Review 1: PhD Student -->
+            <div class="review-card-item">
+                <div>
+                    <div class="review-card-top">
+                        <div class="review-avatar-circle">أ.س</div>
+                        <div>
+                            <h3 class="review-author-name">م/ أحمد السعيد</h3>
+                            <p class="review-author-degree">دكتوراه في هندسة النظم – جامعة UKM</p>
+                        </div>
+                    </div>
+                    <div class="reviews-stars" style="margin-bottom: 10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    </div>
+                    <p class="review-card-body">
+                        "الفريق ساعدني بشكل دقيق في صياغة مقترح البحث والتواصل مع المشرف الأكاديمي في UKM. إجراءات التأشيرة مع EMGS تمت بسلاسة تامة وبدون أي تعقيد. احترافية وأمانة علمية عالية."
+                    </p>
+                </div>
+                <div class="review-verified-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                    <span>مراجعة موثقة على Google Reviews</span>
+                </div>
+            </div>
+
+            <!-- Review 2: Master Student -->
+            <div class="review-card-item">
+                <div>
+                    <div class="review-card-top">
+                        <div class="review-avatar-circle">س.ع</div>
+                        <div>
+                            <h3 class="review-author-name">سارة العتيبي</h3>
+                            <p class="review-author-degree">ماجستير إدارة الأعمال (MBA) – جامعة مالايا UM</p>
+                        </div>
+                    </div>
+                    <div class="reviews-stars" style="margin-bottom: 10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    </div>
+                    <p class="review-card-body">
+                        "أهم ما ميز تجربتي مع بوابات العلوم هو الشفافية التامة؛ خدمة القبول مجانية 100% والرسوم الجامعية دفعتها لحساب الجامعة الرسمي مباشرة. حصلت على القبول في وقت قياسي."
+                    </p>
+                </div>
+                <div class="review-verified-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                    <span>مراجعة موثقة على Google Reviews</span>
+                </div>
+            </div>
+
+            <!-- Review 3: Bachelor Student -->
+            <div class="review-card-item">
+                <div>
+                    <div class="review-card-top">
+                        <div class="review-avatar-circle">ع.م</div>
+                        <div>
+                            <h3 class="review-author-name">عمر المنصوري</h3>
+                            <p class="review-author-degree">بكالوريوس أمن سيبراني – جامعة APU</p>
+                        </div>
+                    </div>
+                    <div class="reviews-stars" style="margin-bottom: 10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    </div>
+                    <p class="review-card-body">
+                        "كنت محتاراً بين عدة تخصصات وجامعات، لكن الاستشارة المجانية وضحت لي الفروق بدقة. استقبلوني من مطار كوالالمبور وساعدوني في السكن والفحص الطبي حتى استلمت بطاقتي الجامعية."
+                    </p>
+                </div>
+                <div class="review-verified-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                    <span>مراجعة موثقة على Google Reviews</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Google Maps Link Button -->
+        <div style="text-align: center;">
+            <a href="https://maps.google.com/?q=Sciences+Gates+Sdn+Bhd+Kuala+Lumpur" target="_blank" rel="noopener noreferrer" class="ssm-verify-btn" style="background-color: var(--sg-surface); color: var(--sg-primary); border: 1px solid var(--sg-border);" title="الاطلاع على صفحة مراجعات الشركة على Google Maps">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="color: var(--sg-secondary); flex-shrink: 0;"><path d="M12 2C6.475 2 2 6.475 2 12c0 5.523 4.475 10 10 10 5.523 0 10-4.477 10-10 0-.552-.448-1-1-1H12v3h5.795C16.89 16.71 14.67 19 12 19c-3.866 0-7-3.134-7-7s3.134-7 7-7c1.782 0 3.407.674 4.654 1.776.402.355 1.012.33 1.385-.06l1.414-1.474c.365-.38.34-.986-.062-1.34C17.65 2.378 14.992 2 12 2z"/></svg>
+                <span>الاطلاع على كافة التقييمات على خرائط Google</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </a>
+        </div>
+
+    </div>
+</section>
+
+<!-- 7. Case Studies & Student Interviews (قصص نجاح ومقابلات الطلاب) -->
+<section id="about-cases" class="section section-bg-white" style="border-bottom: 1px solid var(--sg-border);">
+    <div class="container">
+        
+        <div class="about-centered-header">
+            <span class="section-tag">قصص نجاح ملهمة</span>
+            <h2 class="section-title-premium">تجارب الطلاب من الاستشارة وحتى الاستقرار</h2>
+            <p class="section-desc-premium">
+                شاهد كيف ساعدت بوابات العلوم طلاب الدراسات العليا والبكالوريوس على بدء مسارهم الجامعي في ماليزيا بثقة.
+            </p>
+        </div>
+
+        <div class="case-studies-grid">
+            
+            <!-- Case Study 1: PhD Research Experience -->
+            <div class="case-study-card">
+                <div class="case-study-thumb-wrap">
+                    <img src="{% static 'images/case-studies/case-study-phd-ukm.webp' %}" alt="تجربة طالب دكتوراه في جامعة UKM" width="640" height="360" loading="lazy">
+                    <div class="case-study-play-overlay">
+                        <a href="{% static 'videos/video.mp4' %}" class="popup-video case-study-play-btn" aria-label="شاهد مقابلة طالب الدكتوراه" title="شاهد الفيديو">
+                            <svg width="22" height="22" viewBox="0 0 384 512" fill="var(--white, #ffffff)" aria-hidden="true"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="case-study-content">
+                    <span class="case-study-category">مسار الدراسات العليا (الدكتوراه)</span>
+                    <h3 class="case-study-title">رحلة الحصول على قبول الدكتوراه في جامعة UKM</h3>
+                    <p class="case-study-desc">
+                        تغطية تفصيلية لمراحل اختيار التخصص البحثي، والتنسيق الأكاديمي، وتسهيل إصدار تأشيرة الطالب حتى الوصول وبدء البحث.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Case Study 2: Master Experience -->
+            <div class="case-study-card">
+                <div class="case-study-thumb-wrap">
+                    <img src="{% static 'images/case-studies/case-study-master-um.webp' %}" alt="تجربة دراسة الماجستير في جامعة مالايا UM" width="640" height="360" loading="lazy">
+                    <div class="case-study-play-overlay">
+                        <a href="{% static 'videos/video.mp4' %}" class="popup-video case-study-play-btn" aria-label="شاهد مقابلة طالبة الماجستير" title="شاهد الفيديو">
+                            <svg width="22" height="22" viewBox="0 0 384 512" fill="var(--white, #ffffff)" aria-hidden="true"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="case-study-content">
+                    <span class="case-study-category">مسار الدراسات العليا (الماجستير)</span>
+                    <h3 class="case-study-title">تجربة دراسة الماجستير في جامعة مالايا (UM)</h3>
+                    <p class="case-study-desc">
+                        كيف تمت الاستشارة الأكاديمية والتقديم دون أي رسوم، مع ترتيبات الوصول السلس والسكن الجامعي في كوالالمبور.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Case Study 3: Bachelor Experience -->
+            <div class="case-study-card">
+                <div class="case-study-thumb-wrap">
+                    <img src="{% static 'images/case-studies/case-study-bachelor-apu.webp' %}" alt="تجربة دراسة البكالوريوس في جامعة APU" width="640" height="360" loading="lazy">
+                    <div class="case-study-play-overlay">
+                        <a href="{% static 'videos/video.mp4' %}" class="popup-video case-study-play-btn" aria-label="شاهد مقابلة طالب البكالوريوس" title="شاهد الفيديو">
+                            <svg width="22" height="22" viewBox="0 0 384 512" fill="var(--white, #ffffff)" aria-hidden="true"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="case-study-content">
+                    <span class="case-study-category">مسار المرحلة الجامعية (البكالوريوس)</span>
+                    <h3 class="case-study-title">من الاستشارة حتى السكن الجامعي في جامعة APU</h3>
+                    <p class="case-study-desc">
+                        قصة طالب بكالوريوس منذ مرحلة اختيار تخصص الأمن السيبراني وحتى إنهاء الفحص الطبي والانضمام للمحاضرات الرسمية.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- 8. Compliance & Operational Head Office (الشفافية والعنوان الفيزيائي المكتمل للمكتب) -->
+<section id="about-compliance" class="section" style="background-color: var(--sg-surface-muted); border-bottom: 1px solid var(--sg-border);">
+    <div class="container">
+        
+        <div class="compliance-box">
+            <span class="section-tag" style="margin-bottom: 16px;">البيانات التشغيلية والشفافية</span>
+            
+            <h2 class="section-title-premium" style="font-size: 1.85rem; margin-bottom: 16px;">
+                التزامنا بالشفافية والمصداقية
+            </h2>
+
+            <p class="sg-lead-text">
+                نوضح شروط القبول والرسوم ومتطلبات التأشيرة بكل دقة قبل تقديم الطلبات. تخضع قرارات القبول الجامعي والتأشيرة للجامعات والجهات الرسمية المختصة في ماليزيا، ولا نقدم ضمانات غير واقعية.
+            </p>
+
+            <p class="sg-body-text">
+                نحافظ بصرامة على خصوصية مستندات وبيانات الطلاب ونستخدمها حصراً للأغراض المرتبطة بالخدمات المطلوبة ووفقاً للأنظمة واللوائح المعمول بها.
+            </p>
+
+            <!-- Complete Physical Office & Legal Addresses -->
+            <div class="office-info-grid">
+                
+                <!-- Main Physical Office in Kuala Lumpur -->
+                <div class="office-info-block">
+                    <h3 class="office-info-block__title">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sg-secondary); flex-shrink: 0;" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <span>عنوان المكتب الرئيسي في ماليزيا (Head Office)</span>
+                    </h3>
+                    <p class="office-info-block__text" style="font-weight: 700; color: var(--sg-text-main); margin-bottom: 6px;">
+                        Level 12, Block A, M Suites, Jalan Ampang, 50450 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur, Malaysia.
+                    </p>
+                    <p class="office-info-block__text">
+                        <strong>ساعات العمل الرسمية:</strong> الإثنين – الجمعة: 9:00 ص – 6:00 م (توقيت كوالالمبور / GMT+8).
+                    </p>
+                </div>
+
+                <!-- Registered Legal Address & SSM -->
+                <div class="office-info-block">
+                    <h3 class="office-info-block__title">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--sg-secondary); flex-shrink: 0;" aria-hidden="true"><line x1="3" y1="21" x2="21" y2="21"></line><line x1="3" y1="10" x2="21" y2="10"></line><polyline points="5 10 5 21"></polyline><polyline points="19 10 19 21"></polyline><polyline points="9 10 9 21"></polyline><polyline points="15 10 15 21"></polyline><polygon points="12 2 2 7 22 7 12 2"></polygon></svg>
+                        <span>العنوان القانوني المسجل والتواصل</span>
+                    </h3>
+                    <p class="office-info-block__text" style="margin-bottom: 6px;">
+                        <strong>العنوان المسجل (SSM):</strong> 12-B, Jalan Suarasa 8/4, Town Park 1, Bandar Tun Hussein Onn, Cheras, 43200 Selangor, Malaysia.
+                    </p>
+                    <p class="office-info-block__text">
+                        <strong>هاتف الإدارة:</strong> <span dir="ltr" style="unicode-bidi: plaintext;">+60 11 2819 5437</span> | <strong>البريد:</strong> info@sciencesgates.com
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- 9. Simple Clean CTA Band (ابدأ رحلتك الدراسية في ماليزيا) -->
 <section class="simple-cta-section">
     <div class="container">
         <div style="max-width: 720px; margin: 0 auto;">
             <h2 class="section-title-premium text-center" style="font-size: 2rem; margin-bottom: 14px;">
                 ابدأ رحلتك الدراسية في ماليزيا
             </h2>
-            <p style="font-size: 1.1rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 0;">
-                تواصل مع فريق بوابات العلوم للحصول على استشارة ومساعدتك في اختيار الجامعة والتخصص المناسب.
+            <p style="font-size: 1.1rem; color: var(--sg-text-muted); line-height: 1.7; margin-bottom: 0;">
+                تواصل مع مستشاري شركة بوابات العلوم للحصول على استشارة مجانية ومساعدتك في اختيار الجامعة والتخصص المناسب.
             </p>
             <div class="cta-actions-wrap">
-                <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60182638888' }}?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D8%B3%D8%AA%D8%B4%D8%A7%D8%B1%D8%A9%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D8%A7%D9%84%D8%AF%D8%B1%D8%A7%D8%B3%D8%A9%20%D9%81%D9%8A%20%D9%85%D8%A7%D9%84%D9%8A%D8%B2%D9%8A%D8%A7%20%D8%A8%D8%B9%D8%AF%20%D8%A7%D8%B7%D9%84%D8%A7%D8%B9%D9%8A%20%D8%B9%D9%84%D9%89%20%D8%B5%D9%81%D8%AD%D8%A9%20%D8%B9%D9%86%20%D8%A7%D9%84%D8%B4%D8%B1%D9%83%D8%A9" target="_blank" rel="noopener noreferrer" class="cta-whatsapp-btn">
-                    <i class="fab fa-whatsapp fa-lg" aria-hidden="true"></i>
+                <a href="https://wa.me/{{ site_settings.whatsapp_primary_clean|default:'60182638888' }}?text={% filter urlencode %}مرحباً، أود استشارة بخصوص الدراسة في ماليزيا بعد اطلاعي على صفحة عن الشركة{% endfilter %}" target="_blank" rel="noopener noreferrer" class="cta-whatsapp-btn" title="محادثة واتساب فورية">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink: 0;"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                     <span>تواصل معنا عبر واتساب</span>
                 </a>
-                <a href="{% url 'leads:submit' %}" class="cta-form-btn">
-                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                <a href="{% url 'leads:submit' %}" class="cta-form-btn" title="تقديم طلب استشارة أكاديمية">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                     <span>طلب استشارة مجانية</span>
                 </a>
             </div>
