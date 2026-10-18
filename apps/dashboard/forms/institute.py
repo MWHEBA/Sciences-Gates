@@ -8,7 +8,10 @@ from apps.institutes.models import Institute, Course, InstituteAttachment, Insti
 from apps.html_editor.widgets import CustomHTMLEditorWidget
 
 
-class InstituteForm(forms.ModelForm):
+from .seo_mixins import SEOSynonymsSanitizerMixin
+
+
+class InstituteForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
     """
     Form for creating and editing institutes with structured template editor.
     نموذج إنشاء وتعديل المعاهد مع محرر القالب المنظم

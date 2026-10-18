@@ -153,46 +153,151 @@
 
             <!-- مرادفات الكلمة المفتاحية -->
             <div>
-                <label class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
-                    {{ form.keyphrase_synonyms.label }}
-                </label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-normal mb-0" style="color: var(--text-secondary);">
+                        {{ form.keyphrase_synonyms.label }}
+                    </label>
+                    <span class="text-xs" style="color: var(--text-muted);" x-data="{ count: 0 }" x-init="
+                        const updateCount = () => {
+                            const input = document.querySelector('input[name=keyphrase_synonyms]');
+                            if (input && input.value) {
+                                try {
+                                    const parsed = JSON.parse(input.value);
+                                    count = Array.isArray(parsed) ? parsed.length : 0;
+                                } catch (e) {
+                                    count = input.value.split(',').filter(s => s.trim()).length;
+                                }
+                            } else {
+                                count = 0;
+                            }
+                        };
+                        updateCount();
+                        window.addEventListener('synonyms-updated', (e) => { count = e.detail || 0; });
+                    ">
+                        <span x-text="count"></span> / 5 مرادفات
+                    </span>
+                </div>
                 <div x-data="{
                     synonyms: [],
                     newSynonym: '',
                     isFocused: false,
+                    errorMessage: '',
+                    errorTimer: null,
+                    showError(msg) {
+                        this.errorMessage = msg;
+                        if (this.errorTimer) clearTimeout(this.errorTimer);
+                        this.errorTimer = setTimeout(() => { this.errorMessage = ''; }, 3500);
+                    },
+                    normalize(text) {
+                        if (!text) return '';
+                        let t = text.toLowerCase().trim().replace(/\s+/g, ' ');
+                        const map = { 'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ة': 'ه', 'ى': 'ي' };
+                        for (let k in map) {
+                            t = t.replaceAll(k, map[k]);
+                        }
+                        return t.replace(/[\u064b-\u0652]/g, '');
+                    },
+                    getFocusKeyword() {
+                        const kwInput = document.querySelector('input[name=focus_keyword]');
+                        return kwInput ? kwInput.value.trim() : '';
+                    },
                     init() {
                         const inputEl = $el.querySelector('input[name=keyphrase_synonyms]');
-                        if (inputEl) {
-                            inputEl.addEventListener('change', () => {
-                                if (inputEl.value) {
-                                    try {
-                                        const parsed = JSON.parse(inputEl.value);
-                                        this.synonyms = Array.isArray(parsed) ? parsed : [parsed];
-                                    } catch (e) {
-                                        this.synonyms = inputEl.value.split(',').map(s => s.trim()).filter(s => s);
+                        const parseRaw = (val) => {
+                            if (!val) return [];
+                            try {
+                                const parsed = JSON.parse(val);
+                                return Array.isArray(parsed) ? parsed : [parsed];
+                            } catch (e) {
+                                return val.split(/[،,]/).map(s => s.trim()).filter(Boolean);
+                            }
+                        };
+
+                        const sanitizeAndLoad = () => {
+                            if (!inputEl || !inputEl.value) {
+                                this.synonyms = [];
+                                return;
+                            }
+                            const raw = parseRaw(inputEl.value);
+                            const normFocus = this.normalize(this.getFocusKeyword());
+                            const seen = new Set();
+                            if (normFocus) seen.add(normFocus);
+                            const clean = [];
+                            raw.forEach(s => {
+                                const str = String(s).trim();
+                                const n = this.normalize(str);
+                                if (n && !seen.has(n)) {
+                                    const words = str.split(/\s+/).filter(Boolean);
+                                    if (words.length <= 7) {
+                                        seen.add(n);
+                                        clean.push(str);
                                     }
-                                } else {
-                                    this.synonyms = [];
                                 }
                             });
-                            if (inputEl.value) {
-                                try {
-                                    const parsed = JSON.parse(inputEl.value);
-                                    this.synonyms = Array.isArray(parsed) ? parsed : [parsed];
-                                } catch (e) {
-                                    this.synonyms = inputEl.value.split(',').map(s => s.trim()).filter(s => s);
+                            this.synonyms = clean.slice(0, 5);
+                            this.syncToInput();
+                        };
+
+                        sanitizeAndLoad();
+
+                        if (inputEl) {
+                            inputEl.addEventListener('change', () => {
+                                const parsed = parseRaw(inputEl.value);
+                                if (JSON.stringify(parsed) !== JSON.stringify(this.synonyms)) {
+                                    sanitizeAndLoad();
                                 }
-                            } else {
-                                this.synonyms = [];
-                            }
+                            });
+                        }
+
+                        // Watch focus keyword changes to dynamically remove matching synonyms
+                        const kwInput = document.querySelector('input[name=focus_keyword]');
+                        if (kwInput) {
+                            const onKwChange = () => {
+                                const normKw = this.normalize(kwInput.value);
+                                if (normKw && this.synonyms.some(s => this.normalize(s) === normKw)) {
+                                    this.synonyms = this.synonyms.filter(s => this.normalize(s) !== normKw);
+                                    this.syncToInput();
+                                    this.showError('تم استبعاد المرادف المطابق للكلمة المفتاحية الجديدة تلقائياً.');
+                                }
+                            };
+                            kwInput.addEventListener('input', onKwChange);
+                            kwInput.addEventListener('change', onKwChange);
                         }
                     },
                     addSynonym() {
                         const val = this.newSynonym.replace(/[،,]/g, '').trim();
-                        if (val && !this.synonyms.includes(val)) {
-                            this.synonyms.push(val);
-                            this.syncToInput();
+                        if (!val) {
+                            this.newSynonym = '';
+                            return;
                         }
+
+                        if (this.synonyms.length >= 5) {
+                            this.showError('الحد الأقصى المسموح به هو 5 مرادفات لضمان جودة السيو.');
+                            return;
+                        }
+
+                        const words = val.split(/\s+/).filter(Boolean);
+                        if (words.length > 7) {
+                            this.showError('المرادفات الفعالة تكون عبارات قصيرة محددة (حتى 7 كلمات) وليست جُملاً كاملة.');
+                            return;
+                        }
+
+                        const normVal = this.normalize(val);
+                        const normFocus = this.normalize(this.getFocusKeyword());
+
+                        if (normFocus && normVal === normFocus) {
+                            this.showError('هذه هي الكلمة المفتاحية الرئيسية بالفعل ولا داعي لإضافتها كمرادف.');
+                            return;
+                        }
+
+                        if (this.synonyms.some(s => this.normalize(s) === normVal)) {
+                            this.showError('هذا المرادف مضاف بالفعل في القائمة.');
+                            return;
+                        }
+
+                        this.synonyms.push(val);
+                        this.syncToInput();
+                        this.errorMessage = '';
                         this.newSynonym = '';
                     },
                     removeSynonym(index) {
@@ -202,9 +307,10 @@
                     syncToInput() {
                         const inputEl = $el.querySelector('input[name=keyphrase_synonyms]');
                         if (inputEl) {
-                            inputEl.value = JSON.stringify(this.synonyms);
+                            inputEl.value = this.synonyms.length ? JSON.stringify(this.synonyms) : '';
                             inputEl.dispatchEvent(new Event('change', { bubbles: true }));
                         }
+                        window.dispatchEvent(new CustomEvent('synonyms-updated', { detail: this.synonyms.length }));
                     }
                 }" class="space-y-2">
                     <!-- Hidden Input -->
@@ -220,9 +326,9 @@
                             <span class="tags-input-pill">
                                 <span x-text="syn"></span>
                                 <button type="button" 
-                                        @click.stop="removeSynonym(index)" 
-                                        class="tags-input-pill-remove"
-                                        aria-label="حذف">
+                                         @click.stop="removeSynonym(index)" 
+                                         class="tags-input-pill-remove"
+                                         aria-label="حذف">
                                     &times;
                                 </button>
                             </span>
@@ -237,10 +343,17 @@
                                @input="if (newSynonym.includes(',') || newSynonym.includes('،')) { addSynonym() }"
                                @blur="addSynonym()"
                                @focus="isFocused = true"
-                               @blur="isFocused = false; addSynonym()"
                                placeholder="اكتب مرادفاً واضغط Enter أو فاصلة..."
                                class="tags-input-field"
                                dir="rtl">
+                    </div>
+
+                    <!-- Inline Feedback Message -->
+                    <div x-show="errorMessage"
+                         x-transition
+                         style="background-color: var(--warning-light); border: 1px solid var(--warning); color: var(--text-primary); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                        <span style="color: var(--warning); font-size: 14px;">⚠️</span>
+                        <span x-text="errorMessage"></span>
                     </div>
                 </div>
                 {% if form.keyphrase_synonyms.errors %}

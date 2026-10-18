@@ -40,6 +40,68 @@ def normalize_text(text):
     return text
 
 
+def sanitize_synonyms(synonyms_raw, focus_keyword="", max_synonyms=5, max_words=7, max_length=255):
+    """
+    Sanitizes raw synonyms (string, JSON list, or comma-separated):
+    - Parses input into a list of strings.
+    - Excludes focus keyword (using normalize_text).
+    - Deduplicates synonyms (using normalize_text).
+    - Filters out synonyms exceeding max_words.
+    - Limits total count to max_synonyms.
+    - Ensures serialized JSON does not exceed max_length.
+    Returns (json_str, cleaned_list).
+    """
+    if not synonyms_raw:
+        return "", []
+
+    import json
+    synonyms_list = []
+    if isinstance(synonyms_raw, list):
+        synonyms_list = [str(s).strip() for s in synonyms_raw if str(s).strip()]
+    elif isinstance(synonyms_raw, str):
+        synonyms_raw_str = synonyms_raw.strip()
+        if not synonyms_raw_str:
+            return "", []
+        try:
+            parsed = json.loads(synonyms_raw_str)
+            if isinstance(parsed, list):
+                synonyms_list = [str(s).strip() for s in parsed if str(s).strip()]
+            elif isinstance(parsed, str):
+                synonyms_list = [s.strip() for s in parsed.replace('،', ',').split(',') if s.strip()]
+        except (json.JSONDecodeError, ValueError):
+            synonyms_list = [s.strip() for s in synonyms_raw_str.replace('،', ',').split(',') if s.strip()]
+    else:
+        return "", []
+
+    norm_focus_kw = normalize_text(focus_keyword) if focus_keyword else ""
+    cleaned_synonyms = []
+    seen_norm = set()
+    if norm_focus_kw:
+        seen_norm.add(norm_focus_kw)
+
+    for syn in synonyms_list:
+        norm_syn = normalize_text(syn)
+        if not norm_syn or norm_syn in seen_norm:
+            continue
+        if max_words and len(norm_syn.split()) > max_words:
+            continue
+        seen_norm.add(norm_syn)
+        cleaned_synonyms.append(syn)
+        if max_synonyms and len(cleaned_synonyms) >= max_synonyms:
+            break
+
+    if not cleaned_synonyms:
+        return "", []
+
+    json_str = json.dumps(cleaned_synonyms, ensure_ascii=False)
+    if max_length and len(json_str) > max_length:
+        while cleaned_synonyms and len(json.dumps(cleaned_synonyms, ensure_ascii=False)) > max_length:
+            cleaned_synonyms.pop()
+        json_str = json.dumps(cleaned_synonyms, ensure_ascii=False) if cleaned_synonyms else ""
+
+    return (json_str if cleaned_synonyms else ""), cleaned_synonyms
+
+
 @dataclass
 class ContentConfig:
     model: type
@@ -90,20 +152,14 @@ class PageSEOAnalyzer:
 
         # Count occurrences of focus keyword and synonyms in purified main content text
         focus_kw = getattr(obj, "focus_keyword", "").strip()
+        norm_focus_kw = normalize_text(focus_kw) if focus_kw else ""
         synonyms_str = getattr(obj, "keyphrase_synonyms", "").strip()
-        
-        synonyms_list = []
-        if synonyms_str:
-            import json
-            try:
-                parsed = json.loads(synonyms_str)
-                if isinstance(parsed, list):
-                    synonyms_list = [s.strip() for s in parsed if s.strip()]
-                elif isinstance(parsed, str):
-                    synonyms_list = [s.strip() for s in parsed.replace("،", ",").split(",") if s.strip()]
-            except json.JSONDecodeError:
-                synonyms_list = [s.strip() for s in synonyms_str.replace("،", ",").split(",") if s.strip()]
-
+        _, cleaned_synonyms = sanitize_synonyms(
+            synonyms_str,
+            focus_keyword=focus_kw,
+            max_synonyms=5,
+            max_words=7
+        )
 
         keyword_count = 0
         synonyms_counts = {}
@@ -121,16 +177,29 @@ class PageSEOAnalyzer:
             clean_text = html_lib.unescape(node_copy.get_text())
             norm_clean_text = normalize_text(clean_text)
 
-            if focus_kw:
-                norm_focus_kw = normalize_text(focus_kw)
-                if norm_focus_kw:
-                    keyword_count = len(re.findall(re.escape(norm_focus_kw), norm_clean_text))
+            occupied_spans = []
 
-            for syn in synonyms_list:
+            def overlaps_any(start, end, spans):
+                return any(max(start, s_start) < min(end, s_end) for s_start, s_end in spans)
+
+            # 1. Match focus keyword with Arabic prefixes and word boundary suffix
+            if norm_focus_kw:
+                kw_pattern = re.compile(r'(?:(?<=^)|(?<=\s)|(?<=[^\w])|(?<=[وفكل]))' + re.escape(norm_focus_kw) + r'(?!\w)')
+                for m in kw_pattern.finditer(norm_clean_text):
+                    occupied_spans.append(m.span())
+                    keyword_count += 1
+
+            # 2. Match synonyms without overlapping already occupied keyword or prior synonym spans
+            for syn in cleaned_synonyms:
                 norm_syn = normalize_text(syn)
-                if norm_syn:
-                    syn_count = len(re.findall(re.escape(norm_syn), norm_clean_text))
-                    synonyms_counts[syn] = syn_count
+                syn_count = 0
+                syn_pattern = re.compile(r'(?:(?<=^)|(?<=\s)|(?<=[^\w])|(?<=[وفكل]))' + re.escape(norm_syn) + r'(?!\w)')
+                for m in syn_pattern.finditer(norm_clean_text):
+                    start, end = m.span()
+                    if not overlaps_any(start, end, occupied_spans):
+                        occupied_spans.append((start, end))
+                        syn_count += 1
+                synonyms_counts[syn] = syn_count
 
         main_content["focus_keyword_count"] = keyword_count
         main_content["synonyms_counts"] = synonyms_counts

@@ -9,7 +9,10 @@ from apps.core.widgets import SimpleRichTextWidget
 from apps.html_editor.widgets import CustomHTMLEditorWidget
 
 
-class MajorForm(forms.ModelForm):
+from .seo_mixins import SEOSynonymsSanitizerMixin
+
+
+class MajorForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
     """
     Form for creating and editing majors with structured template editor.
     نموذج إنشاء وتعديل التخصصات مع محرر القالب المنظم

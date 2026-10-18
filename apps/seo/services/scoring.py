@@ -398,6 +398,21 @@ class SEOScoringEngine:
             except json.JSONDecodeError:
                 synonyms_list = [s.strip() for s in synonyms_str.replace("،", ",").split(",") if s.strip()]
 
+        # Clean, deduplicate synonyms, and exclude focus keyword
+        norm_focus_kw = self._normalize(focus_kw) if focus_kw else ""
+        cleaned_synonyms = []
+        seen_norm_syns = set()
+        if norm_focus_kw:
+            seen_norm_syns.add(norm_focus_kw)
+
+        for syn in synonyms_list:
+            norm_syn = self._normalize(syn)
+            if not norm_syn or norm_syn in seen_norm_syns:
+                continue
+            seen_norm_syns.add(norm_syn)
+            cleaned_synonyms.append(syn)
+        synonyms_list = cleaned_synonyms
+
 
         title = (self.full_page.get("title", "") or "").strip()
         desc = (self.full_page.get("meta_description", "") or "").strip()

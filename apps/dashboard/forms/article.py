@@ -8,7 +8,10 @@ from apps.articles.models import Article, ArticleFAQ, Category, Tag, ArticleAtta
 from apps.html_editor.widgets import CustomHTMLEditorWidget
 
 
-class ArticleForm(forms.ModelForm):
+from .seo_mixins import SEOSynonymsSanitizerMixin
+
+
+class ArticleForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
     """
     Form for creating and editing articles with Custom HTML Editor.
     نموذج إنشاء وتعديل المقالات مع محرر HTML المخصص

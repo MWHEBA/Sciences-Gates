@@ -8,7 +8,10 @@ from apps.universities.models import University, UniversityFAQ, Faculty, Program
 from apps.html_editor.widgets import CustomHTMLEditorWidget
 
 
-class UniversityForm(forms.ModelForm):
+from .seo_mixins import SEOSynonymsSanitizerMixin
+
+
+class UniversityForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
     """
     Form for creating and editing universities with structured template editor.
     نموذج إنشاء وتعديل الجامعات مع محرر القالب المنظم

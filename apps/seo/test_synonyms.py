@@ -277,3 +277,101 @@ class TestJSONSynonyms(TestCase):
         result = engine.evaluate()
         self.assertIn("focus_keyword_in_title", result["passed_checks"])
 
+
+class TestSanitizeSynonymsService(TestCase):
+    """Test pure sanitize_synonyms service logic."""
+
+    def test_excludes_exact_and_normalized_focus_keyword(self):
+        from apps.seo.services.page_analyzer import sanitize_synonyms
+        import json
+
+        # Input includes variations of the focus keyword
+        raw = '["جامعة ملاكا", "جامعه ملاكا", "جامعة ماليزيا"]'
+        json_str, clean_list = sanitize_synonyms(raw, focus_keyword="جامعة ملاكا")
+        self.assertEqual(clean_list, ["جامعة ماليزيا"])
+        self.assertEqual(json_str, json.dumps(["جامعة ماليزيا"], ensure_ascii=False))
+
+    def test_deduplicates_synonyms(self):
+        from apps.seo.services.page_analyzer import sanitize_synonyms
+        raw = '["تخصص هندسة", "تخصص هندسه", "دراسة هندسة", "تخصص هندسة"]'
+        _, clean_list = sanitize_synonyms(raw, focus_keyword="دراسة حاسوب")
+        self.assertIn("تخصص هندسة", clean_list)
+        self.assertIn("دراسة هندسة", clean_list)
+        self.assertEqual(len(clean_list), 2)
+
+    def test_filters_long_word_count(self):
+        from apps.seo.services.page_analyzer import sanitize_synonyms
+        raw = '["عبارة قصيرة", "هذه عبارة طويلة جدا تتجاوز الحد الأقصى المسموح به للمرادفات في النظام"]'
+        _, clean_list = sanitize_synonyms(raw, focus_keyword="كلمة رئيسية", max_words=7)
+        self.assertEqual(clean_list, ["عبارة قصيرة"])
+
+    def test_enforces_max_synonyms_limit(self):
+        from apps.seo.services.page_analyzer import sanitize_synonyms
+        raw = '["مرادف 1", "مرادف 2", "مرادف 3", "مرادف 4", "مرادف 5", "مرادف 6", "مرادف 7"]'
+        _, clean_list = sanitize_synonyms(raw, max_synonyms=5)
+        self.assertEqual(len(clean_list), 5)
+        self.assertEqual(clean_list, ["مرادف 1", "مرادف 2", "مرادف 3", "مرادف 4", "مرادف 5"])
+
+    def test_converts_legacy_comma_string(self):
+        from apps.seo.services.page_analyzer import sanitize_synonyms
+        import json
+        raw = "مرادف اول، مرادف ثان, مرادف ثالث"
+        json_str, clean_list = sanitize_synonyms(raw, focus_keyword="مفتاحية")
+        self.assertEqual(clean_list, ["مرادف اول", "مرادف ثان", "مرادف ثالث"])
+        self.assertEqual(json_str, json.dumps(clean_list, ensure_ascii=False))
+
+
+class TestSanitizeSEOSynonymsCommand(TestCase):
+    """Test the sanitize_seo_synonyms management command."""
+
+    def setUp(self):
+        from apps.universities.models import University
+        import json
+
+        self.uni_clean = University.objects.create(
+            name="Clean University",
+            slug="clean-uni",
+            logo="test.png",
+            main_image="test.png",
+            description="وصف",
+            location="كوالالمبور",
+            focus_keyword="جامعة ملاكا",
+            keyphrase_synonyms=json.dumps(["جامعات ماليزيا", "التعليم في ماليزيا"], ensure_ascii=False)
+        )
+        self.uni_dirty = University.objects.create(
+            name="Dirty University",
+            slug="dirty-uni",
+            logo="test.png",
+            main_image="test.png",
+            description="وصف",
+            location="كوالالمبور",
+            focus_keyword="جامعة ليمكوكوينج",
+            keyphrase_synonyms=json.dumps(
+                ["جامعة ليم كوك وينج", "جامعة ليمكوكوينج", "جامعة ليم كوك وينج", "جامعة limkokwing"],
+                ensure_ascii=False
+            )
+        )
+
+    def test_dry_run_does_not_modify_db(self):
+        from django.core.management import call_command
+        import io
+
+        out = io.StringIO()
+        call_command("sanitize_seo_synonyms", "--model=university", f"--ids={self.uni_dirty.id}", stdout=out)
+        self.uni_dirty.refresh_from_db()
+        # Still contains dirty synonyms because it was dry-run
+        self.assertIn("جامعة ليمكوكوينج", self.uni_dirty.keyphrase_synonyms)
+
+    def test_apply_modifies_db(self):
+        from django.core.management import call_command
+        import io
+        import json
+
+        out = io.StringIO()
+        call_command("sanitize_seo_synonyms", "--apply", "--model=university", f"--ids={self.uni_dirty.id}", stdout=out)
+        self.uni_dirty.refresh_from_db()
+        parsed = json.loads(self.uni_dirty.keyphrase_synonyms)
+        self.assertNotIn("جامعة ليمكوكوينج", parsed)
+        self.assertEqual(parsed, ["جامعة ليم كوك وينج", "جامعة limkokwing"])
+
+
