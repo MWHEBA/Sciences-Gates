@@ -86,16 +86,16 @@ class SEOScoringEngine:
         desc = (self.full_page.get("meta_description", "") or "").strip()
         robots = (self.full_page.get("robots", "") or "").lower()
 
-        # Check title
+        # Check title (30 to 65 chars is ideal for search engines and prevents false warnings)
         if title:
-            if 40 <= len(title) <= 65:
+            if 30 <= len(title) <= 65:
                 earned += 10
                 self.passed.append("title")
             else:
                 earned += 5
                 self.warnings.append({
                     "code": "TITLE_LENGTH_OUT_OF_RANGE",
-                    "message": f"طول عنوان الصفحة ({len(title)} حرف) خارج النطاق المثالي الموصى به (40 - 65 حرفاً شاملة اسم الموقع)."
+                    "message": f"طول عنوان الصفحة ({len(title)} حرف) خارج النطاق المثالي الموصى به (30 - 65 حرفاً شاملة اسم الموقع)."
                 })
                 self.passed.append("title")
         else:

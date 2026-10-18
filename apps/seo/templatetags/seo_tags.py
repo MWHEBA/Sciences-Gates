@@ -41,8 +41,9 @@ def render_meta_tags(obj):
     
     meta_tags = []
     
-    # Meta title
-    meta_title = getattr(obj, 'get_meta_title', lambda: '')()
+    # Meta title (harmonized with page <title> via get_full_title)
+    title_getter = getattr(obj, 'get_full_title', getattr(obj, 'get_meta_title', lambda: ''))
+    meta_title = title_getter()
     if meta_title:
         meta_tags.append(f'<meta name="title" content="{escape(meta_title)}">')
     

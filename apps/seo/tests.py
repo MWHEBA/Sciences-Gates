@@ -831,6 +831,120 @@ class TestImageAltFocusKeywordMatching(SimpleTestCase):
         assert "focus_keyword_in_alt" in result["passed_checks"]
 
 
+@pytest.mark.django_db
+class TestSEOTitleRadicalArchitecture:
+    """Comprehensive test suite for the unified SEO Title Architecture."""
+
+    def test_compound_title_with_pipe_preserved_and_brand_appended(self):
+        """Case: 'جامعة صنواي SUNWAY | التخصصات والرسوم 2027' (43 chars) + 21 = 64 chars."""
+        from apps.articles.models import Article
+        from apps.core.models import UserProfile, UserRole
+        from django.contrib.auth.models import User
+
+        user = User.objects.create_user(username="test_author", password="password123")
+        UserProfile.objects.filter(user=user).update(role=UserRole.CONTENT_ADMIN)
+        article = Article(
+            title="عنوان تجريبي",
+            meta_title="جامعة صنواي SUNWAY | التخصصات والرسوم 2027",
+            author=user
+        )
+        full_title = article.get_full_title()
+        assert full_title == "جامعة صنواي SUNWAY | التخصصات والرسوم 2027 - شركة بوابات العلوم"
+        assert len(full_title) == 63
+        # Verify get_og_title produces identical rich title
+        assert article.get_og_title() == full_title
+
+    def test_standalone_rich_title_not_mutilated_and_no_brand_appended(self):
+        """Case: Title > 44 chars stays 100% as written by author without truncation."""
+        from apps.articles.models import Article
+        article = Article(
+            title="عنوان مقال",
+            meta_title="جامعة مالايا UM | دليل شروط القبول والتخصصات والرسوم لعام 2027"
+        )
+        full_title = article.get_full_title()
+        assert full_title == "جامعة مالايا UM | دليل شروط القبول والتخصصات والرسوم لعام 2027"
+        assert "|" in full_title
+
+    def test_english_acronym_and_marketing_phrases_not_deleted(self):
+        """Case: English terms and keywords like 'الدليل الشامل' are never stripped from explicit meta_title."""
+        from apps.articles.models import Article
+        article = Article(
+            title="عنوان مقال",
+            meta_title="جامعة صنواي - SUNWAY | الدليل الشامل"
+        )
+        full_title = article.get_full_title()
+        assert "SUNWAY" in full_title
+        assert "الدليل الشامل" in full_title
+        assert full_title.endswith("- شركة بوابات العلوم")
+
+    def test_title_with_existing_brand_not_duplicated(self):
+        """Case: If brand already exists, do not duplicate."""
+        from apps.articles.models import Article
+        article = Article(
+            title="عنوان مقال",
+            meta_title="منحة التميز الدراسي 2027 - شركة بوابات العلوم"
+        )
+        full_title = article.get_full_title()
+        assert full_title == "منحة التميز الدراسي 2027 - شركة بوابات العلوم"
+        assert full_title.count("شركة بوابات العلوم") == 1
+
+    def test_empty_meta_title_fallback_cleans_legacy_and_appends_brand(self):
+        """Case: Empty meta_title cleans legacy suffixes on fallback name/title."""
+        from apps.articles.models import Article
+        article = Article(
+            title="جامعة كوالالمبور - مكتب قبولات",
+            meta_title=""
+        )
+        full_title = article.get_full_title()
+        assert "مكتب قبولات" not in full_title
+        assert full_title == "جامعة كوالالمبور - شركة بوابات العلوم"
+
+    def test_scoring_engine_ideal_range_30_to_65(self):
+        """Case: Titles between 30 and 65 chars get 10 points and no warning."""
+        from apps.seo.services.scoring import SEOScoringEngine
+        from apps.seo.services.content_profiles import profile_for
+
+        profile = profile_for("university")
+        full_page = {
+            "title": "جامعة مالايا - شركة بوابات العلوم",  # 32 chars
+            "meta_description": "وصف تعريفي كامل ومناسب جداً للجامعة ومطابق للمعايير بدقة كافية للتحقق.",
+            "canonical": "https://sciencesgates.com/universities/um/",
+            "robots": "index, follow",
+            "h1": "جامعة مالايا",
+        }
+        main_content = {
+            "selector_missing": False,
+            "word_count": 400,
+            "headings": [],
+            "links": [],
+            "image_warnings": [],
+        }
+        engine = SEOScoringEngine(full_page, main_content, [], {"found": ["CollegeOrUniversity"], "issues": []}, profile)
+        result = engine.evaluate()
+        warning_codes = [w["code"] for w in result["warnings"]]
+        assert "TITLE_LENGTH_OUT_OF_RANGE" not in warning_codes
+        assert "title" in result["passed_checks"]
+
+    def test_scoring_engine_title_out_of_range_warning(self):
+        """Case: Titles < 30 chars or > 65 chars receive TITLE_LENGTH_OUT_OF_RANGE warning."""
+        from apps.seo.services.scoring import SEOScoringEngine
+        from apps.seo.services.content_profiles import profile_for
+
+        profile = profile_for("university")
+        full_page = {
+            "title": "جامعة قصيرة",  # 11 chars (< 30)
+            "meta_description": "وصف تعريفي كامل ومناسب جداً للجامعة ومطابق للمعايير بدقة كافية للتحقق.",
+            "canonical": "https://sciencesgates.com/universities/short/",
+            "robots": "index, follow",
+            "h1": "جامعة قصيرة",
+        }
+        main_content = {"selector_missing": False, "word_count": 400}
+        engine = SEOScoringEngine(full_page, main_content, [], {"found": [], "issues": []}, profile)
+        result = engine.evaluate()
+        warning_codes = [w["code"] for w in result["warnings"]]
+        assert "TITLE_LENGTH_OUT_OF_RANGE" in warning_codes
+
+
 
 
 
