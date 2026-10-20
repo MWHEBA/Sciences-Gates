@@ -398,7 +398,21 @@
             </section>
             {% endif %}
 
-
+            <!-- Why Choose Sciences Gates Section -->
+            {% if institute.why_choose_sciences_gates %}
+            <section class="detail-section">
+                <div class="detail-section-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <path d="m9 12 2 2 4-4"></path>
+                    </svg>
+                    <h2 class="detail-section-title">لماذا تختار شركة بوابات العلوم للدراسة في {{ institute.name }}؟</h2>
+                </div>
+                <div class="detail-section-content">
+                    {{ institute.why_choose_sciences_gates|safe }}
+                </div>
+            </section>
+            {% endif %}
 
             <!-- FAQ Section -->
             {% if faqs %}

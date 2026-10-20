@@ -46,7 +46,7 @@ class MajorForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
             'bachelor_duration', 'master_duration', 'phd_duration',
             'study_language', 'practical_training', 'career_opportunities', 'competitor_url',
             # Rich Text Sections
-            'description', 'why_study_section', 'how_to_apply_section',
+            'description', 'why_study_section', 'how_to_apply_section', 'why_choose_sciences_gates',
             # Relationships
             'best_universities', 'cheap_universities', 'related_articles', 'tags',
             # Publishing
@@ -141,6 +141,12 @@ class MajorForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
             'how_to_apply_section': CustomHTMLEditorWidget(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'خطوات التقديم للتخصص',
+                'rows': 8,
+                'dir': 'rtl',
+            }),
+            'why_choose_sciences_gates': CustomHTMLEditorWidget(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'أسباب ومميزات دراسة هذا التخصص عبر شركة بوابات العلوم...',
                 'rows': 8,
                 'dir': 'rtl',
             }),

@@ -185,6 +185,12 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='كيفية التقديم',
         help_text='خطوات التقديم للتخصص'
     )
+    why_choose_sciences_gates = models.TextField(
+        blank=True,
+        default="",
+        verbose_name='لماذا تختار شركة بوابات العلوم؟',
+        help_text='قسم اختياري يوضح أسباب ومزايا دراسة هذا التخصص عبر شركة بوابات العلوم'
+    )
 
     # Relationships
     best_universities = models.ManyToManyField(

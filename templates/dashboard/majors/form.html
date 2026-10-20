@@ -203,6 +203,24 @@
                     </section>
                 </div>
 
+<!-- لماذا تختار شركة بوابات العلوم؟ Card -->
+                <div style="background-color: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-xl);
+                            box-shadow: var(--shadow-sm);
+                            padding: 24px;">
+                    <section>
+                        <h2 class="text-lg font-semibold" style="color: var(--text-primary); margin-bottom: 20px;">لماذا تختار شركة بوابات العلوم لدراسة هذا التخصص؟</h2>
+                        <div>
+                            {{ form.why_choose_sciences_gates }}
+                            {% if form.why_choose_sciences_gates.errors %}
+                                <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.why_choose_sciences_gates.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.why_choose_sciences_gates.help_text }}</p>
+                        </div>
+                    </section>
+                </div>
+
 <!-- 3. مدة دراسة التخصص Card -->
                 <div style="background-color: var(--surface);
                             border: 1px solid var(--border);

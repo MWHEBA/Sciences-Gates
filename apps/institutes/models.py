@@ -80,6 +80,12 @@ class Institute(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='دراسة اللغة الإنجليزية',
         help_text='معلومات وتفاصيل عن دراسة اللغة الإنجليزية في المعهد'
     )
+    why_choose_sciences_gates = models.TextField(
+        blank=True,
+        default="",
+        verbose_name='لماذا تختار شركة بوابات العلوم؟',
+        help_text='قسم اختياري يوضح أسباب ومزايا التسجيل في هذا المعهد عبر شركة بوابات العلوم'
+    )
     logo = models.ImageField(
         upload_to='institutes/logos/',
         null=True,

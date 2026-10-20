@@ -64,7 +64,7 @@ class InstituteForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
             'name', 'slug', 'state', 'city', 'order', 'logo', 'main_image', 'location',
             'telephone', 'website',
             # Rich Text Sections
-            'introduction', 'description', 'why_choose_us', 'english_study',
+            'introduction', 'description', 'why_choose_us', 'why_choose_sciences_gates', 'english_study',
             # Fees Info
             'fees_includes', 'fees_excludes',
             # Relationships
@@ -133,6 +133,9 @@ class InstituteForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
             }),
             'why_choose_us': CustomHTMLEditorWidget(attrs={
                 'data-placeholder': 'لماذا يختار الطلاب العرب هذا المعهد...',
+            }),
+            'why_choose_sciences_gates': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'اكتب أسباب ومميزات التسجيل في هذا المعهد عبر شركة بوابات العلوم...',
             }),
             'english_study': CustomHTMLEditorWidget(attrs={
                 'data-placeholder': 'معلومات وتفاصيل عن دراسة اللغة الإنجليزية في المعهد...',

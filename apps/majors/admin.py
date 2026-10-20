@@ -49,7 +49,7 @@ class MajorAdmin(admin.ModelAdmin):
             'fields': ('name', 'slug', 'category', 'main_image')
         }),
         ('المحتوى', {
-            'fields': ('description', 'study_duration', 'why_study_section', 'how_to_apply_section')
+            'fields': ('description', 'study_duration', 'why_study_section', 'how_to_apply_section', 'why_choose_sciences_gates')
         }),
         ('معلومات سريعة', {
             'fields': ('study_language', 'practical_training', 'career_opportunities')

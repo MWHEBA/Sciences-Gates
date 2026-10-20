@@ -30,7 +30,7 @@ class InstituteAdmin(admin.ModelAdmin):
             'fields': ('logo', 'logo_alt', 'main_image', 'main_image_alt')
         }),
         ('المحتوى', {
-            'fields': ('description',)
+            'fields': ('description', 'why_choose_us', 'why_choose_sciences_gates', 'english_study')
         }),
         ('العلاقات', {
             'fields': ('related_articles', 'tags')

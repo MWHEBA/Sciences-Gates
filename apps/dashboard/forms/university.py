@@ -65,6 +65,7 @@ class UniversityForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
             'telephone', 'website',
             # Rich Text Sections
             'description',
+            'why_choose_sciences_gates',
             'admission_requirements_bachelor', 'admission_requirements_master', 'admission_requirements_phd', 'one_time_fees',
             # Relationships
             'related_majors', 'related_articles', 'tags',
@@ -137,6 +138,9 @@ class UniversityForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
             # Rich Text Sections — Professional HTML Editor
             'description': CustomHTMLEditorWidget(attrs={
                 'data-placeholder': 'وصف شامل عن الجامعة...',
+            }),
+            'why_choose_sciences_gates': CustomHTMLEditorWidget(attrs={
+                'data-placeholder': 'اكتب أسباب ومميزات التسجيل في هذه الجامعة عبر شركة بوابات العلوم...',
             }),
             'admission_requirements_bachelor': CustomHTMLEditorWidget(attrs={
                 'data-placeholder': 'شروط القبول لبرنامج البكالوريوس (Bachelor’s)...',

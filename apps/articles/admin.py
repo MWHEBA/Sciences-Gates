@@ -45,7 +45,7 @@ class ArticleAdmin(admin.ModelAdmin):
             'fields': ('title', 'slug', 'featured_image')
         }),
         ('المحتوى', {
-            'fields': ('content', 'category', 'tags', 'author')
+            'fields': ('content', 'why_choose_sciences_gates', 'category', 'tags', 'author')
         }),
         ('العلاقات', {
             'fields': ('related_universities', 'related_institutes', 'related_majors')

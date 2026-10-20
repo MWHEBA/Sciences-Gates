@@ -224,6 +224,18 @@
                                 {% endif %}
                             </div>
 
+                            <!-- لماذا تختار شركة بوابات العلوم؟ -->
+                            <div>
+                                <label for="{{ form.why_choose_sciences_gates.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">
+                                    {{ form.why_choose_sciences_gates.label }}
+                                </label>
+                                {{ form.why_choose_sciences_gates }}
+                                {% if form.why_choose_sciences_gates.errors %}
+                                    <p class="mt-1 text-sm" style="color: var(--danger);">{{ form.why_choose_sciences_gates.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs" style="color: var(--text-muted);">{{ form.why_choose_sciences_gates.help_text }}</p>
+                            </div>
+
                             <!-- دراسة اللغة الإنجليزية -->
                             <div>
                                 <label for="{{ form.english_study.id_for_label }}" class="block text-sm font-normal mb-2" style="color: var(--text-secondary);">

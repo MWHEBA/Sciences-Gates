@@ -347,6 +347,12 @@ class University(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='الحد الأدنى للرسوم السنوية بالدولار',
         help_text='الحد الأدنى التقديري للرسوم السنوية بالدولار الأمريكي (USD) لعرضها في البطاقات ومقتطفات جوجل.'
     )
+    why_choose_sciences_gates = models.TextField(
+        blank=True,
+        default="",
+        verbose_name='لماذا تختار شركة بوابات العلوم؟',
+        help_text='قسم اختياري يوضح أسباب ومزايا التسجيل في هذه الجامعة عبر شركة بوابات العلوم'
+    )
 
 
     # Relationships

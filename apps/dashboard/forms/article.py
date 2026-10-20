@@ -32,7 +32,7 @@ class ArticleForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
             # Basic Information
             'title', 'slug', 'featured_image',
             # Content
-            'category', 'author', 'tags', 'content',
+            'category', 'author', 'tags', 'content', 'why_choose_sciences_gates',
             # Relationships
             'related_universities', 'related_institutes', 'related_majors',
             # Publishing
@@ -77,6 +77,12 @@ class ArticleForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
                 'placeholder': 'محتوى المقالة (يدعم: غامق، مائل، عناوين، قوائم، روابط، صور)',
                 'rows': 15,
                 'required': True,
+                'dir': 'rtl',
+            }),
+            'why_choose_sciences_gates': CustomHTMLEditorWidget(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'اكتب أسباب ومميزات اختيار شركة بوابات العلوم...',
+                'rows': 8,
                 'dir': 'rtl',
             }),
             

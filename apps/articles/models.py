@@ -145,6 +145,12 @@ class Article(TimestampedModel, PublishableModel, SEOMixin):
         verbose_name='المحتوى',
         help_text='محتوى المقالة (HTML محمي)'
     )
+    why_choose_sciences_gates = models.TextField(
+        blank=True,
+        default="",
+        verbose_name='لماذا تختار شركة بوابات العلوم؟',
+        help_text='قسم اختياري يوضح أسباب اختيار شركة بوابات العلوم'
+    )
 
     # Relationships
     related_universities = models.ManyToManyField(
@@ -214,6 +220,8 @@ def sanitize_article_content(sender, instance, **kwargs):
     """
     if instance.content:
         instance.content = sanitize_article_html(instance.content)
+    if instance.why_choose_sciences_gates:
+        instance.why_choose_sciences_gates = sanitize_article_html(instance.why_choose_sciences_gates)
 
 
 class ArticleFAQ(models.Model):
