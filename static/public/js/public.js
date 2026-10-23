@@ -103,31 +103,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 4. Form Validation Enhancements
+    // Returns the inline error element for a field; creates it on demand so that a
+    // blocked submission is never silent (pages without a .form-error slot).
+    const getErrorSlot = (field, create) => {
+        const anchor = field.closest('.intl-phone-wrapper') || field;
+        let slot = anchor.nextElementSibling;
+        if (slot && slot.classList.contains('form-error')) return slot;
+        if (!create) return null;
+        slot = document.createElement('p');
+        slot.className = 'form-error';
+        slot.setAttribute('role', 'alert');
+        slot.dataset.autoError = 'true';
+        slot.textContent = 'هذا الحقل مطلوب';
+        anchor.insertAdjacentElement('afterend', slot);
+        return slot;
+    };
+
     const forms = document.querySelectorAll('form[data-validate]');
     forms.forEach(form => {
+        // If this form is managed by lead-forms.js, delegate validation to lead-forms.js
+        if (form.hasAttribute('data-lead-form') || (form.getAttribute('action') || '').indexOf('/leads/submit') !== -1) {
+            return;
+        }
+
         form.addEventListener('submit', (e) => {
             let isValid = true;
+            let firstInvalid = null;
             const requiredFields = form.querySelectorAll('[required]');
             
             requiredFields.forEach(field => {
                 if (!field.value.trim()) {
                     isValid = false;
+                    if (!firstInvalid) firstInvalid = field;
                     field.classList.add('is-invalid');
-                    const errorMsg = field.nextElementSibling;
-                    if (errorMsg && errorMsg.classList.contains('form-error')) {
-                        errorMsg.style.display = 'block';
-                    }
+                    const errorMsg = getErrorSlot(field, true);
+                    if (errorMsg) errorMsg.style.display = 'block';
                 } else {
                     field.classList.remove('is-invalid');
-                    const errorMsg = field.nextElementSibling;
-                    if (errorMsg && errorMsg.classList.contains('form-error')) {
-                        errorMsg.style.display = 'none';
-                    }
+                    const errorMsg = getErrorSlot(field, false);
+                    if (errorMsg) errorMsg.style.display = 'none';
                 }
             });
 
             if (!isValid) {
                 e.preventDefault();
+                if (firstInvalid && typeof firstInvalid.focus === 'function') {
+                    firstInvalid.focus();
+                }
             } else {
                 const submitBtn = form.querySelector('button[type="submit"]');
                 if (submitBtn) {
@@ -152,10 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
             input.addEventListener('input', () => {
                 if (input.classList.contains('is-invalid')) {
                     input.classList.remove('is-invalid');
-                    const errorMsg = input.nextElementSibling;
-                    if (errorMsg && errorMsg.classList.contains('form-error')) {
-                        errorMsg.style.display = 'none';
-                    }
+                    const errorMsg = getErrorSlot(input, false);
+                    if (errorMsg) errorMsg.style.display = 'none';
                 }
             });
         });

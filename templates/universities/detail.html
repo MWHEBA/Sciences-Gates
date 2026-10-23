@@ -62,7 +62,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="detail-page-container" x-data="{ openRegModal: false, regStep: 1, showCustomNationality: false }">
+<div class="detail-page-container" x-data="{ openRegModal: {% if reg_modal_reopen %}true{% else %}false{% endif %}, regStep: {% if reg_modal_data.study_level or reg_modal_data.residence_country %}2{% else %}1{% endif %}, showCustomNationality: {% if reg_modal_data.custom_nationality %}true{% else %}false{% endif %} }">
 
     <!-- University Hero Header Section -->
     <div class="detail-header">

@@ -329,6 +329,9 @@
             // Set loading button visual state
             var submitBtn = document.getElementById('regSubmitBtn');
             if (submitBtn) {
+                if (!submitBtn.hasAttribute('data-original-text')) {
+                    submitBtn.setAttribute('data-original-text', submitBtn.innerHTML);
+                }
                 submitBtn.style.pointerEvents = 'none';
                 submitBtn.style.opacity = '0.7';
                 submitBtn.innerHTML = '⏳ جاري إرسال طلب التسجيل...';

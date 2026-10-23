@@ -170,12 +170,12 @@
                     املأ البيانات أدناه وسيقوم مستشار أكاديمي معتمد بالتواصل معك خلال أقل من 24 ساعة.
                 </p>
                 
-                <form action="{% url 'leads:submit' %}" method="post" data-validate="true">
+                <form action="{% url 'leads:submit' %}" method="post" data-lead-form="true" data-validate="true">
                     {% csrf_token %}
                     
                     <!-- Honeypot Field for Spam Protection -->
                     <div style="display:none;" aria-hidden="true">
-                        <input type="text" name="website" tabindex="-1" autocomplete="off">
+                        <input type="text" name="hp_field_x" tabindex="-1" autocomplete="new-password">
                     </div>
                     
                     <!-- Hidden Tracking & Lead Fields -->
@@ -199,6 +199,7 @@
                             placeholder="أدخل اسمك الثلاثي"
                             maxlength="200"
                         >
+                        <p class="form-error" role="alert" style="display: none;"></p>
                     </div>
 
                     <!-- Phone & Email Grid -->
@@ -238,6 +239,7 @@
                                     required
                                 >
                             </div>
+                            <p class="form-error" role="alert" style="display: none;"></p>
                             <input type="hidden" name="country_code" id="id_country_code" value="{{ default_code|default:'+966' }}">
                             <input type="hidden" name="phone" id="id_phone_combined" value="">
                         </div>
@@ -256,6 +258,7 @@
                                 placeholder="name@example.com" 
                                 dir="ltr"
                             >
+                            <p class="form-error" role="alert" style="display: none;"></p>
                         </div>
                     </div>
 
@@ -305,6 +308,7 @@
                                 <option value="جيبوتي">جيبوتي</option>
                                 <option value="دولة اخرى غير موجودة">دولة أخرى</option>
                             </select>
+                            <p class="form-error" role="alert" style="display: none;"></p>
                         </div>
                     </div>
 
@@ -341,6 +345,4 @@
 </section>
 {% endblock %}
 
-{% block extra_js %}
-<script src="{% static 'js/intl-phone.min.js' %}"></script>
-{% endblock %}
+{# intl-phone.js is already loaded globally by base.html; loading it again here duplicated every handler (dropdown could never open). #}

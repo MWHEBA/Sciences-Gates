@@ -24,6 +24,10 @@ def send_lead_notification_email(sender, instance, created, **kwargs):
     # Only send email for newly created leads
     if not created:
         return
+
+    # Suspected spam (honeypot tripped) is stored for review but never notified
+    if getattr(instance, 'is_suspected_spam', False):
+        return
     
     # ----------------------------------------------------
     # 1. Admin Email Notification

@@ -303,6 +303,33 @@ def csrf_failure(request, reason=""):
     Handles CSRF failures gracefully for both public visitors and dashboard admins.
     Prevents public visitors (submitting contact/lead forms) from being redirected to the admin login page.
     """
+    import logging
+    from apps.core.utils import get_client_ip
+    logging.getLogger('apps.leads.csrf').warning(
+        'csrf_failure reason=%s path=%s ip=%s has_csrf_cookie=%s referer=%s ua=%r',
+        reason or '-',
+        request.path,
+        get_client_ip(request),
+        'csrftoken' in request.COOKIES,
+        (request.META.get('HTTP_REFERER') or '-')[:160],
+        (request.META.get('HTTP_USER_AGENT') or '')[:160],
+    )
+
+    # Telemetry: Record CSRF rejection into LeadRejectionLog for observability
+    try:
+        from apps.leads.models import LeadRejectionLog
+        LeadRejectionLog.objects.create(
+            reason='csrf',
+            lead_type='unknown',
+            source_kind='csrf_failure',
+            source_page=(request.build_absolute_uri() if hasattr(request, 'build_absolute_uri') else request.path)[:500],
+            ip_address=get_client_ip(request),
+            user_agent=(request.META.get('HTTP_USER_AGENT') or '')[:300],
+            details={'csrf_reason': str(reason)},
+        )
+    except Exception:
+        pass
+
     from django.http import JsonResponse
     from django.conf import settings
 
@@ -320,7 +347,8 @@ def csrf_failure(request, reason=""):
         }, status=403)
 
     # 2. Handle authenticated users
-    if request.user.is_authenticated:
+    user = getattr(request, 'user', None)
+    if user and user.is_authenticated:
         from apps.dashboard.mixins import validate_dashboard_user
         from django.contrib.auth import logout
 
@@ -357,7 +385,8 @@ def csrf_failure(request, reason=""):
 
     # 4. Public Visitor: redirect back to source_page, referer, or current path (never dashboard:login)
     from django.utils.http import url_has_allowed_host_and_scheme
-    messages.warning(request, 'انتهت الجلسة المؤقتة للنموذج، يرجى إعادة محاولة إرسال البيانات.')
+    if hasattr(request, '_messages'):
+        messages.warning(request, 'انتهت الجلسة المؤقتة للنموذج، يرجى إعادة محاولة إرسال البيانات.')
     
     allowed_hosts = {request.get_host(), 'sciencesgates.com', 'www.sciencesgates.com', 'localhost:8000', '127.0.0.1:8000'}
     

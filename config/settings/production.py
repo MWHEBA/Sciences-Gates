@@ -315,6 +315,17 @@ LOGGING = {
             'filename': str(BASE_DIR / 'logs' / 'django.log'),
             'formatter': 'verbose',
         },
+        # Lead-form outcomes (accepted / rejected with a reason) and CSRF failures.
+        # Kept separate from django.log so form diagnostics are not drowned by errors.
+        'leads_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(BASE_DIR / 'logs' / 'leads.log'),
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 5,
+            'encoding': 'utf-8',
+            'formatter': 'verbose',
+        },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
@@ -325,10 +336,22 @@ LOGGING = {
         'handlers': ['file', 'console'],
         'level': 'INFO',
     },
-    'django': {
-        'handlers': ['file'],
-        'level': 'INFO',
-        'propagate': False,
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'apps.leads': {
+            'handlers': ['leads_file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.security.csrf': {
+            'handlers': ['leads_file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
     },
 }
 

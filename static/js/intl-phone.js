@@ -290,7 +290,8 @@
     // Global listener to combine numbers on form submit and prevent double submit
     document.addEventListener('submit', function(e) {
         var form = e.target;
-        if (form && form.method && form.method.toUpperCase() === 'POST') {
+        // Do not lock the button when a validator already blocked this submit (dead-button bug)
+        if (form && form.method && form.method.toUpperCase() === 'POST' && !e.defaultPrevented) {
             if (form.dataset.submitting === 'true') {
                 e.preventDefault();
                 return false;

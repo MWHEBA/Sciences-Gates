@@ -370,6 +370,47 @@
             </a>
             {% endif %}
 
+            <!-- Lead Forms Health Card (Phase 5 Observability) -->
+            <div class="bg-surface border border-border rounded-2xl p-4 shadow-sm">
+                <div class="flex items-center justify-between mb-3 pb-2 border-b border-border">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full {% if lead_health.status == 'normal' %}bg-success{% else %}bg-warning{% endif %}"></span>
+                        <h4 class="text-xs font-bold text-text-primary m-0">صحة نماذج التواصل</h4>
+                    </div>
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full {% if lead_health.status == 'normal' %}bg-success-light text-success{% else %}bg-warning-light text-warning{% endif %}">
+                        {% if lead_health.status == 'normal' %}مستقر{% else %}تنبيه استبعاد{% endif %}
+                    </span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-center mb-3">
+                    <div class="p-2.5 bg-bg-light rounded-xl border border-border">
+                        <p class="text-[10px] text-text-muted m-0">المستبعد اليوم</p>
+                        <p class="text-lg font-bold text-text-primary mt-1 m-0">{{ lead_health.rejections_today }}</p>
+                    </div>
+                    <div class="p-2.5 bg-bg-light rounded-xl border border-border">
+                        <p class="text-[10px] text-text-muted m-0">آخر 7 أيام</p>
+                        <p class="text-lg font-bold text-text-primary mt-1 m-0">{{ lead_health.rejections_7_days }}</p>
+                    </div>
+                </div>
+                <div class="text-[11px] text-text-muted space-y-1">
+                    <div class="flex justify-between items-center">
+                        <span>فخ السبام (Honeypot):</span>
+                        <span class="font-bold text-text-primary">{{ lead_health.breakdown.honeypot }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>تجاوز المعدل (Rate Limit):</span>
+                        <span class="font-bold text-text-primary">{{ lead_health.breakdown.rate_limit }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>أخطاء تحقق (Validation):</span>
+                        <span class="font-bold text-text-primary">{{ lead_health.breakdown.validation }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>حماية الجلسة (CSRF):</span>
+                        <span class="font-bold text-text-primary">{{ lead_health.breakdown.csrf }}</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Pending Content Notification -->
             {% if total_pending > 0 %}
             <div class="bg-warning-light border border-warning rounded-2xl p-4 shadow-sm">

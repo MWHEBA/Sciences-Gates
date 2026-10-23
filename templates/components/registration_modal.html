@@ -40,11 +40,11 @@
         </div>
 
         <!-- Registration Form -->
-        <form method="POST" action="{% url 'leads:submit' %}" id="regWizardForm" class="reg-wizard-form" novalidate>
+        <form method="POST" action="{% url 'leads:submit' %}" id="regWizardForm" class="reg-wizard-form" data-lead-form="true" novalidate>
             {% csrf_token %}
             
             <!-- Honeypot Antispam (Guarded against autofill) -->
-            <input type="text" name="website" tabindex="-1" autocomplete="new-password" aria-hidden="true" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;">
+            <input type="text" name="hp_field_x" tabindex="-1" autocomplete="new-password" aria-hidden="true" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;">
             
             <!-- Hidden Tracking & Entity Metadata -->
             <input type="hidden" name="lead_type" value="registration">
@@ -63,6 +63,12 @@
             <!-- Scrollable Modal Body -->
             <div class="reg-modal-scrollable">
                 
+                {% if reg_modal_reopen %}
+                <div class="alert alert--error" role="alert" style="margin: 0.5rem 1.5rem 1rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.875rem;">
+                    يرجى تصحيح الأخطاء الموضحة أدناه لإكمال طلب التسجيل.
+                </div>
+                {% endif %}
+                
                 <!-- Step 1: Personal Details -->
                 <div x-show="regStep === 1" class="reg-step-pane">
                     
@@ -71,7 +77,7 @@
                         <label class="reg-form-label" for="reg_name">
                             الاسم الكامل <span class="reg-required-mark">*</span>
                         </label>
-                        <input type="text" name="name" id="reg_name" class="reg-form-input" placeholder="اكتب اسمك الثلاثي أو الرباعي" autocomplete="name" enterkeyhint="next" required>
+                        <input type="text" name="name" id="reg_name" class="reg-form-input" value="{{ reg_modal_data.name|default:'' }}" placeholder="اكتب اسمك الثلاثي أو الرباعي" autocomplete="name" enterkeyhint="next" required>
                         <div class="reg-field-error" id="reg_name_error"></div>
                     </div>
 
@@ -80,7 +86,7 @@
                         <label class="reg-form-label" for="reg_email">
                             البريد الإلكتروني <span class="reg-required-mark">*</span>
                         </label>
-                        <input type="email" name="email" id="reg_email" class="reg-form-input" placeholder="example@domain.com" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr" enterkeyhint="next" required>
+                        <input type="email" name="email" id="reg_email" class="reg-form-input" value="{{ reg_modal_data.email|default:'' }}" placeholder="example@domain.com" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr" enterkeyhint="next" required>
                         <div class="reg-field-error" id="reg_email_error"></div>
                     </div>
 
@@ -109,7 +115,7 @@
                                     {% endfor %}
                                 </ul>
                             </div>
-                            <input type="tel" name="phone_number" id="reg_phone" class="intl-phone-input" placeholder="{{ default_placeholder|default:'12 345 6789' }}" dir="ltr" autocomplete="tel" enterkeyhint="next" required>
+                            <input type="tel" name="phone_number" id="reg_phone" class="intl-phone-input" value="{{ reg_modal_data.phone_number|default:'' }}" placeholder="{{ default_placeholder|default:'12 345 6789' }}" dir="ltr" autocomplete="tel" enterkeyhint="next" required>
                         </div>
                         <div class="reg-field-error" id="reg_phone_error"></div>
                     </div>
@@ -160,7 +166,7 @@
                         <label class="reg-form-label" for="reg_custom_nationality">
                             اسم الدولة / الجنسية <span class="reg-required-mark">*</span>
                         </label>
-                        <input type="text" name="custom_nationality" id="reg_custom_nationality" class="reg-form-input" placeholder="اكتب اسم دولتك" enterkeyhint="next">
+                        <input type="text" name="custom_nationality" id="reg_custom_nationality" class="reg-form-input" value="{{ reg_modal_data.custom_nationality|default:'' }}" placeholder="اكتب اسم دولتك" enterkeyhint="next">
                         <div class="reg-field-error" id="reg_custom_nationality_error"></div>
                     </div>
 
@@ -240,7 +246,7 @@
                         <label class="reg-form-label" for="reg_address">
                             المدينة / العنوان الحالي <span class="reg-required-mark">*</span>
                         </label>
-                        <input type="text" name="address" id="reg_address" class="reg-form-input" placeholder="مثال: الرياض، حي النخيل أو القاهرة، المعادي" autocomplete="address-level2" enterkeyhint="next" required>
+                        <input type="text" name="address" id="reg_address" class="reg-form-input" value="{{ reg_modal_data.address|default:'' }}" placeholder="مثال: الرياض، حي النخيل أو القاهرة، المعادي" autocomplete="address-level2" enterkeyhint="next" required>
                         <div class="reg-field-error" id="reg_address_error"></div>
                     </div>
 
@@ -249,7 +255,7 @@
                         <label class="reg-form-label" for="reg_notes">
                             ملاحظات أو استفسارات إضافية <span class="reg-optional-mark">(اختياري)</span>
                         </label>
-                        <textarea name="notes" id="reg_notes" class="reg-form-textarea" rows="2" placeholder="أي تفاصيل أو متطلبات خاصة ترغب في إخبارنا بها..." enterkeyhint="send"></textarea>
+                        <textarea name="notes" id="reg_notes" class="reg-form-textarea" rows="2" placeholder="أي تفاصيل أو متطلبات خاصة ترغب في إخبارنا بها..." enterkeyhint="send">{{ reg_modal_data.notes|default:'' }}</textarea>
                     </div>
 
                 </div>

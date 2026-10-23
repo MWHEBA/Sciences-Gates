@@ -324,6 +324,12 @@ class Lead(TimestampedModel):
         verbose_name='مؤرشفة',
         db_index=True
     )
+    is_suspected_spam = models.BooleanField(
+        default=False,
+        verbose_name='مشتبه به كسبام',
+        db_index=True,
+        help_text='تم حفظها لأن حقل الحماية (honeypot) امتلأ؛ تُؤرشف تلقائياً ولا تُرسل لها إشعارات'
+    )
     notes = models.TextField(
         blank=True,
         verbose_name='ملاحظات'
@@ -537,3 +543,59 @@ class Lead(TimestampedModel):
     def referrer_name(self):
         """Legacy property alias for backward compatibility."""
         return self.traffic_source_display
+
+
+class LeadRejectionLog(TimestampedModel):
+    """
+    Structured model recording every rejected lead submission.
+    Provides database-level observability and daily/monthly rejection telemetry.
+    """
+    reason = models.CharField(
+        max_length=100,
+        verbose_name='سبب الرفض',
+        db_index=True,
+        help_text='مثل: honeypot, rate_limit_ip, rate_limit_phone, validation:<field>, csrf'
+    )
+    lead_type = models.CharField(
+        max_length=20,
+        default='contact',
+        verbose_name='نوع الرسالة',
+        db_index=True
+    )
+    source_kind = models.CharField(
+        max_length=50,
+        blank=True,
+        default='',
+        verbose_name='نوع المصدر'
+    )
+    source_page = models.URLField(
+        max_length=500,
+        blank=True,
+        default='',
+        verbose_name='صفحة الإرسال'
+    )
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        verbose_name='عنوان IP',
+        db_index=True
+    )
+    user_agent = models.CharField(
+        max_length=300,
+        blank=True,
+        default='',
+        verbose_name='المتصفح والجاهز'
+    )
+    details = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='تفاصيل إضافية'
+    )
+
+    class Meta:
+        verbose_name = 'سجل رفض الرسائل'
+        verbose_name_plural = 'سجلات رفض الرسائل'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.created_at.strftime('%Y-%m-%d %H:%M')}] {self.reason} ({self.ip_address})"

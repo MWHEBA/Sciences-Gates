@@ -672,13 +672,29 @@ class SMTPCryptography:
 
 def get_client_ip(request):
     """Extract the real client IP, respecting Cloudflare headers in production."""
-    cf_ip = request.META.get('HTTP_CF_CONNECTING_IP')
+    import ipaddress
+
+    def _valid_ip(val):
+        if not val:
+            return None
+        cleaned = val.strip()
+        try:
+            ipaddress.ip_address(cleaned)
+            return cleaned
+        except ValueError:
+            return None
+
+    cf_ip = _valid_ip(request.META.get('HTTP_CF_CONNECTING_IP'))
     if cf_ip:
-        return cf_ip.strip()
+        return cf_ip
+
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
-        return x_forwarded_for.split(',')[0].strip()
-    return request.META.get('REMOTE_ADDR')
+        first_ip = _valid_ip(x_forwarded_for.split(',')[0])
+        if first_ip:
+            return first_ip
+
+    return _valid_ip(request.META.get('REMOTE_ADDR')) or request.META.get('REMOTE_ADDR') or '127.0.0.1'
 
 
 

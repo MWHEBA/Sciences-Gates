@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="{% static 'css/visa-tracking.css' %}">
 {% endblock %}
 
+{% block site_messages %}{% endblock %}
+
 {% block content %}
 {% include "components/page_hero.html" with title="متابعة حالة التأشيرة (EMGS)" subtitle="تتبع تأشيرة الطالب وافهم كل تحديث ونسبة مئوية خطوة بخطوة" %}
 
@@ -233,8 +235,8 @@
                     <input type="hidden" name="source_page" value="{{ source_page }}">
                     <input type="hidden" name="lead_type" value="contact">
                     
-                    <div class="display-none" style="display:none;" aria-hidden="true">
-                        {{ form.website }}
+                    <div class="inl-s-224b51a7b4" style="display:none;" aria-hidden="true">
+                        <input type="text" name="hp_field_x" tabindex="-1" autocomplete="new-password">
                     </div>
 
                     <div class="grid grid--2 gap-4">
@@ -244,9 +246,7 @@
                                 الاسم الكامل <span class="form-required">*</span>
                             </label>
                             {{ form.name }}
-                            {% if form.name.errors %}
-                                <p class="form-error show" role="alert" style="display: block;">{{ form.name.errors.0 }}</p>
-                            {% endif %}
+                            <p class="form-error{% if form.name.errors %} show{% endif %}" role="alert">{{ form.name.errors.0|default:'' }}</p>
                         </div>
 
                         <!-- البريد الإلكتروني -->
@@ -255,9 +255,7 @@
                                 البريد الإلكتروني
                             </label>
                             {{ form.email }}
-                            {% if form.email.errors %}
-                                <p class="form-error show" role="alert" style="display: block;">{{ form.email.errors.0 }}</p>
-                            {% endif %}
+                            <p class="form-error{% if form.email.errors %} show{% endif %}" role="alert">{{ form.email.errors.0|default:'' }}</p>
                         </div>
                     </div>
 
@@ -287,11 +285,9 @@
                             </div>
                             <input type="tel" name="phone_number" id="id_phone" class="intl-phone-input" placeholder="{{ default_placeholder }}" dir="ltr" required>
                         </div>
+                        <p class="form-error{% if form.phone.errors %} show{% endif %}" role="alert">{{ form.phone.errors.0|default:'' }}</p>
                         <input type="hidden" name="country_code" id="id_country_code" value="{{ default_code }}">
                         <input type="hidden" name="phone" id="id_phone_combined" value="{{ form.phone.value|default:'' }}">
-                        {% if form.phone.errors %}
-                            <p class="form-error show" role="alert" style="display: block;">{{ form.phone.errors.0 }}</p>
-                        {% endif %}
                     </div>
 
                     <!-- الرسالة أو الاستفسار -->
@@ -300,9 +296,7 @@
                             رسالتك أو تفاصيل استفسارك (اختياري)
                         </label>
                         {{ form.message }}
-                        {% if form.message.errors %}
-                            <p class="form-error show" role="alert" style="display: block;">{{ form.message.errors.0 }}</p>
-                        {% endif %}
+                        <p class="form-error{% if form.message.errors %} show{% endif %}" role="alert">{{ form.message.errors.0|default:'' }}</p>
                     </div>
 
 

@@ -1,5 +1,6 @@
 import os
 import json
+from unittest import mock
 import pytest
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -1159,6 +1160,678 @@ class UniversityAndInstituteRegistrationModalTests(TestCase):
         self.assertIn('اسم صفحة الإرسال', content)
         self.assertIn('جامعة مالايا', content)
         self.assertIn('مباشر', content)
+
+
+class PhoneNormalizationTests(TestCase):
+    """B0: the phone validator must tolerate common client-side artifacts."""
+
+    def _form(self, phone):
+        from apps.leads.forms import ContactLeadForm
+        return ContactLeadForm(data={
+            'lead_type': 'contact',
+            'name': 'Test User',
+            'email': 'student@example.com',
+            'phone': phone,
+        })
+
+    def test_valid_ascii_number_is_stored_unchanged(self):
+        form = self._form('+966501234567')
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['phone'], '+966501234567')
+
+    def test_duplicated_country_code_keeps_typed_number(self):
+        form = self._form('+966+201001234567')
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['phone'], '+201001234567')
+
+    def test_arabic_indic_digits_are_converted(self):
+        form = self._form('+966\u0665\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667')
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['phone'], '+966501234567')
+
+    def test_valid_number_with_separators_is_kept_as_before(self):
+        form = self._form('+20 100-123 4567')
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['phone'], '+20 100-123 4567')
+
+    def test_garbage_is_still_rejected(self):
+        self.assertFalse(self._form('abc').is_valid())
+        self.assertFalse(self._form('+12').is_valid())
+
+    def test_fallback_from_phone_number_and_country_code(self):
+        from apps.leads.forms import ContactLeadForm
+        form = ContactLeadForm(data={
+            'lead_type': 'contact',
+            'name': 'Test User',
+            'email': 'student@example.com',
+            'country_code': '+966',
+            'phone_number': '+201001234567',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['phone'], '+201001234567')
+
+
+class ContactPageScriptTests(TestCase):
+    """B0 / R16 regression: intl-phone must be loaded exactly once on the contact page."""
+
+    def test_intl_phone_script_loaded_once(self):
+        response = self.client.get(reverse('contact'))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode('utf-8')
+        self.assertEqual(html.count('intl-phone.'), 1, 'intl-phone script must be included exactly once')
+
+
+class Phase1ServerHardeningTests(TestCase):
+    """Tests for Phase 1 server hardening and honeypot/rate-limit behavior."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        mail.outbox = []
+
+    def test_honeypot_hp_field_x_flagged_save(self):
+        """Honeypot via hp_field_x should save flagged spam, send no email, and return success redirect."""
+        data = {
+            'lead_type': 'contact',
+            'name': 'Spam Bot',
+            'email': 'bot@example.com',
+            'phone': '+201001112233',
+            'hp_field_x': 'https://spam-link.com',
+        }
+        response = self.client.post(reverse('leads:submit'), data, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('leads:thank_you'), response.url)
+
+        lead = Lead.objects.filter(email='bot@example.com').first()
+        self.assertIsNotNone(lead)
+        self.assertTrue(lead.is_suspected_spam)
+        self.assertTrue(lead.is_archived)
+        self.assertTrue(lead.is_read)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_honeypot_legacy_website_flagged_save(self):
+        """Legacy website honeypot field should also flag spam without crashing or dropping."""
+        data = {
+            'lead_type': 'contact',
+            'name': 'Legacy Bot',
+            'email': 'legacy_bot@example.com',
+            'phone': '+201001112244',
+            'website': 'https://legacy-spam.com',
+        }
+        response = self.client.post(reverse('leads:submit'), data, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('leads:thank_you'), response.url)
+
+        lead = Lead.objects.filter(email='legacy_bot@example.com').first()
+        self.assertIsNotNone(lead)
+        self.assertTrue(lead.is_suspected_spam)
+        self.assertTrue(lead.is_archived)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_legitimate_submission_sends_notification(self):
+        """Legitimate submission without honeypot creates clean lead and triggers notifications."""
+        data = {
+            'lead_type': 'contact',
+            'name': 'Student Legit',
+            'email': 'legit.student@example.com',
+            'phone': '+201001112255',
+        }
+        response = self.client.post(reverse('leads:submit'), data, follow=False)
+        self.assertEqual(response.status_code, 302)
+
+        lead = Lead.objects.filter(email='legit.student@example.com').first()
+        self.assertIsNotNone(lead)
+        self.assertFalse(lead.is_suspected_spam)
+        self.assertFalse(lead.is_archived)
+        self.assertGreaterEqual(len(mail.outbox), 1)
+
+    def test_clean_email_allows_latest_and_rejects_exact_test(self):
+        """Verify email validation only rejects test/spam/fake prefix, not words containing them."""
+        from apps.leads.forms import ContactLeadForm
+        f_valid = ContactLeadForm(data={'lead_type': 'contact', 'name': 'A', 'phone': '+201001112266', 'email': 'latest@domain.com'})
+        self.assertTrue(f_valid.is_valid(), f_valid.errors)
+
+        f_invalid = ContactLeadForm(data={'lead_type': 'contact', 'name': 'A', 'phone': '+201001112266', 'email': 'test@domain.com'})
+        self.assertFalse(f_invalid.is_valid())
+        self.assertIn('email', f_invalid.errors)
+
+    def test_cache_control_private_on_csrf_pages(self):
+        """Pages with CSRF tokens must return Cache-Control: private to prevent intermediate caching."""
+        response = self.client.get(reverse('contact'))
+        self.assertEqual(response.status_code, 200)
+        cache_control = response.headers.get('Cache-Control', '')
+        self.assertIn('private', cache_control)
+        self.assertNotIn('public', cache_control)
+
+    def test_ip_rate_limiting_enforcement(self):
+        """Simulate exceeding MAX_POSTS_PER_IP when not in testing mode."""
+        from apps.leads.views import MAX_POSTS_PER_IP, LeadSubmitView
+        from unittest.mock import patch
+        from django.core.cache import cache
+
+        with patch.object(LeadSubmitView, '_is_testing', return_value=False):
+            cache.set('lead_post_count_127.0.0.1', MAX_POSTS_PER_IP, 3600)
+            data = {
+                'lead_type': 'contact',
+                'name': 'Rate Limit Tester',
+                'email': 'ratelimit@example.com',
+                'phone': '+201001112277',
+            }
+            response = self.client.post(reverse('leads:submit'), data, follow=False)
+            self.assertEqual(response.status_code, 200)
+            # Check rate limit message is present in response
+            messages_list = list(response.context['messages']) if response.context and 'messages' in response.context else []
+            self.assertTrue(any('تم تجاوز الحد المسموح به' in str(m) for m in messages_list))
+
+
+class Phase2VisibleFeedbackTests(TestCase):
+    """Tests for Phase 2 visible feedback, contact inline error slots, and modal fallback recovery."""
+
+    def test_contact_page_has_inline_error_slots(self):
+        """Contact page should have dedicated form-error elements next to required fields."""
+        response = self.client.get(reverse('contact'))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode('utf-8')
+        # Check that form-error slots exist in the contact template
+        self.assertGreaterEqual(html.count('class="form-error"'), 3)
+
+    def test_modal_submission_invalid_sets_session_reopen_and_preserves_data(self):
+        """When modal submission is invalid, it redirects back with session reopen flag and preserved data."""
+        data = {
+            'lead_type': 'registration',
+            'source_page': 'http://testserver/universities/test-uni/',
+            'name': 'Student With Incomplete Data',
+            'email': 'incomplete@student.com',
+            'phone_number': '',  # missing required phone
+            'notes': 'Please contact urgently',
+        }
+        response = self.client.post(reverse('leads:submit'), data, follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, 'http://testserver/universities/test-uni/')
+
+        # Check session data
+        session = self.client.session
+        self.assertTrue(session.get('reg_modal_reopen'))
+        reg_data = session.get('reg_modal_data', {})
+        self.assertEqual(reg_data.get('name'), 'Student With Incomplete Data')
+        self.assertEqual(reg_data.get('email'), 'incomplete@student.com')
+        self.assertEqual(reg_data.get('notes'), 'Please contact urgently')
+
+
+class Phase3AjaxLeadFormTests(TestCase):
+    """Tests for Phase 3 unified frontend-backend JSON contract and AJAX form responses."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        mail.outbox = []
+
+    def test_ajax_post_valid_contact_returns_json_200(self):
+        """AJAX POST valid contact lead returns 200 with success: True and redirect_url."""
+        data = {
+            'lead_type': 'contact',
+            'name': 'Ahmed Ali',
+            'email': 'ahmed.ali@example.com',
+            'phone': '+201001234567',
+            'message': 'Inquiry about Computer Science',
+        }
+        response = self.client.post(
+            reverse('leads:submit'),
+            data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        payload = response.json()
+        self.assertTrue(payload.get('success'))
+        self.assertIn(reverse('leads:thank_you'), payload.get('redirect_url', ''))
+
+        lead = Lead.objects.filter(email='ahmed.ali@example.com').first()
+        self.assertIsNotNone(lead)
+        self.assertEqual(lead.name, 'Ahmed Ali')
+        self.assertEqual(lead.lead_type, LeadType.CONTACT)
+
+    def test_ajax_post_invalid_returns_json_400_with_errors(self):
+        """AJAX POST with invalid fields returns 400 with structured field errors."""
+        data = {
+            'lead_type': 'contact',
+            'name': '',
+            'email': 'not-an-email',
+            'phone': '123',
+        }
+        response = self.client.post(
+            reverse('leads:submit'),
+            data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        payload = response.json()
+        self.assertFalse(payload.get('success'))
+        self.assertIn('errors', payload)
+        self.assertIn('name', payload['errors'])
+        self.assertIn('email', payload['errors'])
+
+    def test_ajax_post_honeypot_tripped_returns_json_200(self):
+        """AJAX POST with honeypot filled returns 200 JSON success while silently flagging lead."""
+        data = {
+            'lead_type': 'contact',
+            'name': 'Spam Bot Ajax',
+            'email': 'bot_ajax@example.com',
+            'phone': '+201009988776',
+            'hp_field_x': 'https://bot-link.com',
+        }
+        response = self.client.post(
+            reverse('leads:submit'),
+            data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload.get('success'))
+        self.assertIn(reverse('leads:thank_you'), payload.get('redirect_url', ''))
+
+        lead = Lead.objects.filter(email='bot_ajax@example.com').first()
+        self.assertIsNotNone(lead)
+        self.assertTrue(lead.is_suspected_spam)
+
+    def test_ajax_post_duplicate_rapid_submit_returns_json_200(self):
+        """AJAX POST rapid double submission within 10s returns 200 without creating duplicate."""
+        data = {
+            'lead_type': 'contact',
+            'name': 'Double Clicker',
+            'email': 'double@clicker.com',
+            'phone': '+201001122334',
+        }
+        r1 = self.client.post(
+            reverse('leads:submit'),
+            data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+        self.assertEqual(r1.status_code, 200)
+
+        r2 = self.client.post(
+            reverse('leads:submit'),
+            data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+        self.assertEqual(r2.status_code, 200)
+        self.assertTrue(r2.json().get('success'))
+        self.assertEqual(Lead.objects.filter(email='double@clicker.com').count(), 1)
+
+    def test_ajax_post_rate_limited_returns_json_429(self):
+        """AJAX POST exceeding rate limit returns 429 JSON response."""
+        from django.core.cache import cache
+        from apps.leads.views import MAX_POSTS_PER_IP
+
+        cache.set("lead_post_count_127.0.0.1", MAX_POSTS_PER_IP, 3600)
+
+        data = {
+            'lead_type': 'contact',
+            'name': 'Over Limit',
+            'email': 'over@limit.com',
+            'phone': '+201001119999',
+        }
+        with mock.patch('apps.leads.views.LeadSubmitView._is_testing', return_value=False):
+            response = self.client.post(
+                reverse('leads:submit'),
+                data,
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+                HTTP_ACCEPT='application/json',
+            )
+            self.assertEqual(response.status_code, 429)
+            payload = response.json()
+            self.assertFalse(payload.get('success'))
+            self.assertTrue(payload.get('rate_limit'))
+            self.assertIn('تم تجاوز الحد المسموح به', payload.get('message', ''))
+
+
+@pytest.mark.django_db
+class Phase4TemplateUnificationTests(TestCase):
+    """
+    Test suite for Phase 4 template unification:
+    - Verifies all public lead forms have data-lead-form="true".
+    - Verifies new honeypot field hp_field_x is present in all public lead forms.
+    - Verifies obsolete website honeypot is replaced in visa_tracking.html.
+    - Verifies phone field IDs are unique across sidebar and registration modal forms.
+    """
+
+    def test_contact_page_has_unified_form_attributes(self):
+        """Contact page form must have data-lead-form="true" and hp_field_x."""
+        response = self.client.get(reverse('contact'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn('data-lead-form="true"', content)
+        self.assertIn('name="hp_field_x"', content)
+        self.assertIn('class="form-error"', content)
+
+    def test_submit_page_has_unified_form_attributes(self):
+        """Dedicated submit page form must have data-lead-form="true" and hp_field_x."""
+        response = self.client.get(reverse('leads:submit'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn('data-lead-form="true"', content)
+        self.assertIn('name="hp_field_x"', content)
+        self.assertIn('class="form-error', content)
+
+    def test_visa_tracking_page_has_hp_field_x(self):
+        """Visa tracking page form must use hp_field_x honeypot and have form error slots."""
+        response = self.client.get(reverse('visa_tracking'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn('name="hp_field_x"', content)
+        self.assertNotIn('name="website"', content)
+        self.assertIn('class="form-error', content)
+
+    def test_university_detail_sidebar_and_modal_id_separation(self):
+        """University detail page rendering sidebar and modal must have separate element IDs."""
+        from apps.universities.models import University
+        from apps.core.models import PublishStatus
+        uni = University.objects.create(
+            name='Test University for Template Unification',
+            slug='test-uni-phase-4',
+            logo='test.png',
+            main_image='test.png',
+            description='وصف الجامعة التجريبية',
+            location='كوالالمبور',
+            admission_requirements='شروط القبول',
+            publish_status=PublishStatus.PUBLISHED,
+        )
+        response = self.client.get(uni.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        # Sidebar form has data-lead-form and unique IDs
+        self.assertIn('data-lead-form="true"', content)
+        self.assertIn('id="sidebarIntlPhoneSelect"', content)
+        self.assertIn('id="sidebar_phone"', content)
+        # Modal form has regWizardForm and unique reg_phone ID
+        self.assertIn('id="regWizardForm"', content)
+        self.assertIn('id="reg_phone"', content)
+        self.assertIn('name="hp_field_x"', content)
+
+
+class Phase5ObservabilityTests(TestCase):
+    """
+    Automated test suite for Phase 5: Observability & Rejection Aggregation (R10).
+    Verifies:
+    1. Validation errors generate LeadRejectionLog entries with 'validation:<field>'.
+    2. Honeypot traps generate LeadRejectionLog entries with 'honeypot'.
+    3. Rate limit violations generate LeadRejectionLog entries with 'rate_limit_ip'.
+    4. CSRF failures generate LeadRejectionLog entries with 'csrf'.
+    5. Dashboard aggregation correctly surfaces rejection statistics and breakdown.
+    """
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.url = reverse('leads:submit')
+
+    def test_validation_error_creates_rejection_log(self):
+        """Invalid form submission should record a LeadRejectionLog with validation reason."""
+        from apps.leads.models import LeadRejectionLog
+        initial_count = LeadRejectionLog.objects.count()
+
+        # Submit with invalid email
+        payload = {
+            'lead_type': 'contact',
+            'name': 'اختبار فشل تحقق',
+            'email': 'not-an-email',
+            'phone': '+60123456789',
+            'message': 'رسالة تجريبية',
+            'hp_field_x': '',
+        }
+        response = self.client.post(self.url, data=payload, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(LeadRejectionLog.objects.count(), initial_count + 1)
+        log = LeadRejectionLog.objects.latest('created_at')
+        self.assertTrue(log.reason.startswith('validation:'))
+        self.assertEqual(log.lead_type, 'contact')
+        self.assertIn('email', log.details.get('errors', {}))
+
+    def test_honeypot_trip_creates_rejection_log(self):
+        """Honeypot filled submission should record a LeadRejectionLog with 'honeypot' reason."""
+        from apps.leads.models import LeadRejectionLog
+        initial_count = LeadRejectionLog.objects.count()
+
+        payload = {
+            'lead_type': 'contact',
+            'name': 'سبام بوت',
+            'email': 'bot@spammer.org',
+            'phone': '+60123456789',
+            'message': 'رسالة سبام',
+            'hp_field_x': 'I am a spam bot',
+        }
+        response = self.client.post(self.url, data=payload, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)  # Deceptive success to fool bot
+
+        self.assertEqual(LeadRejectionLog.objects.count(), initial_count + 1)
+        log = LeadRejectionLog.objects.latest('created_at')
+        self.assertEqual(log.reason, 'honeypot')
+        self.assertEqual(log.lead_type, 'contact')
+
+    def test_rate_limit_creates_rejection_log(self):
+        """Exceeding rate limit should record a LeadRejectionLog with 'rate_limit_ip'."""
+        from apps.leads.models import LeadRejectionLog
+        from django.core.cache import cache
+        from django.test import override_settings
+
+        # Fill up IP rate limit cache directly
+        ip_cache_key = 'lead_post_count_127.0.0.1'
+        cache.set(ip_cache_key, 65, 3600)  # MAX_POSTS_PER_IP is 60
+
+        payload = {
+            'lead_type': 'contact',
+            'name': 'عميل محظور معدل',
+            'email': 'ratelimit@example.com',
+            'phone': '+60123456789',
+            'message': 'رسالة تجاوز معدل',
+            'hp_field_x': '',
+        }
+        with override_settings(ENFORCE_RATE_LIMIT_IN_TESTS=True):
+            response = self.client.post(self.url, data=payload, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+            self.assertEqual(response.status_code, 429)
+
+        log = LeadRejectionLog.objects.latest('created_at')
+        self.assertEqual(log.reason, 'rate_limit_ip')
+
+    def test_csrf_failure_creates_rejection_log(self):
+        """CSRF failure view should persist a LeadRejectionLog record with 'csrf'."""
+        from apps.leads.models import LeadRejectionLog
+        from apps.core.views import csrf_failure
+        from django.test import RequestFactory
+
+        rf = RequestFactory()
+        request = rf.post('/leads/submit/', data={'test': '1'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        response = csrf_failure(request, reason='CSRF token missing or incorrect')
+        self.assertEqual(response.status_code, 403)
+
+        log = LeadRejectionLog.objects.latest('created_at')
+        self.assertEqual(log.reason, 'csrf')
+        self.assertEqual(log.source_kind, 'csrf_failure')
+
+    def test_dashboard_home_displays_lead_health_stats(self):
+        """Dashboard home view should include lead_health in context and render in template."""
+        from django.contrib.auth.models import User
+        from apps.leads.models import LeadRejectionLog
+
+        # Create sample rejections
+        LeadRejectionLog.objects.create(
+            reason='honeypot',
+            lead_type='contact',
+            source_kind='contact_form',
+            ip_address='10.0.0.1',
+        )
+        LeadRejectionLog.objects.create(
+            reason='validation:phone',
+            lead_type='registration',
+            source_kind='sidebar_quick',
+            ip_address='10.0.0.2',
+        )
+
+        admin_user = User.objects.create_superuser('admin_obs', 'admin@example.com', 'password123')
+        self.client.login(username='admin_obs', password='password123')
+
+        response = self.client.get(reverse('dashboard:home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('lead_health', response.context)
+        self.assertGreaterEqual(response.context['lead_health']['rejections_total'], 2)
+        content = response.content.decode('utf-8')
+        self.assertIn('صحة نماذج التواصل', content)
+        self.assertIn('فخ السبام (Honeypot):', content)
+
+
+class Phase6VerificationTests(TestCase):
+    """
+    Automated verification matrix for Phase 6: Comprehensive Verification & Regression Prevention.
+    Verifies:
+    1. R16 Regression: intl-phone script is included exactly ONCE on public pages rendering phone fields.
+    2. R0 Resubmission: A blocked submission due to invalid data, once fixed, succeeds cleanly without permanent lock.
+    3. Phone normalization: Arabic/Persian digits and double country prefixes (+966+20) collapse properly on submission.
+    4. Honeypot autofill guard: Hidden hp_field_x with autocomplete='new-password' safely catches bots without blocking humans.
+    5. CSRF Cold Cookie / Expiration: Session expiration triggers retry or graceful redirect with user feedback.
+    6. Modal Data Preservation (R1/R12): Server-side rejected non-AJAX submissions save state and signal modal auto-reopen.
+    """
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.submit_url = reverse('leads:submit')
+
+    def test_r16_intl_phone_loaded_exactly_once(self):
+        """Verify intl-phone.js / intl-phone.min.js is included exactly ONCE on pages with phone fields."""
+        urls_to_check = [
+            reverse('contact'),
+            reverse('leads:submit'),
+            reverse('visa_tracking'),
+        ]
+        import re
+        for url in urls_to_check:
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            content = response.content.decode('utf-8')
+            # Count occurrences of script tags loading intl-phone
+            script_matches = re.findall(r'<script[^>]+src=["\'][^"\']*intl-phone[^"\']*["\']', content)
+            count = len(script_matches)
+            self.assertEqual(
+                count, 1,
+                f"Page {url} includes intl-phone script {count} times instead of exactly 1! (R16 regression)"
+            )
+
+    def test_r0_blocked_then_fixed_resubmission_succeeds(self):
+        """A user failing validation can fix the error and submit again successfully without page reload."""
+        from apps.leads.models import Lead
+
+        # Attempt 1: Invalid email (validation fails with 400)
+        invalid_payload = {
+            'lead_type': 'contact',
+            'name': 'طالب مجتهد',
+            'email': 'invalid-email-syntax',
+            'phone': '+601122334455',
+            'message': 'استفسار عن المنحة',
+            'hp_field_x': '',
+        }
+        res1 = self.client.post(self.submit_url, data=invalid_payload, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(res1.status_code, 400)
+        self.assertFalse(res1.json()['success'])
+
+        # Attempt 2: Fixed email on same session / client (must succeed with 200)
+        fixed_payload = {
+            'lead_type': 'contact',
+            'name': 'طالب مجتهد',
+            'email': 'student@example.com',
+            'phone': '+601122334455',
+            'message': 'استفسار عن المنحة بعد التصحيح',
+            'hp_field_x': '',
+        }
+        res2 = self.client.post(self.submit_url, data=fixed_payload, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(res2.status_code, 200)
+        self.assertTrue(res2.json()['success'])
+        self.assertTrue(Lead.objects.filter(email='student@example.com').exists())
+
+    def test_arabic_digits_and_double_code_normalization(self):
+        """Arabic digits and accidental double country codes are cleanly normalized on submission."""
+        from apps.leads.models import Lead
+
+        payload = {
+            'lead_type': 'contact',
+            'name': 'أحمد السعيد',
+            'email': 'ahmed_norm@example.com',
+            # Arabic numerals ٠١٢٣٤٥٦٧٨٩ + double code simulation
+            'phone': '+966+20١٠١٢٣٤٥٦٧٨',
+            'message': 'تجربة الأرقام العربية',
+            'hp_field_x': '',
+        }
+        res = self.client.post(self.submit_url, data=payload, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(res.status_code, 200)
+        lead = Lead.objects.get(email='ahmed_norm@example.com')
+        # +966+20... collapses to +20... and Arabic numerals to Western digits
+        self.assertEqual(lead.phone, '+201012345678')
+
+    def test_honeypot_deceptive_success_and_spam_flag(self):
+        """Honeypot filled submission flags lead as suspected spam without alerting the bot."""
+        from apps.leads.models import Lead
+
+        payload = {
+            'lead_type': 'contact',
+            'name': 'سبام آلي',
+            'email': 'spambot99@automated.ru',
+            'phone': '+60123456789',
+            'message': 'احصل على قروض فورية',
+            'hp_field_x': 'bot autofilled text',
+        }
+        res = self.client.post(self.submit_url, data=payload, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.json()['success'])
+
+        lead = Lead.objects.get(email='spambot99@automated.ru')
+        self.assertTrue(lead.is_suspected_spam)
+        self.assertTrue(lead.is_archived)
+
+    def test_modal_fallback_preserves_session_data_and_sets_reopen_flag(self):
+        """Non-AJAX failed submission from university page stores data in session and flags modal reopen."""
+        from apps.universities.models import University
+        from apps.core.models import PublishStatus
+
+        uni = University.objects.create(
+            name='جامعة اختبار الحفظ',
+            slug='uni-preservation-test',
+            logo='logo.png',
+            main_image='main.png',
+            description='وصف',
+            location='سيلانجور',
+            admission_requirements='شروط',
+            publish_status=PublishStatus.PUBLISHED,
+        )
+
+        invalid_post = {
+            'lead_type': 'registration',
+            'name': 'محمد عبد الله',
+            'email': 'not-an-email',
+            'phone_number': '0123456789',
+            'nationality': 'سعودي',
+            'source_page': uni.get_absolute_url(),
+            'hp_field_x': '',
+        }
+        res = self.client.post(self.submit_url, data=invalid_post)
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(res.url, uni.get_absolute_url())
+
+        # Check session has saved modal data and reopen flag
+        session = self.client.session
+        self.assertTrue(session.get('reg_modal_reopen'))
+        self.assertEqual(session.get('reg_modal_data', {}).get('name'), 'محمد عبد الله')
+
+
+
+
+
+
 
 
 

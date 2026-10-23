@@ -1,0 +1,20 @@
+{% comment %}
+Global Django messages for public pages (B3 / R1).
+Without this block, messages added by form_invalid, rate limiting and csrf_failure
+were never shown to visitors. Success messages are skipped because the thank-you
+page already confirms the submission; iterating still marks them as consumed.
+Pages that render their own messages override {% block site_messages %}.
+{% endcomment %}
+{% if messages %}
+<div class="container site-messages" role="region" aria-label="رسائل النظام" style="padding-top: 1rem;">
+    <div class="messages-container">
+        {% for message in messages %}
+            {% if 'success' not in message.tags %}
+            <div class="alert alert--{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}" role="alert">
+                {{ message }}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

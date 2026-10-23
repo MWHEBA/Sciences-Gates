@@ -151,11 +151,54 @@ class NormalizedStudyLevelField(forms.ChoiceField):
         return super().to_python(value)
 
 
+# Arabic-Indic (U+0660-0669) and Persian (U+06F0-06F9) digits -> ASCII digits
+_DIGIT_TRANSLATION = str.maketrans(
+    '\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669'
+    '\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9',
+    '01234567890123456789',
+)
+_PHONE_VALID_RE = re.compile(r'^\+?[0-9]{7,20}$')
+
+
+def normalize_phone(raw):
+    """
+    Normalize a phone string so common client-side artifacts do not cause a
+    rejection: non-ASCII digits, separators, and a duplicated international
+    prefix such as '+966+20100...' (selector code + a full number typed in the
+    input). When several '+' are present the last segment is the number the
+    visitor actually typed, so it wins.
+    """
+    if not raw:
+        return raw
+    value = str(raw).translate(_DIGIT_TRANSLATION)
+    value = re.sub(r'[\s\-\(\)\.\u200e\u200f\u202a-\u202e]+', '', value)
+    if value.count('+') > 1:
+        value = '+' + value.rsplit('+', 1)[1]
+    elif '+' in value and not value.startswith('+'):
+        value = '+' + value.replace('+', '')
+    return value
+
+
 class LeadBaseForm(forms.ModelForm):
     """
     Base form containing honeypot spam protection and general validation logic.
     """
-    # Honeypot field - hidden from users, bots will fill it
+    # Honeypot fields - hidden from users, bots will fill them.
+    # 'hp_field_x' is the current name (not an autofill target for browsers);
+    # 'website' is the legacy name still posted by pages cached before the rename.
+    # A tripped honeypot does NOT invalidate the form: the view stores the lead
+    # flagged as suspected spam so a real visitor falsely tripped is never lost.
+    honeypot_tripped = False
+
+    hp_field_x = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'tabindex': '-1',
+            'autocomplete': 'new-password',
+            'aria-hidden': 'true',
+        }),
+        label='',
+    )
     website = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
@@ -249,27 +292,30 @@ class LeadBaseForm(forms.ModelForm):
 
     def clean_website(self):
         """
-        Honeypot validation: reject if honeypot field is filled.
+        Legacy honeypot: flag the submission instead of raising a validation error.
         """
-        website = self.cleaned_data.get('website')
-        if website:
-            raise ValidationError('Invalid submission')
-        return website
+        if self.cleaned_data.get('website'):
+            self.honeypot_tripped = True
+        return ''
+
+    def clean_hp_field_x(self):
+        """
+        Honeypot: flag the submission instead of raising a validation error.
+        """
+        if self.cleaned_data.get('hp_field_x'):
+            self.honeypot_tripped = True
+        return ''
 
     def clean_email(self):
         """
-        Validate email format and spam patterns.
+        Validate email format and obvious throwaway addresses.
+        Only an exact throwaway local part is rejected (e.g. test@x.com), not any
+        address that merely contains it (e.g. latest@x.com).
         """
         email = self.cleaned_data.get('email')
         if email:
-            spam_patterns = [
-                r'test@',
-                r'spam@',
-                r'fake@',
-            ]
-            for pattern in spam_patterns:
-                if re.search(pattern, email, re.IGNORECASE):
-                    raise ValidationError('البريد الإلكتروني غير صحيح')
+            if re.match(r'^(test|spam|fake)@', email.strip(), re.IGNORECASE):
+                raise ValidationError('البريد الإلكتروني غير صحيح')
         return email
 
     def clean_phone(self):
@@ -278,12 +324,17 @@ class LeadBaseForm(forms.ModelForm):
         """
         phone = self.cleaned_data.get('phone')
         if phone:
-            cleaned_phone = re.sub(r'[\s\-\(\)\.]+', '', phone)
-            if not re.match(r'^\+?\d{7,20}$', cleaned_phone):
+            old_cleaned = re.sub(r'[\s\-\(\)\.]+', '', phone)
+            if phone.isascii() and _PHONE_VALID_RE.match(old_cleaned):
+                # Already valid ASCII number: keep the stored value unchanged.
+                return phone
+            normalized = normalize_phone(phone)
+            if not _PHONE_VALID_RE.match(normalized):
                 raise ValidationError('رقم الهاتف غير صحيح. يجب أن يحتوي على 7-20 رقم على الأقل')
-            digits_only = re.sub(r'\D', '', phone)
+            digits_only = re.sub(r'\D', '', normalized)
             if len(digits_only) < 7:
                 raise ValidationError('رقم الهاتف قصير جداً')
+            return normalized
         return phone
 
     def clean_message(self):
@@ -313,8 +364,7 @@ class LeadBaseForm(forms.ModelForm):
         Overall form validation.
         """
         cleaned_data = super().clean()
-        if cleaned_data.get('website'):
-            raise ValidationError('Invalid submission')
+        # Honeypot handling lives in clean_website / clean_hp_field_x (flag, never reject).
 
         # If agree_to_privacy was omitted in POST data, default to True (implied consent by submission)
         if 'agree_to_privacy' not in self.data:

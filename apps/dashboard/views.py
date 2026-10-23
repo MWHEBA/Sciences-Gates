@@ -30,7 +30,7 @@ from django.contrib.auth.views import (
     PasswordResetConfirmView,
     PasswordResetCompleteView
 )
-from apps.leads.models import Lead, LeadType
+from apps.leads.models import Lead, LeadType, LeadRejectionLog
 from apps.redirects.models import Redirect
 from apps.universities.models import University, Faculty, Program
 from apps.institutes.models import Institute, Course
@@ -280,6 +280,41 @@ class DashboardHomeView(DashboardMixin, View):
         # Store absolute trend for template display
         trend_abs = abs(trend)
         
+        # Calculate lead health / rejection statistics (Phase 5 Observability)
+        today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
+        seven_days_ago = today - timedelta(days=7)
+
+        rejection_stats = LeadRejectionLog.objects.aggregate(
+            total=Count('id'),
+            today=Count('id', filter=Q(created_at__gte=today_start)),
+            last_7_days=Count('id', filter=Q(created_at__gte=seven_days_ago)),
+            honeypot=Count('id', filter=Q(reason='honeypot')),
+            rate_limit=Count('id', filter=Q(reason__startswith='rate_limit')),
+            validation=Count('id', filter=Q(reason__startswith='validation')),
+            csrf=Count('id', filter=Q(reason='csrf')),
+        )
+
+        leads_last_7_days = Lead.objects.filter(created_at__gte=seven_days_ago).count()
+        total_attempts_7_days = leads_last_7_days + rejection_stats['last_7_days']
+        rejection_rate_7_days = 0
+        if total_attempts_7_days > 0:
+            rejection_rate_7_days = round((rejection_stats['last_7_days'] / total_attempts_7_days) * 100, 1)
+
+        lead_health = {
+            'rejections_today': rejection_stats['today'],
+            'rejections_7_days': rejection_stats['last_7_days'],
+            'rejections_total': rejection_stats['total'],
+            'leads_7_days': leads_last_7_days,
+            'rejection_rate_7_days': rejection_rate_7_days,
+            'breakdown': {
+                'honeypot': rejection_stats['honeypot'],
+                'rate_limit': rejection_stats['rate_limit'],
+                'validation': rejection_stats['validation'],
+                'csrf': rejection_stats['csrf'],
+            },
+            'status': 'normal' if rejection_rate_7_days < 35 else 'warning',
+        }
+
         # Recent 10 leads (ordered by creation date, newest first) - optimized
         recent_leads = Lead.objects.all().order_by('-created_at')[:10]
         
@@ -372,6 +407,7 @@ class DashboardHomeView(DashboardMixin, View):
             'recent_leads': recent_leads,
             'trend': trend,
             'trend_abs': trend_abs,
+            'lead_health': lead_health,
             # For backward compatibility
             'total_leads': lead_stats['total'],
             'registration_leads': lead_stats['registration'],

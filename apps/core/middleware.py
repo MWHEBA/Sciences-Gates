@@ -224,7 +224,16 @@ class SecurityHeadersMiddleware:
             response['Expires'] = '0'
         elif 'text/html' in response.get('Content-Type', '') and 'Cache-Control' not in response:
             # Prevent browsers and proxies from caching stale HTML referencing superseded static hashes
-            response['Cache-Control'] = 'public, max-age=0, must-revalidate'
+            carries_csrf_token = (
+                not getattr(response, 'streaming', False)
+                and getattr(response, 'is_rendered', True)
+                and b'csrfmiddlewaretoken' in (getattr(response, 'content', b'') or b'')
+            )
+            if carries_csrf_token:
+                # Pages with a CSRF token are per-visitor: shared caches (Cloudflare) must not store them
+                response['Cache-Control'] = 'private, max-age=0, must-revalidate'
+            else:
+                response['Cache-Control'] = 'public, max-age=0, must-revalidate'
 
         return response
 

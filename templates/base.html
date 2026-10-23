@@ -95,6 +95,7 @@
     
     <!-- Main Content -->
     <main id="main-content" role="main">
+        {% block site_messages %}{% include 'components/site_messages.html' %}{% endblock %}
         {% block content %}{% endblock %}
     </main>
     
@@ -132,12 +133,14 @@
         <script defer src="{% static 'js/main.js' %}"></script>
         <script defer src="{% static 'js/lazy-loading.js' %}"></script>
         <script defer src="{% static 'js/intl-phone.js' %}"></script>
+        <script defer src="{% static 'js/lead-forms.js' %}"></script>
     {% else %}
         <!-- Production: Use minified files for performance -->
         <script defer src="{% static 'public/js/public.js' %}"></script>
         <script defer src="{% static 'js/main.min.js' %}"></script>
         <script defer src="{% static 'js/lazy-loading.min.js' %}"></script>
         <script defer src="{% static 'js/intl-phone.min.js' %}"></script>
+        <script defer src="{% static 'js/lead-forms.min.js' %}"></script>
     {% endif %}
     {% block extra_js %}{% endblock %}
 

@@ -428,6 +428,24 @@ function syncAllFormsCsrf() {
         });
     }
 }
+window.syncAllFormsCsrf = syncAllFormsCsrf;
+
+function unlockForm(form) {
+    if (!form) return;
+    form.removeAttribute('data-submitting');
+    form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(btn => {
+        btn.disabled = false;
+        btn.style.pointerEvents = '';
+        btn.style.opacity = '';
+        btn.style.cursor = '';
+        btn.classList.remove('is-loading');
+        const originalText = btn.getAttribute('data-original-text');
+        if (originalText) {
+            btn.innerHTML = originalText;
+        }
+    });
+}
+window.unlockForm = unlockForm;
 
 function unlockAllSubmitButtons() {
     document.querySelectorAll('form').forEach(f => {
@@ -445,6 +463,7 @@ function unlockAllSubmitButtons() {
         }
     });
 }
+window.unlockAllSubmitButtons = unlockAllSubmitButtons;
 
 function initializeCsrfAndFormSync() {
     // Sync CSRF on form submit
@@ -503,11 +522,12 @@ function initializeFormDraftAutoSave() {
             });
         });
 
-        // Clear draft on successful submission
-        form.addEventListener('submit', function() {
+        // Clear draft on successful submission (keep it when a validator blocked the submit)
+        form.addEventListener('submit', function(e) {
+            if (e.defaultPrevented) return;
             try {
                 localStorage.removeItem(formKey);
-            } catch (e) {}
+            } catch (err) {}
         });
     });
 }
@@ -521,6 +541,10 @@ function initializeFormSubmitLock() {
     document.addEventListener('submit', function(e) {
         const form = e.target;
         if (!form || form.tagName.toLowerCase() !== 'form') return;
+
+        // A validator already blocked this submit: never lock the form or the button,
+        // otherwise the visitor cannot fix the field and try again.
+        if (e.defaultPrevented) return;
 
         // Ignore GET search/filter forms from locking
         if (form.method && form.method.toUpperCase() === 'GET') return;
@@ -542,6 +566,17 @@ function initializeFormSubmitLock() {
             btn.style.opacity = '0.7';
             btn.style.cursor = 'wait';
         });
+
+        // Watchdog (public lead forms only; dashboard saves can legitimately take long):
+        // if the page is still here after 15s (offline, cancelled navigation), release the
+        // form so the visitor can retry instead of facing a dead button.
+        if ((form.getAttribute('action') || '').indexOf('leads/submit') !== -1) {
+            setTimeout(function() {
+                if (document.body.contains(form) && form.dataset.submitting === 'true') {
+                    unlockForm(form);
+                }
+            }, 15000);
+        }
     }, false);
 }
 

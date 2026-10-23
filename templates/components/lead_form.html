@@ -1,13 +1,14 @@
 {% load static %}
-<form method="POST" action="{% url 'leads:submit' %}" data-validate="true" class="space-y-6">
+<form method="POST" action="{% url 'leads:submit' %}" data-lead-form="true" data-validate="true" class="space-y-6">
     {% csrf_token %}
     
     <!-- Source Page -->
     <input type="hidden" name="source_page" value="{{ source_page|default:request.build_absolute_uri }}">
 
     <!-- Honeypot Field (Hidden) -->
-    <input type="text" name="website" tabindex="-1" autocomplete="off" style="display: none;">
-    {{ form.website }}
+    <div style="display: none;" aria-hidden="true">
+        <input type="text" name="hp_field_x" tabindex="-1" autocomplete="new-password">
+    </div>
     
     <!-- Hidden lead_type - default to contact -->
     <input type="hidden" name="lead_type" value="contact">
@@ -36,6 +37,7 @@
             الاسم الكامل <span class="inl-s-973ad1998f">*</span>
         </label>
         {{ form.name }}
+        <p class="form-error" role="alert" style="display: none;"></p>
         {% if form.name.errors %}
             <div class="text-xs font-medium inl-s-973ad1998f">{{ form.name.errors.0 }}</div>
         {% endif %}
@@ -48,15 +50,15 @@
         </label>
         <div class="intl-phone-wrapper">
             <!-- Custom Country Code Dropdown -->
-            <div class="intl-phone-select" id="intlPhoneSelect">
-                <button type="button" class="intl-phone-selected" id="intlPhoneBtn" aria-haspopup="listbox" aria-expanded="false">
-                    <img src="https://flagcdn.com/w20/{{ default_country }}.png" alt="" class="intl-phone-flag" id="intlPhoneFlag">
-                    <span id="intlPhoneCode">{{ default_code }}</span>
+            <div class="intl-phone-select" id="sidebarIntlPhoneSelect">
+                <button type="button" class="intl-phone-selected" id="sidebarIntlPhoneBtn" aria-haspopup="listbox" aria-expanded="false">
+                    <img src="https://flagcdn.com/w20/{{ default_country }}.png" alt="" class="intl-phone-flag" id="sidebarIntlPhoneFlag">
+                    <span id="sidebarIntlPhoneCode">{{ default_code }}</span>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="intl-phone-arrow"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
-                <ul class="intl-phone-dropdown" id="intlPhoneDropdown" role="listbox">
+                <ul class="intl-phone-dropdown" id="sidebarIntlPhoneDropdown" role="listbox">
                     <li class="intl-phone-search-wrap">
-                        <input type="text" class="intl-phone-search" id="intlPhoneSearch" placeholder="ابحث عن دولة..." autocomplete="off">
+                        <input type="text" class="intl-phone-search" id="sidebarIntlPhoneSearch" placeholder="ابحث عن دولة..." autocomplete="off">
                     </li>
                     {% for iso, name, code, placeholder in phone_countries %}
                     <li role="option" data-code="{{ code }}" data-flag="{{ iso }}" data-placeholder="{{ placeholder }}">
@@ -65,11 +67,12 @@
                     {% endfor %}
                 </ul>
             </div>
-            <input type="tel" name="phone_number" id="id_phone" class="intl-phone-input" placeholder="{{ default_placeholder }}" dir="ltr" required>
+            <input type="tel" name="phone_number" id="sidebar_phone" class="intl-phone-input" placeholder="{{ default_placeholder }}" dir="ltr" required>
         </div>
+        <p class="form-error" role="alert" style="display: none;"></p>
         <!-- Hidden fields -->
-        <input type="hidden" name="country_code" id="id_country_code" value="{{ default_code }}">
-        <input type="hidden" name="phone" id="id_phone_combined" value="{{ form.phone.value|default:'' }}">
+        <input type="hidden" name="country_code" id="sidebar_country_code" value="{{ default_code }}">
+        <input type="hidden" name="phone" id="sidebar_phone_combined" value="{{ form.phone.value|default:'' }}">
         <input type="hidden" name="utm_source" value="{{ request.GET.utm_source|default:'' }}">
         <input type="hidden" name="utm_medium" value="{{ request.GET.utm_medium|default:'' }}">
         <input type="hidden" name="utm_campaign" value="{{ request.GET.utm_campaign|default:'' }}">
@@ -86,6 +89,7 @@
             البريد الإلكتروني
         </label>
         {{ form.email }}
+        <p class="form-error" role="alert" style="display: none;"></p>
         {% if form.email.errors %}
             <div class="text-xs font-medium inl-s-973ad1998f">{{ form.email.errors.0 }}</div>
         {% endif %}
@@ -97,6 +101,7 @@
             رسالتك أو استفسارك <span class="text-xs inl-s-7abb3a4e64">(اختياري)</span>
         </label>
         {{ form.message }}
+        <p class="form-error" role="alert" style="display: none;"></p>
         {% if form.message.errors %}
             <div class="text-xs font-medium inl-s-973ad1998f">{{ form.message.errors.0 }}</div>
         {% endif %}

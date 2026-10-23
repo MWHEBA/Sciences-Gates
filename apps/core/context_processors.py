@@ -94,11 +94,20 @@ def phone_countries_context(request):
 
     default_country, default_code, default_placeholder = get_country_info(detected_iso)
     
+    # R1 / Phase 2: Pop modal reopen state if previous submission failed validation
+    reg_modal_reopen = False
+    reg_modal_data = {}
+    if hasattr(request, 'session'):
+        reg_modal_reopen = request.session.pop('reg_modal_reopen', False)
+        reg_modal_data = request.session.pop('reg_modal_data', {})
+
     return {
         'phone_countries': ALL_COUNTRIES,
         'default_country': default_country,
         'default_code': default_code,
         'default_placeholder': default_placeholder,
+        'reg_modal_reopen': reg_modal_reopen,
+        'reg_modal_data': reg_modal_data,
     }
 
 
