@@ -157,7 +157,7 @@
                 </div>
                 
                 <h1 class="major-detail-header-title">
-                    دراسة تخصص {{ major.name }}
+                    دراسة {{ major.name }}{% if "ماليزيا" not in major.name %} في ماليزيا{% endif %}
                 </h1>
                 
                 <div class="major-detail-header-breadcrumbs">
