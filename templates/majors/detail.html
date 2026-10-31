@@ -644,16 +644,13 @@
                     </div>
                     
                     {% if major.career_opportunities %}
-                    <div class="detail-section-highlight">
+                    <div class="detail-section-content">
                         {{ major.career_opportunities|safe }}
                     </div>
                     {% endif %}
                     
                     {% if salary_tables %}
-                    <div class="salary-table-container" style="margin-top: 24px;">
-                        <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; border-right: 3px solid var(--secondary); padding-right: 8px; line-height: 1.5;">
-                            فرص العمل ومتوسط الرواتب
-                        </h3>
+                    <div class="salary-table-container"{% if major.career_opportunities %} style="margin-top: 24px;"{% endif %}>
                         <div class="detail-table-wrapper">
                             <table class="detail-table">
                                 <thead>

@@ -164,8 +164,8 @@ class Major(TimestampedModel, PublishableModel, SEOMixin):
     )
     career_opportunities = models.TextField(
         blank=True,
-        verbose_name='فرص العمل',
-        help_text='فرص العمل المتاحة بعد التخرج'
+        verbose_name='الفقرة التمهيدية',
+        help_text='الفقرة التمهيدية لفرص ومجالات العمل المتاحة بعد التخرج'
     )
     competitor_url = models.URLField(
         blank=True,

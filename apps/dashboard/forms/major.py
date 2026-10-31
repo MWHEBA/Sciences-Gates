@@ -120,7 +120,7 @@ class MajorForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
             }),
             'career_opportunities': CustomHTMLEditorWidget(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'فرص العمل المتاحة بعد التخرج',
+                'placeholder': 'الفقرة التمهيدية لفرص ومجالات العمل',
                 'rows': 6,
                 'dir': 'rtl',
             }),
@@ -240,7 +240,7 @@ class MajorForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
             'phd_duration': 'مدة الدكتوراه',
             'study_language': 'لغة الدراسة',
             'practical_training': 'التدريب العملي',
-            'career_opportunities': 'فرص العمل',
+            'career_opportunities': 'الفقرة التمهيدية',
             'competitor_url': 'رابط التخصص عند المنافس',
             
             # Rich Text Sections
@@ -283,7 +283,7 @@ class MajorForm(SEOSynonymsSanitizerMixin, forms.ModelForm):
             'phd_duration': 'مدة الدكتوراه (مثال: 3-4 سنوات)',
             'study_language': 'لغة الدراسة (مثال: الإنجليزية)',
             'practical_training': 'معلومات التدريب العملي (مثال: متاح في السنة الأخيرة)',
-            'career_opportunities': 'فرص العمل المتاحة بعد التخرج',
+            'career_opportunities': 'الفقرة التمهيدية لفرص ومجالات العمل',
             'competitor_url': 'رابط صفحة التخصص على موقع المنافس المستخدمة في دمج المحتوى',
             
             # Rich Text Sections
