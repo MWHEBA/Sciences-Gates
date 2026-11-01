@@ -9,6 +9,7 @@ from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.middleware.csrf import get_token
 from apps.seo.mixins import BreadcrumbMixin
 from apps.seo.breadcrumbs import BreadcrumbTrail
@@ -57,6 +58,7 @@ def _error_summary(form):
 
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class LeadSubmitView(BreadcrumbMixin, FormView):
     """
     Handle lead form submissions from public site.

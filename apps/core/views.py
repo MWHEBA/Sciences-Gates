@@ -2,6 +2,8 @@
 Core views for the Science Gates platform.
 """
 from django.views.generic import TemplateView, View, FormView
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
 from django.http import Http404
 from django.db.models import Q
@@ -204,6 +206,7 @@ class FAQView(BreadcrumbMixin, TemplateView):
         return context
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class VisaTrackingView(FormView):
     """
     متابعة حالة الفيزا الدراسية (EMGS) وتقديم طلبات الدعم

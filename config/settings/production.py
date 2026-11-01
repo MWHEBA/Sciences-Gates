@@ -250,11 +250,19 @@ CSRF_COOKIE_HTTPONLY = False  # Allows JS to sync CSRF token cookie across multi
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_AGE = 31449600  # 1 year
 
-CSRF_TRUSTED_ORIGINS = config(
+CSRF_TRUSTED_ORIGINS = list(config(
     'CSRF_TRUSTED_ORIGINS',
     default='https://sciencesgates.com,https://www.sciencesgates.com,http://sciencesgates.com,http://www.sciencesgates.com',
     cast=Csv()
-)
+))
+for _origin in [
+    'https://sciencesgates.com',
+    'https://www.sciencesgates.com',
+    'http://sciencesgates.com',
+    'http://www.sciencesgates.com',
+]:
+    if _origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_origin)
 
 
 # SECURE_CONTENT_TYPE_NOSNIFF
