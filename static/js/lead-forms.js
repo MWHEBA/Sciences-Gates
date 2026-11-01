@@ -301,7 +301,6 @@
             method: 'POST',
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
                 'X-CSRFToken': csrfToken
             },
@@ -318,6 +317,28 @@
         .then(function (result) {
             var status = result.status;
             var data = result.data;
+
+            // Check if server firewall (Imunify360) or WAF intercepted the AJAX call
+            var isWafBlock = Boolean(
+                (status === 403 || status === 406 || status === 429) &&
+                data && data.message && (
+                    data.message.indexOf('Imunify') !== -1 ||
+                    data.message.indexOf('bot-protection') !== -1 ||
+                    data.message.indexOf('automation') !== -1 ||
+                    data.message.indexOf('whitelisted') !== -1
+                )
+            );
+
+            if (isWafBlock) {
+                // Imunify360 WebShield requires a real browser navigation to resolve its challenge.
+                // Fall back cleanly to native browser submission.
+                clearTimeout(watchdog);
+                unlockLeadForm(form);
+                try {
+                    HTMLFormElement.prototype.submit.call(form);
+                    return;
+                } catch (submitErr) {}
+            }
 
             // 1. Success (200 / 201)
             if (result.ok && data && data.success) {
