@@ -1128,8 +1128,8 @@ class DeploymentManager:
 
         run_pip = has_reqs
         run_migrate = has_migrations
-        run_collectstatic = has_static
-        run_reload = has_py or has_migrations or has_reqs or has_static
+        run_collectstatic = has_static or has_html
+        run_reload = has_py or has_migrations or has_reqs or has_static or has_html
         run_clear_cache = has_static or has_html or has_py or has_migrations
 
         print("\n🔍 التحديث الذكي التلقائي اكتشف:")
