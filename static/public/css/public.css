@@ -2042,6 +2042,52 @@ img#intlPhoneFlag {
   text-align: justify;
 }
 
+/* Rich-text headings inside detail sections (override Tailwind Preflight reset) */
+.detail-section-content h2,
+.detail-section-highlight h2,
+.admission-tab-panel h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1.4;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.detail-section-content h3,
+.detail-section-highlight h3,
+.admission-tab-panel h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1.4;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.detail-section-content h4,
+.detail-section-highlight h4,
+.admission-tab-panel h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.4;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.detail-section-content > h2:first-child,
+.detail-section-content > h3:first-child,
+.detail-section-content > h4:first-child,
+.detail-section-highlight > h2:first-child,
+.detail-section-highlight > h3:first-child,
+.detail-section-highlight > h4:first-child,
+.admission-tab-panel > h2:first-child,
+.admission-tab-panel > h3:first-child,
+.admission-tab-panel > h4:first-child {
+  margin-top: 0;
+}
+
 /* تنسيق القوائم للتغلب على تصفير TailwindCSS */
 .detail-section-content ul,
 .detail-section-highlight ul,
@@ -3273,8 +3319,21 @@ img#intlPhoneFlag {
 }
 
 .article-content h3 {
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.article-content h4 {
+  color: var(--text-dark);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .article-content p {
