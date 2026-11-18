@@ -41,10 +41,10 @@ p a,
 .content a,
 .pro-editor-content a,
 .rich-text-content a {
-    color: var(--primary);
-    font-weight: 500;
+    color: var(--info);
+    font-weight: 600;
     text-decoration: underline;
-    text-underline-offset: 3px;
+    text-underline-offset: 4px;
     cursor: pointer;
     transition: color 0.2s ease;
 }

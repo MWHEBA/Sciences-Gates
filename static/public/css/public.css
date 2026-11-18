@@ -9,6 +9,7 @@
   --secondary-hover: #B38C34;
   --secondary-light: #FDF9F1;
   --secondary-muted: rgba(200, 160, 65, 0.08);
+  --info: #2368B5;
 
   --text-dark: #1E293B;
   --text-body: #475569;
@@ -76,11 +77,15 @@ p a,
 .content a,
 .article-content a,
 .pro-editor-content a,
-.rich-text-content a {
-  color: var(--primary);
-  font-weight: 500;
+.rich-text-content a,
+.detail-section-content a,
+.detail-section-highlight a,
+.detail-faq-answer a,
+.prose a {
+  color: var(--info);
+  font-weight: 600;
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
   cursor: pointer;
 }
 
@@ -88,7 +93,11 @@ p a:hover,
 .content a:hover,
 .article-content a:hover,
 .pro-editor-content a:hover,
-.rich-text-content a:hover {
+.rich-text-content a:hover,
+.detail-section-content a:hover,
+.detail-section-highlight a:hover,
+.detail-faq-answer a:hover,
+.prose a:hover {
   color: var(--primary-hover);
 }
 
