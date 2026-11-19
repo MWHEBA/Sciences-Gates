@@ -41,7 +41,7 @@ p a,
 .content a,
 .pro-editor-content a,
 .rich-text-content a {
-    color: var(--info);
+    color: var(--primary);
     font-weight: 600;
     text-decoration: underline;
     text-underline-offset: 4px;

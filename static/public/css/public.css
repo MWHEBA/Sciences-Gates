@@ -9,7 +9,6 @@
   --secondary-hover: #B38C34;
   --secondary-light: #FDF9F1;
   --secondary-muted: rgba(200, 160, 65, 0.08);
-  --info: #2368B5;
 
   --text-dark: #1E293B;
   --text-body: #475569;
@@ -82,7 +81,7 @@ p a,
 .detail-section-highlight a,
 .detail-faq-answer a,
 .prose a {
-  color: var(--info);
+  color: var(--primary);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 4px;
